@@ -1,0 +1,16 @@
+{
+  "name": "htnc-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "infra:up": "docker compose -f infra/docker/docker-compose.local.yml --env-file .env up -d",
+    "infra:down": "docker compose -f infra/docker/docker-compose.local.yml down",
+    "infra:logs": "docker compose -f infra/docker/docker-compose.local.yml logs -f",
+    "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v"
+  }
+}
