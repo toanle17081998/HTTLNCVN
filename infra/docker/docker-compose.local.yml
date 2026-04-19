@@ -4,42 +4,62 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-htnc}-postgres
     restart: unless-stopped
     environment:
+      TZ: ${TZ}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: ${POSTGRES_DATA_DIR}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_CONTAINER_PORT}"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:${POSTGRES_DATA_DIR}
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    networks:
+      - local
 
   redis:
     image: redis:7-alpine
     container_name: ${COMPOSE_PROJECT_NAME:-htnc}-redis
     restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_PORT}:${REDIS_CONTAINER_PORT}"
     volumes:
       - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
+    networks:
+      - local
 
   adminer:
     image: adminer:4
     container_name: ${COMPOSE_PROJECT_NAME:-htnc}-adminer
     restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
     ports:
       - "${ADMINER_PORT}:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - local
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  local:
+    name: ${COMPOSE_PROJECT_NAME:-htnc}-local

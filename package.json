@@ -11,6 +11,8 @@
     "infra:up": "docker compose -f infra/docker/docker-compose.local.yml --env-file .env up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.local.yml down",
     "infra:logs": "docker compose -f infra/docker/docker-compose.local.yml logs -f",
+    "infra:ps": "docker compose -f infra/docker/docker-compose.local.yml ps",
+    "infra:restart": "docker compose -f infra/docker/docker-compose.local.yml restart",
     "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v"
   }
 }
