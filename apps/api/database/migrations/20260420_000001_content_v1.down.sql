@@ -1,0 +1,11 @@
+BEGIN;
+
+DROP TABLE IF EXISTS lesson_progresses;
+DROP TABLE IF EXISTS course_progresses;
+DROP TABLE IF EXISTS course_enrollments;
+DROP TABLE IF EXISTS lessons;
+DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS users;
+
+COMMIT;
