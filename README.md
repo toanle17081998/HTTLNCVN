@@ -148,11 +148,19 @@ Copy-Item apps/api/.env.example apps/api/.env
 - `postgres`
 - `redis`
 - `adminer`
+- init script cho PostgreSQL
+- redis config rieng cho local persistence
 
 Chay local infra:
 
 ```bash
 pnpm infra:up
+```
+
+Kiem tra container:
+
+```bash
+pnpm infra:ps
 ```
 
 Dung:
@@ -166,6 +174,15 @@ Xoa volume de reset local:
 ```bash
 pnpm infra:reset
 ```
+
+Thong tin ket noi local mac dinh:
+
+- PostgreSQL:
+  host `localhost`, port `5432`, db `htnc`, user `postgres`, password `postgres`
+- Redis:
+  host `localhost`, port `6379`, db `0`
+- Adminer:
+  `http://localhost:8080`
 
 ## 5. Scaffold FE/BE theo vi tri da chot
 
@@ -267,5 +284,6 @@ Chi tiet xem tai [docs/branching-release.md](docs/branching-release.md).
 
 - [Cau truc repo](docs/repo-structure.md)
 - [Branching va release](docs/branching-release.md)
+- [Local infra](docs/infra-local.md)
 - [Web app placeholder](apps/web/README.md)
 - [API app placeholder](apps/api/README.md)
