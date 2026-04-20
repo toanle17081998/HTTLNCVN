@@ -1,0 +1,31 @@
+{
+  "name": "@htnc/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "nodemon --watch src --ext ts --exec \"ts-node src/main.ts\"",
+    "start": "node dist/main.js",
+    "db:migrate": "tsx src/database/scripts/migrate.ts",
+    "db:seed": "tsx src/database/scripts/seed.ts",
+    "test": "tsx --test src/**/*.spec.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "dotenv": "^16.5.0",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.3",
+    "@types/pg": "^8.15.6",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

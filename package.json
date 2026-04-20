@@ -8,6 +8,11 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
+    "api:build": "pnpm --filter @htnc/api build",
+    "api:db:migrate": "pnpm --filter @htnc/api db:migrate",
+    "api:db:seed": "pnpm --filter @htnc/api db:seed",
+    "api:dev": "pnpm --filter @htnc/api dev",
+    "api:start": "pnpm --filter @htnc/api start",
     "infra:up": "docker compose -f infra/docker/docker-compose.local.yml --env-file .env up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.local.yml down",
     "infra:logs": "docker compose -f infra/docker/docker-compose.local.yml logs -f",
