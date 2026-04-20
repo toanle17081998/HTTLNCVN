@@ -18,6 +18,8 @@
     "infra:logs": "docker compose -f infra/docker/docker-compose.local.yml logs -f",
     "infra:ps": "docker compose -f infra/docker/docker-compose.local.yml ps",
     "infra:restart": "docker compose -f infra/docker/docker-compose.local.yml restart",
-    "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v"
+    "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v",
+    "db:migrate": "node apps/api/database/migrate.mjs up",
+    "db:rollback": "node apps/api/database/migrate.mjs down"
   }
 }

@@ -1,0 +1,51 @@
+:root {
+  --p-blue-50:  239 246 255; 
+  --p-blue-600: 37 99 235;
+  --p-blue-700: 29 78 216;
+
+  --p-gray-50:  249 250 251;
+  --p-gray-900: 17 24 39;
+
+  --bg-base: rgb(var(--p-gray-50));
+  --bg-surface: #ffffff;
+  --bg-overlay: rgba(var(--p-gray-900) / 0.4); 
+
+  --text-primary: rgb(var(--p-gray-900));
+  --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #ffffff;
+
+  --brand-primary: rgb(var(--p-blue-600));
+  --brand-muted: rgba(var(--p-blue-600) / 0.1);
+  
+  --status-info: #3b82f6;
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --border-subtle: #e5e7eb;
+  --border-strong: #d1d5db;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  --btn-primary-bg: var(--brand-primary);
+  --btn-primary-text: var(--text-inverse);
+  --input-focus-ring: rgba(var(--p-blue-600) / 0.2);
+}
+
+[data-theme='dark'] {
+  --bg-base: #030712;
+  --bg-surface: #111827;
+  
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  
+  --border-subtle: #1f2937;
+  --brand-primary: #60a5fa; 
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
