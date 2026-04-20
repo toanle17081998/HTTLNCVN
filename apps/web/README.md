@@ -1,23 +1,45 @@
-# Web App Placeholder
+# HTNC Web
 
-Vi tri danh cho frontend `Next.js`.
+Next.js frontend app for the HTNC Platform.
 
-## Internal structure target
+## Structure
 
 ```text
 src/
-|-- app/
-|-- modules/
-|-- components/
-|-- lib/
+|-- app/                     # route, layout, page
+|-- modules/                 # UI/business by domain
+|   |-- auth/
+|   |-- member/
+|   |-- blog/
+|   |-- course/
+|   |-- page/
+|   |-- event/
+|   |-- notification/
+|   `-- prayer-journal/
+|-- components/              # shared components
+|-- lib/                     # helpers, API clients, utilities
 |-- hooks/
 |-- providers/
 |-- styles/
 `-- types/
 ```
 
-## Notes
+## Conventions
 
-- Public site va admin UI co the cung repo, tach bang route group
-- Uu tien SSR/SEO cho homepage, blog, course landing
-- Khong de API schema hard-code trong component; dua qua `lib/` hoac typed client
+- Routes use `kebab-case`.
+- React components use `PascalCase`.
+- Hooks use the `useXxx.ts` naming pattern.
+- Keep `src/app` focused on routing, layout, and thin page composition.
+- Put domain UI and client-side business logic in `src/modules/<domain>`.
+
+## Development
+
+```powershell
+pnpm.cmd dev
+```
+
+If PowerShell allows pnpm scripts on your machine, this also works:
+
+```powershell
+pnpm dev
+```
