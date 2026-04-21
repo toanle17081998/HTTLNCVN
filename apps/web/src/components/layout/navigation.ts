@@ -1,49 +1,51 @@
+import type { TranslationKey } from "@/lib/i18n";
+
 export type NavItem = {
-  label: string;
   href: string;
-  description: string;
+  labelKey: TranslationKey;
+  descriptionKey: TranslationKey;
 };
 
 export const navItems: NavItem[] = [
   {
-    label: "Dashboard",
     href: "/",
-    description: "Tong quan nen tang",
+    labelKey: "nav.dashboard.label",
+    descriptionKey: "nav.dashboard.description",
   },
   {
-    label: "Auth",
     href: "/auth",
-    description: "Dang nhap va tai khoan",
+    labelKey: "nav.auth.label",
+    descriptionKey: "nav.auth.description",
   },
   {
-    label: "Members",
     href: "/member",
-    description: "Ho so thanh vien",
+    labelKey: "nav.member.label",
+    descriptionKey: "nav.member.description",
   },
   {
-    label: "Blog",
     href: "/blog",
-    description: "Bai viet va noi dung",
+    labelKey: "nav.blog.label",
+    descriptionKey: "nav.blog.description",
   },
   {
-    label: "Courses",
     href: "/course",
-    description: "Hanh trinh hoc tap",
+    labelKey: "nav.course.label",
+    descriptionKey: "nav.course.description",
   },
   {
-    label: "Events",
     href: "/event",
-    description: "Lich sinh hoat",
+    labelKey: "nav.event.label",
+    descriptionKey: "nav.event.description",
   },
   {
-    label: "Notifications",
     href: "/notification",
-    description: "Thong bao quan trong",
+    labelKey: "nav.notification.label",
+    descriptionKey: "nav.notification.description",
   },
   {
-    label: "Prayer Journal",
     href: "/prayer-journal",
-    description: "Nhat ky dong hanh",
+    labelKey: "nav.prayerJournal.label",
+    descriptionKey: "nav.prayerJournal.description",
   },
 ];
 

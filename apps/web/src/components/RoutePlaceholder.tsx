@@ -1,49 +1,65 @@
+"use client";
+
 import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
+import type { TranslationKey } from "@/lib/i18n";
+import { useTranslation } from "@/providers/I18nProvider";
+import type { ReactNode } from "react";
 
 type RoutePlaceholderProps = {
-  eyebrow: string;
-  title: string;
-  description: string;
+  eyebrowKey: TranslationKey;
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
+  actions?: ReactNode;
 };
 
+const placeholderStages = [
+  "placeholder.planning",
+  "placeholder.content",
+  "placeholder.review",
+] satisfies TranslationKey[];
+
 export function RoutePlaceholder({
-  eyebrow,
-  title,
-  description,
+  actions,
+  eyebrowKey,
+  titleKey,
+  descriptionKey,
 }: RoutePlaceholderProps) {
+  const { t } = useTranslation();
+
   return (
     <PageLayout
       actions={
-        <>
-          <Button variant="secondary">View draft</Button>
-          <Button>Create</Button>
-        </>
+        actions ?? (
+          <>
+            <Button variant="secondary">{t("action.viewDraft")}</Button>
+            <Button>{t("action.create")}</Button>
+          </>
+        )
       }
-      description={description}
-      eyebrow={eyebrow}
-      title={title}
+      description={t(descriptionKey)}
+      eyebrow={t(eyebrowKey)}
+      title={t(titleKey)}
     >
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-            Workspace
+            {t("placeholder.workspace")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-            Noi dung chinh cua module se duoc dat tai day, dung chung header,
-            breadcrumb, sidebar va cac control co san.
+            {t("placeholder.workspaceDescription")}
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {["Planning", "Content", "Review"].map((item) => (
+            {placeholderStages.map((item) => (
               <div
                 className="rounded-md border border-[var(--border-subtle)] px-4 py-3"
                 key={item}
               >
                 <p className="text-sm font-semibold text-[var(--text-primary)]">
-                  {item}
+                  {t(item)}
                 </p>
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                  Ready
+                  {t("common.ready")}
                 </p>
               </div>
             ))}
@@ -52,14 +68,14 @@ export function RoutePlaceholder({
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-            Quick actions
+            {t("placeholder.quickActions")}
           </h2>
           <div className="mt-4 grid gap-2">
             <Button className="w-full" variant="secondary">
-              Import data
+              {t("action.importData")}
             </Button>
             <Button className="w-full" variant="ghost">
-              Manage settings
+              {t("action.manageSettings")}
             </Button>
           </div>
         </Card>
