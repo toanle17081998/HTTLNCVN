@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -32,6 +33,8 @@ type ToolbarItem = {
   value?: string;
   className?: string;
 };
+
+type ToolbarItemKey = `${string}:${string}`;
 
 type ToolbarIconName =
   | "heading2"
@@ -71,7 +74,7 @@ type ColumnResizeState = {
 type MediaKind = "image" | "video";
 
 type ImageModalState =
-  | { mode: "insert"; kind: MediaKind; placeholder: Element | null }
+  | { mode: "insert"; kind: MediaKind }
   | { mode: "edit"; kind: MediaKind; figure: HTMLElement; image: HTMLImageElement };
 
 type ImageFormState = {
@@ -111,6 +114,9 @@ const toolbarGroups: readonly (readonly ToolbarItem[])[] = [
 
 const toolbarButtonClass =
   "inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-transparent bg-transparent px-2.5 text-sm font-semibold text-[var(--text-secondary)] transition hover:border-[var(--border-subtle)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]";
+
+const toolbarButtonActiveClass =
+  "border-[var(--brand-primary)] bg-[var(--brand-muted)] text-[var(--brand-primary)] shadow-sm";
 
 const toolbarActionButtonClass =
   "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]";
@@ -279,6 +285,10 @@ function parseCount(value: string, fallback: number, max: number) {
   return Math.min(Math.max(count, 1), max);
 }
 
+function getToolbarItemKey(item: ToolbarItem): ToolbarItemKey {
+  return `${item.command}:${item.value ?? ""}`;
+}
+
 function normalizeWebUrl(value: string) {
   try {
     const url = new URL(value);
@@ -386,6 +396,7 @@ export function CreateBlogPage() {
   const editorRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<Range | null>(null);
   const imageResizeRef = useRef<ImageResizeState | null>(null);
+  const imagePlaceholderRef = useRef<Element | null>(null);
   const columnResizeRef = useRef<ColumnResizeState | null>(null);
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -408,6 +419,86 @@ export function CreateBlogPage() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeToolbarKeys, setActiveToolbarKeys] = useState<ToolbarItemKey[]>(
+    [],
+  );
+
+  const updateToolbarState = useCallback(() => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+
+    if (!editor || !selection || selection.rangeCount === 0) {
+      setActiveToolbarKeys([]);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+
+    if (!editor.contains(range.commonAncestorContainer)) {
+      setActiveToolbarKeys([]);
+      return;
+    }
+
+    const container =
+      range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? range.commonAncestorContainer
+        : range.commonAncestorContainer.parentElement;
+
+    const selectedElement = container instanceof Element ? container : null;
+    const block = selectedElement?.closest("h2, h3, p, blockquote, li");
+    const blockTag = block?.tagName.toLowerCase();
+    const selectedFigure = selectedElement?.closest(".blog-image-frame");
+    const selectedActionKeys: ToolbarItemKey[] = [];
+
+    if (selectedElement?.closest("a")) {
+      selectedActionKeys.push("action:link");
+    }
+
+    if (selectedFigure?.querySelector("img")) {
+      selectedActionKeys.push("action:image");
+    }
+
+    if (selectedFigure?.querySelector("iframe, video")) {
+      selectedActionKeys.push("action:video");
+    }
+
+    if (selectedElement?.closest(".blog-columns")) {
+      selectedActionKeys.push("action:columns");
+    }
+
+    if (selectedElement?.closest("table")) {
+      selectedActionKeys.push("action:table");
+    }
+
+    const nextKeys = [
+      ...toolbarGroups
+        .flatMap((group) => group)
+        .filter((item) => {
+          if (item.command === "formatBlock") {
+            return item.value === (blockTag === "li" ? "p" : blockTag);
+          }
+
+          try {
+            return document.queryCommandState(item.command);
+          } catch {
+            return false;
+          }
+        })
+        .map(getToolbarItemKey),
+      ...selectedActionKeys,
+    ];
+
+    setActiveToolbarKeys((currentKeys) => {
+      if (
+        currentKeys.length === nextKeys.length &&
+        currentKeys.every((key, index) => key === nextKeys[index])
+      ) {
+        return currentKeys;
+      }
+
+      return nextKeys;
+    });
+  }, []);
 
   useEffect(() => {
     function handleMouseMove(event: MouseEvent) {
@@ -468,6 +559,14 @@ export function CreateBlogPage() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
+
+  useEffect(() => {
+    document.addEventListener("selectionchange", updateToolbarState);
+
+    return () => {
+      document.removeEventListener("selectionchange", updateToolbarState);
+    };
+  }, [updateToolbarState]);
 
   function normalizeColumns() {
     const editor = editorRef.current;
@@ -582,6 +681,7 @@ export function CreateBlogPage() {
     normalizeMedia();
     normalizeEditorRoot();
     setContentHtml(editorRef.current?.innerHTML ?? "");
+    updateToolbarState();
   }
 
   function saveSelection() {
@@ -596,7 +696,11 @@ export function CreateBlogPage() {
 
     if (editor.contains(range.commonAncestorContainer)) {
       selectionRef.current = range.cloneRange();
+      updateToolbarState();
+      return;
     }
+
+    setActiveToolbarKeys([]);
   }
 
   function restoreSelection() {
@@ -689,12 +793,13 @@ export function CreateBlogPage() {
   }
 
   function importMedia(kind: MediaKind, placeholder?: Element | null) {
+    imagePlaceholderRef.current = placeholder ?? null;
     setImageForm({
       url: "",
       alt: "",
       caption: "",
     });
-    setImageModal({ mode: "insert", kind, placeholder: placeholder ?? null });
+    setImageModal({ mode: "insert", kind });
   }
 
   function submitImageModal(event: FormEvent<HTMLFormElement>) {
@@ -743,8 +848,12 @@ export function CreateBlogPage() {
 
     const imageHtml = `<figure class="blog-image-frame" contenteditable="false" draggable="false" style="width:100%;max-width:100%;">${mediaHtml}${captionHtml}<span class="blog-image-resize-handle" aria-hidden="true"></span></figure><p><br></p>`;
 
-    if (imageModal.mode === "insert" && imageModal.placeholder) {
-      imageModal.placeholder.outerHTML = imageHtml;
+    const placeholder =
+      imageModal.mode === "insert" ? imagePlaceholderRef.current : null;
+
+    if (placeholder) {
+      placeholder.outerHTML = imageHtml;
+      imagePlaceholderRef.current = null;
       syncEditor();
       saveSelection();
       setImageModal(null);
@@ -752,6 +861,7 @@ export function CreateBlogPage() {
     }
 
     insertHtml(imageHtml);
+    imagePlaceholderRef.current = null;
     setImageModal(null);
   }
 
@@ -1111,24 +1221,40 @@ export function CreateBlogPage() {
                 className="inline-flex shrink-0 items-center rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-1 shadow-sm"
                 key={index}
               >
-                {group.map((item) => (
-                  <button
-                    aria-label={item.label}
-                    className={cn(toolbarButtonClass, item.className)}
-                    key={`${item.command}-${item.label}`}
-                    onClick={() => runCommand(item.command, item.value)}
-                    onMouseDown={(event) => event.preventDefault()}
-                    title={item.label}
-                    type="button"
-                  >
-                    <ToolbarIcon name={item.icon} />
-                  </button>
-                ))}
+                {group.map((item) => {
+                  const isActive = activeToolbarKeys.includes(
+                    getToolbarItemKey(item),
+                  );
+
+                  return (
+                    <button
+                      aria-label={item.label}
+                      aria-pressed={isActive}
+                      className={cn(
+                        toolbarButtonClass,
+                        isActive && toolbarButtonActiveClass,
+                        item.className,
+                      )}
+                      key={`${item.command}-${item.label}`}
+                      onClick={() => runCommand(item.command, item.value)}
+                      onMouseDown={(event) => event.preventDefault()}
+                      title={item.label}
+                      type="button"
+                    >
+                      <ToolbarIcon name={item.icon} />
+                    </button>
+                  );
+                })}
               </div>
             ))}
             <div className="ml-auto flex shrink-0 gap-2">
               <button
-                className={toolbarActionButtonClass}
+                aria-pressed={activeToolbarKeys.includes("action:link")}
+                className={cn(
+                  toolbarActionButtonClass,
+                  activeToolbarKeys.includes("action:link") &&
+                    toolbarButtonActiveClass,
+                )}
                 onClick={addLink}
                 onMouseDown={(event) => event.preventDefault()}
                 type="button"
@@ -1137,7 +1263,12 @@ export function CreateBlogPage() {
                 Link
               </button>
               <button
-                className={toolbarActionButtonClass}
+                aria-pressed={activeToolbarKeys.includes("action:image")}
+                className={cn(
+                  toolbarActionButtonClass,
+                  activeToolbarKeys.includes("action:image") &&
+                    toolbarButtonActiveClass,
+                )}
                 onClick={addImage}
                 onMouseDown={(event) => event.preventDefault()}
                 type="button"
@@ -1146,7 +1277,12 @@ export function CreateBlogPage() {
                 Image
               </button>
               <button
-                className={toolbarActionButtonClass}
+                aria-pressed={activeToolbarKeys.includes("action:video")}
+                className={cn(
+                  toolbarActionButtonClass,
+                  activeToolbarKeys.includes("action:video") &&
+                    toolbarButtonActiveClass,
+                )}
                 onClick={addVideo}
                 onMouseDown={(event) => event.preventDefault()}
                 type="button"
@@ -1155,7 +1291,12 @@ export function CreateBlogPage() {
                 Video
               </button>
               <button
-                className={toolbarActionButtonClass}
+                aria-pressed={activeToolbarKeys.includes("action:columns")}
+                className={cn(
+                  toolbarActionButtonClass,
+                  activeToolbarKeys.includes("action:columns") &&
+                    toolbarButtonActiveClass,
+                )}
                 onClick={addColumns}
                 onMouseDown={(event) => event.preventDefault()}
                 type="button"
@@ -1164,7 +1305,12 @@ export function CreateBlogPage() {
                 Columns
               </button>
               <button
-                className={toolbarActionButtonClass}
+                aria-pressed={activeToolbarKeys.includes("action:table")}
+                className={cn(
+                  toolbarActionButtonClass,
+                  activeToolbarKeys.includes("action:table") &&
+                    toolbarButtonActiveClass,
+                )}
                 onClick={addTable}
                 onMouseDown={(event) => event.preventDefault()}
                 type="button"
