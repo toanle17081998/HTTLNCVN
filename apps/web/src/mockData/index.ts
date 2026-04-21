@@ -11,3 +11,15 @@ export type {
 } from "./homepage";
 export { memberMockData } from "./members";
 export type { ChurchMember, MemberRole, MemberStatus } from "./members";
+export {
+  prayerCategoryMockData,
+  prayerMockData,
+  prayerShareMockData,
+} from "./prayers";
+export type {
+  Prayer,
+  PrayerCategory,
+  PrayerShare,
+  PrayerStatus,
+  PrayerVisibility,
+} from "./prayers";
