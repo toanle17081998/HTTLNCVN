@@ -25,11 +25,6 @@ datasource db {
 // 1. AUTHENTICATION & RBAC
 // ---------------------------------------------------------
 
-enum UserRole {
-  user
-  admin
-}
-
 model User {
   id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username      String        @unique @db.VarChar(50)
