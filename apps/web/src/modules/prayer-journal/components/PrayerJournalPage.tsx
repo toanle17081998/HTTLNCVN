@@ -3,9 +3,9 @@ import { RoutePlaceholder } from "@/components/RoutePlaceholder";
 export function PrayerJournalPage() {
   return (
     <RoutePlaceholder
-      descriptionKey="page.prayerJournal.description"
-      eyebrowKey="page.prayerJournal.eyebrow"
-      titleKey="page.prayerJournal.title"
+      eyebrow="Prayer Journal"
+      title="Nhat ky cau nguyen"
+      description="Placeholder cho ghi chu cau nguyen, nhac nho va hanh trinh dong hanh ca nhan."
     />
   );
 }

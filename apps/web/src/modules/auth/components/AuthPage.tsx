@@ -3,9 +3,9 @@ import { RoutePlaceholder } from "@/components/RoutePlaceholder";
 export function AuthPage() {
   return (
     <RoutePlaceholder
-      descriptionKey="page.auth.description"
-      eyebrowKey="page.auth.eyebrow"
-      titleKey="page.auth.title"
+      eyebrow="Auth"
+      title="Dang nhap va tai khoan"
+      description="Placeholder cho luong dang nhap, dang ky, xac thuc va quan ly phien nguoi dung."
     />
   );
 }

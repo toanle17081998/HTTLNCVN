@@ -3,9 +3,9 @@ import { RoutePlaceholder } from "@/components/RoutePlaceholder";
 export function MemberPage() {
   return (
     <RoutePlaceholder
-      descriptionKey="page.member.description"
-      eyebrowKey="page.member.eyebrow"
-      titleKey="page.member.title"
+      eyebrow="Member"
+      title="Thanh vien"
+      description="Placeholder cho ho so thanh vien, danh ba va cac thong tin lien quan den cong dong."
     />
   );
 }

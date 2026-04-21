@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import { useTranslation } from "@/providers/I18nProvider";
 import { Breadcrumb } from "./Breadcrumb";
-import { LanguageToggle } from "./LanguageToggle";
 import { getActiveNavItem, navItems } from "./navigation";
 
 type HeaderProps = {
@@ -10,7 +8,6 @@ type HeaderProps = {
 };
 
 export function Header({ pathname }: HeaderProps) {
-  const { t } = useTranslation();
   const activeItem = getActiveNavItem(pathname);
 
   return (
@@ -19,16 +16,15 @@ export function Header({ pathname }: HeaderProps) {
         <div className="min-w-0">
           <Breadcrumb pathname={pathname} />
           <p className="mt-1 truncate text-sm text-[var(--text-secondary)]">
-            {t(activeItem.descriptionKey)}
+            {activeItem.description}
           </p>
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <LanguageToggle />
           <Button size="sm" variant="secondary">
-            {t("action.newItem")}
+            New item
           </Button>
-          <Button size="sm">{t("action.publish")}</Button>
+          <Button size="sm">Publish</Button>
         </div>
       </div>
 
@@ -51,7 +47,7 @@ export function Header({ pathname }: HeaderProps) {
               href={item.href}
               key={item.href}
             >
-              {t(item.labelKey)}
+              {item.label}
             </Link>
           );
         })}

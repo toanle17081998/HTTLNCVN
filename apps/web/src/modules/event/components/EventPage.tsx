@@ -3,9 +3,9 @@ import { RoutePlaceholder } from "@/components/RoutePlaceholder";
 export function EventPage() {
   return (
     <RoutePlaceholder
-      descriptionKey="page.event.description"
-      eyebrowKey="page.event.eyebrow"
-      titleKey="page.event.title"
+      eyebrow="Event"
+      title="Su kien"
+      description="Placeholder cho lich su kien, thong tin dang ky va cac buoi sinh hoat chung."
     />
   );
 }
