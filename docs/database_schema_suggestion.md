@@ -22,23 +22,39 @@ datasource db {
 }
 
 // ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+
+enum PrayerVisibility {
+  public
+  private
+  shared
+}
+
+enum PrayerStatus {
+  open
+  closed
+}
+
+// ---------------------------------------------------------
 // 1. AUTHENTICATION & RBAC
 // ---------------------------------------------------------
 
-enum UserRole {
-  user
-  admin
-}
-
 model User {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username      String        @unique @db.VarChar(50)
-  email         String        @unique @db.VarChar(255)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String   @unique @db.VarChar(50)
+  email         String   @unique @db.VarChar(255)
   password_hash String
   role_id       Int
-  role          Role          @relation(fields: [role_id], references: [id])
-  created_at    DateTime      @default(now()) @db.Timestamptz
-  
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  // Discipleship / evangelism relationship
+  faith_sharer_id String? @db.Uuid
+
+  role          Role   @relation(fields: [role_id], references: [id])
+  faith_sharer  User?  @relation("FaithSharer", fields: [faith_sharer_id], references: [id], onDelete: SetNull)
+  shared_faith_to User[] @relation("FaithSharer")
+
   // Relations to LMS content & tracking
   courses_created   Course[]
   lessons_created   Lesson[]
@@ -50,39 +66,44 @@ model User {
   audit_logs        AuditLog[]
 
   // Relations to Church Management
-  profile           Profile?
-  department_led    Department[]        @relation("DepartmentLeader")
-  departments       DepartmentMember[]
-  cellgroups_led    CellGroup[]         @relation("CellGroupLeader")
-  cellgroups        CellGroupMember[]
-  events_created    Event[]
-  attendances       EventAttendance[]
-  articles          Article[]
-  notifications_sent    Notification[]          @relation("NotificationSender")
-  notifications_inbox   NotificationRecipient[]
+  profile                 Profile?
+  church_units_led        ChurchUnit[]            @relation("ChurchUnitLeader")
+  church_unit_memberships ChurchUnitMember[]
+  events_created          Event[]
+  attendances             EventAttendance[]
+  articles                Article[]
+  notifications_sent      Notification[]          @relation("NotificationSender")
+  notifications_inbox     NotificationRecipient[]
 
+  prayers_created         Prayer[]
+  prayers_shared_with     PrayerShare[]
+
+  household_memberships   HouseholdMember[]
+
+  @@index([faith_sharer_id])
   @@map("users")
 }
 
 model Profile {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id       String    @unique @db.Uuid
-  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   first_name    String    @db.VarChar(100)
   last_name     String    @db.VarChar(100)
   phone         String?   @db.VarChar(20)
   address       String?   @db.Text
   date_of_birth DateTime? @db.Date
-  gender        String?   @db.VarChar(10) // e.g., MALE, FEMALE
+  gender        String?   @db.VarChar(10)
+
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("profiles")
 }
 
 model Role {
-  id                  Int               @id @default(autoincrement())
-  name                String            @unique @db.VarChar(50) // e.g., "admin", "student"
-  permissions         RolePermission[]
-  users               User[]
+  id          Int              @id @default(autoincrement())
+  name        String           @unique @db.VarChar(50)
+  permissions RolePermission[]
+  users       User[]
 
   @@map("roles")
 }
@@ -104,14 +125,14 @@ model Resource {
 }
 
 model RolePermission {
-  id          Int      @id @default(autoincrement())
+  id          Int @id @default(autoincrement())
   role_id     Int
   action_id   Int
   resource_id Int
 
-  role     Role     @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  action   Action   @relation(fields: [action_id], references: [id], onDelete: Cascade)
-  resource Resource @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+  role        Role     @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  action      Action   @relation(fields: [action_id], references: [id], onDelete: Cascade)
+  resource    Resource @relation(fields: [resource_id], references: [id], onDelete: Cascade)
 
   @@unique([role_id, action_id, resource_id])
   @@map("role_permissions")
@@ -122,34 +143,34 @@ model RolePermission {
 // ---------------------------------------------------------
 
 model Course {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug        String    @unique @db.VarChar(100)
-  title_en    String    @db.VarChar(255)
-  title_vi    String    @db.VarChar(255)
-  description String?   @db.Text
-  created_by  String?   @db.Uuid
-  creator     User?     @relation(fields: [created_by], references: [id], onDelete: SetNull)
-  
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String   @unique @db.VarChar(100)
+  title_en    String   @db.VarChar(255)
+  title_vi    String   @db.VarChar(255)
+  description String?  @db.Text
+  created_by  String?  @db.Uuid
+
+  creator     User?    @relation(fields: [created_by], references: [id], onDelete: SetNull)
   lessons     Lesson[]
   grades      CourseGrade[]
-  
+
   @@map("courses")
 }
 
 model Lesson {
-  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  course_id           String              @db.Uuid
-  title_en            String              @db.VarChar(255)
-  title_vi            String              @db.VarChar(255)
-  content_markdown_en String              @db.Text
-  content_markdown_vi String              @db.Text
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id           String   @db.Uuid
+  title_en            String   @db.VarChar(255)
+  title_vi            String   @db.VarChar(255)
+  content_markdown_en String   @db.Text
+  content_markdown_vi String   @db.Text
   order_index         Int?
-  created_by          String?             @db.Uuid
-  updated_at          DateTime            @default(now()) @db.Timestamptz
-  
-  course              Course              @relation(fields: [course_id], references: [id], onDelete: Cascade)
-  creator             User?               @relation(fields: [created_by], references: [id], onDelete: SetNull)
-  
+  created_by          String?  @db.Uuid
+  updated_at          DateTime @default(now()) @db.Timestamptz
+
+  course              Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  creator             User?    @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
   templates           QuestionTemplate[]
   sessions            LearningSession[]
   grades              LessonGrade[]
@@ -162,21 +183,21 @@ model Lesson {
 // ---------------------------------------------------------
 
 model QuestionTemplate {
-  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lesson_id               String?            @db.Uuid
-  template_type           String             @db.VarChar(50)
-  difficulty              String             @default("medium") @db.VarChar(20)
-  
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lesson_id               String?  @db.Uuid
+  template_type           String   @db.VarChar(50)
+  difficulty              String   @default("medium") @db.VarChar(20)
+
   body_template_en        String
   body_template_vi        String
   explanation_template_en String?
   explanation_template_vi String?
-  
-  logic_config            Json               @default("{}")
+
+  logic_config            Json     @default("{}")
   answer_formula          String?
-  created_at              DateTime           @default(now()) @db.Timestamptz
-  
-  lesson                  Lesson?            @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+  created_at              DateTime @default(now()) @db.Timestamptz
+
+  lesson                  Lesson?  @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
   test_maps               TestTemplateMap[]
   snapshots               QuestionSnapshot[]
 
@@ -184,12 +205,13 @@ model QuestionTemplate {
 }
 
 model Test {
-  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title_vi           String            @db.VarChar(255)
-  title_en           String            @db.VarChar(255)
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title_vi           String   @db.VarChar(255)
+  title_en           String   @db.VarChar(255)
   time_limit_seconds Int?
-  passing_score      Decimal?          @default(50.0) @db.Decimal(5, 2)
-  is_active          Boolean?          @default(true)
+  passing_score      Decimal? @default(50.0) @db.Decimal(5, 2)
+  is_active          Boolean? @default(true)
+
   test_maps          TestTemplateMap[]
   attempts           TestAttempt[]
 
@@ -197,10 +219,11 @@ model Test {
 }
 
 model TestTemplateMap {
-  test_id     String           @db.Uuid
-  template_id String           @db.Uuid
-  weight      Int?             @default(1)
+  test_id     String @db.Uuid
+  template_id String @db.Uuid
+  weight      Int?   @default(1)
   position    Int?
+
   test        Test             @relation(fields: [test_id], references: [id], onDelete: Cascade)
   template    QuestionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
 
@@ -209,16 +232,16 @@ model TestTemplateMap {
 }
 
 model TestAttempt {
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String?            @db.Uuid
-  test_id      String?            @db.Uuid
-  total_score  Decimal?           @db.Decimal(5, 2)
-  is_completed Boolean?           @default(false)
-  started_at   DateTime           @default(now()) @db.Timestamptz
-  completed_at DateTime?          @db.Timestamptz 
-  
-  user         User?              @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  test         Test?              @relation(fields: [test_id], references: [id])
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String?  @db.Uuid
+  test_id      String?  @db.Uuid
+  total_score  Decimal? @db.Decimal(5, 2)
+  is_completed Boolean? @default(false)
+  started_at   DateTime @default(now()) @db.Timestamptz
+  completed_at DateTime? @db.Timestamptz
+
+  user         User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  test         Test?    @relation(fields: [test_id], references: [id])
   snapshots    QuestionSnapshot[]
   evidence     ActivityEvidence[]
 
@@ -226,14 +249,15 @@ model TestAttempt {
 }
 
 model QuestionSnapshot {
-  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  attempt_id          String?           @db.Uuid
-  template_id         String?           @db.Uuid
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attempt_id          String?  @db.Uuid
+  template_id         String?  @db.Uuid
   generated_variables Json
   student_answer      String?
-  is_correct          Boolean?          @default(false)
-  points_earned       Int?              @default(0)
-  responded_at        DateTime?         @db.Timestamptz
+  is_correct          Boolean? @default(false)
+  points_earned       Int?     @default(0)
+  responded_at        DateTime? @db.Timestamptz
+
   attempt             TestAttempt?      @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
   template            QuestionTemplate? @relation(fields: [template_id], references: [id])
 
@@ -245,27 +269,26 @@ model QuestionSnapshot {
 // ---------------------------------------------------------
 
 model LearningSession {
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String             @db.Uuid
-  lesson_id    String             @db.Uuid
-  started_at   DateTime           @default(now()) @db.Timestamptz
-  ended_at     DateTime?          @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  lesson_id    String   @db.Uuid
+  started_at   DateTime @default(now()) @db.Timestamptz
+  ended_at     DateTime? @db.Timestamptz
   duration_sec Int?
 
-  user         User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  lesson       Lesson             @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  lesson       Lesson   @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
   evidence     ActivityEvidence[]
 
   @@map("learning_sessions")
 }
 
-// Tracks user's grade/score for a specific lesson
 model LessonGrade {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id        String   @db.Uuid
   lesson_id      String   @db.Uuid
   score          Decimal  @default(0.0) @db.Decimal(5, 2)
-  status         String   @default("in_progress") @db.VarChar(20) // "completed", "in_progress"
+  status         String   @default("in_progress") @db.VarChar(20)
   graded_at      DateTime @default(now()) @db.Timestamptz
 
   user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -275,17 +298,16 @@ model LessonGrade {
   @@map("lesson_grades")
 }
 
-// Tracks user's overall grade/status for an entire course
 model CourseGrade {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id        String    @db.Uuid
-  course_id      String    @db.Uuid
-  overall_score  Decimal   @default(0.0) @db.Decimal(5, 2)
-  status         String    @default("enrolled") @db.VarChar(20) // "enrolled", "completed"
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  course_id      String   @db.Uuid
+  overall_score  Decimal  @default(0.0) @db.Decimal(5, 2)
+  status         String   @default("enrolled") @db.VarChar(20)
   completed_at   DateTime? @db.Timestamptz
 
-  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  course         Course    @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  course         Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, course_id])
   @@map("course_grades")
@@ -300,9 +322,9 @@ model ActivityEvidence {
   caption     String?  @db.VarChar(255)
   uploaded_at DateTime @default(now()) @db.Timestamptz
 
-  user    User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  attempt TestAttempt?     @relation(fields: [attempt_id], references: [id], onDelete: SetNull)
-  session LearningSession? @relation(fields: [session_id], references: [id], onDelete: SetNull)
+  user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  attempt     TestAttempt?     @relation(fields: [attempt_id], references: [id], onDelete: SetNull)
+  session     LearningSession? @relation(fields: [session_id], references: [id], onDelete: SetNull)
 
   @@map("activity_evidence")
 }
@@ -310,80 +332,90 @@ model ActivityEvidence {
 model AuditLog {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id     String   @db.Uuid
-  event_type  String   @db.VarChar(50) 
+  event_type  String   @db.VarChar(50)
   metadata    Json?    @default("{}")
   occurred_at DateTime @default(now()) @db.Timestamptz
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("audit_logs")
 }
 
 // ---------------------------------------------------------
-// 5. CHURCH ORGANIZATION & EVENTS
+// 5. CHURCH TREE / ORGANIZATION / EVENTS
 // ---------------------------------------------------------
 
-model Department {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String             @db.VarChar(255)
-  description String?            @db.Text
-  leader_id   String?            @db.Uuid
-  created_at  DateTime           @default(now()) @db.Timestamptz
-  leader      User?              @relation("DepartmentLeader", fields: [leader_id], references: [id])
-  members     DepartmentMember[]
+model ChurchUnit {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  type        String   @db.VarChar(50) // church, department, ministry, cellgroup, team, class
+  parent_id   String?  @db.Uuid
+  leader_id   String?  @db.Uuid
+  description String?  @db.Text
+  sort_order  Int?     @default(0)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
 
-  @@map("departments")
+  parent      ChurchUnit?      @relation("ChurchUnitTree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children    ChurchUnit[]     @relation("ChurchUnitTree")
+  leader      User?            @relation("ChurchUnitLeader", fields: [leader_id], references: [id], onDelete: SetNull)
+  members     ChurchUnitMember[]
+
+  @@index([parent_id])
+  @@index([leader_id])
+  @@index([type])
+  @@map("church_units")
 }
 
-model DepartmentMember {
-  department_id String     @db.Uuid
-  user_id       String     @db.Uuid
-  joined_at     DateTime   @default(now()) @db.Timestamptz
-  department    Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
-  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model ChurchUnitMember {
+  church_unit_id String   @db.Uuid
+  user_id        String   @db.Uuid
+  role           String?  @db.VarChar(50) // leader, assistant, member, staff
+  joined_at      DateTime @default(now()) @db.Timestamptz
 
-  @@id([department_id, user_id])
-  @@map("department_members")
+  church_unit    ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([church_unit_id, user_id])
+  @@index([user_id])
+  @@map("church_unit_members")
 }
 
-model CellGroup {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String            @db.VarChar(255)
-  location     String?           @db.VarChar(255)
-  meeting_time String?           @db.VarChar(100)
-  leader_id    String?           @db.Uuid
-  leader       User?             @relation("CellGroupLeader", fields: [leader_id], references: [id])
-  members      CellGroupMember[]
+model EventCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
 
-  @@map("cellgroups")
-}
+  events      Event[]
 
-model CellGroupMember {
-  cellgroup_id String    @db.Uuid
-  user_id      String    @db.Uuid
-  joined_at    DateTime  @default(now()) @db.Timestamptz
-  cellgroup    CellGroup @relation(fields: [cellgroup_id], references: [id], onDelete: Cascade)
-  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@id([cellgroup_id, user_id])
-  @@map("cellgroup_members")
+  @@map("event_categories")
 }
 
 model Event {
-  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       String            @db.VarChar(255)
-  description String?           @db.Text
-  starts_at   DateTime          @db.Timestamptz
-  ends_at     DateTime          @db.Timestamptz
-  location    String?           @db.VarChar(255)
-  audience    String            @default("public") @db.VarChar(50)
-  color       String?           @db.VarChar(50)
-  repeat      String            @default("none") @db.VarChar(50)
-  
-  created_by  String            @db.Uuid
-  creator     User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
-  attendees   EventAttendance[]
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String   @db.VarChar(255)
+  description   String?  @db.Text
+  starts_at     DateTime @db.Timestamptz
+  ends_at       DateTime @db.Timestamptz
+  location      String?  @db.VarChar(255)
 
+  audience      String   @default("public") @db.VarChar(50)
+  color         String?  @db.VarChar(50)
+  repeat        String   @default("none") @db.VarChar(50)
+
+  category_id   Int?
+  created_by    String   @db.Uuid
+
+  category      EventCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator       User           @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  attendees     EventAttendance[]
+
+  created_at    DateTime @default(now()) @db.Timestamptz
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@index([category_id])
+  @@index([created_by])
   @@map("events")
 }
 
@@ -391,6 +423,7 @@ model EventAttendance {
   event_id      String   @db.Uuid
   user_id       String   @db.Uuid
   check_in_time DateTime @default(now()) @db.Timestamptz
+
   event         Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
   user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -399,58 +432,158 @@ model EventAttendance {
 }
 
 // ---------------------------------------------------------
-// 6. MEDIA & PUBLISHING
+// 6. PRAYERS
 // ---------------------------------------------------------
 
-model Article {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug                String    @unique @db.VarChar(255)
-  title_en            String    @db.VarChar(255)
-  title_vi            String    @db.VarChar(255)
-  content_markdown_en String    @db.Text
-  content_markdown_vi String    @db.Text
-  cover_image_url     String?   @db.Text
-  status              String    @default("draft") @db.VarChar(50) // "draft", "published"
-  published_at        DateTime? @db.Timestamptz
-  created_by          String    @db.Uuid
-  creator             User      @relation(fields: [created_by], references: [id], onDelete: Cascade)
-  created_at          DateTime  @default(now()) @db.Timestamptz
-  updated_at          DateTime  @default(now()) @db.Timestamptz
+model PrayerCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
 
+  prayers     Prayer[]
+
+  @@map("prayer_categories")
+}
+
+model Prayer {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String?          @db.VarChar(255)
+  content       String           @db.Text
+  visibility    PrayerVisibility @default(private)
+  status        PrayerStatus     @default(open)
+  close_reason  String?          @db.Text
+
+  category_id   Int?
+  created_by    String           @db.Uuid
+  created_at    DateTime         @default(now()) @db.Timestamptz
+  updated_at    DateTime         @default(now()) @updatedAt @db.Timestamptz
+  closed_at     DateTime?        @db.Timestamptz
+
+  category      PrayerCategory?  @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator       User             @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  shared_with   PrayerShare[]
+
+  @@index([created_by])
+  @@index([visibility])
+  @@index([status])
+  @@index([category_id])
+  @@map("prayers")
+}
+
+model PrayerShare {
+  prayer_id     String   @db.Uuid
+  user_id       String   @db.Uuid
+  shared_at     DateTime @default(now()) @db.Timestamptz
+
+  prayer        Prayer   @relation(fields: [prayer_id], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([prayer_id, user_id])
+  @@index([user_id])
+  @@map("prayer_shares")
+}
+
+// ---------------------------------------------------------
+// 7. MEDIA & PUBLISHING
+// ---------------------------------------------------------
+
+model ArticleCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+
+  articles    Article[]
+
+  @@map("article_categories")
+}
+
+model Article {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                String   @unique @db.VarChar(255)
+  title_en            String   @db.VarChar(255)
+  title_vi            String   @db.VarChar(255)
+  content_markdown_en String   @db.Text
+  content_markdown_vi String   @db.Text
+  cover_image_url     String?  @db.Text
+  status              String   @default("draft") @db.VarChar(50)
+  published_at        DateTime? @db.Timestamptz
+
+  category_id         Int?
+  created_by          String   @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz
+  updated_at          DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  category            ArticleCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator             User             @relation(fields: [created_by], references: [id], onDelete: Cascade)
+
+  @@index([category_id])
+  @@index([created_by])
   @@map("articles")
 }
 
 // ---------------------------------------------------------
-// 7. NOTIFICATIONS & ALERTS
+// 8. NOTIFICATIONS & ALERTS
 // ---------------------------------------------------------
 
 model Notification {
-  id              String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title           String                  @db.VarChar(255)
-  message         String                  @db.Text
-  type            String                  @default("announcement") @db.VarChar(50) // "announcement", "event_reminder", "system"
-  target_type     String                  @default("user") @db.VarChar(50)         // "all", "department", "user"
-  target_id       String?                 @db.Uuid                                 // Null if 'all', department_id if 'department', user_id if 'user'
-  action_url      String?                 @db.Text                                 // Optional URL to navigate to when clicked
-  created_by      String?                 @db.Uuid // Admin who created it. Null if system-generated
-  created_at      DateTime                @default(now()) @db.Timestamptz
-  
-  sender          User?                   @relation("NotificationSender", fields: [created_by], references: [id], onDelete: SetNull)
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String   @db.VarChar(255)
+  message         String   @db.Text
+  type            String   @default("announcement") @db.VarChar(50) // announcement, event_reminder, system
+  target_type     String   @default("user") @db.VarChar(50) // all, church_unit, user
+  target_id       String?  @db.Uuid
+  action_url      String?  @db.Text
+  created_by      String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz
+
+  sender          User?    @relation("NotificationSender", fields: [created_by], references: [id], onDelete: SetNull)
   recipients      NotificationRecipient[]
 
+  @@index([target_type, target_id])
   @@map("notifications")
 }
 
 model NotificationRecipient {
-  notification_id String       @db.Uuid
-  user_id         String       @db.Uuid
-  is_read         Boolean      @default(false)
-  read_at         DateTime?    @db.Timestamptz
-  
+  notification_id String   @db.Uuid
+  user_id         String   @db.Uuid
+  is_read         Boolean  @default(false)
+  read_at         DateTime? @db.Timestamptz
+
   notification    Notification @relation(fields: [notification_id], references: [id], onDelete: Cascade)
   user            User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([notification_id, user_id])
   @@map("notification_recipients")
+}
+
+// ---------------------------------------------------------
+// 9. HOUSEHOLD & FAMILY RELATIONSHIP
+// ---------------------------------------------------------
+
+model Household {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  address     String?  @db.Text
+  phone       String?  @db.VarChar(20)
+  note        String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  members     HouseholdMember[]
+
+  @@map("households")
+}
+
+model HouseholdMember {
+  household_id String   @db.Uuid
+  user_id      String   @db.Uuid
+  role         String?  @db.VarChar(50) // head, spouse, child, parent, relative
+  joined_at    DateTime @default(now()) @db.Timestamptz
+
+  household    Household @relation(fields: [household_id], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([household_id, user_id])
+  @@map("household_members")
 }
 ```
