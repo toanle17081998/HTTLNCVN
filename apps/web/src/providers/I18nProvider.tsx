@@ -19,7 +19,7 @@ import {
 type I18nContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, params?: Record<string, string>) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -87,7 +87,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
   const value = useMemo<I18nContextValue>(() => {
     return {
       locale,
-      setLocale(nextLocale) {
+      setLocale(nextLocale: Locale) {
         updateClientLocale(nextLocale);
 
         try {
@@ -97,8 +97,16 @@ export function I18nProvider({ children }: I18nProviderProps) {
         }
         document.documentElement.lang = nextLocale;
       },
-      t(key) {
-        return messages[locale][key] ?? messages[defaultLocale][key];
+      t(key: TranslationKey, params?: Record<string, string>) {
+        let value: string = messages[locale][key] ?? messages[defaultLocale][key];
+
+        if (params) {
+          Object.entries(params).forEach(([k, v]) => {
+            value = value.replaceAll(`{${k}}`, v);
+          });
+        }
+
+        return value;
       },
     };
   }, [locale]);

@@ -246,6 +246,18 @@ export function HomePage() {
                 {hero.secondaryCta.label}
               </Link>
             </div>
+            <Link
+              className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3 text-sm leading-6 text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--text-primary)]"
+              href="/about"
+            >
+              <span className="block font-semibold text-[var(--text-primary)]">
+                About HTNC
+              </span>
+              <span>
+                Read the public article about our learning focus, community, and
+                why this platform exists.
+              </span>
+            </Link>
             <div className="grid gap-3 sm:grid-cols-3">
               {hero.stats.map((stat) => (
                 <div

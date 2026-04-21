@@ -3,17 +3,10 @@
 import { PageLayout } from "@/components/layout";
 import { Button, Card, cn } from "@/components/ui";
 import {
-  accessProfiles,
+  ACCESS_FLOW,
   useAuth,
   type AccessProfile,
 } from "@/providers/AuthProvider";
-
-const accessFlow: AccessProfile[] = [
-  accessProfiles.guest,
-  accessProfiles["church-member"],
-  accessProfiles["church-admin"],
-  accessProfiles["system-admin"],
-];
 
 function roleActionLabel(profile: AccessProfile) {
   if (profile.role === "guest") {
@@ -34,7 +27,7 @@ export function AuthPage() {
     >
       <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
         <div className="grid gap-4 md:grid-cols-2">
-          {accessFlow.map((profile) => {
+          {ACCESS_FLOW.map((profile) => {
             const isActive = profile.role === accessRole;
 
             return (

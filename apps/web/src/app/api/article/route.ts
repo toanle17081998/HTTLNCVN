@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-type BlogPayload = {
+type ArticlePayload = {
   title?: unknown;
   excerpt?: unknown;
   category?: unknown;
@@ -10,10 +10,10 @@ type BlogPayload = {
 };
 
 export async function POST(request: Request) {
-  let payload: BlogPayload;
+  let payload: ArticlePayload;
 
   try {
-    payload = (await request.json()) as BlogPayload;
+    payload = (await request.json()) as ArticlePayload;
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON payload." },
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json(
     {
-      blog: {
+      article: {
         id: crypto.randomUUID(),
         title: payload.title.trim(),
         excerpt: typeof payload.excerpt === "string" ? payload.excerpt.trim() : "",

@@ -1,5 +1,6 @@
 export { AppShell } from "./AppShell";
 export { Breadcrumb } from "./Breadcrumb";
+export { Footer } from "./Footer";
 export { Header } from "./Header";
 export { LanguageToggle } from "./LanguageToggle";
 export { PageHeader } from "./PageHeader";

@@ -8,34 +8,29 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import {
+  ACCESS_PROFILES,
+  ROLES,
+  can,
+  canAny,
+  isAccessRole,
+  type AccessProfile,
+  type AccessRole,
+  type Permission,
+} from "@/lib/rbac";
 
-export type AccessRole =
-  | "guest"
-  | "church-member"
-  | "church-admin"
-  | "system-admin";
+export { ACCESS_FLOW, ACCESS_PROFILES, PERMISSIONS, ROLES } from "@/lib/rbac";
+export type { AccessProfile, AccessRole, Permission } from "@/lib/rbac";
 
-export type AuthUser = {
-  id: string;
-  displayName: string;
-  email: string;
-  role: Exclude<AccessRole, "guest">;
-};
-
-export type AccessProfile = {
-  role: AccessRole;
-  label: string;
-  shortLabel: string;
-  description: string;
-  capabilities: string[];
-  user: AuthUser | null;
-};
+export type AuthUser = NonNullable<AccessProfile["user"]>;
 
 type AuthContextValue = {
   accessRole: AccessRole;
   currentProfile: AccessProfile;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  can: (permission: Permission) => boolean;
+  canAny: (permissions: readonly Permission[]) => boolean;
   switchRole: (role: AccessRole) => void;
   continueAsGuest: () => void;
   logout: () => void;
@@ -45,86 +40,7 @@ const storageKey = "httlncvn.accessRole";
 const listeners = new Set<() => void>();
 let clientAccessRole: AccessRole | null = null;
 
-export const accessProfiles: Record<AccessRole, AccessProfile> = {
-  guest: {
-    role: "guest",
-    label: "Guest user",
-    shortLabel: "Guest",
-    description:
-      "Public visitor access for browsing homepage, public courses, blog content, and events.",
-    capabilities: [
-      "View public homepage content",
-      "Browse public lectures, courses, and events",
-      "Open the login flow when ready",
-    ],
-    user: null,
-  },
-  "church-member": {
-    role: "church-member",
-    label: "Church member",
-    shortLabel: "Member",
-    description:
-      "Member access for personal profile, notifications, prayer journal, and community participation.",
-    capabilities: [
-      "Manage personal member profile",
-      "Use prayer journal and notifications",
-      "Join member-facing courses and events",
-    ],
-    user: {
-      id: "demo-church-member",
-      displayName: "Demo Church Member",
-      email: "member@httlncvn.local",
-      role: "church-member",
-    },
-  },
-  "church-admin": {
-    role: "church-admin",
-    label: "Church admin",
-    shortLabel: "Church Admin",
-    description:
-      "Church staff access for publishing content, managing events, and supporting members.",
-    capabilities: [
-      "Create and publish church content",
-      "Manage events, courses, and member records",
-      "Review notifications and ministry workflows",
-    ],
-    user: {
-      id: "demo-church-admin",
-      displayName: "Demo Church Admin",
-      email: "church-admin@httlncvn.local",
-      role: "church-admin",
-    },
-  },
-  "system-admin": {
-    role: "system-admin",
-    label: "System admin",
-    shortLabel: "System Admin",
-    description:
-      "Platform operator access for system-wide configuration, data operations, and admin oversight.",
-    capabilities: [
-      "Configure platform-wide settings",
-      "Oversee all church workspaces",
-      "Perform system administration tasks",
-    ],
-    user: {
-      id: "demo-system-admin",
-      displayName: "Demo System Admin",
-      email: "system-admin@httlncvn.local",
-      role: "system-admin",
-    },
-  },
-};
-
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function isAccessRole(value: string | null): value is AccessRole {
-  return (
-    value === "guest" ||
-    value === "church-member" ||
-    value === "church-admin" ||
-    value === "system-admin"
-  );
-}
 
 function getPreferredAccessRole(): AccessRole {
   try {
@@ -134,10 +50,10 @@ function getPreferredAccessRole(): AccessRole {
       return savedRole;
     }
   } catch {
-    return "guest";
+    return ROLES.guest;
   }
 
-  return "guest";
+  return ROLES.guest;
 }
 
 function getAccessRoleSnapshot() {
@@ -147,7 +63,7 @@ function getAccessRoleSnapshot() {
 }
 
 function getServerAccessRoleSnapshot(): AccessRole {
-  return "guest";
+  return ROLES.guest;
 }
 
 function subscribeToAccessRole(listener: () => void) {
@@ -178,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getAccessRoleSnapshot,
     getServerAccessRoleSnapshot,
   );
-  const currentProfile = accessProfiles[accessRole];
+  const currentProfile = ACCESS_PROFILES[accessRole];
 
   useEffect(() => {
     document.documentElement.dataset.accessRole = accessRole;
@@ -189,15 +105,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessRole,
       currentProfile,
       user: currentProfile.user,
-      isAuthenticated: accessRole !== "guest",
+      isAuthenticated: accessRole !== ROLES.guest,
+      can(permission) {
+        return can(accessRole, permission);
+      },
+      canAny(permissions) {
+        return canAny(accessRole, permissions);
+      },
       switchRole(role) {
         updateAccessRole(role);
       },
       continueAsGuest() {
-        updateAccessRole("guest");
+        updateAccessRole(ROLES.guest);
       },
       logout() {
-        updateAccessRole("guest");
+        updateAccessRole(ROLES.guest);
       },
     };
   }, [accessRole, currentProfile]);

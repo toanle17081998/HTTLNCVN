@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button, cn } from "@/components/ui";
-import { accessProfiles, useAuth, type AccessRole } from "@/providers/AuthProvider";
+import { ACCESS_FLOW, ROLES, useAuth } from "@/providers/AuthProvider";
+import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
@@ -15,16 +16,34 @@ type HeaderProps = {
 
 export function Header({ pathname }: HeaderProps) {
   const { t } = useTranslation();
-  const { accessRole, currentProfile, isAuthenticated, logout, switchRole, user } =
-    useAuth();
+  const {
+    accessRole,
+    can,
+    canAny,
+    currentProfile,
+    isAuthenticated,
+    logout,
+    switchRole,
+    user,
+  } = useAuth();
   const settingsNavItem = navItems.find((item) => item.href === "/auth");
-  const menuNavItems = navItems.filter((item) => item.href !== "/auth");
+  const menuNavItems = navItems.filter(
+    (item) =>
+      item.href !== "/auth" &&
+      (!item.permissions || canAny(item.permissions)),
+  );
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const roleOptions = Object.values(accessProfiles);
+  const canCreateContent = canAny([
+    PERMISSIONS.manageArticle,
+    PERMISSIONS.manageAbout,
+    PERMISSIONS.manageCourses,
+    PERMISSIONS.manageEvents,
+  ]);
+  const canPublish = can(PERMISSIONS.manageArticle);
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
@@ -99,7 +118,7 @@ export function Header({ pathname }: HeaderProps) {
 
         <nav
           aria-label="Primary"
-          className="mx-auto grid w-full max-w-4xl auto-cols-fr grid-flow-col gap-1 overflow-x-auto px-24 sm:px-28 lg:px-0"
+          className="mx-auto flex w-full max-w-3xl min-w-0 flex-nowrap justify-center gap-1 px-24 sm:px-28 lg:px-0"
         >
           {menuNavItems.map((item) => {
             const isActive =
@@ -111,7 +130,7 @@ export function Header({ pathname }: HeaderProps) {
               <Link
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "rounded-md px-3 py-2 text-center text-sm font-semibold transition",
+                  "min-w-0 rounded-md px-2 py-2 text-center text-xs font-semibold transition sm:px-3 sm:text-sm",
                   isActive
                     ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
                     : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
@@ -119,7 +138,7 @@ export function Header({ pathname }: HeaderProps) {
                 href={item.href}
                 key={item.href}
               >
-                {t(item.labelKey)}
+                <span className="block truncate">{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -155,7 +174,7 @@ export function Header({ pathname }: HeaderProps) {
                 </p>
               </div>
               <div className="grid gap-1" role="group" aria-label="Access role">
-                {roleOptions.map((profile) => {
+                {ACCESS_FLOW.map((profile) => {
                   const isActive = profile.role === accessRole;
 
                   return (
@@ -168,7 +187,7 @@ export function Header({ pathname }: HeaderProps) {
                           : "text-[var(--text-secondary)]",
                       )}
                       key={profile.role}
-                      onClick={() => switchRole(profile.role as AccessRole)}
+                      onClick={() => switchRole(profile.role)}
                       type="button"
                     >
                       {profile.shortLabel}
@@ -183,7 +202,7 @@ export function Header({ pathname }: HeaderProps) {
                   onClick={() => setSettingsOpen(false)}
                   role="menuitem"
                 >
-                  {t(settingsNavItem.labelKey)}
+                  Access flow
                 </Link>
               ) : null}
               {isAuthenticated ? (
@@ -192,16 +211,18 @@ export function Header({ pathname }: HeaderProps) {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => switchRole("church-member")}
+                  onClick={() => switchRole(ROLES.churchMember)}
                   size="sm"
                 >
                   Log in member
                 </Button>
               )}
-              <Button size="sm" variant="secondary">
-                {t("action.newItem")}
-              </Button>
-              <Button size="sm">{t("action.publish")}</Button>
+              {canCreateContent ? (
+                <Button size="sm" variant="secondary">
+                  {t("action.newItem")}
+                </Button>
+              ) : null}
+              {canPublish ? <Button size="sm">{t("action.publish")}</Button> : null}
             </div>
           ) : null}
         </div>

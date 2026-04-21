@@ -437,9 +437,8 @@ export function EventPage() {
           <div className="mt-5 grid gap-3">
             {monthEvents.map((event) => (
               <div
-                className="group relative cursor-pointer rounded-md border border-[var(--border-subtle)] p-4 transition-colors hover:bg-[var(--bg-base)]"
+                className="rounded-md border border-[var(--border-subtle)] p-4"
                 key={`${event.id}-${event.startsAt}`}
-                onClick={() => openViewModal(event)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -457,18 +456,15 @@ export function EventPage() {
                         {repeatLabel(event.repeat, t)}
                       </span>
                     </div>
-                    <h3 className="mt-2 text-base font-semibold text-[var(--text-primary)] transition-colors group-hover:text-[var(--brand-primary)]">
+                    <h3 className="mt-2 text-base font-semibold text-[var(--text-primary)]">
                       {event.title}
                     </h3>
                   </div>
                   {canManageEvents ? (
                     <button
                       aria-label={`Edit ${event.title}`}
-                      className="relative z-10 rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditModal(event);
-                      }}
+                      className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                      onClick={() => openEditModal(event)}
                       type="button"
                     >
                       <Edit3 aria-hidden="true" className="h-4 w-4" />
@@ -767,6 +763,270 @@ export function EventPage() {
           </form>
         </div>
       ) : null}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                  {t("event.config.eyebrow")}
+                </p>
+                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                  {viewingEvent
+                    ? viewingEvent.title
+                    : editingEventId
+                      ? t("event.config.title.edit")
+                      : t("event.config.title.add")}
+                </h2>
+              </div>
+              <button
+                aria-label="Close"
+                className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+                onClick={closeModal}
+                type="button"
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </button>
+            </div>
+
+            {viewingEvent ? (
+              <div className="grid gap-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span
+                    className="h-4 w-4 rounded-full"
+                    style={{ backgroundColor: viewingEvent.color }}
+                  />
+                  <span className="text-sm font-semibold uppercase text-[var(--text-secondary)]">
+                    {viewingEvent.audience === "public"
+                      ? t("event.form.audience.public")
+                      : t("event.form.audience.church")}
+                  </span>
+                  <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+                    {repeatLabel(viewingEvent.repeat, t)}
+                  </span>
+                </div>
+
+                <div className="grid gap-4 text-sm text-[var(--text-secondary)] sm:grid-cols-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--bg-base)] text-[var(--brand-primary)]">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--text-primary)]">
+                        {t("event.form.starts")}
+                      </p>
+                      <p>
+                        {formatEventDate(viewingEvent.startsAt, t)} @{" "}
+                        {formatEventTime(viewingEvent.startsAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--bg-base)] text-[var(--brand-primary)]">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--text-primary)]">
+                        {t("event.form.ends")}
+                      </p>
+                      <p>
+                        {formatEventDate(viewingEvent.endsAt, t)} @{" "}
+                        {formatEventTime(viewingEvent.endsAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 sm:col-span-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--bg-base)] text-[var(--brand-primary)]">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[var(--text-primary)]">
+                        {t("event.form.location")}
+                      </p>
+                      <p>{viewingEvent.location}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {viewingEvent.description ? (
+                  <div className="rounded-lg bg-[var(--bg-base)] p-4">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {t("event.form.description")}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                      {viewingEvent.description}
+                    </p>
+                  </div>
+                ) : null}
+
+                <div className="flex justify-end gap-3 border-t border-[var(--border-subtle)] pt-5">
+                  <Button onClick={closeModal} type="button" variant="secondary">
+                    {t("common.cancel")}
+                  </Button>
+                  {canManageEvents ? (
+                    <Button
+                      onClick={() => {
+                        const eventToEdit = viewingEvent;
+                        closeModal();
+                        openEditModal(eventToEdit);
+                      }}
+                    >
+                      <Edit3 className="mr-2 h-4 w-4" />
+                      {t("event.config.title.edit")}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <>
+              <FormField htmlFor="event-title" label={t("event.form.title")}>
+                <Input
+                  id="event-title"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
+                  }
+                  required
+                  value={form.title}
+                />
+              </FormField>
+              <FormField htmlFor="event-audience" label={t("event.form.audience")}>
+                <Select
+                  id="event-audience"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      audience: event.target.value as EventAudience,
+                    }))
+                  }
+                  value={form.audience}
+                >
+                  <option value="public">{t("event.form.audience.publicOption")}</option>
+                  <option value="church">{t("event.form.audience.churchOption")}</option>
+                </Select>
+              </FormField>
+              <FormField htmlFor="event-repeat" label={t("event.form.repeat")}>
+                <Select
+                  id="event-repeat"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      repeat: event.target.value as EventRepeat,
+                    }))
+                  }
+                  value={form.repeat}
+                >
+                  <option value="none">{t("event.form.repeat.noneOption")}</option>
+                  <option value="daily">{t("event.form.repeat.daily")}</option>
+                  <option value="weekly">{t("event.form.repeat.weekly")}</option>
+                  <option value="monthly">{t("event.form.repeat.monthly")}</option>
+                  <option value="weekdays">{t("event.form.repeat.weekdays")}</option>
+                </Select>
+              </FormField>
+              <FormField htmlFor="event-start" label={t("event.form.starts")}>
+                <Input
+                  id="event-start"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      startsAt: event.target.value,
+                    }))
+                  }
+                  required
+                  type="datetime-local"
+                  value={form.startsAt}
+                />
+              </FormField>
+              <FormField htmlFor="event-end" label={t("event.form.ends")}>
+                <Input
+                  id="event-end"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      endsAt: event.target.value,
+                    }))
+                  }
+                  required
+                  type="datetime-local"
+                  value={form.endsAt}
+                />
+              </FormField>
+              <FormField htmlFor="event-location" label={t("event.form.location")}>
+                <Input
+                  id="event-location"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      location: event.target.value,
+                    }))
+                  }
+                  required
+                  value={form.location}
+                />
+              </FormField>
+              <FormField htmlFor="event-color" label={t("event.form.color")}>
+                <div className="flex h-10 items-center gap-2">
+                  {eventColors.map((color) => (
+                    <button
+                      aria-label={`Use ${color}`}
+                      aria-pressed={form.color === color}
+                      className={cn(
+                        "h-8 w-8 rounded-md border-2 transition",
+                        form.color === color
+                          ? "border-[var(--text-primary)]"
+                          : "border-transparent",
+                      )}
+                      key={color}
+                      onClick={() =>
+                        setForm((current) => ({ ...current, color }))
+                      }
+                      style={{ backgroundColor: color }}
+                      type="button"
+                    />
+                  ))}
+                </div>
+              </FormField>
+              <FormField
+                htmlFor="event-description"
+                label={t("event.form.description")}
+                className="sm:col-span-2"
+              >
+                <Textarea
+                  id="event-description"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  value={form.description}
+                />
+              </FormField>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {editingEventId ? (
+                <Button onClick={deleteEvent} type="button" variant="danger">
+                  <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
+                  {t("event.action.delete")}
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2">
+                <Button onClick={closeModal} type="button" variant="secondary">
+                  {t("common.cancel")}
+                </Button>
+                <Button type="submit">
+                  {editingEventId ? t("event.action.saveChanges") : t("event.action.add")}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </form>
+    </div>
+  ) : null}
     </PageLayout>
   );
 }

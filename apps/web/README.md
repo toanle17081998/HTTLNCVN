@@ -7,10 +7,11 @@ Next.js frontend app for the HTNC Platform.
 ```text
 src/
 |-- app/                     # Next.js routes, root layout, thin page composition
+|   |-- about/
 |   |-- auth/
-|   |-- blog/
+|   |-- article/
 |   |-- course/
-|   |-- create-blog/
+|   |-- create-article/
 |   |-- event/
 |   |-- member/
 |   |-- notification/
@@ -28,7 +29,7 @@ src/
 |   `-- index.ts
 |-- modules/                 # UI/business by domain
 |   |-- auth/
-|   |-- blog/
+|   |-- article/
 |   |-- course/
 |   |-- event/
 |   |-- member/
@@ -36,7 +37,7 @@ src/
 |   |-- page/
 |   `-- prayer-journal/
 |-- providers/               # app-wide client providers
-|   |-- AuthProvider.tsx     # guest/member/admin/system-admin access roles
+|   |-- AuthProvider.tsx     # current access role and permission helpers
 |   `-- I18nProvider.tsx     # locale state and translations
 |-- styles/                  # global CSS variables and themes
 `-- types/                   # shared TypeScript types
@@ -44,16 +45,16 @@ src/
 
 ## Access Model
 
-The web app supports four access roles:
+The web app supports four access roles. Role and permission constants live in `src/lib/rbac.ts`; UI should use `useAuth().can()` or `useAuth().canAny()` instead of hard-coded role checks.
 
-- `guest`: the default public browsing mode. Guests can view public homepage, blog, courses, and events.
-- `church-member`: a logged-in member mode for profile, notifications, prayer journal, courses, and event participation.
-- `church-admin`: a church staff/admin mode for publishing content, managing events/courses, and supporting member workflows.
-- `system-admin`: a platform operator mode for system-wide configuration, cross-church oversight, and administrative operations.
+- `guest`: public landing, About Us article, footer contact information, public articles, and public event calendar. No comments, enrollment, or prayer journal access.
+- `church-member`: personal prayer journal CRUD, church-wide prayer sharing, course enrollment, lessons, quizzes/exams, certificates, internal articles/events, and personalized search.
+- `church-admin`: local church content management, LMS management, member enrollment, events, Telegram notifications, prayer moderation, and local member permissions.
+- `system-admin`: global role/permission schemas, system settings, integrations, database configuration, full data oversight, maintenance, backups, and security audits.
 
 `AuthProvider` is mounted in `src/app/layout.tsx`, so all routes can read access state with `useAuth()`. The current implementation uses demo profiles in `src/providers/AuthProvider.tsx` until the real session API is connected.
 
-The header Settings menu exposes the current role and quick role switching. The `/auth` route provides the full four-path access flow for guest, church member, church admin, and system admin previews.
+The header Settings menu exposes the current role and quick role switching. Navigation items and primary actions are filtered by permission. The `/auth` route provides the full four-path access flow for guest, church member, church admin, and system admin previews.
 
 ## Conventions
 

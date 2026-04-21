@@ -391,7 +391,7 @@ function normalizeVideoUrl(value: string) {
   }
 }
 
-export function CreateBlogPage() {
+export function CreateArticlePage() {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<Range | null>(null);
@@ -447,7 +447,7 @@ export function CreateBlogPage() {
     const selectedElement = container instanceof Element ? container : null;
     const block = selectedElement?.closest("h2, h3, p, blockquote, li");
     const blockTag = block?.tagName.toLowerCase();
-    const selectedFigure = selectedElement?.closest(".blog-image-frame");
+    const selectedFigure = selectedElement?.closest(".article-image-frame");
     const selectedActionKeys: ToolbarItemKey[] = [];
 
     if (selectedElement?.closest("a")) {
@@ -462,7 +462,7 @@ export function CreateBlogPage() {
       selectedActionKeys.push("action:video");
     }
 
-    if (selectedElement?.closest(".blog-columns")) {
+    if (selectedElement?.closest(".article-columns")) {
       selectedActionKeys.push("action:columns");
     }
 
@@ -575,19 +575,19 @@ export function CreateBlogPage() {
       return;
     }
 
-    editor.querySelectorAll(".blog-columns").forEach((columns) => {
+    editor.querySelectorAll(".article-columns").forEach((columns) => {
       const columnsElement = columns as HTMLElement;
       const columnItems = Array.from(columns.children).filter(
         (child) =>
           child instanceof HTMLElement &&
-          !child.classList.contains("blog-columns-resize-handle"),
+          !child.classList.contains("article-columns-resize-handle"),
       );
 
       columnsElement.style.gridTemplateColumns ||=
         "calc(50% - 0.375rem) 0.75rem calc(50% - 0.375rem)";
 
       columnItems.forEach((column) => {
-        column.classList.add("blog-column");
+        column.classList.add("article-column");
 
         if (
           column.textContent?.trim() ||
@@ -603,11 +603,11 @@ export function CreateBlogPage() {
 
       if (
         columnItems.length >= 2 &&
-        !columns.querySelector(".blog-columns-resize-handle")
+        !columns.querySelector(".article-columns-resize-handle")
       ) {
         columnItems[0].insertAdjacentHTML(
           "afterend",
-          '<span class="blog-columns-resize-handle" contenteditable="false" aria-hidden="true"></span>',
+          '<span class="article-columns-resize-handle" contenteditable="false" aria-hidden="true"></span>',
         );
       }
     });
@@ -627,7 +627,7 @@ export function CreateBlogPage() {
         return;
       }
 
-      figure.classList.add("blog-image-frame");
+      figure.classList.add("article-image-frame");
       figure.setAttribute("contenteditable", "false");
       figure.setAttribute("draggable", "false");
       media.setAttribute("draggable", "false");
@@ -641,10 +641,10 @@ export function CreateBlogPage() {
         media.style.height = "auto";
       }
 
-      if (!figure.querySelector(".blog-image-resize-handle")) {
+      if (!figure.querySelector(".article-image-resize-handle")) {
         figure.insertAdjacentHTML(
           "beforeend",
-          '<span class="blog-image-resize-handle" aria-hidden="true"></span>',
+          '<span class="article-image-resize-handle" aria-hidden="true"></span>',
         );
       }
     });
@@ -667,10 +667,10 @@ export function CreateBlogPage() {
       return;
     }
 
-    editor.querySelectorAll(".blog-columns").forEach((columns) => {
+    editor.querySelectorAll(".article-columns").forEach((columns) => {
       const next = columns.nextElementSibling;
 
-      if (!next || next.classList.contains("blog-columns")) {
+      if (!next || next.classList.contains("article-columns")) {
         columns.insertAdjacentHTML("afterend", "<p><br></p>");
       }
     });
@@ -732,7 +732,7 @@ export function CreateBlogPage() {
       return null;
     }
 
-    const figure = container.closest(".blog-image-frame");
+    const figure = container.closest(".article-image-frame");
 
     if (figure instanceof HTMLElement && editor.contains(figure)) {
       return figure;
@@ -846,7 +846,7 @@ export function CreateBlogPage() {
             )}" controls preload="metadata" style="width:100%;height:auto;max-width:100%;"></video>`;
     }
 
-    const imageHtml = `<figure class="blog-image-frame" contenteditable="false" draggable="false" style="width:100%;max-width:100%;">${mediaHtml}${captionHtml}<span class="blog-image-resize-handle" aria-hidden="true"></span></figure><p><br></p>`;
+    const imageHtml = `<figure class="article-image-frame" contenteditable="false" draggable="false" style="width:100%;max-width:100%;">${mediaHtml}${captionHtml}<span class="article-image-resize-handle" aria-hidden="true"></span></figure><p><br></p>`;
 
     const placeholder =
       imageModal.mode === "insert" ? imagePlaceholderRef.current : null;
@@ -899,13 +899,13 @@ export function CreateBlogPage() {
       return false;
     }
 
-    const handle = target.closest(".blog-columns-resize-handle");
+    const handle = target.closest(".article-columns-resize-handle");
 
     if (!handle || !editor.contains(handle)) {
       return false;
     }
 
-    const columns = handle.closest(".blog-columns");
+    const columns = handle.closest(".article-columns");
 
     if (!(columns instanceof HTMLElement)) {
       return false;
@@ -933,7 +933,7 @@ export function CreateBlogPage() {
       return false;
     }
 
-    const handle = target.closest(".blog-image-resize-handle");
+    const handle = target.closest(".article-image-resize-handle");
 
     if (!handle || !editor.contains(handle)) {
       return false;
@@ -972,7 +972,7 @@ export function CreateBlogPage() {
       return;
     }
 
-    const column = target.closest(".blog-column");
+    const column = target.closest(".article-column");
 
     if (!column || !editor.contains(column) || column.textContent?.trim()) {
       return;
@@ -1001,7 +1001,7 @@ export function CreateBlogPage() {
     const target = event.target;
 
     if (target instanceof Element) {
-      const placeholder = target.closest(".blog-image-placeholder");
+      const placeholder = target.closest(".article-image-placeholder");
 
       if (placeholder && editor.contains(placeholder)) {
         const kind =
@@ -1054,19 +1054,19 @@ export function CreateBlogPage() {
 
   function addImage() {
     insertHtml(
-      `<div class="blog-image-placeholder" data-media-kind="image" contenteditable="false" role="button" tabindex="0">Click to import image from URL</div><p><br></p>`,
+      `<div class="article-image-placeholder" data-media-kind="image" contenteditable="false" role="button" tabindex="0">Click to import image from URL</div><p><br></p>`,
     );
   }
 
   function addVideo() {
     insertHtml(
-      `<div class="blog-image-placeholder" data-media-kind="video" contenteditable="false" role="button" tabindex="0">Click to import video from URL</div><p><br></p>`,
+      `<div class="article-image-placeholder" data-media-kind="video" contenteditable="false" role="button" tabindex="0">Click to import video from URL</div><p><br></p>`,
     );
   }
 
   function addColumns() {
     insertHtml(
-      `<div class="blog-columns" style="grid-template-columns:calc(50% - 0.375rem) 0.75rem calc(50% - 0.375rem);"><div class="blog-column"><p>First column</p></div><span class="blog-columns-resize-handle" contenteditable="false" aria-hidden="true"></span><div class="blog-column"><p>Second column</p></div></div><p><br></p>`,
+      `<div class="article-columns" style="grid-template-columns:calc(50% - 0.375rem) 0.75rem calc(50% - 0.375rem);"><div class="article-column"><p>First column</p></div><span class="article-columns-resize-handle" contenteditable="false" aria-hidden="true"></span><div class="article-column"><p>Second column</p></div></div><p><br></p>`,
     );
   }
 
@@ -1117,27 +1117,27 @@ export function CreateBlogPage() {
     };
 
     try {
-      const response = await fetch("/api/blog", {
+      const response = await fetch("/api/article", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-      const result = (await response.json()) as { error?: string; blog?: { id: string } };
+      const result = (await response.json()) as { error?: string; article?: { id: string } };
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Blog submit failed.");
+        throw new Error(result.error ?? "Article submit failed.");
       }
 
       setSubmitState({
         status: "success",
-        message: `Submitted JSON blog ${result.blog?.id ?? ""}`.trim(),
+        message: `Submitted JSON article ${result.article?.id ?? ""}`.trim(),
       });
     } catch (error) {
       setSubmitState({
         status: "error",
-        message: error instanceof Error ? error.message : "Blog submit failed.",
+        message: error instanceof Error ? error.message : "Article submit failed.",
       });
     } finally {
       setIsSubmitting(false);
@@ -1146,36 +1146,36 @@ export function CreateBlogPage() {
 
   return (
     <PageLayout
-      description={t("blog.create.description")}
-      eyebrow={t("page.blog.eyebrow")}
-      title={t("blog.create.title")}
+      description={t("article.create.description")}
+      eyebrow={t("page.article.eyebrow")}
+      title={t("article.create.title")}
     >
       <form className="grid gap-4 lg:grid-cols-[20rem_1fr]" onSubmit={handleSubmit}>
         <Card className="grid gap-4 p-5">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-            {t("blog.create.metadata")}
+            {t("article.create.metadata")}
           </h2>
-          <FormField htmlFor="blog-title" label={t("form.title")}>
+          <FormField htmlFor="article-title" label={t("form.title")}>
             <Input
-              id="blog-title"
+              id="article-title"
               onChange={(event) => setTitle(event.target.value)}
-              placeholder={t("blog.create.titlePlaceholder")}
+              placeholder={t("article.create.titlePlaceholder")}
               required
               value={title}
             />
           </FormField>
-          <FormField htmlFor="blog-excerpt" label="Excerpt">
+          <FormField htmlFor="article-excerpt" label="Excerpt">
             <Textarea
-              id="blog-excerpt"
+              id="article-excerpt"
               onChange={(event) => setExcerpt(event.target.value)}
-              placeholder={t("blog.create.excerptPlaceholder")}
+              placeholder={t("article.create.excerptPlaceholder")}
               rows={4}
               value={excerpt}
             />
           </FormField>
-          <FormField htmlFor="blog-category" label="Category">
+          <FormField htmlFor="article-category" label="Category">
             <Select
-              id="blog-category"
+              id="article-category"
               onChange={(event) => setCategory(event.target.value)}
               value={category}
             >
@@ -1185,11 +1185,11 @@ export function CreateBlogPage() {
               <option value="testimony">Testimony</option>
             </Select>
           </FormField>
-          <FormField htmlFor="blog-tags" label="Tags">
+          <FormField htmlFor="article-tags" label="Tags">
             <Input
-              id="blog-tags"
+              id="article-tags"
               onChange={(event) => setTags(event.target.value)}
-              placeholder={t("blog.create.tagsPlaceholder")}
+              placeholder={t("article.create.tagsPlaceholder")}
               value={tags}
             />
           </FormField>
@@ -1212,7 +1212,7 @@ export function CreateBlogPage() {
         <Card className="overflow-hidden">
           <div className="border-b border-[var(--border-subtle)] px-5 py-4">
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-              {t("blog.create.editor")}
+              {t("article.create.editor")}
             </h2>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
@@ -1321,7 +1321,7 @@ export function CreateBlogPage() {
             </div>
           </div>
           <div
-            className="min-h-[26rem] px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.blog-column]:min-h-24 [&_.blog-column]:rounded-md [&_.blog-column]:border [&_.blog-column]:border-dashed [&_.blog-column]:border-[var(--border-subtle)] [&_.blog-column]:px-3 [&_.blog-column]:py-2 [&_.blog-columns-resize-handle]:cursor-col-resize [&_.blog-columns-resize-handle]:rounded [&_.blog-columns-resize-handle]:bg-[var(--border-strong)] [&_.blog-columns-resize-handle]:transition [&_.blog-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.blog-columns]:grid [&_.blog-columns]:gap-0 [&_.blog-columns]:rounded-md [&_.blog-columns]:border [&_.blog-columns]:border-[var(--border-subtle)] [&_.blog-columns]:p-4 [&_.blog-image-frame]:relative [&_.blog-image-frame]:max-w-full [&_.blog-image-placeholder]:my-4 [&_.blog-image-placeholder]:cursor-pointer [&_.blog-image-placeholder]:rounded-md [&_.blog-image-placeholder]:border [&_.blog-image-placeholder]:border-dashed [&_.blog-image-placeholder]:border-[var(--brand-primary)] [&_.blog-image-placeholder]:bg-[var(--brand-muted)] [&_.blog-image-placeholder]:px-4 [&_.blog-image-placeholder]:py-10 [&_.blog-image-placeholder]:text-center [&_.blog-image-placeholder]:text-sm [&_.blog-image-placeholder]:font-semibold [&_.blog-image-placeholder]:text-[var(--brand-primary)] [&_.blog-image-resize-handle]:absolute [&_.blog-image-resize-handle]:bottom-2 [&_.blog-image-resize-handle]:right-2 [&_.blog-image-resize-handle]:h-5 [&_.blog-image-resize-handle]:w-5 [&_.blog-image-resize-handle]:cursor-nwse-resize [&_.blog-image-resize-handle]:rounded [&_.blog-image-resize-handle]:border [&_.blog-image-resize-handle]:border-white [&_.blog-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
+            className="min-h-[26rem] px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.article-column]:min-h-24 [&_.article-column]:rounded-md [&_.article-column]:border [&_.article-column]:border-dashed [&_.article-column]:border-[var(--border-subtle)] [&_.article-column]:px-3 [&_.article-column]:py-2 [&_.article-columns-resize-handle]:cursor-col-resize [&_.article-columns-resize-handle]:rounded [&_.article-columns-resize-handle]:bg-[var(--border-strong)] [&_.article-columns-resize-handle]:transition [&_.article-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.article-columns]:grid [&_.article-columns]:gap-0 [&_.article-columns]:rounded-md [&_.article-columns]:border [&_.article-columns]:border-[var(--border-subtle)] [&_.article-columns]:p-4 [&_.article-image-frame]:relative [&_.article-image-frame]:max-w-full [&_.article-image-placeholder]:my-4 [&_.article-image-placeholder]:cursor-pointer [&_.article-image-placeholder]:rounded-md [&_.article-image-placeholder]:border [&_.article-image-placeholder]:border-dashed [&_.article-image-placeholder]:border-[var(--brand-primary)] [&_.article-image-placeholder]:bg-[var(--brand-muted)] [&_.article-image-placeholder]:px-4 [&_.article-image-placeholder]:py-10 [&_.article-image-placeholder]:text-center [&_.article-image-placeholder]:text-sm [&_.article-image-placeholder]:font-semibold [&_.article-image-placeholder]:text-[var(--brand-primary)] [&_.article-image-resize-handle]:absolute [&_.article-image-resize-handle]:bottom-2 [&_.article-image-resize-handle]:right-2 [&_.article-image-resize-handle]:h-5 [&_.article-image-resize-handle]:w-5 [&_.article-image-resize-handle]:cursor-nwse-resize [&_.article-image-resize-handle]:rounded [&_.article-image-resize-handle]:border [&_.article-image-resize-handle]:border-white [&_.article-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
             contentEditable
             onInput={syncEditor}
             onClick={focusEditableSpace}
