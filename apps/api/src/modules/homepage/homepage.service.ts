@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { getEnv } from '../../config/env';
-import type { HomepagePayload, HomepageQuery } from './homepage.types';
 import { HomepageRepository } from './homepage.repository';
+import type { HomepageQuery, HomepageResult } from './homepage.types';
 
 type HomepageCacheEntry = {
   expiresAt: number;
-  payload: HomepagePayload;
+  result: HomepageResult;
 };
 
 @Injectable()
@@ -16,27 +16,32 @@ export class HomepageService {
 
   constructor(private readonly homepageRepository: HomepageRepository) {}
 
-  async getHomepage(query: HomepageQuery): Promise<HomepagePayload> {
+  async getHomepage(query: HomepageQuery): Promise<HomepageResult> {
     const cacheKey = this.buildCacheKey(query);
     const now = Date.now();
     const cachedEntry = this.cache.get(cacheKey);
 
     if (cachedEntry && cachedEntry.expiresAt > now) {
-      return cachedEntry.payload;
+      return cachedEntry.result;
     }
 
     if (cachedEntry) {
       this.cache.delete(cacheKey);
     }
 
-    const payload = await this.homepageRepository.getHomepagePayload(query);
+    const data = await this.homepageRepository.getHomepageData(query);
 
-    this.cache.set(cacheKey, {
-      expiresAt: now + this.cacheTtlMs,
-      payload,
-    });
+    const result: HomepageResult = {
+      data,
+      meta: {
+        generated_at: new Date().toISOString(),
+        included: query.include,
+      },
+    };
 
-    return payload;
+    this.cache.set(cacheKey, { expiresAt: now + this.cacheTtlMs, result });
+
+    return result;
   }
 
   private buildCacheKey(query: HomepageQuery): string {

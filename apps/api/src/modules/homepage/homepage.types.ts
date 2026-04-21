@@ -7,56 +7,63 @@ export type HomepageQuery = {
   upcomingEventsLimit: number;
 };
 
-export type HomepagePayload = {
-  data: {
-    featured_courses: Array<{
-      cover_image_url: string | null;
-      estimated_duration_minutes: number;
-      id: string;
-      instructor: {
-        id: string;
-        name: string;
-      };
-      lesson_count: number;
-      level: string;
-      slug: string;
-      summary: string | null;
-      title: string;
-    }>;
-    hero: {
-      cta: {
-        href: string;
-        label: string;
-      };
-      headline: string;
-      subheadline: string;
+export type HomepageAuthor = {
+  id: string;
+  name: string;
+};
+
+export type HomepagePost = {
+  author: HomepageAuthor;
+  cover_image_url: string | null;
+  excerpt: string | null;
+  id: string;
+  published_at: string;
+  slug: string;
+  title: string;
+};
+
+export type HomepageCourse = {
+  cover_image_url: string | null;
+  estimated_duration_minutes: number;
+  id: string;
+  instructor: HomepageAuthor;
+  lesson_count: number;
+  level: string;
+  slug: string;
+  summary: string | null;
+  title: string;
+};
+
+export type HomepageEvent = {
+  cover_image_url: string | null;
+  ends_at: string;
+  id: string;
+  location: string | null;
+  slug: string;
+  starts_at: string;
+  title: string;
+};
+
+export type HomepageData = {
+  featured_courses: HomepageCourse[];
+  hero: {
+    cta: {
+      href: string;
+      label: string;
     };
-    latest_posts: Array<{
-      author: {
-        id: string;
-        name: string;
-      };
-      cover_image_url: string | null;
-      excerpt: string | null;
-      id: string;
-      published_at: string;
-      slug: string;
-      title: string;
-    }>;
-    upcoming_events: Array<{
-      cover_image_url: string | null;
-      ends_at: string | null;
-      excerpt: string | null;
-      id: string;
-      location_name: string | null;
-      slug: string;
-      starts_at: string;
-      title: string;
-    }>;
+    headline: string;
+    subheadline: string;
   };
-  meta: {
-    generated_at: string;
-    included: HomepageIncludeKey[];
-  };
-  success: true;
+  latest_posts: HomepagePost[];
+  upcoming_events: HomepageEvent[];
+};
+
+export type HomepageMeta = {
+  generated_at: string;
+  included: HomepageIncludeKey[];
+};
+
+export type HomepageResult = {
+  data: HomepageData;
+  meta: HomepageMeta;
 };
