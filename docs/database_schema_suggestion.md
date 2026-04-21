@@ -25,6 +25,17 @@ datasource db {
 // 1. AUTHENTICATION & RBAC
 // ---------------------------------------------------------
 
+enum PrayerVisibility {
+  public
+  private
+  shared
+}
+
+enum PrayerStatus {
+  open
+  closed
+}
+
 model User {
   id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username      String        @unique @db.VarChar(50)
@@ -56,7 +67,45 @@ model User {
   notifications_sent    Notification[]          @relation("NotificationSender")
   notifications_inbox   NotificationRecipient[]
 
+  // Prayer relations
+  prayers_created   Prayer[]
+  prayers_shared_with PrayerShare[]
+
   @@map("users")
+}
+
+model Prayer {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String?           @db.VarChar(255)
+  content       String            @db.Text
+  visibility    PrayerVisibility  @default(private)
+  status        PrayerStatus      @default(open)
+  close_reason  String?           @db.Text
+  created_by    String            @db.Uuid
+  created_at    DateTime          @default(now()) @db.Timestamptz
+  updated_at    DateTime          @default(now()) @updatedAt @db.Timestamptz
+  closed_at     DateTime?         @db.Timestamptz
+
+  creator       User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  shared_with   PrayerShare[]
+
+  @@index([created_by])
+  @@index([visibility])
+  @@index([status])
+  @@map("prayers")
+}
+
+model PrayerShare {
+  prayer_id     String    @db.Uuid
+  user_id       String    @db.Uuid
+  shared_at     DateTime  @default(now()) @db.Timestamptz
+
+  prayer        Prayer    @relation(fields: [prayer_id], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([prayer_id, user_id])
+  @@index([user_id])
+  @@map("prayer_shares")
 }
 
 model Profile {
