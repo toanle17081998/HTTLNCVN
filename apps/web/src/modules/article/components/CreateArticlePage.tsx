@@ -72,6 +72,7 @@ type ColumnResizeState = {
 };
 
 type MediaKind = "image" | "video";
+type EditorMode = "rich" | "markdown";
 
 type ImageModalState =
   | { mode: "insert"; kind: MediaKind }
@@ -337,6 +338,109 @@ function normalizeImageUrl(value: string) {
   return normalizeWebUrl(value);
 }
 
+function renderInlineMarkdown(value: string) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2">$1</a>');
+}
+
+function markdownToHtml(markdown: string) {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  const html: string[] = [];
+  let listType: "ul" | "ol" | null = null;
+  const codeBlockRef: { current: string[] | null } = { current: null };
+
+  function closeList() {
+    if (listType) {
+      html.push(`</${listType}>`);
+      listType = null;
+    }
+  }
+
+  lines.forEach((line) => {
+    if (line.trim().startsWith("```")) {
+      if (codeBlockRef.current) {
+        html.push(
+          `<pre><code>${escapeHtml(codeBlockRef.current.join("\n"))}</code></pre>`,
+        );
+        codeBlockRef.current = null;
+      } else {
+        closeList();
+        codeBlockRef.current = [];
+      }
+      return;
+    }
+
+    if (codeBlockRef.current) {
+      codeBlockRef.current.push(line);
+      return;
+    }
+
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      closeList();
+      return;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+
+    if (headingMatch) {
+      closeList();
+      const level = headingMatch[1].length + 1;
+      html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
+      return;
+    }
+
+    const quoteMatch = trimmed.match(/^>\s+(.+)$/);
+
+    if (quoteMatch) {
+      closeList();
+      html.push(`<blockquote>${renderInlineMarkdown(quoteMatch[1])}</blockquote>`);
+      return;
+    }
+
+    const unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
+
+    if (unorderedMatch) {
+      if (listType !== "ul") {
+        closeList();
+        html.push("<ul>");
+        listType = "ul";
+      }
+      html.push(`<li>${renderInlineMarkdown(unorderedMatch[1])}</li>`);
+      return;
+    }
+
+    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+
+    if (orderedMatch) {
+      if (listType !== "ol") {
+        closeList();
+        html.push("<ol>");
+        listType = "ol";
+      }
+      html.push(`<li>${renderInlineMarkdown(orderedMatch[1])}</li>`);
+      return;
+    }
+
+    closeList();
+    html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+  });
+
+  closeList();
+
+  if (codeBlockRef.current) {
+    html.push(
+      `<pre><code>${escapeHtml(codeBlockRef.current.join("\n"))}</code></pre>`,
+    );
+  }
+
+  return html.join("");
+}
+
 function getYouTubeVideoId(url: URL) {
   if (url.hostname.includes("youtu.be")) {
     return url.pathname.split("/").filter(Boolean)[0] ?? "";
@@ -403,6 +507,8 @@ export function CreateArticlePage() {
   const [category, setCategory] = useState("community");
   const [tags, setTags] = useState("");
   const [contentHtml, setContentHtml] = useState("");
+  const [editorMode, setEditorMode] = useState<EditorMode>("rich");
+  const [markdownContent, setMarkdownContent] = useState("");
   const [imageModal, setImageModal] = useState<ImageModalState | null>(null);
   const [imageForm, setImageForm] = useState<ImageFormState>({
     url: "",
@@ -1098,12 +1204,42 @@ export function CreateArticlePage() {
     setTableModalOpen(false);
   }
 
+  function switchEditorMode(nextMode: EditorMode) {
+    if (nextMode === editorMode) {
+      return;
+    }
+
+    if (nextMode === "markdown") {
+      setMarkdownContent(editorRef.current?.innerText ?? markdownContent);
+      setEditorMode("markdown");
+      setActiveToolbarKeys([]);
+      return;
+    }
+
+    const nextHtml = markdownToHtml(markdownContent);
+
+    setContentHtml(nextHtml);
+    setEditorMode("rich");
+    window.requestAnimationFrame(() => {
+      if (editorRef.current) {
+        editorRef.current.innerHTML = nextHtml || "<p><br></p>";
+        syncEditor();
+      }
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setSubmitState({ status: "idle", message: "" });
 
-    const contentText = editorRef.current?.innerText.trim() ?? "";
+    const isMarkdownMode = editorMode === "markdown";
+    const nextContentHtml = isMarkdownMode
+      ? markdownToHtml(markdownContent)
+      : editorRef.current?.innerHTML ?? contentHtml;
+    const contentText = isMarkdownMode
+      ? markdownContent.trim()
+      : editorRef.current?.innerText.trim() ?? "";
     const payload = {
       title,
       excerpt,
@@ -1112,7 +1248,7 @@ export function CreateArticlePage() {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
-      contentHtml: editorRef.current?.innerHTML ?? contentHtml,
+      contentHtml: nextContentHtml,
       contentText,
     };
 
@@ -1150,7 +1286,10 @@ export function CreateArticlePage() {
       eyebrow={t("page.article.eyebrow")}
       title={t("article.create.title")}
     >
-      <form className="grid gap-4 lg:grid-cols-[20rem_1fr]" onSubmit={handleSubmit}>
+      <form
+        className="grid gap-4 lg:grid-cols-[20rem_1fr] lg:items-start"
+        onSubmit={handleSubmit}
+      >
         <Card className="grid gap-4 p-5">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">
             {t("article.create.metadata")}
@@ -1209,13 +1348,46 @@ export function CreateArticlePage() {
           ) : null}
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="border-b border-[var(--border-subtle)] px-5 py-4">
+        <Card className="flex min-h-[32rem] flex-col overflow-hidden lg:max-h-[calc(100vh-9rem)]">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-5 py-4">
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               {t("article.create.editor")}
             </h2>
+            <div
+              aria-label="Editor mode"
+              className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1"
+              role="group"
+            >
+              <button
+                aria-pressed={editorMode === "rich"}
+                className={cn(
+                  "h-8 rounded px-3 text-sm font-semibold transition",
+                  editorMode === "rich"
+                    ? "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
+                )}
+                onClick={() => switchEditorMode("rich")}
+                type="button"
+              >
+                Rich
+              </button>
+              <button
+                aria-pressed={editorMode === "markdown"}
+                className={cn(
+                  "h-8 rounded px-3 text-sm font-semibold transition",
+                  editorMode === "markdown"
+                    ? "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
+                )}
+                onClick={() => switchEditorMode("markdown")}
+                type="button"
+              >
+                Markdown
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
+          {editorMode === "rich" ? (
+            <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
             {toolbarGroups.map((group, index) => (
               <div
                 className="inline-flex shrink-0 items-center rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-1 shadow-sm"
@@ -1319,19 +1491,30 @@ export function CreateArticlePage() {
                 Table
               </button>
             </div>
-          </div>
-          <div
-            className="min-h-[26rem] overflow-x-auto px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.article-column]:min-h-24 [&_.article-column]:rounded-md [&_.article-column]:border [&_.article-column]:border-dashed [&_.article-column]:border-[var(--border-subtle)] [&_.article-column]:px-3 [&_.article-column]:py-2 [&_.article-columns-resize-handle]:cursor-col-resize [&_.article-columns-resize-handle]:rounded [&_.article-columns-resize-handle]:bg-[var(--border-strong)] [&_.article-columns-resize-handle]:transition [&_.article-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.article-columns]:grid [&_.article-columns]:gap-0 [&_.article-columns]:rounded-md [&_.article-columns]:border [&_.article-columns]:border-[var(--border-subtle)] [&_.article-columns]:p-4 [&_.article-image-frame]:relative [&_.article-image-frame]:max-w-full [&_.article-image-placeholder]:my-4 [&_.article-image-placeholder]:cursor-pointer [&_.article-image-placeholder]:rounded-md [&_.article-image-placeholder]:border [&_.article-image-placeholder]:border-dashed [&_.article-image-placeholder]:border-[var(--brand-primary)] [&_.article-image-placeholder]:bg-[var(--brand-muted)] [&_.article-image-placeholder]:px-4 [&_.article-image-placeholder]:py-10 [&_.article-image-placeholder]:text-center [&_.article-image-placeholder]:text-sm [&_.article-image-placeholder]:font-semibold [&_.article-image-placeholder]:text-[var(--brand-primary)] [&_.article-image-resize-handle]:absolute [&_.article-image-resize-handle]:bottom-2 [&_.article-image-resize-handle]:right-2 [&_.article-image-resize-handle]:h-5 [&_.article-image-resize-handle]:w-5 [&_.article-image-resize-handle]:cursor-nwse-resize [&_.article-image-resize-handle]:rounded [&_.article-image-resize-handle]:border [&_.article-image-resize-handle]:border-white [&_.article-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
-            contentEditable
-            onInput={syncEditor}
-            onClick={focusEditableSpace}
-            onKeyUp={saveSelection}
-            onMouseDown={handleEditorMouseDown}
-            onMouseUp={saveSelection}
-            ref={editorRef}
-            role="textbox"
-            suppressContentEditableWarning
-          />
+            </div>
+          ) : null}
+          {editorMode === "rich" ? (
+            <div
+              className="min-h-[26rem] flex-1 overflow-y-auto overflow-x-auto px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.article-column]:min-h-24 [&_.article-column]:rounded-md [&_.article-column]:border [&_.article-column]:border-dashed [&_.article-column]:border-[var(--border-subtle)] [&_.article-column]:px-3 [&_.article-column]:py-2 [&_.article-columns-resize-handle]:cursor-col-resize [&_.article-columns-resize-handle]:rounded [&_.article-columns-resize-handle]:bg-[var(--border-strong)] [&_.article-columns-resize-handle]:transition [&_.article-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.article-columns]:grid [&_.article-columns]:gap-0 [&_.article-columns]:rounded-md [&_.article-columns]:border [&_.article-columns]:border-[var(--border-subtle)] [&_.article-columns]:p-4 [&_.article-image-frame]:relative [&_.article-image-frame]:max-w-full [&_.article-image-placeholder]:my-4 [&_.article-image-placeholder]:cursor-pointer [&_.article-image-placeholder]:rounded-md [&_.article-image-placeholder]:border [&_.article-image-placeholder]:border-dashed [&_.article-image-placeholder]:border-[var(--brand-primary)] [&_.article-image-placeholder]:bg-[var(--brand-muted)] [&_.article-image-placeholder]:px-4 [&_.article-image-placeholder]:py-10 [&_.article-image-placeholder]:text-center [&_.article-image-placeholder]:text-sm [&_.article-image-placeholder]:font-semibold [&_.article-image-placeholder]:text-[var(--brand-primary)] [&_.article-image-resize-handle]:absolute [&_.article-image-resize-handle]:bottom-2 [&_.article-image-resize-handle]:right-2 [&_.article-image-resize-handle]:h-5 [&_.article-image-resize-handle]:w-5 [&_.article-image-resize-handle]:cursor-nwse-resize [&_.article-image-resize-handle]:rounded [&_.article-image-resize-handle]:border [&_.article-image-resize-handle]:border-white [&_.article-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
+              contentEditable
+              onInput={syncEditor}
+              onClick={focusEditableSpace}
+              onKeyUp={saveSelection}
+              onMouseDown={handleEditorMouseDown}
+              onMouseUp={saveSelection}
+              ref={editorRef}
+              role="textbox"
+              suppressContentEditableWarning
+            />
+          ) : (
+            <textarea
+              aria-label="Markdown content"
+              className="min-h-[26rem] flex-1 resize-none overflow-y-auto bg-[var(--bg-surface)] px-5 py-4 font-mono text-sm leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
+              onChange={(event) => setMarkdownContent(event.target.value)}
+              placeholder="## Heading&#10;&#10;Write Markdown here..."
+              value={markdownContent}
+            />
+          )}
         </Card>
       </form>
       {imageModal ? (
