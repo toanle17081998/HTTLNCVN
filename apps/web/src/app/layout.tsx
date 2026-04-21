@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { I18nProvider } from "@/providers/I18nProvider";
 import "@/styles/globals.css";
 
@@ -31,7 +32,9 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <I18nProvider>
-          <AppShell>{children}</AppShell>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
         </I18nProvider>
       </body>
     </html>
