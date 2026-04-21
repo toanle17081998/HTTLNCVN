@@ -14,14 +14,14 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-5 border-b border-[var(--border-subtle)] pb-6 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-3xl">
+    <div className="flex min-w-0 flex-col gap-5 border-b border-[var(--border-subtle)] pb-6 md:flex-row md:items-end md:justify-between">
+      <div className="min-w-0 max-w-3xl">
         {eyebrow ? (
           <p className="text-sm font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="mt-2 text-3xl font-semibold leading-tight text-[var(--text-primary)] sm:text-4xl">
+        <h1 className="mt-2 break-words text-3xl font-semibold leading-tight text-[var(--text-primary)] sm:text-4xl">
           {title}
         </h1>
         {description ? (
@@ -30,7 +30,7 @@ export function PageHeader({
           </p>
         ) : null}
       </div>
-      {actions ? <div className="flex gap-2">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
 }

@@ -248,9 +248,9 @@ export function MemberPage() {
                   <p className="truncate text-sm text-[var(--text-secondary)]">
                     {member.full_name}
                   </p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <Mail aria-hidden="true" className="h-4 w-4" />
-                    {member.email}
+                  <p className="mt-1 flex min-w-0 items-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{member.email}</span>
                   </p>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export function MemberPage() {
       {modalOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
           <form
-            className="grid w-full max-w-2xl gap-5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
+            className="grid max-h-[calc(100vh-3rem)] w-full max-w-2xl gap-5 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
             onSubmit={submitMember}
           >
             <div className="flex items-start justify-between gap-4">

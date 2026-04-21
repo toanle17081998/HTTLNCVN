@@ -114,7 +114,7 @@ export function Footer() {
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-5">
           <p className="text-sm text-[var(--text-secondary)]">
-            Â© 2026 HTNC. All rights reserved.
+            © HTTLNC 2026. All rights reserved.
           </p>
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
             {footerLinks.map((item) => (
