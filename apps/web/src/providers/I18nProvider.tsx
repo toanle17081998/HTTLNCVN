@@ -5,7 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -24,38 +24,77 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 const storageKey = "httlncvn.locale";
+const listeners = new Set<() => void>();
+let clientLocale: Locale | null = null;
 
 type I18nProviderProps = {
   children: ReactNode;
 };
 
-export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === "undefined") {
-      return defaultLocale;
-    }
+function getBrowserLocale() {
+  const browserLocale = window.navigator.language.split("-")[0];
 
+  return isLocale(browserLocale) ? browserLocale : defaultLocale;
+}
+
+function getPreferredLocale() {
+  try {
     const savedLocale = window.localStorage.getItem(storageKey);
 
     if (savedLocale && isLocale(savedLocale)) {
       return savedLocale;
     }
+  } catch {
+    return getBrowserLocale();
+  }
 
-    const browserLocale = window.navigator.language.split("-")[0];
+  return getBrowserLocale();
+}
 
-    if (isLocale(browserLocale)) {
-      return browserLocale;
-    }
+function getLocaleSnapshot() {
+  clientLocale ??= getPreferredLocale();
 
-    return defaultLocale;
+  return clientLocale;
+}
+
+function getServerLocaleSnapshot() {
+  return defaultLocale;
+}
+
+function subscribeToLocale(listener: () => void) {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function updateClientLocale(nextLocale: Locale) {
+  clientLocale = nextLocale;
+
+  listeners.forEach((listener) => {
+    listener();
   });
+}
+
+export function I18nProvider({ children }: I18nProviderProps) {
+  const locale = useSyncExternalStore(
+    subscribeToLocale,
+    getLocaleSnapshot,
+    getServerLocaleSnapshot,
+  );
 
   const value = useMemo<I18nContextValue>(() => {
     return {
       locale,
       setLocale(nextLocale) {
-        setLocaleState(nextLocale);
-        window.localStorage.setItem(storageKey, nextLocale);
+        updateClientLocale(nextLocale);
+
+        try {
+          window.localStorage.setItem(storageKey, nextLocale);
+        } catch {
+          // Keep the in-memory language change even if storage is unavailable.
+        }
         document.documentElement.lang = nextLocale;
       },
       t(key) {
