@@ -368,53 +368,63 @@ export function EventPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
-            {weekdaysKeys.map((key) => (
-              <div
-                className="px-2 py-3 text-center text-xs font-semibold uppercase text-[var(--text-secondary)]"
-                key={key}
-              >
-                {t(key)}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7">
-            {calendarDays.map((day) => {
-              const dayEvents = monthEvents.filter(
-                (event) => dateKey(new Date(event.startsAt)) === dateKey(day.date),
-              );
-
-              return (
-                <div
-                  className={cn(
-                    "min-h-28 border-b border-r border-[var(--border-subtle)] p-2",
-                    !day.inMonth && "bg-[var(--bg-base)] text-[var(--text-tertiary)]",
-                  )}
-                  key={day.date.toISOString()}
-                >
-                  <div className="text-sm font-semibold">{day.date.getDate()}</div>
-                  <div className="mt-2 grid gap-1">
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <button
-                        className="min-w-0 rounded-md px-2 py-1 text-left text-xs font-semibold text-white shadow-sm"
-                        key={`${event.id}-${event.startsAt}`}
-                        onClick={() => openViewModal(event)}
-                        style={{ backgroundColor: event.color }}
-                        type="button"
-                      >
-                        <span className="block truncate">{event.title}</span>
-                      </button>
-                    ))}
-                    {dayEvents.length > 3 ? (
-                      <span className="text-xs text-[var(--text-secondary)]">
-                        {t("event.list.more", { count: (dayEvents.length - 3).toString() })}
-                      </span>
-                    ) : null}
+          <div className="overflow-x-auto">
+            <div className="min-w-[42rem] md:min-w-0">
+              <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
+                {weekdaysKeys.map((key) => (
+                  <div
+                    className="px-2 py-3 text-center text-xs font-semibold uppercase text-[var(--text-secondary)]"
+                    key={key}
+                  >
+                    {t(key)}
                   </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7">
+                {calendarDays.map((day) => {
+                  const dayEvents = monthEvents.filter(
+                    (event) =>
+                      dateKey(new Date(event.startsAt)) === dateKey(day.date),
+                  );
+
+                  return (
+                    <div
+                      className={cn(
+                        "min-h-28 border-b border-r border-[var(--border-subtle)] p-2",
+                        !day.inMonth &&
+                          "bg-[var(--bg-base)] text-[var(--text-tertiary)]",
+                      )}
+                      key={day.date.toISOString()}
+                    >
+                      <div className="text-sm font-semibold">
+                        {day.date.getDate()}
+                      </div>
+                      <div className="mt-2 grid gap-1">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <button
+                            className="min-w-0 rounded-md px-2 py-1 text-left text-xs font-semibold text-white shadow-sm"
+                            key={`${event.id}-${event.startsAt}`}
+                            onClick={() => openViewModal(event)}
+                            style={{ backgroundColor: event.color }}
+                            type="button"
+                          >
+                            <span className="block truncate">{event.title}</span>
+                          </button>
+                        ))}
+                        {dayEvents.length > 3 ? (
+                          <span className="text-xs text-[var(--text-secondary)]">
+                            {t("event.list.more", {
+                              count: (dayEvents.length - 3).toString(),
+                            })}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -499,7 +509,7 @@ export function EventPage() {
       {modalOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
           <form
-            className="grid w-full max-w-2xl gap-5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
+            className="grid max-h-[calc(100vh-3rem)] w-full max-w-2xl gap-5 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
             onSubmit={submitEvent}
           >
             <div className="flex items-start justify-between gap-4">

@@ -1,4 +1,5 @@
 export { AppShell } from "./AppShell";
+export { BackToTopButton } from "./BackToTopButton";
 export { Breadcrumb } from "./Breadcrumb";
 export { Footer } from "./Footer";
 export { Header } from "./Header";

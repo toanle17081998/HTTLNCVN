@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, cn } from "@/components/ui";
 import { ACCESS_FLOW, ROLES, useAuth } from "@/providers/AuthProvider";
@@ -36,6 +37,7 @@ export function Header({ pathname }: HeaderProps) {
   const tickingRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const canCreateContent = canAny([
     PERMISSIONS.manageArticle,
@@ -50,10 +52,17 @@ export function Header({ pathname }: HeaderProps) {
 
     function updateHeaderVisibility() {
       const currentScrollY = window.scrollY;
-      const isScrollingUp = currentScrollY < lastScrollYRef.current;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+      const isScrollingDown = scrollDelta > 6;
+      const isScrollingUp = scrollDelta < -1;
       const isNearTop = currentScrollY < 24;
 
-      setIsVisible(isScrollingUp || isNearTop);
+      if (isNearTop || isScrollingUp) {
+        setIsVisible(true);
+      } else if (isScrollingDown) {
+        setIsVisible(false);
+      }
+
       lastScrollYRef.current = currentScrollY;
       tickingRef.current = false;
     }
@@ -75,6 +84,11 @@ export function Header({ pathname }: HeaderProps) {
   }, []);
 
   useEffect(() => {
+    setMobileMenuOpen(false);
+    setSettingsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
       if (
         settingsRef.current &&
@@ -94,139 +108,182 @@ export function Header({ pathname }: HeaderProps) {
     };
   }, [settingsOpen]);
 
+  function renderNavLinks({ mobile = false }: { mobile?: boolean } = {}) {
+    return menuNavItems.map((item) => {
+      const isActive =
+        item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+
+      return (
+        <Link
+          aria-current={isActive ? "page" : undefined}
+          className={cn(
+            mobile
+              ? "flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition"
+              : "min-w-0 rounded-md px-2 py-2 text-center text-xs font-semibold transition sm:px-3 sm:text-sm",
+            isActive
+              ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
+              : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
+          )}
+          href={item.href}
+          key={item.href}
+          onClick={() => {
+            if (mobile) {
+              setMobileMenuOpen(false);
+            }
+          }}
+        >
+          <span className="block truncate">{t(item.labelKey)}</span>
+        </Link>
+      );
+    });
+  }
+
   return (
     <header
       className={cn(
-        "sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/95 shadow-sm backdrop-blur transition duration-300 ease-out",
+        "fixed inset-x-0 top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/95 shadow-sm backdrop-blur transition-[opacity,transform,box-shadow] duration-300 ease-out",
         isVisible
           ? "translate-y-0 opacity-100"
-          : "pointer-events-none -translate-y-full opacity-0",
+          : "pointer-events-none -translate-y-full opacity-0 shadow-none",
       )}
     >
-      <div className="relative flex h-20 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="relative flex min-h-16 items-center gap-3 px-4 py-3 sm:px-6 md:h-20 md:gap-4 lg:px-8">
         <Link
           aria-label={t("app.name")}
-          className="absolute left-4 top-3 z-10 flex shrink-0 items-start rounded-md sm:left-6 lg:left-8"
+          className="flex shrink-0 items-center rounded-md"
           href="/"
         >
           <img
             alt=""
-            className="h-32 w-32 shrink-0 object-contain drop-shadow-sm bg-auto"
+            className="h-14 w-14 shrink-0 object-contain drop-shadow-sm md:h-20 md:w-20"
             src="/church-logo.png"
           />
         </Link>
 
         <nav
           aria-label="Primary"
-          className="mx-auto flex w-full max-w-3xl min-w-0 flex-nowrap justify-center gap-1 px-24 sm:px-28 lg:px-0"
+          className="mx-auto hidden w-full max-w-3xl min-w-0 flex-nowrap justify-center gap-1 md:flex"
         >
-          {menuNavItems.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
-
-            return (
-              <Link
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "min-w-0 rounded-md px-2 py-2 text-center text-xs font-semibold transition sm:px-3 sm:text-sm",
-                  isActive
-                    ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
-                )}
-                href={item.href}
-                key={item.href}
-              >
-                <span className="block truncate">{t(item.labelKey)}</span>
-              </Link>
-            );
-          })}
+          {renderNavLinks()}
         </nav>
 
-        <div className="relative shrink-0" ref={settingsRef}>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <button
-            aria-expanded={settingsOpen}
-            aria-haspopup="menu"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-            onClick={() => setSettingsOpen((open) => !open)}
+            aria-controls="mobile-primary-navigation"
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] md:hidden"
+            onClick={() => {
+              setMobileMenuOpen((open) => !open);
+              setSettingsOpen(false);
+            }}
             type="button"
           >
-            Settings
+            {mobileMenuOpen ? (
+              <X aria-hidden="true" className="h-5 w-5" />
+            ) : (
+              <Menu aria-hidden="true" className="h-5 w-5" />
+            )}
           </button>
 
-          {settingsOpen ? (
-            <div
-              className="absolute right-0 top-full z-30 mt-2 grid w-56 gap-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 shadow-lg"
-              role="menu"
+          <div className="relative shrink-0" ref={settingsRef}>
+            <button
+              aria-expanded={settingsOpen}
+              aria-haspopup="menu"
+              className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+              onClick={() => {
+                setSettingsOpen((open) => !open);
+                setMobileMenuOpen(false);
+              }}
+              type="button"
             >
-              <LanguageToggle />
-              <ThemeToggle />
-              <div className="rounded-md border border-[var(--border-subtle)] px-3 py-2">
-                <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                  Access
-                </p>
-                <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                  {currentProfile.label}
-                </p>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  {user?.email ?? "Public browsing"}
-                </p>
-              </div>
-              <div className="grid gap-1" role="group" aria-label="Access role">
-                {ACCESS_FLOW.map((profile) => {
-                  const isActive = profile.role === accessRole;
+              Settings
+            </button>
 
-                  return (
-                    <button
-                      aria-pressed={isActive}
-                      className={cn(
-                        "rounded-md px-3 py-2 text-left text-sm font-semibold transition hover:bg-[var(--brand-muted)]",
-                        isActive
-                          ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
-                          : "text-[var(--text-secondary)]",
-                      )}
-                      key={profile.role}
-                      onClick={() => switchRole(profile.role)}
-                      type="button"
-                    >
-                      {profile.shortLabel}
-                    </button>
-                  );
-                })}
+            {settingsOpen ? (
+              <div
+                className="absolute right-0 top-full z-30 mt-2 grid w-56 gap-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 shadow-lg"
+                role="menu"
+              >
+                <LanguageToggle />
+                <ThemeToggle />
+                <div className="rounded-md border border-[var(--border-subtle)] px-3 py-2">
+                  <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                    Access
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+                    {currentProfile.label}
+                  </p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {user?.email ?? "Public browsing"}
+                  </p>
+                </div>
+                <div className="grid gap-1" role="group" aria-label="Access role">
+                  {ACCESS_FLOW.map((profile) => {
+                    const isActive = profile.role === accessRole;
+
+                    return (
+                      <button
+                        aria-pressed={isActive}
+                        className={cn(
+                          "rounded-md px-3 py-2 text-left text-sm font-semibold transition hover:bg-[var(--brand-muted)]",
+                          isActive
+                            ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
+                            : "text-[var(--text-secondary)]",
+                        )}
+                        key={profile.role}
+                        onClick={() => switchRole(profile.role)}
+                        type="button"
+                      >
+                        {profile.shortLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+                {settingsNavItem ? (
+                  <Link
+                    className="flex h-10 items-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                    href={settingsNavItem.href}
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                  >
+                    Access flow
+                  </Link>
+                ) : null}
+                {isAuthenticated ? (
+                  <Button onClick={logout} size="sm" variant="secondary">
+                    Log out
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => switchRole(ROLES.churchMember)}
+                    size="sm"
+                  >
+                    Log in member
+                  </Button>
+                )}
+                {canCreateContent ? (
+                  <Button size="sm" variant="secondary">
+                    {t("action.newItem")}
+                  </Button>
+                ) : null}
+                {canPublish ? (
+                  <Button size="sm">{t("action.publish")}</Button>
+                ) : null}
               </div>
-              {settingsNavItem ? (
-                <Link
-                  className="flex h-10 items-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                  href={settingsNavItem.href}
-                  onClick={() => setSettingsOpen(false)}
-                  role="menuitem"
-                >
-                  Access flow
-                </Link>
-              ) : null}
-              {isAuthenticated ? (
-                <Button onClick={logout} size="sm" variant="secondary">
-                  Log out
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => switchRole(ROLES.churchMember)}
-                  size="sm"
-                >
-                  Log in member
-                </Button>
-              )}
-              {canCreateContent ? (
-                <Button size="sm" variant="secondary">
-                  {t("action.newItem")}
-                </Button>
-              ) : null}
-              {canPublish ? <Button size="sm">{t("action.publish")}</Button> : null}
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
+      {mobileMenuOpen ? (
+        <nav
+          aria-label="Primary"
+          className="grid gap-1 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 shadow-sm md:hidden"
+          id="mobile-primary-navigation"
+        >
+          {renderNavLinks({ mobile: true })}
+        </nav>
+      ) : null}
     </header>
   );
 }
