@@ -285,5 +285,6 @@ Chi tiet xem tai [docs/branching-release.md](docs/branching-release.md).
 - [Cau truc repo](docs/repo-structure.md)
 - [Branching va release](docs/branching-release.md)
 - [Local infra](docs/infra-local.md)
+- [API contract](docs/api-contract.md)
 - [Web app placeholder](apps/web/README.md)
 - [API app placeholder](apps/api/README.md)

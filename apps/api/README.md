@@ -1,34 +1,54 @@
-# API App Placeholder
+# HTNC API
 
-Vi tri danh cho backend `NestJS`.
+NestJS app toi thieu cho homepage aggregate API.
 
-## Internal structure target
+## Run
+
+```powershell
+pnpm install
+pnpm --filter @htnc/api db:migrate
+pnpm --filter @htnc/api db:seed
+pnpm --filter @htnc/api dev
+pnpm --filter @htnc/api test
+```
+
+API mac dinh:
+
+- `http://localhost:3001/api/homepage`
+
+## Postman
+
+Method:
+
+- `GET`
+
+URL:
+
+- `http://localhost:3001/api/homepage`
+
+Vi du query params:
+
+- `http://localhost:3001/api/homepage?latest_posts_limit=3&featured_courses_limit=2&upcoming_events_limit=2`
+- `http://localhost:3001/api/homepage?include=posts,events`
+
+## Structure
 
 ```text
 src/
-|-- modules/
-|   |-- auth/
-|   |-- member/
-|   |-- blog/
-|   |-- course/
-|   |-- event/
-|   |-- page/
-|   |-- notification/
-|   `-- prayer-journal/
+|-- app.module.ts
 |-- common/
+|   `-- http/
 |-- config/
 |-- database/
-`-- main.ts
+|   `-- scripts/
+`-- modules/
+    `-- homepage/
 ```
 
 ## Notes
 
-- Giu `module-first`, khong don het moi thu vao `common/`
-- Auth, member, blog, course la 4 domain MVP uu tien
-- DB nen co migration strategy ro rang ngay tu dau
-
-## Database v1
-
-- ERD va schema rationale: `../../docs/db-schema-v1.md`
-- Baseline migration: `database/migrations/20260420_000001_content_v1.up.sql`
-- Rollback baseline: `database/migrations/20260420_000001_content_v1.down.sql`
+- Controller chi xu ly HTTP
+- Service xu ly orchestration
+- Repository doc SQL va query PostgreSQL
+- Migration va seed dang dung file SQL/raw query de boot nhanh MVP
+- Homepage co in-memory cache TTL mac dinh `300` giay, override bang env `HOMEPAGE_CACHE_TTL_SECONDS`
