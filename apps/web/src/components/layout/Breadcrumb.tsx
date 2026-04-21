@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslation } from "@/providers/I18nProvider";
 import { navItems } from "./navigation";
 
 type BreadcrumbProps = {
@@ -13,13 +14,14 @@ function toTitle(segment: string) {
 }
 
 export function Breadcrumb({ pathname }: BreadcrumbProps) {
+  const { t } = useTranslation();
   const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length === 0) {
     return (
       <nav aria-label="Breadcrumb" className="text-sm">
         <span className="font-medium text-[var(--text-primary)]">
-          Dashboard
+          {t("breadcrumb.dashboard")}
         </span>
       </nav>
     );
@@ -30,13 +32,16 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
       <ol className="flex flex-wrap items-center gap-2 text-[var(--text-secondary)]">
         <li>
           <Link className="hover:text-[var(--brand-primary)]" href="/">
-            Dashboard
+            {t("breadcrumb.dashboard")}
           </Link>
         </li>
         {segments.map((segment, index) => {
           const href = `/${segments.slice(0, index + 1).join("/")}`;
-          const navLabel = navItems.find((item) => item.href === href)?.label;
+          const navLabelKey = navItems.find(
+            (item) => item.href === href,
+          )?.labelKey;
           const isLast = index === segments.length - 1;
+          const label = navLabelKey ? t(navLabelKey) : toTitle(segment);
 
           return (
             <li className="flex items-center gap-2" key={href}>
@@ -45,14 +50,14 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
               </span>
               {isLast ? (
                 <span className="font-medium text-[var(--text-primary)]">
-                  {navLabel ?? toTitle(segment)}
+                  {label}
                 </span>
               ) : (
                 <Link
                   className="hover:text-[var(--brand-primary)]"
                   href={href}
                 >
-                  {navLabel ?? toTitle(segment)}
+                  {label}
                 </Link>
               )}
             </li>
