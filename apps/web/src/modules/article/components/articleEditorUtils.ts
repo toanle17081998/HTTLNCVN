@@ -184,3 +184,43 @@ export function markdownToHtml(markdown: string) {
 
   return html.join("");
 }
+
+export function isRichTextHtml(value: string) {
+  return /<\/?(p|h[1-6]|ul|ol|li|blockquote|figure|img|video|iframe|table|thead|tbody|tr|td|th|a|strong|em|div|span)\b/i.test(
+    value,
+  );
+}
+
+export function hasMeaningfulRichHtml(value: string) {
+  const text = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+
+  return Boolean(
+    text || /<(figure|iframe|img|table|video)\b|class=["'][^"']*article-columns/i.test(value),
+  );
+}
+
+export function getColumnLeftPercentFromTemplate(template: string) {
+  const calcMatch = template.match(/calc\(([\d.]+)%/);
+  if (calcMatch) return Number.parseFloat(calcMatch[1]);
+
+  const percentMatches = Array.from(template.matchAll(/([\d.]+)%/g));
+  if (percentMatches.length >= 2) {
+    const left = Number.parseFloat(percentMatches[0][1]);
+    const right = Number.parseFloat(percentMatches[1][1]);
+    const total = left + right;
+    return total > 0 ? (left / total) * 100 : left;
+  }
+
+  return null;
+}
+
+export function getEditableColumnTemplate(leftPercent: number) {
+  const boundedLeftPercent = Math.min(Math.max(leftPercent, 20), 80);
+  return `calc(${boundedLeftPercent.toFixed(2)}% - 0.375rem) 0.75rem calc(${(
+    100 - boundedLeftPercent
+  ).toFixed(2)}% - 0.375rem)`;
+}
+

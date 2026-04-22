@@ -7,7 +7,7 @@ import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
-import { markdownToHtml } from "@/modules/article/components/articleEditorUtils";
+import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
 import {
   useLessonQuery,
   useStartQuizMutation,
@@ -20,12 +20,6 @@ type LessonDetailPageProps = {
   courseSlug: string;
   lessonId: string;
 };
-
-function isRichTextHtml(value: string) {
-  return /<\/?(p|h[1-6]|ul|ol|li|blockquote|figure|img|video|iframe|table|thead|tbody|tr|td|th|a|strong|em|div|span)\b/i.test(
-    value,
-  );
-}
 
 function renderLessonBody(value: string) {
   return isRichTextHtml(value) ? value : markdownToHtml(value);

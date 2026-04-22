@@ -6,6 +6,7 @@ import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
+import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
 import {
   useCourseQuery,
   useCourseQuizzesQuery,
@@ -27,6 +28,12 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const startQuiz = useStartQuizMutation();
   const deleteCourse = useDeleteCourseMutation();
   const course = courseQuery.data;
+
+  const descriptionHtml = course?.description
+    ? isRichTextHtml(course.description)
+      ? course.description
+      : markdownToHtml(course.description)
+    : "";
 
   async function handleStartQuiz(quiz: QuizListItem) {
     const attempt = await startQuiz.mutateAsync(quiz.id);
@@ -92,10 +99,11 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                   {course.estimated_duration_minutes} minutes
                 </span>
               </div>
-              {course.description ? (
-                <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
-                  {course.description}
-                </p>
+              {descriptionHtml ? (
+                <div
+                  className="mt-4 text-sm leading-6 text-[var(--text-secondary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
               ) : null}
             </Card>
 

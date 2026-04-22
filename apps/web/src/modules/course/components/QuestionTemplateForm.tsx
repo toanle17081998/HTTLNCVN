@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, FormField, Input, Textarea, Select } from "@/components/ui";
+import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
 import { CreateQuestionTemplateDto, QuestionTemplate } from "@services/course";
 
 type QuestionTemplateFormProps = {
@@ -12,6 +12,7 @@ type QuestionTemplateFormProps = {
 };
 
 export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }: QuestionTemplateFormProps) {
+  const [editLang, setEditLang] = useState<"en" | "vi">("vi");
   const [formData, setFormData] = useState({
     template_type: initialData?.template_type || "short_answer",
     difficulty: initialData?.difficulty || "medium",
@@ -35,9 +36,28 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
 
   return (
     <Card className="max-w-2xl mx-auto p-8 shadow-xl border-[var(--border-subtle)] bg-[var(--bg-card)]">
-      <h1 className="text-3xl font-extrabold mb-8 text-[var(--text-primary)] tracking-tight">
-        {title}
-      </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+          {title}
+        </h1>
+        <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
+          {(["en", "vi"] as const).map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setEditLang(lang)}
+              className={cn(
+                "h-8 rounded px-4 text-sm font-semibold transition",
+                editLang === lang
+                  ? "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
+              )}
+            >
+              {lang === "en" ? "English" : "Tiếng Việt"}
+            </button>
+          ))}
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField label="Type" htmlFor="template_type">
@@ -69,31 +89,37 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           </FormField>
         </div>
 
-        <FormField label="Question (English)" htmlFor="body_template_en">
-          <Textarea
-            id="body_template_en"
-            name="body_template_en"
-            value={formData.body_template_en}
-            onChange={handleChange}
-            placeholder="Question template in English..."
-            required
-            rows={4}
-            className="bg-[var(--bg-base)]"
-          />
-        </FormField>
+        <div className="grid grid-cols-1 gap-6">
+          <div className={cn(editLang !== "en" && "hidden")}>
+            <FormField label="Question (English)" htmlFor="body_template_en">
+              <Textarea
+                id="body_template_en"
+                name="body_template_en"
+                value={formData.body_template_en}
+                onChange={handleChange}
+                placeholder="Question template in English..."
+                required={editLang === "en"}
+                rows={4}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
 
-        <FormField label="Question (Vietnamese)" htmlFor="body_template_vi">
-          <Textarea
-            id="body_template_vi"
-            name="body_template_vi"
-            value={formData.body_template_vi}
-            onChange={handleChange}
-            placeholder="Question template in Vietnamese..."
-            required
-            rows={4}
-            className="bg-[var(--bg-base)]"
-          />
-        </FormField>
+          <div className={cn(editLang !== "vi" && "hidden")}>
+            <FormField label="Câu hỏi (Tiếng Việt)" htmlFor="body_template_vi">
+              <Textarea
+                id="body_template_vi"
+                name="body_template_vi"
+                value={formData.body_template_vi}
+                onChange={handleChange}
+                placeholder="Nhập nội dung câu hỏi bằng tiếng Việt..."
+                required={editLang === "vi"}
+                rows={4}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
+        </div>
 
         <FormField label="Answer Formula" htmlFor="answer_formula" hint="Formula or value to calculate the correct answer.">
           <Input
@@ -106,29 +132,35 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           />
         </FormField>
 
-        <FormField label="Explanation (English)" htmlFor="explanation_template_en">
-          <Textarea
-            id="explanation_template_en"
-            name="explanation_template_en"
-            value={formData.explanation_template_en}
-            onChange={handleChange}
-            placeholder="Explanation in English..."
-            rows={3}
-            className="bg-[var(--bg-base)]"
-          />
-        </FormField>
+        <div className="grid grid-cols-1 gap-6">
+          <div className={cn(editLang !== "en" && "hidden")}>
+            <FormField label="Explanation (English)" htmlFor="explanation_template_en">
+              <Textarea
+                id="explanation_template_en"
+                name="explanation_template_en"
+                value={formData.explanation_template_en}
+                onChange={handleChange}
+                placeholder="Explanation in English..."
+                rows={3}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
 
-        <FormField label="Explanation (Vietnamese)" htmlFor="explanation_template_vi">
-          <Textarea
-            id="explanation_template_vi"
-            name="explanation_template_vi"
-            value={formData.explanation_template_vi}
-            onChange={handleChange}
-            placeholder="Explanation in Vietnamese..."
-            rows={3}
-            className="bg-[var(--bg-base)]"
-          />
-        </FormField>
+          <div className={cn(editLang !== "vi" && "hidden")}>
+            <FormField label="Giải thích (Tiếng Việt)" htmlFor="explanation_template_vi">
+              <Textarea
+                id="explanation_template_vi"
+                name="explanation_template_vi"
+                value={formData.explanation_template_vi}
+                onChange={handleChange}
+                placeholder="Giải thích bằng tiếng Việt..."
+                rows={3}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
+        </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border-subtle)]">
           <Button
