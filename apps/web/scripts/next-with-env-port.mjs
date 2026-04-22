@@ -44,10 +44,16 @@ if (!/^\d+$/.test(port)) {
   process.exit(1);
 }
 
-const nextCommand = process.platform === "win32" ? "next.cmd" : "next";
+const nextCommand = resolve(
+  scriptDir,
+  "..",
+  "node_modules",
+  ".bin",
+  process.platform === "win32" ? "next.CMD" : "next",
+);
 const child = spawn(nextCommand, [command, "-p", port], {
   env: process.env,
-  shell: false,
+  shell: process.platform === "win32",
   stdio: "inherit",
 });
 
