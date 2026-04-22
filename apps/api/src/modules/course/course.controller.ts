@@ -19,8 +19,20 @@ import { CourseService } from './course.service';
 import type {
   CourseDto,
   CourseListResult,
+  CreateLessonDto,
+  CreateQuestionTemplateDto,
   CreateCourseDto,
+  CreateQuizDto,
+  LessonDto,
+  QuestionTemplateDto,
+  QuizAttemptDto,
+  QuizDto,
+  QuizListDto,
+  SubmitAnswerDto,
+  SubmitAnswerResultDto,
   UpdateCourseDto,
+  UpdateLessonDto,
+  UpdateQuizDto,
 } from './course.types';
 
 @Controller('courses')
@@ -32,8 +44,9 @@ export class CourseController {
   findAll(
     @Query('skip') skip = '0',
     @Query('take') take = '20',
+    @Query('status') status?: string,
   ): Promise<CourseListResult> {
-    return this.courseService.findAll(Number(skip), Number(take));
+    return this.courseService.findAll(Number(skip), Number(take), status);
   }
 
   @Public()
@@ -72,5 +85,113 @@ export class CourseController {
     @Request() req: { user: JwtPayload },
   ): Promise<void> {
     return this.courseService.enroll(id, req.user.sub);
+  }
+
+  @Public()
+  @Get(':slug/lessons/:lessonId')
+  findLessonById(@Param('lessonId') lessonId: string): Promise<LessonDto> {
+    return this.courseService.findLessonById(lessonId);
+  }
+
+  @Can('create', 'lesson')
+  @Post(':slug/lessons')
+  createLesson(
+    @Param('slug') slug: string,
+    @Body() dto: CreateLessonDto,
+    @Request() req: { user: JwtPayload },
+  ): Promise<LessonDto> {
+    return this.courseService.createLesson(slug, dto, req.user.sub);
+  }
+
+  @Can('update', 'lesson')
+  @Patch('lessons/:lessonId')
+  updateLesson(
+    @Param('lessonId') lessonId: string,
+    @Body() dto: UpdateLessonDto,
+  ): Promise<LessonDto> {
+    return this.courseService.updateLesson(lessonId, dto);
+  }
+
+  @Can('delete', 'lesson')
+  @Delete('lessons/:lessonId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteLesson(@Param('lessonId') lessonId: string): Promise<void> {
+    return this.courseService.deleteLesson(lessonId);
+  }
+
+  @Can('create', 'quiz')
+  @Post('lessons/:lessonId/templates')
+  createTemplate(
+    @Param('lessonId') lessonId: string,
+    @Body() dto: CreateQuestionTemplateDto,
+  ): Promise<QuestionTemplateDto> {
+    return this.courseService.createTemplate(lessonId, dto);
+  }
+
+  @Public()
+  @Get(':slug/quizzes')
+  listCourseQuizzes(@Param('slug') slug: string): Promise<QuizListDto[]> {
+    return this.courseService.listQuizzes(slug);
+  }
+
+  @Public()
+  @Get('quizzes/:quizId')
+  findQuiz(@Param('quizId') quizId: string): Promise<QuizDto> {
+    return this.courseService.findQuiz(quizId);
+  }
+
+  @Can('create', 'quiz')
+  @Post('quizzes')
+  createQuiz(@Body() dto: CreateQuizDto): Promise<QuizDto> {
+    return this.courseService.createQuiz(dto);
+  }
+
+  @Can('update', 'quiz')
+  @Patch('quizzes/:quizId')
+  updateQuiz(@Param('quizId') quizId: string, @Body() dto: UpdateQuizDto): Promise<QuizDto> {
+    return this.courseService.updateQuiz(quizId, dto);
+  }
+
+  @Can('delete', 'quiz')
+  @Delete('quizzes/:quizId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteQuiz(@Param('quizId') quizId: string): Promise<void> {
+    return this.courseService.deleteQuiz(quizId);
+  }
+
+  @Can('take', 'quiz')
+  @Post('quizzes/:quizId/start')
+  startQuiz(
+    @Param('quizId') quizId: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<QuizAttemptDto> {
+    return this.courseService.startQuiz(quizId, req.user.sub);
+  }
+
+  @Can('take', 'quiz')
+  @Get('quiz-attempts/:attemptId')
+  findAttempt(
+    @Param('attemptId') attemptId: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<QuizAttemptDto> {
+    return this.courseService.findAttempt(attemptId, req.user.sub);
+  }
+
+  @Can('take', 'quiz')
+  @Post('quiz-attempts/answers')
+  submitAnswer(
+    @Body() dto: SubmitAnswerDto,
+    @Request() req: { user: JwtPayload },
+  ): Promise<SubmitAnswerResultDto> {
+    return this.courseService.submitAnswer(dto, req.user.sub);
+  }
+
+  @Can('take', 'quiz')
+  @Post('quiz-attempts/:attemptId/finish')
+  finishAttempt(
+    @Param('attemptId') attemptId: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<QuizAttemptDto> {
+    return this.courseService.finishAttempt(attemptId, req.user.sub);
   }
 }

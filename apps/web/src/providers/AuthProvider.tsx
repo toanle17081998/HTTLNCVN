@@ -66,6 +66,12 @@ const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
     { action: "create", resource: "course" },
     { action: "update", resource: "course" },
     { action: "delete", resource: "course" },
+    { action: "create", resource: "lesson" },
+    { action: "update", resource: "lesson" },
+    { action: "delete", resource: "lesson" },
+    { action: "create", resource: "quiz" },
+    { action: "update", resource: "quiz" },
+    { action: "delete", resource: "quiz" },
   ],
   [PERMISSIONS.enrollMembers]: [{ action: "enroll", resource: "course" }],
   [PERMISSIONS.manageEvents]: [

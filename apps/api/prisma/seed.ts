@@ -629,6 +629,130 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
     update: {},
   });
 
+  const bibleTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000001' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000001',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'easy',
+      body_template_en: 'How many books are in the Bible?',
+      body_template_vi: 'Kinh Thánh có bao nhiêu sách?',
+      explanation_template_en: 'The Protestant Bible contains 66 books.',
+      explanation_template_vi: 'Kinh Thánh Tin Lành gồm 66 sách.',
+      answer_formula: '66',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const bibleTemplate2 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000002' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000002',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'easy',
+      body_template_en: 'According to 2 Timothy 3:16, Scripture is breathed out by whom?',
+      body_template_vi: 'Theo 2 Ti-mô-thê 3:16, Kinh Thánh được hà hơi bởi ai?',
+      explanation_template_en: 'Scripture is God-breathed.',
+      explanation_template_vi: 'Cả Kinh Thánh đều được Đức Chúa Trời hà hơi.',
+      answer_formula: 'God',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const salvationTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000003' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000003',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000003',
+      template_type: 'short_answer',
+      difficulty: 'medium',
+      body_template_en: 'According to Ephesians 2:8-9, salvation is received through what?',
+      body_template_vi: 'Theo Ê-phê-sô 2:8-9, sự cứu rỗi được nhận lãnh qua điều gì?',
+      explanation_template_en: 'Salvation is by grace through faith.',
+      explanation_template_vi: 'Sự cứu rỗi bởi ân điển qua đức tin.',
+      answer_formula: 'faith',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const spiritTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0002-0001-0001-000000000001' },
+    create: {
+      id: 'bbbbbbbb-0002-0001-0001-000000000001',
+      lesson_id: 'aaaaaaaa-0002-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'medium',
+      body_template_en: 'Who is the third Person of the Trinity?',
+      body_template_vi: 'Thân vị thứ ba của Ba Ngôi là ai?',
+      explanation_template_en: 'The Holy Spirit is the third Person of the Trinity.',
+      explanation_template_vi: 'Đức Thánh Linh là Thân Vị thứ ba của Ba Ngôi.',
+      answer_formula: 'Holy Spirit',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const quiz1 = await prisma.quiz.upsert({
+    where: { id: 'cccccccc-0001-0001-0001-000000000001' },
+    create: {
+      id: 'cccccccc-0001-0001-0001-000000000001',
+      title_en: 'ISOM 1 Foundations Quiz',
+      title_vi: 'Bài kiểm tra nền tảng ISOM 1',
+      passing_score: 70,
+      time_limit_seconds: 900,
+      is_active: true,
+    },
+    update: {
+      title_en: 'ISOM 1 Foundations Quiz',
+      title_vi: 'Bài kiểm tra nền tảng ISOM 1',
+      passing_score: 70,
+      time_limit_seconds: 900,
+      is_active: true,
+    },
+  });
+  await prisma.quizTemplateMap.deleteMany({ where: { quiz_id: quiz1.id } });
+  await prisma.quizTemplateMap.createMany({
+    data: [bibleTemplate1, bibleTemplate2, salvationTemplate1].map((template, index) => ({
+      quiz_id: quiz1.id,
+      template_id: template.id,
+      position: index + 1,
+      weight: 1,
+    })),
+  });
+
+  const quiz2 = await prisma.quiz.upsert({
+    where: { id: 'cccccccc-0002-0001-0001-000000000001' },
+    create: {
+      id: 'cccccccc-0002-0001-0001-000000000001',
+      title_en: 'Holy Spirit Quiz',
+      title_vi: 'Bài kiểm tra Đức Thánh Linh',
+      passing_score: 70,
+      time_limit_seconds: 600,
+      is_active: true,
+    },
+    update: {
+      title_en: 'Holy Spirit Quiz',
+      title_vi: 'Bài kiểm tra Đức Thánh Linh',
+      passing_score: 70,
+      time_limit_seconds: 600,
+      is_active: true,
+    },
+  });
+  await prisma.quizTemplateMap.deleteMany({ where: { quiz_id: quiz2.id } });
+  await prisma.quizTemplateMap.createMany({
+    data: [spiritTemplate1].map((template, index) => ({
+      quiz_id: quiz2.id,
+      template_id: template.id,
+      position: index + 1,
+      weight: 1,
+    })),
+  });
+
   // Events
   const nextSunday = new Date();
   nextSunday.setDate(nextSunday.getDate() + ((7 - nextSunday.getDay()) % 7 || 7));
