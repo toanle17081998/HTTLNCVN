@@ -82,7 +82,14 @@ const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
   [PERMISSIONS.manageTelegramNotifications]: [{ action: "create", resource: "notification" }],
   [PERMISSIONS.manageChurchMembers]: [
     { action: "read", resource: "member" },
+  ],
+  [PERMISSIONS.createChurchMembers]: [
+    { action: "create", resource: "member" },
+  ],
+  [PERMISSIONS.updateChurchMembers]: [
     { action: "update", resource: "member" },
+  ],
+  [PERMISSIONS.deleteChurchMembers]: [
     { action: "delete", resource: "member" },
   ],
   [PERMISSIONS.manageRoleSchemas]: [{ action: "manage", resource: "role_schema" }],

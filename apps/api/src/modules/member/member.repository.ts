@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import bcrypt from 'bcryptjs';
 
 import { PrismaService } from '../../database/prisma.service';
-import type { MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
+import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
 const MEMBER_INCLUDE = { profile: true, role: true } as const;
 
@@ -57,30 +58,81 @@ export class MemberRepository {
   }
 
   async findById(id: string): Promise<MemberDto | null> {
-    const user = await this.prisma.user.findUnique({ include: MEMBER_INCLUDE, where: { id } });
+    const user = await this.prisma.user.findFirst({
+      include: MEMBER_INCLUDE,
+      where: { deleted_at: null, id },
+    });
 
     return user ? toDto(user) : null;
   }
 
-  async update(id: string, dto: UpdateMemberDto): Promise<MemberDto | null> {
-    const user = await this.prisma.user.update({
+  async create(dto: CreateMemberDto): Promise<MemberDto> {
+    const role = await this.findRole(dto.role ?? 'church_member');
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
       data: {
-        ...(dto.username !== undefined && { username: dto.username }),
+        email: dto.email.trim(),
+        password_hash: passwordHash,
+        role_id: role.id,
+        status: dto.status ?? 'active',
+        username: dto.username.trim(),
         ...(dto.profile !== undefined && {
           profile: {
-            upsert: {
-              create: {
-                first_name: dto.profile.first_name ?? '',
-                last_name: dto.profile.last_name ?? '',
-                ...dto.profile,
-              },
-              update: dto.profile,
+            create: {
+              address: dto.profile.address ?? null,
+              date_of_birth: dto.profile.date_of_birth ? new Date(dto.profile.date_of_birth) : null,
+              first_name: dto.profile.first_name ?? '',
+              gender: dto.profile.gender ?? null,
+              last_name: dto.profile.last_name ?? '',
+              phone: dto.profile.phone ?? null,
             },
           },
         }),
       },
       include: MEMBER_INCLUDE,
-      where: { id },
+    });
+
+    return toDto(user);
+  }
+
+  async update(id: string, dto: UpdateMemberDto): Promise<MemberDto | null> {
+    const role = dto.role ? await this.findRole(dto.role) : null;
+    const user = await this.prisma.user.update({
+      data: {
+        ...(dto.email !== undefined && { email: dto.email.trim() }),
+        ...(role && { role_id: role.id }),
+        ...(dto.status !== undefined && { status: dto.status }),
+        ...(dto.username !== undefined && { username: dto.username.trim() }),
+        ...(dto.profile !== undefined && {
+          profile: {
+            upsert: {
+              create: {
+                address: dto.profile.address ?? null,
+                date_of_birth: dto.profile.date_of_birth ? new Date(dto.profile.date_of_birth) : null,
+                first_name: dto.profile.first_name ?? '',
+                gender: dto.profile.gender ?? null,
+                last_name: dto.profile.last_name ?? '',
+                phone: dto.profile.phone ?? null,
+              },
+              update: {
+                ...(dto.profile.address !== undefined && { address: dto.profile.address }),
+                ...(dto.profile.date_of_birth !== undefined && {
+                  date_of_birth: dto.profile.date_of_birth
+                    ? new Date(dto.profile.date_of_birth)
+                    : null,
+                }),
+                ...(dto.profile.first_name !== undefined && { first_name: dto.profile.first_name }),
+                ...(dto.profile.gender !== undefined && { gender: dto.profile.gender }),
+                ...(dto.profile.last_name !== undefined && { last_name: dto.profile.last_name }),
+                ...(dto.profile.phone !== undefined && { phone: dto.profile.phone }),
+              },
+            },
+          },
+        }),
+      },
+      include: MEMBER_INCLUDE,
+      where: { id, deleted_at: null },
     });
 
     return toDto(user);
@@ -91,5 +143,18 @@ export class MemberRepository {
       data: { deleted_at: new Date() },
       where: { id },
     });
+  }
+
+  private async findRole(name: string): Promise<{ id: number }> {
+    const role = await this.prisma.role.findUnique({
+      select: { id: true },
+      where: { name },
+    });
+
+    if (!role) {
+      throw new Error('ROLE_NOT_FOUND');
+    }
+
+    return role;
   }
 }
