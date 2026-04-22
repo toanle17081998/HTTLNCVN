@@ -276,8 +276,10 @@ pnpm --filter web dev
 Web mac dinh:
 
 ```text
-http://localhost:3000
+http://localhost:5000
 ```
+
+Port nay lay tu `WEB_PORT` trong file `.env`.
 
 ### Thu tu setup nhanh
 

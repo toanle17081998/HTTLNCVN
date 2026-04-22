@@ -69,11 +69,19 @@ The header Settings menu exposes the current role and quick role switching. Navi
 ## Development
 
 ```powershell
-pnpm.cmd dev
+pnpm --filter web dev
 ```
 
 If PowerShell allows pnpm scripts on your machine, this also works:
 
 ```powershell
-pnpm dev
+pnpm --filter web dev
 ```
+
+The local web app runs at:
+
+```text
+http://localhost:5000
+```
+
+The port comes from `WEB_PORT` in the repository root `.env`.
