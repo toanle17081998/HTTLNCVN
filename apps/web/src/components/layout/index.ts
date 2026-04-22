@@ -1,6 +1,7 @@
 export { AppShell } from "./AppShell";
 export { BackToTopButton } from "./BackToTopButton";
 export { Breadcrumb } from "./Breadcrumb";
+export { ChurchLogo } from "./ChurchLogo";
 export { Footer } from "./Footer";
 export { Header } from "./Header";
 export { LanguageToggle } from "./LanguageToggle";

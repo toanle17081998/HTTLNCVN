@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { ChurchLogo } from "./ChurchLogo";
 
 type ContactItem = {
   icon: LucideIcon;
@@ -58,11 +59,7 @@ export function Footer() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
           <div>
             <div className="flex items-center gap-3">
-              <img
-                alt=""
-                className="h-12 w-12 object-contain"
-                src="/church-logo.png"
-              />
+              <ChurchLogo className="h-12 w-12" />
               <div>
                 <p className="font-semibold text-[var(--text-primary)]">
                   {t("app.name")}

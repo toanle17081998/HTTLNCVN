@@ -63,6 +63,15 @@ function updateTheme(nextTheme: Theme) {
   });
 }
 
+export function ThemeInitializer() {
+  useEffect(() => {
+    const theme = getThemeSnapshot();
+    document.documentElement.dataset.theme = theme;
+  }, []);
+
+  return null;
+}
+
 export function ThemeToggle() {
   const { t } = useTranslation();
   const theme = useSyncExternalStore(

@@ -8,6 +8,7 @@ import { Button, cn } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
+import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { navItems } from "./navigation";
@@ -161,11 +162,7 @@ export function Header({ pathname }: HeaderProps) {
           className="flex shrink-0 items-center rounded-md"
           href="/"
         >
-          <img
-            alt=""
-            className="h-14 w-14 shrink-0 object-contain drop-shadow-sm md:h-20 md:w-20"
-            src="/church-logo.png"
-          />
+          <ChurchLogo className="h-14 w-14 drop-shadow-sm md:h-20 md:w-20" />
         </Link>
 
         <nav

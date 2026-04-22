@@ -45,9 +45,25 @@
   --brand-primary: #60a5fa; 
 }
 
+[data-theme='dark'] .church-logo-light {
+  display: none;
+}
+
+[data-theme='dark'] .church-logo-dark {
+  display: block;
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.church-logo-light {
+  display: block;
+}
+
+.church-logo-dark {
+  display: none;
 }
