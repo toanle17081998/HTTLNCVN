@@ -1,128 +1,135 @@
 "use client";
 
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { PERMISSIONS, type Permission } from "@/lib/rbac";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
-import {
-  ACCESS_PROFILES,
-  ROLES,
-  can,
-  canAny,
-  isAccessRole,
-  type AccessProfile,
-  type AccessRole,
-  type Permission,
-} from "@/lib/rbac";
+  clearStoredTokens,
+  useAccessToken,
+  useMeQuery,
+  type AuthUser,
+} from "@services/auth";
 
-export { ACCESS_FLOW, ACCESS_PROFILES, PERMISSIONS, ROLES } from "@/lib/rbac";
-export type { AccessProfile, AccessRole, Permission } from "@/lib/rbac";
-
-export type AuthUser = NonNullable<AccessProfile["user"]>;
+export { PERMISSIONS };
+export type { Permission };
 
 type AuthContextValue = {
-  accessRole: AccessRole;
-  currentProfile: AccessProfile;
+  role: string;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   can: (permission: Permission) => boolean;
   canAny: (permissions: readonly Permission[]) => boolean;
-  switchRole: (role: AccessRole) => void;
-  continueAsGuest: () => void;
   logout: () => void;
 };
 
-const storageKey = "httlncvn.accessRole";
-const listeners = new Set<() => void>();
-let clientAccessRole: AccessRole | null = null;
+type ApiPermissionRequirement = {
+  action: string;
+  resource: string;
+};
+
+const publicPermissions = new Set<Permission>([
+  PERMISSIONS.viewLanding,
+  PERMISSIONS.viewAbout,
+  PERMISSIONS.viewContact,
+  PERMISSIONS.viewPublicArticle,
+  PERMISSIONS.viewEvents,
+]);
+
+const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
+  [PERMISSIONS.viewLanding]: [{ action: "read", resource: "landing_page" }],
+  [PERMISSIONS.viewAbout]: [{ action: "read", resource: "about_page" }],
+  [PERMISSIONS.viewContact]: [{ action: "read", resource: "contact_page" }],
+  [PERMISSIONS.viewPublicArticle]: [{ action: "read", resource: "article" }],
+  [PERMISSIONS.viewInternalArticle]: [{ action: "read", resource: "article" }],
+  [PERMISSIONS.manageOwnPrayers]: [
+    { action: "read", resource: "prayer_journal" },
+    { action: "create", resource: "prayer_journal" },
+    { action: "update", resource: "prayer_journal" },
+    { action: "delete", resource: "prayer_journal" },
+  ],
+  [PERMISSIONS.shareChurchPrayers]: [{ action: "share", resource: "prayer_journal" }],
+  [PERMISSIONS.moderateChurchPrayers]: [{ action: "manage", resource: "prayer_journal" }],
+  [PERMISSIONS.enrollCourses]: [{ action: "enroll", resource: "course" }],
+  [PERMISSIONS.accessLessons]: [{ action: "read", resource: "lesson" }],
+  [PERMISSIONS.takeAssessments]: [{ action: "take", resource: "quiz" }],
+  [PERMISSIONS.viewCertificates]: [{ action: "read", resource: "certificate" }],
+  [PERMISSIONS.viewEvents]: [{ action: "read", resource: "event" }],
+  [PERMISSIONS.personalizedSearch]: [{ action: "read", resource: "search" }],
+  [PERMISSIONS.manageArticle]: [
+    { action: "create", resource: "article" },
+    { action: "update", resource: "article" },
+    { action: "delete", resource: "article" },
+  ],
+  [PERMISSIONS.manageAbout]: [{ action: "update", resource: "about_page" }],
+  [PERMISSIONS.manageContact]: [{ action: "update", resource: "contact_page" }],
+  [PERMISSIONS.manageCourses]: [
+    { action: "create", resource: "course" },
+    { action: "update", resource: "course" },
+    { action: "delete", resource: "course" },
+    { action: "create", resource: "lesson" },
+    { action: "update", resource: "lesson" },
+    { action: "delete", resource: "lesson" },
+    { action: "create", resource: "quiz" },
+    { action: "update", resource: "quiz" },
+    { action: "delete", resource: "quiz" },
+  ],
+  [PERMISSIONS.enrollMembers]: [{ action: "enroll", resource: "course" }],
+  [PERMISSIONS.manageEvents]: [
+    { action: "create", resource: "event" },
+    { action: "update", resource: "event" },
+    { action: "delete", resource: "event" },
+  ],
+  [PERMISSIONS.manageTelegramNotifications]: [{ action: "create", resource: "notification" }],
+  [PERMISSIONS.manageChurchMembers]: [
+    { action: "read", resource: "member" },
+    { action: "update", resource: "member" },
+    { action: "delete", resource: "member" },
+  ],
+  [PERMISSIONS.manageRoleSchemas]: [{ action: "manage", resource: "role_schema" }],
+  [PERMISSIONS.manageSystemSettings]: [{ action: "manage", resource: "system_setting" }],
+  [PERMISSIONS.manageIntegrations]: [{ action: "manage", resource: "integration" }],
+  [PERMISSIONS.manageDatabaseConfig]: [{ action: "manage", resource: "database_config" }],
+  [PERMISSIONS.viewAllData]: [{ action: "manage", resource: "all_data" }],
+  [PERMISSIONS.executeMaintenance]: [{ action: "manage", resource: "backup" }],
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getPreferredAccessRole(): AccessRole {
-  try {
-    const savedRole = window.localStorage.getItem(storageKey);
-
-    if (isAccessRole(savedRole)) {
-      return savedRole;
-    }
-  } catch {
-    return ROLES.guest;
-  }
-
-  return ROLES.guest;
-}
-
-function getAccessRoleSnapshot() {
-  clientAccessRole ??= getPreferredAccessRole();
-
-  return clientAccessRole;
-}
-
-function getServerAccessRoleSnapshot(): AccessRole {
-  return ROLES.guest;
-}
-
-function subscribeToAccessRole(listener: () => void) {
-  listeners.add(listener);
-
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-function updateAccessRole(nextRole: AccessRole) {
-  clientAccessRole = nextRole;
-
-  try {
-    window.localStorage.setItem(storageKey, nextRole);
-  } catch {
-    // Keep the in-memory role even if storage is unavailable.
-  }
-
-  listeners.forEach((listener) => {
-    listener();
-  });
+function hasApiPermission(user: AuthUser | null, requirement: ApiPermissionRequirement) {
+  return Boolean(
+    user?.permissions.some(
+      (permission) =>
+        permission.action === requirement.action && permission.resource === requirement.resource,
+    ),
+  );
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const accessRole = useSyncExternalStore(
-    subscribeToAccessRole,
-    getAccessRoleSnapshot,
-    getServerAccessRoleSnapshot,
-  );
-  const currentProfile = ACCESS_PROFILES[accessRole];
-
-  useEffect(() => {
-    document.documentElement.dataset.accessRole = accessRole;
-  }, [accessRole]);
+  const accessToken = useAccessToken();
+  const meQuery = useMeQuery(Boolean(accessToken));
+  const user = accessToken ? (meQuery.data ?? null) : null;
 
   const value = useMemo<AuthContextValue>(() => {
+    const canPermission = (permission: Permission) => {
+      if (!user && publicPermissions.has(permission)) return true;
+      const requirements = permissionMap[permission] ?? [];
+      return requirements.some((requirement) => hasApiPermission(user, requirement));
+    };
+
     return {
-      accessRole,
-      currentProfile,
-      user: currentProfile.user,
-      isAuthenticated: accessRole !== ROLES.guest,
-      can(permission) {
-        return can(accessRole, permission);
-      },
+      role: user?.role ?? "guest",
+      user,
+      isAuthenticated: Boolean(user),
+      isLoading: meQuery.isLoading,
+      can: canPermission,
       canAny(permissions) {
-        return canAny(accessRole, permissions);
-      },
-      switchRole(role) {
-        updateAccessRole(role);
-      },
-      continueAsGuest() {
-        updateAccessRole(ROLES.guest);
+        return permissions.some(canPermission);
       },
       logout() {
-        updateAccessRole(ROLES.guest);
+        clearStoredTokens();
       },
     };
-  }, [accessRole, currentProfile]);
+  }, [meQuery.isLoading, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

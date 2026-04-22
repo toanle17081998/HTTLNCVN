@@ -143,4 +143,10 @@ export class ArticleRepository {
       where: { slug },
     });
   }
+
+  async findCategories(): Promise<{ id: number; name: string }[]> {
+    return this.prisma.articleCategory.findMany({
+      orderBy: { name: 'asc' },
+    });
+  }
 }

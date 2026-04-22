@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { I18nProvider } from "@/providers/I18nProvider";
+import { TanStackProvider } from "@/providers/TanStackProvider";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -31,11 +32,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <I18nProvider>
-          <AuthProvider>
-            <AppShell>{children}</AppShell>
-          </AuthProvider>
-        </I18nProvider>
+        <TanStackProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <AppShell>{children}</AppShell>
+            </AuthProvider>
+          </I18nProvider>
+        </TanStackProvider>
       </body>
     </html>
   );

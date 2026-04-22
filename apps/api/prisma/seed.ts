@@ -3,28 +3,223 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+const actions = [
+  'read',
+  'create',
+  'update',
+  'delete',
+  'share',
+  'enroll',
+  'take',
+  'manage',
+] as const;
+
+const resources = [
+  'landing_page',
+  'about_page',
+  'contact_page',
+  'article',
+  'prayer_journal',
+  'course',
+  'lesson',
+  'quiz',
+  'certificate',
+  'event',
+  'search',
+  'notification',
+  'member',
+  'member_permission',
+  'role_schema',
+  'system_setting',
+  'integration',
+  'database_config',
+  'user_analytics',
+  'backup',
+  'audit_log',
+  'all_data',
+] as const;
+
+const rolePermissions = {
+  guest: [
+    ['read', 'landing_page'],
+    ['read', 'about_page'],
+    ['read', 'contact_page'],
+    ['read', 'article'],
+  ],
+  church_member: [
+    ['read', 'landing_page'],
+    ['read', 'about_page'],
+    ['read', 'contact_page'],
+    ['read', 'article'],
+    ['read', 'event'],
+    ['read', 'prayer_journal'],
+    ['create', 'prayer_journal'],
+    ['update', 'prayer_journal'],
+    ['delete', 'prayer_journal'],
+    ['share', 'prayer_journal'],
+    ['read', 'course'],
+    ['enroll', 'course'],
+    ['read', 'lesson'],
+    ['take', 'quiz'],
+    ['read', 'certificate'],
+    ['read', 'search'],
+    ['read', 'notification'],
+  ],
+  church_admin: [
+    ['read', 'landing_page'],
+    ['read', 'about_page'],
+    ['update', 'about_page'],
+    ['read', 'contact_page'],
+    ['update', 'contact_page'],
+    ['read', 'article'],
+    ['create', 'article'],
+    ['update', 'article'],
+    ['delete', 'article'],
+    ['read', 'event'],
+    ['create', 'event'],
+    ['update', 'event'],
+    ['delete', 'event'],
+    ['read', 'prayer_journal'],
+    ['create', 'prayer_journal'],
+    ['update', 'prayer_journal'],
+    ['delete', 'prayer_journal'],
+    ['share', 'prayer_journal'],
+    ['manage', 'prayer_journal'],
+    ['read', 'course'],
+    ['create', 'course'],
+    ['update', 'course'],
+    ['delete', 'course'],
+    ['enroll', 'course'],
+    ['read', 'lesson'],
+    ['create', 'lesson'],
+    ['update', 'lesson'],
+    ['delete', 'lesson'],
+    ['take', 'quiz'],
+    ['create', 'quiz'],
+    ['update', 'quiz'],
+    ['delete', 'quiz'],
+    ['read', 'certificate'],
+    ['read', 'search'],
+    ['read', 'notification'],
+    ['create', 'notification'],
+    ['read', 'member'],
+    ['update', 'member'],
+    ['delete', 'member'],
+    ['manage', 'member_permission'],
+  ],
+  system_admin: [
+    ['read', 'landing_page'],
+    ['read', 'about_page'],
+    ['update', 'about_page'],
+    ['read', 'contact_page'],
+    ['update', 'contact_page'],
+    ['read', 'article'],
+    ['create', 'article'],
+    ['update', 'article'],
+    ['delete', 'article'],
+    ['read', 'event'],
+    ['create', 'event'],
+    ['update', 'event'],
+    ['delete', 'event'],
+    ['read', 'prayer_journal'],
+    ['create', 'prayer_journal'],
+    ['update', 'prayer_journal'],
+    ['delete', 'prayer_journal'],
+    ['share', 'prayer_journal'],
+    ['manage', 'prayer_journal'],
+    ['read', 'course'],
+    ['create', 'course'],
+    ['update', 'course'],
+    ['delete', 'course'],
+    ['enroll', 'course'],
+    ['read', 'lesson'],
+    ['create', 'lesson'],
+    ['update', 'lesson'],
+    ['delete', 'lesson'],
+    ['take', 'quiz'],
+    ['create', 'quiz'],
+    ['update', 'quiz'],
+    ['delete', 'quiz'],
+    ['read', 'certificate'],
+    ['read', 'search'],
+    ['read', 'notification'],
+    ['create', 'notification'],
+    ['read', 'member'],
+    ['update', 'member'],
+    ['delete', 'member'],
+    ['manage', 'member_permission'],
+    ['manage', 'role_schema'],
+    ['manage', 'system_setting'],
+    ['manage', 'integration'],
+    ['manage', 'database_config'],
+    ['read', 'user_analytics'],
+    ['manage', 'backup'],
+    ['read', 'audit_log'],
+    ['manage', 'all_data'],
+  ],
+} satisfies Record<string, Array<[string, string]>>;
+
 async function main(): Promise<void> {
-  // Roles
-  const adminRole = await prisma.role.upsert({
-    where: { name: 'admin' },
-    create: { name: 'admin' },
-    update: {},
-  });
-  const editorRole = await prisma.role.upsert({
-    where: { name: 'editor' },
-    create: { name: 'editor' },
-    update: {},
-  });
-  const instructorRole = await prisma.role.upsert({
-    where: { name: 'instructor' },
-    create: { name: 'instructor' },
-    update: {},
-  });
-  await prisma.role.upsert({
-    where: { name: 'member' },
-    create: { name: 'member' },
-    update: {},
-  });
+  const actionByName = new Map<string, { id: number }>();
+  for (const name of actions) {
+    const action = await prisma.action.upsert({
+      where: { name },
+      create: { name },
+      update: {},
+    });
+    actionByName.set(name, action);
+  }
+
+  const resourceByName = new Map<string, { id: number }>();
+  for (const name of resources) {
+    const resource = await prisma.resource.upsert({
+      where: { name },
+      create: { name },
+      update: {},
+    });
+    resourceByName.set(name, resource);
+  }
+
+  const roleByName = new Map<string, { id: number; name: string }>();
+  for (const name of Object.keys(rolePermissions)) {
+    const role = await prisma.role.upsert({
+      where: { name },
+      create: { name },
+      update: {},
+    });
+    roleByName.set(name, role);
+  }
+
+  for (const [roleName, permissions] of Object.entries(rolePermissions)) {
+    const role = roleByName.get(roleName);
+    if (!role) continue;
+
+    await prisma.rolePermission.deleteMany({
+      where: { role_id: role.id },
+    });
+
+    for (const [actionName, resourceName] of permissions) {
+      const action = actionByName.get(actionName);
+      const resource = resourceByName.get(resourceName);
+      if (!action || !resource) continue;
+
+      await prisma.rolePermission.upsert({
+        where: {
+          role_id_action_id_resource_id: {
+            action_id: action.id,
+            resource_id: resource.id,
+            role_id: role.id,
+          },
+        },
+        create: {
+          action_id: action.id,
+          resource_id: resource.id,
+          role_id: role.id,
+        },
+        update: {},
+      });
+    }
+  }
 
   // Article categories
   const newsCategory = await prisma.articleCategory.upsert({
@@ -77,20 +272,36 @@ async function main(): Promise<void> {
   }
 
   const password = await bcrypt.hash('seed-password', 10);
+  const memberRole = roleByName.get('church_member')!;
+  const churchAdminRole = roleByName.get('church_admin')!;
+  const systemAdminRole = roleByName.get('system_admin')!;
 
-  // Users
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@htnc.local' },
+    create: {
+      username: 'admin',
+      email: 'admin@htnc.local',
+      password_hash: password,
+      role_id: systemAdminRole.id,
+      profile: {
+        create: { first_name: 'System', last_name: 'Admin' },
+      },
+    },
+    update: { role_id: systemAdminRole.id },
+  });
+
   const editorUser = await prisma.user.upsert({
     where: { email: 'editor@htnc.local' },
     create: {
       username: 'editor',
       email: 'editor@htnc.local',
       password_hash: password,
-      role_id: editorRole.id,
+      role_id: churchAdminRole.id,
       profile: {
-        create: { first_name: 'Lê', last_name: 'Văn Toàn' },
+        create: { first_name: 'Church', last_name: 'Editor' },
       },
     },
-    update: {},
+    update: { role_id: churchAdminRole.id },
   });
 
   const instructorUser = await prisma.user.upsert({
@@ -99,27 +310,46 @@ async function main(): Promise<void> {
       username: 'instructor',
       email: 'instructor@htnc.local',
       password_hash: password,
-      role_id: instructorRole.id,
+      role_id: churchAdminRole.id,
       profile: {
-        create: { first_name: 'Đoàn', last_name: 'Thuận An' },
+        create: { first_name: 'Course', last_name: 'Instructor' },
       },
     },
-    update: {},
+    update: { role_id: churchAdminRole.id },
   });
 
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@htnc.local' },
+  await prisma.user.upsert({
+    where: { email: 'member@htnc.local' },
     create: {
-      username: 'admin',
-      email: 'admin@htnc.local',
+      username: 'member',
+      email: 'member@htnc.local',
       password_hash: password,
-      role_id: adminRole.id,
+      role_id: memberRole.id,
       profile: {
-        create: { first_name: 'Quản', last_name: 'Trị Viên' },
+        create: { first_name: 'Church', last_name: 'Member' },
       },
     },
-    update: {},
+    update: { role_id: memberRole.id },
   });
+
+  for (let i = 1; i <= 20; i++) {
+    const email = `member${i}@htnc.local`;
+    const username = `member${i}`;
+
+    await prisma.user.upsert({
+      where: { email },
+      create: {
+        username,
+        email,
+        password_hash: password,
+        role_id: memberRole.id,
+        profile: {
+          create: { first_name: 'Member', last_name: `${i}` },
+        },
+      },
+      update: { role_id: memberRole.id },
+    });
+  }
 
   // Articles
   await prisma.article.upsert({
@@ -397,6 +627,130 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
       created_by: instructorUser.id,
     },
     update: {},
+  });
+
+  const bibleTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000001' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000001',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'easy',
+      body_template_en: 'How many books are in the Bible?',
+      body_template_vi: 'Kinh Thánh có bao nhiêu sách?',
+      explanation_template_en: 'The Protestant Bible contains 66 books.',
+      explanation_template_vi: 'Kinh Thánh Tin Lành gồm 66 sách.',
+      answer_formula: '66',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const bibleTemplate2 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000002' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000002',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'easy',
+      body_template_en: 'According to 2 Timothy 3:16, Scripture is breathed out by whom?',
+      body_template_vi: 'Theo 2 Ti-mô-thê 3:16, Kinh Thánh được hà hơi bởi ai?',
+      explanation_template_en: 'Scripture is God-breathed.',
+      explanation_template_vi: 'Cả Kinh Thánh đều được Đức Chúa Trời hà hơi.',
+      answer_formula: 'God',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const salvationTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0001-0001-0001-000000000003' },
+    create: {
+      id: 'bbbbbbbb-0001-0001-0001-000000000003',
+      lesson_id: 'aaaaaaaa-0001-0001-0001-000000000003',
+      template_type: 'short_answer',
+      difficulty: 'medium',
+      body_template_en: 'According to Ephesians 2:8-9, salvation is received through what?',
+      body_template_vi: 'Theo Ê-phê-sô 2:8-9, sự cứu rỗi được nhận lãnh qua điều gì?',
+      explanation_template_en: 'Salvation is by grace through faith.',
+      explanation_template_vi: 'Sự cứu rỗi bởi ân điển qua đức tin.',
+      answer_formula: 'faith',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const spiritTemplate1 = await prisma.questionTemplate.upsert({
+    where: { id: 'bbbbbbbb-0002-0001-0001-000000000001' },
+    create: {
+      id: 'bbbbbbbb-0002-0001-0001-000000000001',
+      lesson_id: 'aaaaaaaa-0002-0001-0001-000000000001',
+      template_type: 'short_answer',
+      difficulty: 'medium',
+      body_template_en: 'Who is the third Person of the Trinity?',
+      body_template_vi: 'Thân vị thứ ba của Ba Ngôi là ai?',
+      explanation_template_en: 'The Holy Spirit is the third Person of the Trinity.',
+      explanation_template_vi: 'Đức Thánh Linh là Thân Vị thứ ba của Ba Ngôi.',
+      answer_formula: 'Holy Spirit',
+      logic_config: {},
+    },
+    update: {},
+  });
+
+  const quiz1 = await prisma.quiz.upsert({
+    where: { id: 'cccccccc-0001-0001-0001-000000000001' },
+    create: {
+      id: 'cccccccc-0001-0001-0001-000000000001',
+      title_en: 'ISOM 1 Foundations Quiz',
+      title_vi: 'Bài kiểm tra nền tảng ISOM 1',
+      passing_score: 70,
+      time_limit_seconds: 900,
+      is_active: true,
+    },
+    update: {
+      title_en: 'ISOM 1 Foundations Quiz',
+      title_vi: 'Bài kiểm tra nền tảng ISOM 1',
+      passing_score: 70,
+      time_limit_seconds: 900,
+      is_active: true,
+    },
+  });
+  await prisma.quizTemplateMap.deleteMany({ where: { quiz_id: quiz1.id } });
+  await prisma.quizTemplateMap.createMany({
+    data: [bibleTemplate1, bibleTemplate2, salvationTemplate1].map((template, index) => ({
+      quiz_id: quiz1.id,
+      template_id: template.id,
+      position: index + 1,
+      weight: 1,
+    })),
+  });
+
+  const quiz2 = await prisma.quiz.upsert({
+    where: { id: 'cccccccc-0002-0001-0001-000000000001' },
+    create: {
+      id: 'cccccccc-0002-0001-0001-000000000001',
+      title_en: 'Holy Spirit Quiz',
+      title_vi: 'Bài kiểm tra Đức Thánh Linh',
+      passing_score: 70,
+      time_limit_seconds: 600,
+      is_active: true,
+    },
+    update: {
+      title_en: 'Holy Spirit Quiz',
+      title_vi: 'Bài kiểm tra Đức Thánh Linh',
+      passing_score: 70,
+      time_limit_seconds: 600,
+      is_active: true,
+    },
+  });
+  await prisma.quizTemplateMap.deleteMany({ where: { quiz_id: quiz2.id } });
+  await prisma.quizTemplateMap.createMany({
+    data: [spiritTemplate1].map((template, index) => ({
+      quiz_id: quiz2.id,
+      template_id: template.id,
+      position: index + 1,
+      weight: 1,
+    })),
   });
 
   // Events

@@ -48,4 +48,8 @@ export class ArticleService {
     await this.findBySlug(slug);
     await this.articleRepository.delete(slug);
   }
+
+  findCategories(): Promise<{ id: number; name: string }[]> {
+    return this.articleRepository.findCategories();
+  }
 }

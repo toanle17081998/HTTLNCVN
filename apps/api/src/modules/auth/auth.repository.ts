@@ -1,9 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import type { User, Role } from '@prisma/client';
+import type { User, Role, RolePermission, Action, Resource } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
 
-export type UserWithRole = User & { role: Role };
+export type UserWithRole = User & {
+  role: Role & {
+    permissions: Array<RolePermission & { action: Action; resource: Resource }>;
+  };
+};
+
+const USER_INCLUDE = {
+  role: {
+    include: {
+      permissions: {
+        include: {
+          action: true,
+          resource: true,
+        },
+      },
+    },
+  },
+} as const;
 
 @Injectable()
 export class AuthRepository {
@@ -11,14 +28,14 @@ export class AuthRepository {
 
   findByEmail(email: string): Promise<UserWithRole | null> {
     return this.prisma.user.findUnique({
-      include: { role: true },
+      include: USER_INCLUDE,
       where: { email },
     });
   }
 
   findById(id: string): Promise<UserWithRole | null> {
     return this.prisma.user.findUnique({
-      include: { role: true },
+      include: USER_INCLUDE,
       where: { id },
     });
   }

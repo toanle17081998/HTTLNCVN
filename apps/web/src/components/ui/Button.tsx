@@ -7,6 +7,7 @@ type ButtonSize = "sm" | "md" | "lg";
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  isLoading?: boolean;
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -31,6 +32,8 @@ export function Button({
   type = "button",
   variant = "primary",
   size = "md",
+  isLoading,
+  children,
   ...props
 }: ButtonProps) {
   return (
@@ -42,7 +45,14 @@ export function Button({
         className,
       )}
       type={type}
+      disabled={isLoading || props.disabled}
       {...props}
-    />
+    >
+      {isLoading ? (
+        <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      ) : null}
+      {children}
+    </button>
   );
 }
+

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Query } from '@nestjs/common';
 
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import { MemberService } from './member.service';
 import type { MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
@@ -9,6 +9,7 @@ export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
   @Get()
+  @Can('read', 'member')
   findAll(
     @Query('skip') skip = '0',
     @Query('take') take = '20',
@@ -17,16 +18,18 @@ export class MemberController {
   }
 
   @Get(':id')
+  @Can('read', 'member')
   findById(@Param('id') id: string): Promise<MemberDto> {
     return this.memberService.findById(id);
   }
 
   @Patch(':id')
+  @Can('update', 'member')
   update(@Param('id') id: string, @Body() dto: UpdateMemberDto): Promise<MemberDto> {
     return this.memberService.update(id, dto);
   }
 
-  @Roles('admin')
+  @Can('delete', 'member')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {

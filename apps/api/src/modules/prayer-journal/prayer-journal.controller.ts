@@ -12,6 +12,7 @@ import {
   Request,
 } from '@nestjs/common';
 
+import { Can } from '../../common/decorators/permissions.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { PrayerJournalService } from './prayer-journal.service';
 import type {
@@ -27,6 +28,7 @@ export class PrayerJournalController {
   constructor(private readonly prayerJournalService: PrayerJournalService) {}
 
   @Get()
+  @Can('read', 'prayer_journal')
   findAll(
     @Request() req: { user: JwtPayload },
     @Query('skip') skip = '0',
@@ -36,6 +38,7 @@ export class PrayerJournalController {
   }
 
   @Get(':id')
+  @Can('read', 'prayer_journal')
   findById(
     @Param('id') id: string,
     @Request() req: { user: JwtPayload },
@@ -44,6 +47,7 @@ export class PrayerJournalController {
   }
 
   @Post()
+  @Can('create', 'prayer_journal')
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() dto: CreatePrayerDto,
@@ -53,6 +57,7 @@ export class PrayerJournalController {
   }
 
   @Patch(':id')
+  @Can('update', 'prayer_journal')
   update(
     @Param('id') id: string,
     @Body() dto: UpdatePrayerDto,
@@ -62,6 +67,7 @@ export class PrayerJournalController {
   }
 
   @Delete(':id')
+  @Can('delete', 'prayer_journal')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(
     @Param('id') id: string,
@@ -71,6 +77,7 @@ export class PrayerJournalController {
   }
 
   @Post(':id/share')
+  @Can('share', 'prayer_journal')
   @HttpCode(HttpStatus.CREATED)
   share(
     @Param('id') id: string,

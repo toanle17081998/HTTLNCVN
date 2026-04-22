@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs';
 import { getEnv } from '../../config/env';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { AuthRepository } from './auth.repository';
-import type { AuthTokens, LoginDto, RefreshDto } from './auth.types';
+import type { AuthTokens, AuthUser, LoginDto, RefreshDto } from './auth.types';
+import type { UserWithRole } from './auth.repository';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +70,32 @@ export class AuthService {
         expiresIn: env.refreshExpiresIn as any,
         secret: env.refreshSecret,
       }),
+    };
+  }
+
+  async me(userId: string): Promise<AuthUser> {
+    const user = await this.authRepository.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'USER_NOT_FOUND',
+        message: 'Authenticated user no longer exists.',
+      });
+    }
+
+    return this.toAuthUser(user);
+  }
+
+  private toAuthUser(user: UserWithRole): AuthUser {
+    return {
+      email: user.email,
+      id: user.id,
+      permissions: user.role.permissions.map((permission) => ({
+        action: permission.action.name,
+        resource: permission.resource.name,
+      })),
+      role: user.role.name,
+      username: user.username,
     };
   }
 }
