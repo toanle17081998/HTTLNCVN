@@ -123,6 +123,25 @@ Quy uoc:
 - `pnpm 10+`
 - `Docker Desktop`
 
+Kiem tra version:
+
+```powershell
+node --version
+pnpm.cmd --version
+docker --version
+```
+
+> Windows PowerShell co the chan `pnpm.ps1`. Neu gap loi execution policy, dung `pnpm.cmd` thay cho `pnpm`.
+
+### Cai dependencies
+
+Chay tu root repo, khong chay `npm install` trong `apps/api` hoac `apps/web`:
+
+```powershell
+cd C:\code\httlncvn
+pnpm.cmd install
+```
+
 ### Bien moi truong
 
 Copy file mau:
@@ -141,6 +160,17 @@ Copy-Item apps/web/.env.example apps/web/.env
 Copy-Item apps/api/.env.example apps/api/.env
 ```
 
+Gia tri database local dang dung:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=htnc
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=1
+DATABASE_URL=postgresql://postgres:1@localhost:5432/htnc?schema=public
+```
+
 ### Dich vu local
 
 `infra/docker/docker-compose.local.yml` khoi tao:
@@ -153,36 +183,115 @@ Copy-Item apps/api/.env.example apps/api/.env
 
 Chay local infra:
 
-```bash
-pnpm infra:up
+```powershell
+pnpm.cmd infra:up
 ```
 
 Kiem tra container:
 
-```bash
-pnpm infra:ps
+```powershell
+pnpm.cmd infra:ps
 ```
 
 Dung:
 
-```bash
-pnpm infra:down
+```powershell
+pnpm.cmd infra:down
 ```
 
 Xoa volume de reset local:
 
-```bash
-pnpm infra:reset
+```powershell
+pnpm.cmd infra:reset
 ```
 
 Thong tin ket noi local mac dinh:
 
 - PostgreSQL:
-  host `localhost`, port `5432`, db `htnc`, user `postgres`, password `postgres`
+  host `localhost`, port `5432`, db `htnc`, user `postgres`, password `1`, SSL `off`
 - Redis:
   host `localhost`, port `6379`, db `0`
 - Adminer:
   `http://localhost:8080`
+
+Connection string:
+
+```text
+postgresql://postgres:1@localhost:5432/htnc
+```
+
+Neu DB client bao `database "htnc" does not exist`, thu host `localhost` thay vi `127.0.0.1` va dam bao khong co PostgreSQL local khac dang chiem port `5432`.
+
+### Prisma migrate va seed
+
+Generate Prisma Client:
+
+```powershell
+pnpm.cmd api:db:generate
+```
+
+Chay migration:
+
+```powershell
+pnpm.cmd api:db:migrate
+```
+
+Seed du lieu mau neu can:
+
+```powershell
+pnpm.cmd api:db:seed
+```
+
+Kiem tra build API:
+
+```powershell
+pnpm.cmd api:build
+```
+
+### Chay backend
+
+Mo terminal 1:
+
+```powershell
+cd C:\code\httlncvn
+pnpm.cmd api:dev
+```
+
+API mac dinh:
+
+```text
+http://localhost:3001
+http://localhost:3001/api/homepage
+```
+
+### Chay frontend
+
+Mo terminal 2:
+
+```powershell
+cd C:\code\httlncvn
+pnpm --filter web dev
+```
+
+Web mac dinh:
+
+```text
+http://localhost:3000
+```
+
+### Thu tu setup nhanh
+
+```powershell
+cd C:\code\httlncvn
+pnpm install
+pnpm infra:up
+pnpm api:db:generate
+pnpm api:db:migrate
+pnpm api:db:seed
+pnpm api:build
+```
+
+Sau do chay `pnpm api:dev` va `pnpm --filter web dev` o hai terminal rieng.
 
 ## 5. Scaffold FE/BE theo vi tri da chot
 

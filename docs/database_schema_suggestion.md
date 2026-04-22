@@ -58,7 +58,7 @@ model User {
   // Relations to LMS content & tracking
   courses_created   Course[]
   lessons_created   Lesson[]
-  test_attempts     TestAttempt[]
+  quiz_attempts     QuizAttempt[]
   learning_sessions LearningSession[]
   lesson_grades     LessonGrade[]
   course_grades     CourseGrade[]
@@ -198,13 +198,13 @@ model QuestionTemplate {
   created_at              DateTime @default(now()) @db.Timestamptz
 
   lesson                  Lesson?  @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
-  test_maps               TestTemplateMap[]
+  quiz_maps               QuizTemplateMap[]
   snapshots               QuestionSnapshot[]
 
   @@map("question_templates")
 }
 
-model Test {
+model Quiz {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title_vi           String   @db.VarChar(255)
   title_en           String   @db.VarChar(255)
@@ -212,40 +212,40 @@ model Test {
   passing_score      Decimal? @default(50.0) @db.Decimal(5, 2)
   is_active          Boolean? @default(true)
 
-  test_maps          TestTemplateMap[]
-  attempts           TestAttempt[]
+  quiz_maps          QuizTemplateMap[]
+  attempts           QuizAttempt[]
 
-  @@map("tests")
+  @@map("quizzes")
 }
 
-model TestTemplateMap {
-  test_id     String @db.Uuid
+model QuizTemplateMap {
+  quiz_id     String @db.Uuid
   template_id String @db.Uuid
   weight      Int?   @default(1)
   position    Int?
 
-  test        Test             @relation(fields: [test_id], references: [id], onDelete: Cascade)
+  quiz        Quiz             @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
   template    QuestionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
 
-  @@id([test_id, template_id])
-  @@map("test_template_maps")
+  @@id([quiz_id, template_id])
+  @@map("quiz_template_maps")
 }
 
-model TestAttempt {
+model QuizAttempt {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id      String?  @db.Uuid
-  test_id      String?  @db.Uuid
+  quiz_id      String?  @db.Uuid
   total_score  Decimal? @db.Decimal(5, 2)
   is_completed Boolean? @default(false)
   started_at   DateTime @default(now()) @db.Timestamptz
   completed_at DateTime? @db.Timestamptz
 
   user         User?    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  test         Test?    @relation(fields: [test_id], references: [id])
+  quiz         Quiz?    @relation(fields: [quiz_id], references: [id])
   snapshots    QuestionSnapshot[]
   evidence     ActivityEvidence[]
 
-  @@map("test_attempts")
+  @@map("quiz_attempts")
 }
 
 model QuestionSnapshot {
@@ -258,7 +258,7 @@ model QuestionSnapshot {
   points_earned       Int?     @default(0)
   responded_at        DateTime? @db.Timestamptz
 
-  attempt             TestAttempt?      @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  attempt             QuizAttempt?      @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
   template            QuestionTemplate? @relation(fields: [template_id], references: [id])
 
   @@map("question_snapshots")
@@ -323,7 +323,7 @@ model ActivityEvidence {
   uploaded_at DateTime @default(now()) @db.Timestamptz
 
   user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  attempt     TestAttempt?     @relation(fields: [attempt_id], references: [id], onDelete: SetNull)
+  attempt     QuizAttempt?     @relation(fields: [attempt_id], references: [id], onDelete: SetNull)
   session     LearningSession? @relation(fields: [session_id], references: [id], onDelete: SetNull)
 
   @@map("activity_evidence")

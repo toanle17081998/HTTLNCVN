@@ -9,8 +9,11 @@
   },
   "scripts": {
     "api:build": "pnpm --filter @htnc/api build",
+    "api:db:generate": "pnpm --filter @htnc/api db:generate",
     "api:db:migrate": "pnpm --filter @htnc/api db:migrate",
+    "api:db:migrate:deploy": "pnpm --filter @htnc/api db:migrate:deploy",
     "api:db:seed": "pnpm --filter @htnc/api db:seed",
+    "api:db:studio": "pnpm --filter @htnc/api db:studio",
     "api:dev": "pnpm --filter @htnc/api dev",
     "api:start": "pnpm --filter @htnc/api start",
     "infra:up": "docker compose -f infra/docker/docker-compose.local.yml --env-file .env up -d",
@@ -18,8 +21,6 @@
     "infra:logs": "docker compose -f infra/docker/docker-compose.local.yml logs -f",
     "infra:ps": "docker compose -f infra/docker/docker-compose.local.yml ps",
     "infra:restart": "docker compose -f infra/docker/docker-compose.local.yml restart",
-    "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v",
-    "db:migrate": "node apps/api/database/migrate.mjs up",
-    "db:rollback": "node apps/api/database/migrate.mjs down"
+    "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v"
   }
 }

@@ -5,16 +5,15 @@ import { config as loadDotEnv } from 'dotenv';
 
 type EnvShape = {
   appName: string;
-  databaseUrl?: string;
+  databaseUrl: string;
   homepageCacheTtlSeconds: number;
-  port: number;
-  postgres: {
-    database: string;
-    host: string;
-    password: string;
-    port: number;
-    user: string;
+  jwt: {
+    accessExpiresIn: string;
+    accessSecret: string;
+    refreshExpiresIn: string;
+    refreshSecret: string;
   };
+  port: number;
 };
 
 let cachedEnv: EnvShape | null = null;
@@ -33,8 +32,8 @@ function loadEnvFile(): void {
   }
 }
 
-function requireString(name: string, fallback?: string): string {
-  const value = process.env[name] ?? fallback;
+function requireString(name: string): string {
+  const value = process.env[name];
 
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
@@ -82,16 +81,15 @@ export function getEnv(): EnvShape {
 
   cachedEnv = {
     appName: process.env.APP_NAME ?? 'htnc-api',
-    databaseUrl: process.env.DATABASE_URL,
+    databaseUrl: requireString('DATABASE_URL'),
     homepageCacheTtlSeconds: parsePositiveInteger('HOMEPAGE_CACHE_TTL_SECONDS', 300),
-    port: parsePort('PORT', 3001),
-    postgres: {
-      database: requireString('POSTGRES_DB', 'htnc'),
-      host: requireString('POSTGRES_HOST', 'localhost'),
-      password: requireString('POSTGRES_PASSWORD', 'postgres'),
-      port: parsePort('POSTGRES_PORT', 5432),
-      user: requireString('POSTGRES_USER', 'postgres'),
+    jwt: {
+      accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
+      accessSecret: requireString('JWT_ACCESS_SECRET'),
+      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+      refreshSecret: requireString('JWT_REFRESH_SECRET'),
     },
+    port: parsePort('PORT', 3001),
   };
 
   return cachedEnv;
