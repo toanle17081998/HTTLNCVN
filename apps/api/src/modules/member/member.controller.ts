@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 
-import { Can } from '../../common/decorators/permissions.decorator';
+import { Can, Permissions } from '../../common/decorators/permissions.decorator';
 import { MemberService } from './member.service';
-import type { MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
+import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
 @Controller('members')
 export class MemberController {
@@ -21,6 +21,12 @@ export class MemberController {
   @Can('read', 'member')
   findById(@Param('id') id: string): Promise<MemberDto> {
     return this.memberService.findById(id);
+  }
+
+  @Post()
+  @Permissions({ action: 'create', resource: 'member' }, { action: 'update', resource: 'member' })
+  create(@Body() dto: CreateMemberDto): Promise<MemberDto> {
+    return this.memberService.create(dto);
   }
 
   @Patch(':id')

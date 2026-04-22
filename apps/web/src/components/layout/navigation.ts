@@ -43,7 +43,7 @@ export const navItems: NavItem[] = [
     href: "/member",
     labelKey: "nav.member.label",
     descriptionKey: "nav.member.description",
-    permissions: [PERMISSIONS.manageOwnPrayers, PERMISSIONS.manageChurchMembers],
+    permissions: [PERMISSIONS.manageChurchMembers],
   },
   {
     href: "/notification",
