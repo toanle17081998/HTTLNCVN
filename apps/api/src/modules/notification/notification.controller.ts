@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Request } from '@nestjs/common';
 
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { NotificationService } from './notification.service';
 import type { CreateNotificationDto, NotificationListResult } from './notification.types';
@@ -10,6 +10,7 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
+  @Can('read', 'notification')
   findAll(
     @Request() req: { user: JwtPayload },
     @Query('skip') skip = '0',
@@ -19,6 +20,7 @@ export class NotificationController {
   }
 
   @Patch(':id/read')
+  @Can('read', 'notification')
   @HttpCode(HttpStatus.NO_CONTENT)
   markRead(
     @Param('id') id: string,
@@ -27,7 +29,7 @@ export class NotificationController {
     return this.notificationService.markRead(id, req.user.sub);
   }
 
-  @Roles('admin')
+  @Can('create', 'notification')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(

@@ -9,15 +9,17 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { getEnv } from './config/env';
+import { PrismaService } from './database/prisma.service';
 
 async function bootstrap(): Promise<void> {
   const env = getEnv();
   const app = await NestFactory.create(AppModule);
   const reflector = app.get(Reflector);
+  const prisma = app.get(PrismaService);
 
   app.setGlobalPrefix('api');
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector, prisma));
   app.useGlobalInterceptors(new TransformInterceptor());
   app.enableCors();
 

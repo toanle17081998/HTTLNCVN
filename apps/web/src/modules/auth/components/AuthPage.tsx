@@ -1,105 +1,141 @@
 "use client";
 
-import { PageLayout } from "@/components/layout";
-import { Button, Card, cn } from "@/components/ui";
-import {
-  ACCESS_FLOW,
-  useAuth,
-  type AccessProfile,
-} from "@/providers/AuthProvider";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Button, Card, FormField, Input } from "@/components/ui";
+import { useAuth } from "@/providers/AuthProvider";
+import { useLoginMutation, useLogoutMutation } from "@services/auth";
 
-function roleActionLabel(profile: AccessProfile) {
-  if (profile.role === "guest") {
-    return "Continue as guest";
-  }
-
-  return `Use ${profile.shortLabel}`;
-}
+const seededAccounts = [
+  { email: "member@htnc.local", label: "Church Member" },
+  { email: "editor@htnc.local", label: "Church Admin" },
+  { email: "admin@htnc.local", label: "System Admin" },
+];
 
 export function AuthPage() {
-  const { accessRole, currentProfile, switchRole, user } = useAuth();
+  const router = useRouter();
+  const { isAuthenticated, role, user } = useAuth();
+  const loginMutation = useLoginMutation();
+  const logoutMutation = useLogoutMutation();
+  const [email, setEmail] = useState("editor@htnc.local");
+  const [password, setPassword] = useState("seed-password");
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await loginMutation.mutateAsync({ email, password });
+    router.push("/");
+    router.refresh();
+  }
+
+  async function handleLogout() {
+    await logoutMutation.mutateAsync();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
-    <PageLayout
-      description="Pick the access flow you want to preview. Guest users browse public content, church members use personal community tools, church admins manage ministry content, and system admins operate the platform."
-      eyebrow="Access flow"
-      title="Choose one of four user paths"
-    >
-      <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-        <div className="grid gap-4 md:grid-cols-2">
-          {ACCESS_FLOW.map((profile) => {
-            const isActive = profile.role === accessRole;
+    <main className="grid min-h-screen place-items-center px-4 py-10 sm:px-6">
+      <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_20rem]">
+        <Card className="grid gap-6 p-6 sm:p-8">
+          <div>
+            <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+              Authentication
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              Sign in
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+              Sign in with a real API account. Authorization is loaded from database roles,
+              actions, resources, and role permissions.
+            </p>
+          </div>
 
-            return (
-              <Card
-                className={cn(
-                  "grid gap-5 p-6",
-                  isActive && "border-[var(--brand-primary)] shadow-md",
-                )}
-                key={profile.role}
+          <form className="grid gap-4" onSubmit={handleLogin}>
+            <FormField htmlFor="api-email" label="Email">
+              <Input
+                id="api-email"
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                type="email"
+                value={email}
+              />
+            </FormField>
+
+            <FormField htmlFor="api-password" label="Password">
+              <Input
+                id="api-password"
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+              />
+            </FormField>
+
+            <div className="flex flex-wrap gap-2">
+              <Button disabled={loginMutation.isPending} type="submit">
+                {loginMutation.isPending ? "Signing in..." : "Sign in"}
+              </Button>
+              <Button
+                disabled={!isAuthenticated || logoutMutation.isPending}
+                onClick={handleLogout}
+                type="button"
+                variant="secondary"
               >
-                <div>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
-                      {profile.shortLabel}
-                    </p>
-                    {isActive ? (
-                      <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
-                        Active
-                      </span>
-                    ) : null}
-                  </div>
-                  <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-                    {profile.label}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                    {profile.description}
-                  </p>
-                </div>
+                Sign out
+              </Button>
+            </div>
 
-                <ul className="grid gap-2 text-sm text-[var(--text-secondary)]">
-                  {profile.capabilities.map((capability) => (
-                    <li
-                      className="rounded-md border border-[var(--border-subtle)] px-3 py-2"
-                      key={capability}
-                    >
-                      {capability}
-                    </li>
-                  ))}
-                </ul>
+            {loginMutation.error ? (
+              <p className="text-sm font-medium text-[var(--status-danger)]">
+                {loginMutation.error instanceof Error
+                  ? loginMutation.error.message
+                  : "Login failed."}
+              </p>
+            ) : null}
+          </form>
 
-                <Button
-                  disabled={isActive}
-                  onClick={() => switchRole(profile.role)}
-                  variant={isActive ? "secondary" : "primary"}
-                >
-                  {isActive ? "Current flow" : roleActionLabel(profile)}
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
+          <div className="grid gap-2">
+            {seededAccounts.map((account) => (
+              <button
+                className="rounded-md border border-[var(--border-subtle)] px-3 py-2 text-left text-sm transition hover:bg-[var(--brand-muted)]"
+                key={account.email}
+                onClick={() => {
+                  setEmail(account.email);
+                  setPassword("seed-password");
+                }}
+                type="button"
+              >
+                <span className="block font-semibold text-[var(--text-primary)]">
+                  {account.label}
+                </span>
+                <span className="text-[var(--text-secondary)]">{account.email}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
 
         <Card className="h-max p-6">
           <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
-            Current access
+            Current session
           </p>
           <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-            {currentProfile.label}
+            {isAuthenticated ? role : "Guest"}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            {currentProfile.description}
-          </p>
           <div className="mt-5 rounded-md border border-[var(--border-subtle)] px-4 py-3">
             <p className="text-sm font-semibold text-[var(--text-primary)]">
-              {user?.displayName ?? "Guest visitor"}
+              {user?.username ?? "Public visitor"}
             </p>
             <p className="text-sm text-[var(--text-secondary)]">
-              {user?.email ?? "No account session"}
+              {user?.email ?? "No API session"}
             </p>
           </div>
+          {user ? (
+            <p className="mt-4 text-sm text-[var(--text-secondary)]">
+              {user.permissions.length} permissions loaded from the database.
+            </p>
+          ) : null}
         </Card>
       </div>
-    </PageLayout>
+    </main>
   );
 }

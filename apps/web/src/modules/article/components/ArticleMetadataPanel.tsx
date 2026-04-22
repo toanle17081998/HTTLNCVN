@@ -8,12 +8,14 @@ type ArticleMetadataPanelProps = {
   title: string;
   excerpt: string;
   category: string;
+  status: "draft" | "published";
   tags: string;
   isSubmitting: boolean;
   submitState: SubmitState;
   onTitleChange: (v: string) => void;
   onExcerptChange: (v: string) => void;
   onCategoryChange: (v: string) => void;
+  onStatusChange: (v: "draft" | "published") => void;
   onTagsChange: (v: string) => void;
 };
 
@@ -21,12 +23,14 @@ export function ArticleMetadataPanel({
   title,
   excerpt,
   category,
+  status,
   tags,
   isSubmitting,
   submitState,
   onTitleChange,
   onExcerptChange,
   onCategoryChange,
+  onStatusChange,
   onTagsChange,
 }: ArticleMetadataPanelProps) {
   const { t } = useTranslation();
@@ -67,6 +71,17 @@ export function ArticleMetadataPanel({
           <option value="discipleship">Discipleship</option>
           <option value="event">Event</option>
           <option value="testimony">Testimony</option>
+        </Select>
+      </FormField>
+
+      <FormField htmlFor="article-status" label="Status">
+        <Select
+          id="article-status"
+          onChange={(e) => onStatusChange(e.target.value === "published" ? "published" : "draft")}
+          value={status}
+        >
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
         </Select>
       </FormField>
 

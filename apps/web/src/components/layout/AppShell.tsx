@@ -14,6 +14,14 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
+  if (pathname === "/auth") {
+    return (
+      <div className="min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
       <div className="flex min-w-0 flex-1 flex-col">

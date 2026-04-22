@@ -12,9 +12,15 @@ export type AuthTokens = {
   refreshToken: string;
 };
 
+export type AuthPermission = {
+  action: string;
+  resource: string;
+};
+
 export type AuthUser = {
   email: string;
   id: string;
+  permissions: AuthPermission[];
   role: string;
   username: string;
 };

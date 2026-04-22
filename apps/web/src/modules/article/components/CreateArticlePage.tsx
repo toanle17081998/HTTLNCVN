@@ -8,9 +8,18 @@ import {
   type FormEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Card, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import {
+  articleApi,
+  useArticleQuery,
+  useCreateArticleMutation,
+  useUpdateArticleMutation,
+  type ArticleStatus,
+  type CreateArticleDto,
+} from "@services/article";
 import {
   type ColumnResizeState,
   type EditorMode,
@@ -36,8 +45,26 @@ import { ArticleMetadataPanel } from "./ArticleMetadataPanel";
 import { MediaInsertModal } from "./MediaInsertModal";
 import { TableInsertModal } from "./TableInsertModal";
 
+function slugify(value: string) {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || `article-${Date.now()}`
+  );
+}
+
 export function CreateArticlePage() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editSlug = searchParams.get("slug") ?? undefined;
+  const articleQuery = useArticleQuery(editSlug);
+  const createArticle = useCreateArticleMutation();
+  const updateArticle = useUpdateArticleMutation(editSlug ?? "");
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const editorRef = useRef<HTMLDivElement>(null);
@@ -50,6 +77,7 @@ export function CreateArticlePage() {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [category, setCategory] = useState("community");
+  const [status, setStatus] = useState<ArticleStatus>("draft");
   const [tags, setTags] = useState("");
   const [contentHtml, setContentHtml] = useState("");
   const [editorMode, setEditorMode] = useState<EditorMode>("rich");
@@ -61,6 +89,25 @@ export function CreateArticlePage() {
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeToolbarKeys, setActiveToolbarKeys] = useState<ToolbarItemKey[]>([]);
+
+  useEffect(() => {
+    const article = articleQuery.data;
+    if (!article) return;
+
+    setTitle(article.title_vi || article.title_en);
+    setExcerpt(article.cover_image_url ?? "");
+    setCategory(article.category?.name ?? "community");
+    setStatus(article.status === "published" ? "published" : "draft");
+    setTags("");
+    setMarkdownContent(article.content_markdown_vi);
+    setContentHtml(article.content_markdown_vi);
+    window.requestAnimationFrame(() => {
+      if (editorRef.current) {
+        editorRef.current.innerHTML = article.content_markdown_vi || "<p><br></p>";
+        syncEditor();
+      }
+    });
+  }, [articleQuery.data]);
 
   const hasEditorContent =
     editorMode === "markdown"
@@ -556,7 +603,6 @@ export function CreateArticlePage() {
   // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsSubmitting(true);
     setSubmitState({ status: "idle", message: "" });
 
     const isMarkdownMode = editorMode === "markdown";
@@ -567,27 +613,42 @@ export function CreateArticlePage() {
       ? markdownContent.trim()
       : editorRef.current?.innerText.trim() ?? "";
 
-    const payload = {
-      title,
-      excerpt,
-      category,
-      tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
-      contentHtml: nextContentHtml,
-      contentText,
+    if (!title.trim()) {
+      setSubmitState({ status: "error", message: "Title is required." });
+      return;
+    }
+
+    if (!contentText && !nextContentHtml.trim()) {
+      setSubmitState({ status: "error", message: "Content is required." });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const nextSlug = editSlug ?? slugify(title);
+    const payload: CreateArticleDto = {
+      content_markdown_en: isMarkdownMode ? markdownContent : nextContentHtml,
+      content_markdown_vi: isMarkdownMode ? markdownContent : nextContentHtml,
+      cover_image_url: excerpt.trim() || undefined,
+      slug: nextSlug,
+      title_en: title.trim(),
+      title_vi: title.trim(),
     };
 
     try {
-      const response = await fetch("/api/article", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = (await response.json()) as { error?: string; article?: { id: string } };
-      if (!response.ok) throw new Error(result.error ?? "Article submit failed.");
+      let article = editSlug
+        ? await updateArticle.mutateAsync({ ...payload, status })
+        : await createArticle.mutateAsync(payload);
+
+      if (!editSlug && status === "published") {
+        article = await articleApi.update(article.slug, { status });
+      }
+
       setSubmitState({
         status: "success",
-        message: `Submitted JSON article ${result.article?.id ?? ""}`.trim(),
+        message: `${editSlug ? "Updated" : "Created"} article ${article.slug}.`,
       });
+      router.refresh();
     } catch (error) {
       setSubmitState({
         status: "error",
@@ -601,10 +662,16 @@ export function CreateArticlePage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <PageLayout
-      description={t("article.create.description")}
+      description={editSlug ? "Update article content and publishing status." : t("article.create.description")}
       eyebrow={t("page.article.eyebrow")}
-      title={t("article.create.title")}
+      title={editSlug ? "Edit article" : t("article.create.title")}
     >
+      {articleQuery.isFetching && editSlug ? (
+        <Card className="mb-4 p-4 text-sm text-[var(--text-secondary)]">
+          Loading article...
+        </Card>
+      ) : null}
+
       <form
         className="grid gap-4 lg:grid-cols-[20rem_1fr] lg:items-start"
         onSubmit={handleSubmit}
@@ -614,11 +681,13 @@ export function CreateArticlePage() {
           category={category}
           excerpt={excerpt}
           isSubmitting={isSubmitting}
+          status={status}
           submitState={submitState}
           tags={tags}
           title={title}
           onCategoryChange={setCategory}
           onExcerptChange={setExcerpt}
+          onStatusChange={setStatus}
           onTagsChange={setTags}
           onTitleChange={setTitle}
         />

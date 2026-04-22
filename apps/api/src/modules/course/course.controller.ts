@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { CourseService } from './course.service';
 import type {
@@ -42,7 +42,7 @@ export class CourseController {
     return this.courseService.findBySlug(slug);
   }
 
-  @Roles('admin', 'instructor')
+  @Can('create', 'course')
   @Post()
   create(
     @Body() dto: CreateCourseDto,
@@ -51,13 +51,13 @@ export class CourseController {
     return this.courseService.create(dto, req.user.sub);
   }
 
-  @Roles('admin', 'instructor')
+  @Can('update', 'course')
   @Patch(':slug')
   update(@Param('slug') slug: string, @Body() dto: UpdateCourseDto): Promise<CourseDto> {
     return this.courseService.update(slug, dto);
   }
 
-  @Roles('admin', 'instructor')
+  @Can('delete', 'course')
   @Delete(':slug')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('slug') slug: string): Promise<void> {
@@ -65,6 +65,7 @@ export class CourseController {
   }
 
   @Post(':id/enroll')
+  @Can('enroll', 'course')
   @HttpCode(HttpStatus.CREATED)
   enroll(
     @Param('id') id: string,

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { EventService } from './event.service';
 import type {
@@ -48,7 +48,7 @@ export class EventController {
     return this.eventService.findBySlug(slug);
   }
 
-  @Roles('admin')
+  @Can('create', 'event')
   @Post()
   create(
     @Body() dto: CreateEventDto,
@@ -57,13 +57,13 @@ export class EventController {
     return this.eventService.create(dto, req.user.sub);
   }
 
-  @Roles('admin')
+  @Can('update', 'event')
   @Patch(':slug')
   update(@Param('slug') slug: string, @Body() dto: UpdateEventDto): Promise<EventDto> {
     return this.eventService.update(slug, dto);
   }
 
-  @Roles('admin')
+  @Can('delete', 'event')
   @Delete(':slug')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('slug') slug: string): Promise<void> {

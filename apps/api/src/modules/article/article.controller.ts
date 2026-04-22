@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { ArticleService } from './article.service';
 import type {
@@ -48,7 +48,7 @@ export class ArticleController {
     return this.articleService.findBySlug(slug);
   }
 
-  @Roles('admin', 'editor')
+  @Can('create', 'article')
   @Post()
   create(
     @Body() dto: CreateArticleDto,
@@ -57,13 +57,13 @@ export class ArticleController {
     return this.articleService.create(dto, req.user.sub);
   }
 
-  @Roles('admin', 'editor')
+  @Can('update', 'article')
   @Patch(':slug')
   update(@Param('slug') slug: string, @Body() dto: UpdateArticleDto): Promise<ArticleDto> {
     return this.articleService.update(slug, dto);
   }
 
-  @Roles('admin', 'editor')
+  @Can('delete', 'article')
   @Delete(':slug')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('slug') slug: string): Promise<void> {

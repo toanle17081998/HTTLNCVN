@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, cn } from "@/components/ui";
-import { ACCESS_FLOW, ROLES, useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
 import { LanguageToggle } from "./LanguageToggle";
@@ -16,15 +17,14 @@ type HeaderProps = {
 };
 
 export function Header({ pathname }: HeaderProps) {
+  const router = useRouter();
   const { t } = useTranslation();
   const {
-    accessRole,
     can,
     canAny,
-    currentProfile,
     isAuthenticated,
     logout,
-    switchRole,
+    role,
     user,
   } = useAuth();
   const settingsNavItem = navItems.find((item) => item.href === "/auth");
@@ -138,6 +138,14 @@ export function Header({ pathname }: HeaderProps) {
     });
   }
 
+  function handleLogout() {
+    logout();
+    setSettingsOpen(false);
+    setMobileMenuOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
   return (
     <header
       className={cn(
@@ -212,33 +220,11 @@ export function Header({ pathname }: HeaderProps) {
                     Access
                   </p>
                   <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                    {currentProfile.label}
+                    {role}
                   </p>
                   <p className="text-xs text-[var(--text-secondary)]">
                     {user?.email ?? "Public browsing"}
                   </p>
-                </div>
-                <div className="grid gap-1" role="group" aria-label="Access role">
-                  {ACCESS_FLOW.map((profile) => {
-                    const isActive = profile.role === accessRole;
-
-                    return (
-                      <button
-                        aria-pressed={isActive}
-                        className={cn(
-                          "rounded-md px-3 py-2 text-left text-sm font-semibold transition hover:bg-[var(--brand-muted)]",
-                          isActive
-                            ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
-                            : "text-[var(--text-secondary)]",
-                        )}
-                        key={profile.role}
-                        onClick={() => switchRole(profile.role)}
-                        type="button"
-                      >
-                        {profile.shortLabel}
-                      </button>
-                    );
-                  })}
                 </div>
                 {settingsNavItem ? (
                   <Link
@@ -251,16 +237,16 @@ export function Header({ pathname }: HeaderProps) {
                   </Link>
                 ) : null}
                 {isAuthenticated ? (
-                  <Button onClick={logout} size="sm" variant="secondary">
+                  <Button onClick={handleLogout} size="sm" variant="secondary">
                     Log out
                   </Button>
                 ) : (
-                  <Button
-                    onClick={() => switchRole(ROLES.churchMember)}
-                    size="sm"
+                  <Link
+                    className="inline-flex h-9 items-center justify-center rounded-md border border-transparent bg-[var(--btn-primary-bg)] px-3 text-sm font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                    href="/auth"
                   >
-                    Log in member
-                  </Button>
+                    Log in
+                  </Link>
                 )}
                 {canCreateContent ? (
                   <Button size="sm" variant="secondary">
