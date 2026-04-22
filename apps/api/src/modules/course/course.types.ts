@@ -118,6 +118,8 @@ export type CreateQuestionTemplateDto = {
   template_type?: string;
 };
 
+export type UpdateQuestionTemplateDto = Partial<CreateQuestionTemplateDto>;
+
 export type QuizListDto = {
   id: string;
   is_active: boolean;

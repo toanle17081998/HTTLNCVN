@@ -32,6 +32,7 @@ import type {
   SubmitAnswerResultDto,
   UpdateCourseDto,
   UpdateLessonDto,
+  UpdateQuestionTemplateDto,
   UpdateQuizDto,
 } from './course.types';
 
@@ -126,6 +127,22 @@ export class CourseController {
     @Body() dto: CreateQuestionTemplateDto,
   ): Promise<QuestionTemplateDto> {
     return this.courseService.createTemplate(lessonId, dto);
+  }
+
+  @Can('update', 'quiz')
+  @Patch('templates/:templateId')
+  updateTemplate(
+    @Param('templateId') templateId: string,
+    @Body() dto: UpdateQuestionTemplateDto,
+  ): Promise<QuestionTemplateDto> {
+    return this.courseService.updateTemplate(templateId, dto);
+  }
+
+  @Can('delete', 'quiz')
+  @Delete('templates/:templateId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteTemplate(@Param('templateId') templateId: string): Promise<void> {
+    return this.courseService.deleteTemplate(templateId);
   }
 
   @Public()

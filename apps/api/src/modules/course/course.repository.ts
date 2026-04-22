@@ -19,6 +19,7 @@ import type {
   SubmitAnswerResultDto,
   UpdateCourseDto,
   UpdateLessonDto,
+  UpdateQuestionTemplateDto,
   UpdateQuizDto,
 } from './course.types';
 
@@ -429,6 +430,31 @@ export class CourseRepository {
     });
 
     return this.mapTemplate(template);
+  }
+
+  async updateTemplate(templateId: string, dto: UpdateQuestionTemplateDto): Promise<QuestionTemplateDto> {
+    const template = await this.prisma.questionTemplate.update({
+      where: { id: templateId },
+      data: {
+        ...(dto.answer_formula !== undefined && { answer_formula: dto.answer_formula }),
+        ...(dto.body_template_en !== undefined && { body_template_en: dto.body_template_en }),
+        ...(dto.body_template_vi !== undefined && { body_template_vi: dto.body_template_vi }),
+        ...(dto.difficulty !== undefined && { difficulty: dto.difficulty }),
+        ...(dto.explanation_template_en !== undefined && { explanation_template_en: dto.explanation_template_en }),
+        ...(dto.explanation_template_vi !== undefined && { explanation_template_vi: dto.explanation_template_vi }),
+        ...(dto.logic_config !== undefined && { logic_config: dto.logic_config as Prisma.InputJsonValue }),
+        ...(dto.template_type !== undefined && { template_type: dto.template_type }),
+      },
+      include: { lesson: true },
+    });
+
+    return this.mapTemplate(template);
+  }
+
+  async deleteTemplate(templateId: string): Promise<void> {
+    await this.prisma.questionTemplate.delete({
+      where: { id: templateId },
+    });
   }
 
   async listQuizzes(courseSlug?: string): Promise<QuizListDto[]> {

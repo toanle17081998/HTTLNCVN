@@ -8,7 +8,13 @@ import { Button, Card } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { markdownToHtml } from "@/modules/article/components/articleEditorUtils";
-import { useLessonQuery, useStartQuizMutation, type QuizListItem } from "@services/course";
+import {
+  useLessonQuery,
+  useStartQuizMutation,
+  useDeleteTemplateMutation,
+  useDeleteLessonMutation,
+  type QuizListItem,
+} from "@services/course";
 
 type LessonDetailPageProps = {
   courseSlug: string;
@@ -31,6 +37,8 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
   const canTakeQuiz = can(PERMISSIONS.takeAssessments);
   const lessonQuery = useLessonQuery(courseSlug, lessonId);
   const startQuiz = useStartQuizMutation();
+  const deleteTemplate = useDeleteTemplateMutation(lessonId);
+  const deleteLesson = useDeleteLessonMutation(courseSlug);
   const lesson = lessonQuery.data;
   const body = lesson?.content_markdown_vi || lesson?.content_markdown_en || "";
   const html = useMemo(() => renderLessonBody(body), [body]);
@@ -60,8 +68,34 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
           <article className="grid min-w-0 gap-5">
             <Card className="p-6">
-              <div className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                Lesson {lesson.order_index ?? "-"}
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                  Lesson {lesson.order_index ?? "-"}
+                </div>
+                {can(PERMISSIONS.manageCourses) && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => router.push(`/course/${courseSlug}/lesson/${lessonId}/edit`)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                      onClick={async () => {
+                        if (confirm("Are you sure you want to delete this lesson?")) {
+                          await deleteLesson.mutateAsync(lessonId);
+                          router.push(`/course/${courseSlug}`);
+                        }
+                      }}
+                    >
+                      Delete Lesson
+                    </Button>
+                  </div>
+                )}
               </div>
               <div
                 className="mt-5 text-base leading-7 text-[var(--text-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
@@ -77,7 +111,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
             </Link>
           </article>
 
-          <aside className="lg:sticky lg:top-24">
+          <aside className="lg:sticky lg:top-24 grid gap-5">
             <Card className="p-5">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Lesson quizzes</h2>
               <div className="mt-4 grid gap-3">
@@ -107,6 +141,52 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                 <p className="mt-3 text-sm text-[var(--text-secondary)]">No quizzes yet.</p>
               ) : null}
             </Card>
+
+            {can(PERMISSIONS.manageCourses) && (
+              <Card className="p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-[var(--text-primary)]">Templates</h2>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => router.push(`/course/${courseSlug}/lesson/${lessonId}/template/create`)}
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="mt-4 grid gap-2">
+                  {lesson.templates?.map((template) => (
+                    <div key={template.id} className="text-xs p-2 rounded border border-[var(--border-subtle)] flex justify-between items-center">
+                      <span className="truncate mr-2">{template.body_template_vi || template.body_template_en}</span>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => router.push(`/course/${courseSlug}/lesson/${lessonId}/template/${template.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                          onClick={async () => {
+                            if (confirm("Are you sure you want to delete this template?")) {
+                              await deleteTemplate.mutateAsync(template.id);
+                            }
+                          }}
+                        >
+                          Del
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {!lesson.templates?.length && (
+                    <p className="text-sm text-[var(--text-secondary)]">No templates yet.</p>
+                  )}
+                </div>
+              </Card>
+            )}
           </aside>
         </div>
       ) : null}

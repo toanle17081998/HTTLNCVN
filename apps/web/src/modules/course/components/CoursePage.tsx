@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCoursesQuery } from "@services/course";
 
 export function CoursePage() {
+  const router = useRouter();
   const { can } = useAuth();
   const canManageCourses = can(PERMISSIONS.manageCourses);
   const coursesQuery = useCoursesQuery({
@@ -21,6 +23,13 @@ export function CoursePage() {
       eyebrow="Education"
       title="Courses"
     >
+      {canManageCourses && (
+        <div className="mb-6 flex justify-end">
+          <Button onClick={() => router.push("/course/create")}>
+            Create Course
+          </Button>
+        </div>
+      )}
       {coursesQuery.isLoading ? (
         <Card className="p-6 text-sm text-[var(--text-secondary)]">Loading courses...</Card>
       ) : null}

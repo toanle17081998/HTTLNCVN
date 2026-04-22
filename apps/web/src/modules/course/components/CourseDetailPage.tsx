@@ -10,6 +10,7 @@ import {
   useCourseQuery,
   useCourseQuizzesQuery,
   useStartQuizMutation,
+  useDeleteCourseMutation,
   type QuizListItem,
 } from "@services/course";
 
@@ -24,6 +25,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const courseQuery = useCourseQuery(slug);
   const quizzesQuery = useCourseQuizzesQuery(slug);
   const startQuiz = useStartQuizMutation();
+  const deleteCourse = useDeleteCourseMutation();
   const course = courseQuery.data;
 
   async function handleStartQuiz(quiz: QuizListItem) {
@@ -58,6 +60,26 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
               />
             ) : null}
 
+            {can(PERMISSIONS.manageCourses) && (
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => router.push(`/course/${slug}/edit`)}>
+                  Edit Course
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to delete this course?")) {
+                      await deleteCourse.mutateAsync(slug);
+                      router.push("/course");
+                    }
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            )}
+
             <Card className="p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
@@ -78,7 +100,18 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
             </Card>
 
             <section className="grid gap-3">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Lessons</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Lessons</h2>
+                {can(PERMISSIONS.manageCourses) && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => router.push(`/course/${slug}/lesson/create`)}
+                  >
+                    Add Lesson
+                  </Button>
+                )}
+              </div>
               {course.lessons.map((lesson) => (
                 <Link
                   className="rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"

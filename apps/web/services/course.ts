@@ -88,6 +88,7 @@ export type Lesson = {
   order_index: number | null;
   quiz_count: number;
   quizzes: QuizListItem[];
+  templates: QuestionTemplate[];
   title_en: string;
   title_vi: string;
   updated_at: string;
@@ -127,6 +128,8 @@ export type CreateQuestionTemplateDto = {
   logic_config?: unknown;
   template_type?: string;
 };
+
+export type UpdateQuestionTemplateDto = Partial<CreateQuestionTemplateDto>;
 
 export type Quiz = QuizListItem & {
   templates: QuestionTemplate[];
@@ -256,6 +259,19 @@ export const courseApi = {
       },
     );
   },
+  updateTemplate(templateId: string, dto: UpdateQuestionTemplateDto) {
+    return apiRequest<QuestionTemplate>(`/courses/templates/${encodeURIComponent(templateId)}`, {
+      body: JSON.stringify(dto),
+      method: "PATCH",
+      token: getStoredTokens()?.accessToken,
+    });
+  },
+  deleteTemplate(templateId: string) {
+    return apiRequest<void>(`/courses/templates/${encodeURIComponent(templateId)}`, {
+      method: "DELETE",
+      token: getStoredTokens()?.accessToken,
+    });
+  },
   quizzes(courseSlug?: string) {
     return apiRequest<QuizListItem[]>(
       courseSlug ? `/courses/${encodeURIComponent(courseSlug)}/quizzes` : "/courses/quizzes",
@@ -384,6 +400,17 @@ export function useUpdateCourseMutation(slug: string) {
   });
 }
 
+export function useDeleteCourseMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: courseApi.delete,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.lists() });
+    },
+  });
+}
+
 export function useCreateLessonMutation(courseSlug: string) {
   const queryClient = useQueryClient();
 
@@ -395,11 +422,58 @@ export function useCreateLessonMutation(courseSlug: string) {
   });
 }
 
+export function useUpdateLessonMutation(lessonId: string, courseSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: UpdateLessonDto) => courseApi.updateLesson(lessonId, dto),
+    onSuccess(lesson) {
+      queryClient.setQueryData(courseKeys.lesson(lessonId), lesson);
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseSlug) });
+    },
+  });
+}
+
+export function useDeleteLessonMutation(courseSlug: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: courseApi.deleteLesson,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseSlug) });
+    },
+  });
+}
+
 export function useCreateTemplateMutation(lessonId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (dto: CreateQuestionTemplateDto) => courseApi.createTemplate(lessonId, dto),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.lesson(lessonId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
+export function useUpdateTemplateMutation(templateId: string, lessonId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: UpdateQuestionTemplateDto) => courseApi.updateTemplate(templateId, dto),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.lesson(lessonId) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
+export function useDeleteTemplateMutation(lessonId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: courseApi.deleteTemplate,
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: courseKeys.lesson(lessonId) });
       queryClient.invalidateQueries({ queryKey: courseKeys.all });

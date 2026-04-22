@@ -17,6 +17,7 @@ import type {
   SubmitAnswerResultDto,
   UpdateCourseDto,
   UpdateLessonDto,
+  UpdateQuestionTemplateDto,
   UpdateQuizDto,
 } from './course.types';
 
@@ -98,6 +99,14 @@ export class CourseService {
 
   createTemplate(lessonId: string, dto: CreateQuestionTemplateDto): Promise<QuestionTemplateDto> {
     return this.courseRepository.createTemplate(lessonId, dto);
+  }
+
+  updateTemplate(templateId: string, dto: UpdateQuestionTemplateDto): Promise<QuestionTemplateDto> {
+    return this.courseRepository.updateTemplate(templateId, dto);
+  }
+
+  deleteTemplate(templateId: string): Promise<void> {
+    return this.courseRepository.deleteTemplate(templateId);
   }
 
   listQuizzes(courseSlug?: string): Promise<QuizListDto[]> {
