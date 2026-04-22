@@ -100,12 +100,22 @@ export const articleApi = {
       token: getStoredTokens()?.accessToken,
     });
   },
+  categories() {
+    return apiRequest<ArticleCategory[]>("/articles/categories");
+  },
 };
 
 export function useArticlesQuery(params: ArticleListParams = {}) {
   return useQuery({
     queryFn: () => articleApi.list(params),
     queryKey: articleKeys.list(params),
+  });
+}
+
+export function useArticleCategoriesQuery() {
+  return useQuery({
+    queryFn: articleApi.categories,
+    queryKey: [...articleKeys.all, "categories"],
   });
 }
 

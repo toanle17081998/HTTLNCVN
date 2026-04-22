@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, Input } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import {
   useFinishAttemptMutation,
   useQuizAttemptQuery,
@@ -15,6 +16,7 @@ type QuizAttemptPageProps = {
 };
 
 export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
+  const { t, locale } = useTranslation();
   const attemptQuery = useQuizAttemptQuery(attemptId);
   const submitAnswer = useSubmitAnswerMutation(attemptId);
   const finishAttempt = useFinishAttemptMutation(attemptId);
@@ -34,17 +36,17 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
 
   return (
     <PageLayout
-      description="Answer each question, then finish the quiz to calculate your score."
-      eyebrow="Quiz"
-      title={attempt?.quiz?.title_vi || attempt?.quiz?.title_en || "Quiz attempt"}
+      description={t("quiz.timeLimit")}
+      eyebrow={t("quiz.title")}
+      title={locale === "vi" ? (attempt?.quiz?.title_vi || attempt?.quiz?.title_en || "Làm bài trắc nghiệm") : (attempt?.quiz?.title_en || attempt?.quiz?.title_vi || "Quiz attempt")}
     >
       {attemptQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">Loading quiz...</Card>
+        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
       ) : null}
 
       {attemptQuery.error ? (
         <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
-          {attemptQuery.error instanceof Error ? attemptQuery.error.message : "Could not load quiz."}
+          {attemptQuery.error instanceof Error ? attemptQuery.error.message : t("page.course.description")}
         </Card>
       ) : null}
 
@@ -58,7 +60,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                 <Card className="p-5" key={snapshot.id}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                      Question {index + 1}
+                      {t("quiz.question")} {index + 1}
                     </span>
                     {answered ? (
                       <span
@@ -69,13 +71,13 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                             : "bg-[color-mix(in_srgb,var(--status-danger)_14%,transparent)] text-[var(--status-danger)]",
                         ].join(" ")}
                       >
-                        {snapshot.is_correct ? "Correct" : "Incorrect"}
+                        {snapshot.is_correct ? t("common.ready") : t("common.cancel")}
                       </span>
                     ) : null}
                   </div>
 
                   <h2 className="mt-3 text-base font-semibold text-[var(--text-primary)]">
-                    {template?.body_template_vi || template?.body_template_en || "Question"}
+                    {locale === "vi" ? (template?.body_template_vi || template?.body_template_en || "Câu hỏi") : (template?.body_template_en || template?.body_template_vi || "Question")}
                   </h2>
 
                   {answered ? (
@@ -132,14 +134,14 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                   disabled={finishAttempt.isPending}
                   onClick={handleFinish}
                 >
-                  Finish quiz
+                  {t("quiz.status.completed")}
                 </Button>
               )}
               <Link
                 className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
                 href="/course"
               >
-                Back to courses
+                {t("nav.course.label")}
               </Link>
             </Card>
           </aside>

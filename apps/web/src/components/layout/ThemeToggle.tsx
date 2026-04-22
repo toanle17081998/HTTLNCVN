@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { cn } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 
 type Theme = "light" | "dark";
 
@@ -63,6 +64,7 @@ function updateTheme(nextTheme: Theme) {
 }
 
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const theme = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
@@ -81,7 +83,7 @@ export function ThemeToggle() {
       onClick={() => updateTheme(isDark ? "light" : "dark")}
       type="button"
     >
-      <span>Theme</span>
+      <span>{t("common.theme")}</span>
       <span
         className={cn(
           "relative h-5 w-9 rounded-full border border-[var(--border-strong)] transition",

@@ -43,6 +43,12 @@ export class ArticleController {
   }
 
   @Public()
+  @Get('categories')
+  findCategories(): Promise<{ id: number; name: string }[]> {
+    return this.articleService.findCategories();
+  }
+
+  @Public()
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<ArticleDto> {
     return this.articleService.findBySlug(slug);

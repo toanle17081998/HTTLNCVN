@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Button, Card, FormField, Input, cn } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { CreateLessonDto, Lesson } from "@services/course";
 import { ModularEditor, type ModularEditorHandle } from "@/modules/article/components/ModularEditor";
 
@@ -13,6 +14,7 @@ type LessonFormProps = {
 };
 
 export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFormProps) {
+  const { t } = useTranslation();
   const contentEnRef = useRef<ModularEditorHandle>(null);
   const contentViRef = useRef<ModularEditorHandle>(null);
 
@@ -76,7 +78,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
         <div className="grid grid-cols-1 md:grid-cols-[1fr_10rem] gap-6">
           <div className="grid grid-cols-1 gap-6">
             <div className={cn(editLang !== "en" && "hidden")}>
-              <FormField label="Title (English)" htmlFor="title_en">
+              <FormField label={t("lesson.form.title_en")} htmlFor="title_en">
                 <Input
                   id="title_en"
                   name="title_en"
@@ -90,7 +92,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
             </div>
 
             <div className={cn(editLang !== "vi" && "hidden")}>
-              <FormField label="Title (Vietnamese)" htmlFor="title_vi">
+              <FormField label={t("lesson.form.title_vi")} htmlFor="title_vi">
                 <Input
                   id="title_vi"
                   name="title_vi"
@@ -104,7 +106,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
             </div>
           </div>
 
-          <FormField label="Order" htmlFor="order_index">
+          <FormField label={t("lesson.form.order")} htmlFor="order_index">
             <Input
               id="order_index"
               name="order_index"
@@ -119,7 +121,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
         <div className="grid gap-8">
           <div className={cn(editLang !== "en" && "hidden")}>
             <ModularEditor
-              label="Content (English)"
+              label={t("lesson.form.content_en")}
               initialValue={formData.content_markdown_en}
               onChange={(val) => handleEditorChange("content_markdown_en", val)}
               placeholder="Write lesson content in English..."
@@ -129,7 +131,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
 
           <div className={cn(editLang !== "vi" && "hidden")}>
             <ModularEditor
-              label="Nội dung (Tiếng Việt)"
+              label={t("lesson.form.content_vi")}
               initialValue={formData.content_markdown_vi}
               onChange={(val) => handleEditorChange("content_markdown_vi", val)}
               placeholder="Viết nội dung bài học bằng tiếng Việt..."
@@ -145,10 +147,10 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
             onClick={() => window.history.back()}
             disabled={isLoading}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
-            {initialData ? "Update Lesson" : "Create Lesson"}
+            {initialData ? t("lesson.action.update") : t("lesson.action.create")}
           </Button>
         </div>
       </form>

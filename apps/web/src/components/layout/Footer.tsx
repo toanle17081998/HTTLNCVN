@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   CalendarDays,
@@ -6,47 +8,50 @@ import {
   MessageCircle,
   type LucideIcon,
 } from "lucide-react";
+import { useTranslation } from "@/providers/I18nProvider";
 
 type ContactItem = {
   icon: LucideIcon;
-  label: string;
-  value: string;
+  labelKey: any;
+  valueKey: any;
   href?: string;
 };
 
 const contactItems: ContactItem[] = [
   {
     icon: Mail,
-    label: "General",
-    value: "hello@httlncvn.local",
+    labelKey: "footer.contact.general",
+    valueKey: "hello@httlncvn.local", // Assuming this is fixed
     href: "mailto:hello@httlncvn.local",
   },
   {
     icon: CalendarDays,
-    label: "Events",
-    value: "events@httlncvn.local",
+    labelKey: "footer.contact.events",
+    valueKey: "events@httlncvn.local",
     href: "mailto:events@httlncvn.local",
   },
   {
     icon: MapPin,
-    label: "Visit",
-    value: "Sunday support desk after service",
+    labelKey: "footer.contact.visit",
+    valueKey: "footer.contact.visitValue",
   },
   {
     icon: MessageCircle,
-    label: "Community",
-    value: "Telegram updates and prayer support",
+    labelKey: "footer.contact.community",
+    valueKey: "footer.contact.communityValue",
   },
 ];
 
 const footerLinks = [
-  { href: "/about", label: "About Us" },
-  { href: "/article", label: "Article" },
-  { href: "/event", label: "Events" },
-  { href: "/auth", label: "Access" },
+  { href: "/about", labelKey: "nav.about.label" },
+  { href: "/article", labelKey: "nav.article.label" },
+  { href: "/event", labelKey: "nav.event.label" },
+  { href: "/auth", labelKey: "nav.auth.label" },
 ] as const;
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl gap-8">
@@ -60,22 +65,24 @@ export function Footer() {
               />
               <div>
                 <p className="font-semibold text-[var(--text-primary)]">
-                  HTNC Platform
+                  {t("app.name")}
                 </p>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  Learning and community
+                  {t("app.tagline")}
                 </p>
               </div>
             </div>
             <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-              Public learning, community updates, member tools, and ministry
-              workflows in one shared space.
+              {t("footer.description")}
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             {contactItems.map((item) => {
               const Icon = item.icon;
+              const label = t(item.labelKey);
+              const value = item.valueKey.includes(".") ? t(item.valueKey) : item.valueKey;
+              
               const content = (
                 <>
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--brand-muted)] text-[var(--brand-primary)]">
@@ -83,10 +90,10 @@ export function Footer() {
                   </span>
                   <span>
                     <span className="block text-sm font-semibold text-[var(--text-primary)]">
-                      {item.label}
+                      {label}
                     </span>
                     <span className="mt-0.5 block text-sm leading-5 text-[var(--text-secondary)]">
-                      {item.value}
+                      {value}
                     </span>
                   </span>
                 </>
@@ -96,14 +103,14 @@ export function Footer() {
                 <a
                   className="flex items-center gap-3 rounded-md border border-[var(--border-subtle)] p-3 transition hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)]"
                   href={item.href}
-                  key={item.label}
+                  key={item.labelKey}
                 >
                   {content}
                 </a>
               ) : (
                 <div
                   className="flex items-center gap-3 rounded-md border border-[var(--border-subtle)] p-3"
-                  key={item.label}
+                  key={item.labelKey}
                 >
                   {content}
                 </div>
@@ -114,7 +121,7 @@ export function Footer() {
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-5">
           <p className="text-sm text-[var(--text-secondary)]">
-            © HTTLNC 2026. All rights reserved.
+            © HTTLNC 2026. {t("footer.rights")}
           </p>
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
             {footerLinks.map((item) => (
@@ -123,7 +130,7 @@ export function Footer() {
                 href={item.href}
                 key={item.href}
               >
-                {item.label}
+                {t(item.labelKey as any)}
               </Link>
             ))}
           </nav>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { CreateQuestionTemplateDto, QuestionTemplate } from "@services/course";
 
 type QuestionTemplateFormProps = {
@@ -12,6 +13,7 @@ type QuestionTemplateFormProps = {
 };
 
 export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }: QuestionTemplateFormProps) {
+  const { t } = useTranslation();
   const [editLang, setEditLang] = useState<"en" | "vi">("vi");
   const [formData, setFormData] = useState({
     template_type: initialData?.template_type || "short_answer",
@@ -169,10 +171,10 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
             onClick={() => window.history.back()}
             disabled={isLoading}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
-            {initialData ? "Update Template" : "Create Template"}
+            {initialData ? t("course.action.update") : t("course.action.create")}
           </Button>
         </div>
       </form>

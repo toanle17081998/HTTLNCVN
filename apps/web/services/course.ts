@@ -43,6 +43,7 @@ export type CourseListResult = {
 };
 
 export type CourseListParams = {
+  level?: string;
   skip?: number;
   status?: CourseStatus;
   take?: number;
@@ -62,6 +63,16 @@ export type CreateCourseDto = {
 export type UpdateCourseDto = Partial<CreateCourseDto> & {
   status?: CourseStatus;
 };
+
+function courseListSearch(params: CourseListParams = {}) {
+  const search = new URLSearchParams();
+  if (params.status) search.set("status", params.status);
+  if (params.level) search.set("level", params.level);
+  if (params.skip !== undefined) search.set("skip", String(params.skip));
+  if (params.take !== undefined) search.set("take", String(params.take));
+  const query = search.toString();
+  return query ? `?${query}` : "";
+}
 
 export type QuizListItem = {
   id: string;
@@ -176,15 +187,6 @@ export type SubmitAnswerResult = {
   is_correct: boolean;
   right_answer: string | null;
 };
-
-function courseListSearch(params: CourseListParams = {}) {
-  const search = new URLSearchParams();
-  if (params.status) search.set("status", params.status);
-  if (params.skip !== undefined) search.set("skip", String(params.skip));
-  if (params.take !== undefined) search.set("take", String(params.take));
-  const query = search.toString();
-  return query ? `?${query}` : "";
-}
 
 export const courseKeys = {
   all: ["courses"] as const,

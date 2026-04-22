@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
@@ -20,6 +21,7 @@ type CourseDetailPageProps = {
 };
 
 export function CourseDetailPage({ slug }: CourseDetailPageProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { can, isAuthenticated } = useAuth();
   const canTakeQuiz = can(PERMISSIONS.takeAssessments);
@@ -42,17 +44,17 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
   return (
     <PageLayout
-      description={course?.summary ?? "Course lessons and quizzes."}
-      eyebrow="Course"
-      title={course?.title_vi || course?.title_en || "Course"}
+      description={course?.summary || (locale === "vi" ? "Bài học và câu hỏi trắc nghiệm của khóa học." : "Course lessons and quizzes.")}
+      eyebrow={t("nav.course.label")}
+      title={locale === "vi" ? (course?.title_vi || course?.title_en || "Khóa học") : (course?.title_en || course?.title_vi || "Course")}
     >
       {courseQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">Loading course...</Card>
+        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
       ) : null}
 
       {courseQuery.error ? (
         <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
-          {courseQuery.error instanceof Error ? courseQuery.error.message : "Could not load course."}
+          {courseQuery.error instanceof Error ? courseQuery.error.message : t("page.course.description")}
         </Card>
       ) : null}
 
@@ -70,19 +72,19 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
             {can(PERMISSIONS.manageCourses) && (
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => router.push(`/course/${slug}/edit`)}>
-                  Edit Course
+                  {t("course.action.edit")}
                 </Button>
                 <Button
                   variant="ghost"
                   className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                   onClick={async () => {
-                    if (confirm("Are you sure you want to delete this course?")) {
+                    if (confirm(t("course.action.deleteConfirm"))) {
                       await deleteCourse.mutateAsync(slug);
                       router.push("/course");
                     }
                   }}
                 >
-                  Delete
+                  {t("prayer.action.delete")}
                 </Button>
               </div>
             )}
@@ -90,13 +92,13 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
             <Card className="p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-                  {course.level}
+                  {t(`course.form.level.${course.level as any}`)}
                 </span>
                 <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                  {course.lesson_count} lessons
+                  {course.lesson_count} {t("lesson.label").toLowerCase()}s
                 </span>
                 <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                  {course.estimated_duration_minutes} minutes
+                  {course.estimated_duration_minutes} {t("quiz.minutes")}
                 </span>
               </div>
               {descriptionHtml ? (
@@ -109,14 +111,14 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
             <section className="grid gap-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Lessons</h2>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("lesson.label")}s</h2>
                 {can(PERMISSIONS.manageCourses) && (
                   <Button
                     size="sm"
                     variant="secondary"
                     onClick={() => router.push(`/course/${slug}/lesson/create`)}
                   >
-                    Add Lesson
+                    {t("lesson.action.add")}
                   </Button>
                 )}
               </div>
@@ -130,15 +132,15 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                          Lesson {lesson.order_index ?? "-"}
+                          {t("lesson.label")} {lesson.order_index ?? "-"}
                         </p>
                         <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                          {lesson.title_vi || lesson.title_en}
+                          {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
                         </h3>
                       </div>
                       {lesson.quiz_count ? (
                         <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                          {lesson.quiz_count} quizzes
+                          {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
                         </span>
                       ) : null}
                     </div>
@@ -150,7 +152,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
           <aside className="grid gap-4 lg:sticky lg:top-24">
             <Card className="p-5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Course quizzes</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("quiz.title")}s</h2>
               <div className="mt-4 grid gap-3">
                 {quizzesQuery.data?.map((quiz) => (
                   <div
@@ -158,7 +160,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                     key={quiz.id}
                   >
                     <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-                      {quiz.title_vi || quiz.title_en}
+                      {locale === "vi" ? (quiz.title_vi || quiz.title_en) : (quiz.title_en || quiz.title_vi)}
                     </h3>
                     <p className="mt-1 text-xs text-[var(--text-secondary)]">
                       {quiz.question_count} questions · Passing {quiz.passing_score}%
@@ -169,7 +171,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                       onClick={() => handleStartQuiz(quiz)}
                       size="sm"
                     >
-                      Start quiz
+                      {t("quiz.action.start")}
                     </Button>
                   </div>
                 ))}

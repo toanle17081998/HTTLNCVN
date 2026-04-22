@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { PageLayout } from "@/components/layout";
 import { Card } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleQuery } from "@services/article";
 import { markdownToHtml } from "./articleEditorUtils";
 
@@ -86,6 +87,7 @@ function renderArticleBody(value: string) {
 }
 
 export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
+  const { t, locale } = useTranslation();
   const articleQuery = useArticleQuery(slug);
   const article = articleQuery.data;
   const body = article?.content_markdown_vi || article?.content_markdown_en || "";
@@ -93,24 +95,43 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
 
   return (
     <PageLayout
-      description={article?.title_en ?? "Read article details."}
-      eyebrow={article?.category?.name ?? "Article"}
-      title={article?.title_vi || article?.title_en || "Article"}
+      description={locale === "vi" ? (article?.title_vi || "Xem chi tiết bài viết.") : (article?.title_en || "Read article details.")}
+      eyebrow={article?.category?.name ?? t("nav.article.label")}
+      title={locale === "vi" ? (article?.title_vi || article?.title_en || "Bài viết") : (article?.title_en || article?.title_vi || "Article")}
     >
       {articleQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">Loading article...</Card>
+        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
       ) : null}
 
       {articleQuery.error ? (
         <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
           {articleQuery.error instanceof Error
             ? articleQuery.error.message
-            : "Could not load article."}
+            : t("page.article.description")}
         </Card>
       ) : null}
 
       {article ? (
         <div className="mx-auto grid w-full max-w-6xl gap-5 lg:grid-cols-[minmax(0,48rem)_16rem] lg:items-start">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Article",
+                headline: locale === "vi" ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi),
+                image: article.cover_image_url ? [article.cover_image_url] : [],
+                datePublished: article.published_at,
+                dateModified: article.updated_at,
+                author: [
+                  {
+                    "@type": "Person",
+                    name: article.creator.username,
+                  },
+                ],
+              }),
+            }}
+          />
           <article className="grid min-w-0 gap-5">
             {article.cover_image_url ? (
               <img
@@ -139,7 +160,7 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
               className="inline-flex h-10 w-max items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
               href="/article"
             >
-              Back to articles
+              {t("nav.article.label")}
             </Link>
           </article>
 

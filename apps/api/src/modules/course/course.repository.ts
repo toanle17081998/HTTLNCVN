@@ -206,10 +206,11 @@ export class CourseRepository {
     };
   }
 
-  async findAll(skip: number, take: number, status?: string): Promise<CourseListResult> {
+  async findAll(skip: number, take: number, status?: string, level?: string): Promise<CourseListResult> {
     const where = {
       deleted_at: null,
       ...(status !== undefined && { status }),
+      ...(level !== undefined && { level }),
     };
 
     const [items, total] = await this.prisma.$transaction([

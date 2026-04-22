@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
@@ -26,6 +27,7 @@ function renderLessonBody(value: string) {
 }
 
 export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps) {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const { can, isAuthenticated } = useAuth();
   const canTakeQuiz = can(PERMISSIONS.takeAssessments);
@@ -44,17 +46,17 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
 
   return (
     <PageLayout
-      description={lesson?.course.title_vi ?? "Course lesson."}
-      eyebrow={lesson?.course.title_vi ?? "Lesson"}
-      title={lesson?.title_vi || lesson?.title_en || "Lesson"}
+      description={locale === "vi" ? (lesson?.course.title_vi ?? "Bài học khóa học.") : (lesson?.course.title_en ?? "Course lesson.")}
+      eyebrow={locale === "vi" ? (lesson?.course.title_vi ?? "Bài học") : (lesson?.course.title_en ?? "Lesson")}
+      title={locale === "vi" ? (lesson?.title_vi || lesson?.title_en || "Bài học") : (lesson?.title_en || lesson?.title_vi || "Lesson")}
     >
       {lessonQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">Loading lesson...</Card>
+        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
       ) : null}
 
       {lessonQuery.error ? (
         <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
-          {lessonQuery.error instanceof Error ? lessonQuery.error.message : "Could not load lesson."}
+          {lessonQuery.error instanceof Error ? lessonQuery.error.message : t("page.article.description")}
         </Card>
       ) : null}
 
@@ -64,7 +66,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                  Lesson {lesson.order_index ?? "-"}
+                  {t("lesson.label")} {lesson.order_index ?? "-"}
                 </div>
                 {can(PERMISSIONS.manageCourses) && (
                   <div className="flex gap-2">
@@ -73,20 +75,20 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                       variant="ghost"
                       onClick={() => router.push(`/course/${courseSlug}/lesson/${lessonId}/edit`)}
                     >
-                      Edit
+                      {t("lesson.action.edit")}
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                       onClick={async () => {
-                        if (confirm("Are you sure you want to delete this lesson?")) {
+                        if (confirm(t("lesson.action.deleteConfirm"))) {
                           await deleteLesson.mutateAsync(lessonId);
                           router.push(`/course/${courseSlug}`);
                         }
                       }}
                     >
-                      Delete Lesson
+                      {t("lesson.action.delete")}
                     </Button>
                   </div>
                 )}
@@ -101,13 +103,13 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
               className="inline-flex h-10 w-max items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
               href={`/course/${encodeURIComponent(courseSlug)}`}
             >
-              Back to course
+              {t("nav.course.label")}
             </Link>
           </article>
 
           <aside className="lg:sticky lg:top-24 grid gap-5">
             <Card className="p-5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Lesson quizzes</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("quiz.title")}</h2>
               <div className="mt-4 grid gap-3">
                 {lesson.quizzes.map((quiz) => (
                   <div
@@ -115,7 +117,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                     key={quiz.id}
                   >
                     <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-                      {quiz.title_vi || quiz.title_en}
+                      {locale === "vi" ? (quiz.title_vi || quiz.title_en) : (quiz.title_en || quiz.title_vi)}
                     </h3>
                     <p className="mt-1 text-xs text-[var(--text-secondary)]">
                       {quiz.question_count} questions
@@ -126,7 +128,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                       onClick={() => handleStartQuiz(quiz)}
                       size="sm"
                     >
-                      Start quiz
+                      {t("quiz.action.start")}
                     </Button>
                   </div>
                 ))}

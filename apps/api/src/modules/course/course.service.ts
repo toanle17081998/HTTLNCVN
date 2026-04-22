@@ -25,8 +25,8 @@ import type {
 export class CourseService {
   constructor(private readonly courseRepository: CourseRepository) {}
 
-  findAll(skip: number, take: number, status?: string): Promise<CourseListResult> {
-    return this.courseRepository.findAll(skip, take, status);
+  findAll(skip: number, take: number, status?: string, level?: string): Promise<CourseListResult> {
+    return this.courseRepository.findAll(skip, take, status, level);
   }
 
   async findBySlug(slug: string): Promise<CourseDto> {

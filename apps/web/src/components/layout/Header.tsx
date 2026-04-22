@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
@@ -179,7 +179,7 @@ export function Header({ pathname }: HeaderProps) {
           <button
             aria-controls="mobile-primary-navigation"
             aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
+            aria-label={mobileMenuOpen ? t("nav.closeNavigation") : t("nav.openNavigation")}
             className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] md:hidden"
             onClick={() => {
               setMobileMenuOpen((open) => !open);
@@ -205,7 +205,7 @@ export function Header({ pathname }: HeaderProps) {
               }}
               type="button"
             >
-              Settings
+              {t("nav.settings")}
             </button>
 
             {settingsOpen ? (
@@ -217,13 +217,13 @@ export function Header({ pathname }: HeaderProps) {
                 <ThemeToggle />
                 <div className="rounded-md border border-[var(--border-subtle)] px-3 py-2">
                   <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                    Access
+                    {t("nav.access")}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
                     {role}
                   </p>
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {user?.email ?? "Public browsing"}
+                    {user?.email ?? t("nav.publicBrowsing")}
                   </p>
                 </div>
                 {settingsNavItem ? (
@@ -233,19 +233,19 @@ export function Header({ pathname }: HeaderProps) {
                     onClick={() => setSettingsOpen(false)}
                     role="menuitem"
                   >
-                    Access flow
+                    {t("nav.accessFlow")}
                   </Link>
                 ) : null}
                 {isAuthenticated ? (
                   <Button onClick={handleLogout} size="sm" variant="secondary">
-                    Log out
+                    {t("nav.logout")}
                   </Button>
                 ) : (
                   <Link
                     className="inline-flex h-9 items-center justify-center rounded-md border border-transparent bg-[var(--btn-primary-bg)] px-3 text-sm font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
                     href="/auth"
                   >
-                    Log in
+                    {t("nav.login")}
                   </Link>
                 )}
                 {canCreateContent ? (

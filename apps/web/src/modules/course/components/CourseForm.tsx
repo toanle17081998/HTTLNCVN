@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { CreateCourseDto, Course } from "@services/course";
 import { ModularEditor, type ModularEditorHandle } from "@/modules/article/components/ModularEditor";
 
@@ -13,6 +14,7 @@ type CourseFormProps = {
 };
 
 export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFormProps) {
+  const { t } = useTranslation();
   const descriptionRef = useRef<ModularEditorHandle>(null);
   const [editLang, setEditLang] = useState<"en" | "vi">("vi");
 
@@ -80,7 +82,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
           <div className="space-y-8">
             <div className="grid grid-cols-1 gap-6">
               <div className={cn(editLang !== "en" && "hidden")}>
-                <FormField label="Title (English)" htmlFor="title_en">
+                <FormField label={t("course.form.title_en")} htmlFor="title_en">
                   <Input
                     id="title_en"
                     name="title_en"
@@ -94,7 +96,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               </div>
 
               <div className={cn(editLang !== "vi" && "hidden")}>
-                <FormField label="Title (Vietnamese)" htmlFor="title_vi">
+                <FormField label={t("course.form.title_vi")} htmlFor="title_vi">
                   <Input
                     id="title_vi"
                     name="title_vi"
@@ -108,7 +110,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               </div>
             </div>
 
-            <FormField label="Summary" htmlFor="summary" hint="A short teaser for the course list.">
+            <FormField label={t("course.form.summary")} htmlFor="summary" hint={t("course.form.summaryHint")}>
               <Textarea
                 id="summary"
                 name="summary"
@@ -121,7 +123,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             </FormField>
 
             <ModularEditor
-              label="Description"
+              label={t("course.form.description")}
               initialValue={formData.description}
               onChange={(val) => handleEditorChange("description", val)}
               placeholder="Full course description..."
@@ -131,7 +133,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
 
           {/* Right Column: Metadata */}
           <div className="space-y-6">
-            <FormField label="Slug" htmlFor="slug" hint="URL-friendly name">
+            <FormField label={t("course.form.slug")} htmlFor="slug" hint={t("course.form.slugHint")}>
               <Input
                 id="slug"
                 name="slug"
@@ -144,7 +146,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               />
             </FormField>
 
-            <FormField label="Level" htmlFor="level">
+            <FormField label={t("course.form.level")} htmlFor="level">
               <Select
                 id="level"
                 name="level"
@@ -152,13 +154,13 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 onChange={handleChange}
                 className="bg-[var(--bg-base)] w-full"
               >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="beginner">{t("course.form.level.beginner")}</option>
+                <option value="intermediate">{t("course.form.level.intermediate")}</option>
+                <option value="advanced">{t("course.form.level.advanced")}</option>
               </Select>
             </FormField>
 
-            <FormField label="Cover Image URL" htmlFor="cover_image_url">
+            <FormField label={t("course.form.coverImage")} htmlFor="cover_image_url">
               <Input
                 id="cover_image_url"
                 name="cover_image_url"
@@ -169,7 +171,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               />
             </FormField>
 
-            <FormField label="Estimated Duration (minutes)" htmlFor="estimated_duration_minutes">
+            <FormField label={t("course.form.duration")} htmlFor="estimated_duration_minutes">
               <Input
                 id="estimated_duration_minutes"
                 name="estimated_duration_minutes"
@@ -180,7 +182,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               />
             </FormField>
 
-            <FormField label="Status" htmlFor="status">
+            <FormField label={t("course.form.status")} htmlFor="status">
               <Select
                 id="status"
                 name="status"
@@ -188,8 +190,8 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 onChange={handleChange}
                 className="bg-[var(--bg-base)] w-full"
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="draft">{t("course.form.status.draft")}</option>
+                <option value="published">{t("course.form.status.published")}</option>
               </Select>
             </FormField>
           </div>
@@ -202,10 +204,10 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             onClick={() => window.history.back()}
             disabled={isLoading}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
-            {initialData ? "Update Course" : "Create Course"}
+            {initialData ? t("course.action.update") : t("course.action.create")}
           </Button>
         </div>
       </form>

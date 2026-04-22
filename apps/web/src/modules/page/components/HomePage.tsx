@@ -4,62 +4,36 @@ import Link from "next/link";
 import { Card, cn } from "@/components/ui";
 import {
   homepageMockData,
-  type HomepageCourse,
   type HomepageEvent,
-  type HomepageLecture,
 } from "@/mockData";
+import { useTranslation } from "@/providers/I18nProvider";
+import { useArticlesQuery, type ArticleListItem } from "@services/article";
+import { useCoursesQuery, type CourseListItem } from "@services/course";
 
-const monthLabels = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
-function formatDateTime(value: string) {
+function formatDateTime(value: string, locale: string) {
   const date = new Date(value);
-  const month = monthLabels[date.getUTCMonth()];
-  const day = date.getUTCDate();
-  const hour = date.getUTCHours();
-  const minute = date.getUTCMinutes();
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 || 12;
-  const displayMinute = minute.toString().padStart(2, "0");
-
-  return `${month} ${day}, ${displayHour}:${displayMinute} ${suffix}`;
+  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
 }
 
-function formatDuration(seconds: number) {
-  const minutes = Math.max(1, Math.round(seconds / 60));
-
-  return `${minutes} min`;
-}
-
-function formatCourseDuration(minutes: number) {
+function formatCourseDuration(minutes: number, t: (key: string) => string) {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
 
   if (!hours) {
-    return `${remainingMinutes} min`;
+    return `${remainingMinutes} ${t("common.unit.minute")}`;
   }
 
   if (!remainingMinutes) {
-    return `${hours} hr`;
+    return `${hours} ${t("common.unit.hour")}`;
   }
 
-  return `${hours} hr ${remainingMinutes} min`;
-}
-
-function levelLabel(level: HomepageCourse["level"]) {
-  return level[0].toUpperCase() + level.slice(1);
+  return `${hours} ${t("common.unit.hour")} ${remainingMinutes} ${t("common.unit.minute")}`;
 }
 
 function SectionHeader({
@@ -96,35 +70,38 @@ function SectionHeader({
   );
 }
 
-function LectureCard({ lecture }: { lecture: HomepageLecture }) {
+function ArticleCard({ article }: { article: ArticleListItem }) {
+  const { t, locale } = useTranslation();
   return (
     <Card className="grid gap-4 p-5">
       <div className="flex items-center justify-between gap-3">
         <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-          {lecture.lesson_type}
+          {article.category?.name || t("nav.article.label")}
         </span>
-        <span className="text-sm font-medium text-[var(--text-secondary)]">
-          {formatDuration(lecture.duration_seconds)}
-        </span>
+        {article.published_at ? (
+          <span className="text-sm font-medium text-[var(--text-secondary)]">
+            {formatDateTime(article.published_at, locale)}
+          </span>
+        ) : null}
       </div>
       <div>
-        <p className="text-sm font-medium text-[var(--text-secondary)]">
-          {lecture.course.title}
-        </p>
         <h3 className="mt-1 text-lg font-semibold leading-6 text-[var(--text-primary)]">
-          {lecture.title}
+          {locale === "vi" ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi)}
         </h3>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-          {lecture.short_description}
+        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
+          {locale === "vi" ? (article.title_en) : ""}
         </p>
       </div>
       <div className="flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
         <span className="font-medium text-[var(--text-primary)]">
-          {lecture.instructor.name}
+          {article.creator.username}
         </span>
-        <span className="text-[var(--text-secondary)]">
-          {formatDateTime(lecture.published_at)}
-        </span>
+        <Link
+          href={`/article/${encodeURIComponent(article.slug)}`}
+          className="text-[var(--brand-primary)] font-semibold hover:underline"
+        >
+          {t("action.readMore")}
+        </Link>
       </div>
     </Card>
   );
@@ -137,6 +114,7 @@ function EventCard({
   event: HomepageEvent;
   featured?: boolean;
 }) {
+  const { t, locale } = useTranslation();
   return (
     <Card className={cn("overflow-hidden", featured && "lg:row-span-2")}>
       {event.cover_image_url ? (
@@ -151,7 +129,7 @@ function EventCard({
       <div className="grid gap-4 p-5">
         <div>
           <p className="text-sm font-semibold text-[var(--brand-primary)]">
-            {formatDateTime(event.starts_at)}
+            {formatDateTime(event.starts_at, locale)}
           </p>
           <h3 className="mt-1 text-xl font-semibold text-[var(--text-primary)]">
             {event.title}
@@ -162,7 +140,7 @@ function EventCard({
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
           <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
-            {event.is_online ? "Online" : event.location_name}
+            {event.is_online ? t("event.location.online") : event.location_name}
           </span>
           <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
             {event.organizer.name}
@@ -173,39 +151,47 @@ function EventCard({
   );
 }
 
-function CourseCard({ course }: { course: HomepageCourse }) {
+function CourseCard({ course }: { course: CourseListItem }) {
+  const { t, locale } = useTranslation();
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden flex flex-col">
       {course.cover_image_url ? (
         <div
           className="h-40 bg-cover bg-center"
           style={{ backgroundImage: `url(${course.cover_image_url})` }}
         />
-      ) : null}
-      <div className="grid gap-4 p-5">
+      ) : (
+        <div className="h-40 bg-[var(--brand-muted)] flex items-center justify-center">
+           <span className="text-[var(--brand-primary)] font-bold text-2xl opacity-20">HTNC</span>
+        </div>
+      )}
+      <div className="grid gap-4 p-5 flex-1">
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
           <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-[var(--brand-primary)]">
-            {levelLabel(course.level)}
+            {t(`course.form.level.${course.level}` as any)}
           </span>
           <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
-            {course.lesson_count} lessons
+            {course.lesson_count} {t("course.form.lessons")}
           </span>
         </div>
         <div>
-          <h3 className="text-xl font-semibold leading-7 text-[var(--text-primary)]">
-            {course.title}
+          <h3 className="text-xl font-semibold leading-7 text-[var(--text-primary)] line-clamp-2">
+            {locale === "vi" ? (course.title_vi || course.title_en) : (course.title_en || course.title_vi)}
           </h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
             {course.summary}
           </p>
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
           <span className="font-medium text-[var(--text-primary)]">
-            {course.instructor.name}
+            {course.creator?.username || "HTNC"}
           </span>
-          <span className="text-[var(--text-secondary)]">
-            {formatCourseDuration(course.estimated_duration_minutes)}
-          </span>
+          <Link
+            href={`/course/${encodeURIComponent(course.slug)}`}
+            className="text-[var(--brand-primary)] font-semibold hover:underline"
+          >
+            {t("action.readMore")}
+          </Link>
         </div>
       </div>
     </Card>
@@ -213,8 +199,18 @@ function CourseCard({ course }: { course: HomepageCourse }) {
 }
 
 export function HomePage() {
-  const { hero, newLectures, events, featuredCourses } = homepageMockData;
+  const { t } = useTranslation();
+  const articlesQuery = useArticlesQuery({ take: 3, status: "published" });
+  const coursesQuery = useCoursesQuery({ take: 3, status: "published" });
+
+  const { events } = homepageMockData;
   const [featuredEvent, ...secondaryEvents] = events;
+
+  const stats = [
+    { label: t("home.stats.courses"), value: "12" },
+    { label: t("home.stats.lectures"), value: "28" },
+    { label: t("home.stats.gatherings"), value: "6" },
+  ];
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-8">
@@ -223,27 +219,27 @@ export function HomePage() {
           <div className="flex flex-col justify-center gap-7 px-6 py-10 sm:px-8 lg:px-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]">
-                {hero.eyebrow}
+                {t("home.hero.eyebrow")}
               </p>
               <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-[var(--text-primary)] sm:text-5xl">
-                {hero.headline}
+                {t("home.hero.headline")}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
-                {hero.subheadline}
+                {t("home.hero.subheadline")}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
                 className="inline-flex h-11 items-center justify-center rounded-md border border-transparent bg-[var(--btn-primary-bg)] px-5 text-base font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                href={hero.cta.href}
+                href="/course"
               >
-                {hero.cta.label}
+                {t("home.hero.cta")}
               </Link>
               <Link
                 className="inline-flex h-11 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-5 text-base font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                href={hero.secondaryCta.href}
+                href="/event"
               >
-                {hero.secondaryCta.label}
+                {t("home.hero.secondaryCta")}
               </Link>
             </div>
             <Link
@@ -251,15 +247,14 @@ export function HomePage() {
               href="/about"
             >
               <span className="block font-semibold text-[var(--text-primary)]">
-                About HTNC
+                {t("home.about.title")}
               </span>
               <span>
-                Read the public article about our learning focus, community, and
-                why this platform exists.
+                {t("home.about.description")}
               </span>
             </Link>
             <div className="grid gap-3 sm:grid-cols-3">
-              {hero.stats.map((stat) => (
+              {stats.map((stat) => (
                 <div
                   className="rounded-md border border-[var(--border-subtle)] px-4 py-3"
                   key={stat.label}
@@ -289,22 +284,28 @@ export function HomePage() {
 
       <section className="grid gap-4">
         <SectionHeader
-          action={{ href: "/course", label: "Browse lessons" }}
-          eyebrow="New lectures"
-          title="Recently published learning"
+          action={{ href: "/article", label: t("nav.article.label") }}
+          eyebrow={t("page.article.eyebrow")}
+          title={t("page.article.title")}
         />
-        <div className="grid gap-4 lg:grid-cols-3">
-          {newLectures.map((lecture) => (
-            <LectureCard key={lecture.id} lecture={lecture} />
-          ))}
-        </div>
+        {articlesQuery.isLoading ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+             {[1, 2, 3].map(i => <Card key={i} className="h-48 animate-pulse bg-[var(--bg-base)]" />)}
+          </div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-3">
+            {articlesQuery.data?.items.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4">
         <SectionHeader
-          action={{ href: "/event", label: "See calendar" }}
-          eyebrow="Events"
-          title="Upcoming gatherings"
+          action={{ href: "/event", label: t("event.calendar.view") }}
+          eyebrow={t("page.event.eyebrow")}
+          title={t("page.event.title")}
         />
         <div className="grid gap-4 lg:grid-cols-2">
           {featuredEvent ? (
@@ -320,15 +321,21 @@ export function HomePage() {
 
       <section className="grid gap-4">
         <SectionHeader
-          action={{ href: "/course", label: "View all courses" }}
-          eyebrow="Featured courses"
-          title="Start a guided path"
+          action={{ href: "/course", label: t("nav.course.label") }}
+          eyebrow={t("nav.course.label")}
+          title={t("page.course.title")}
         />
-        <div className="grid gap-4 lg:grid-cols-3">
-          {featuredCourses.map((course) => (
-            <CourseCard course={course} key={course.id} />
-          ))}
-        </div>
+        {coursesQuery.isLoading ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+             {[1, 2, 3].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-base)]" />)}
+          </div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-3">
+            {coursesQuery.data?.items.map((course) => (
+              <CourseCard course={course} key={course.id} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
