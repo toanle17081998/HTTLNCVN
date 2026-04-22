@@ -17,6 +17,7 @@ import {
   useArticleQuery,
   useCreateArticleMutation,
   useUpdateArticleMutation,
+  type Article,
   type ArticleStatus,
   type CreateArticleDto,
 } from "@services/article";
@@ -50,38 +51,136 @@ function slugify(value: string) {
     value
       .trim()
       .toLowerCase()
+      .replace(/[đĐ]/g, "d")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
+      .replace(/['’]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-{2,}/g, "-")
       .replace(/^-+|-+$/g, "") || `article-${Date.now()}`
   );
 }
 
 export function CreateArticlePage() {
-  const { t } = useTranslation();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const editSlug = searchParams.get("slug") ?? undefined;
   const articleQuery = useArticleQuery(editSlug);
+
+  if (editSlug && articleQuery.isLoading) {
+    return (
+      <PageLayout
+        description="Loading article content."
+        eyebrow="Article"
+        title="Edit article"
+      >
+        <Card className="p-4 text-sm text-[var(--text-secondary)]">
+          Loading article...
+        </Card>
+      </PageLayout>
+    );
+  }
+
+  if (editSlug && articleQuery.error) {
+    return (
+      <PageLayout
+        description="The article could not be loaded."
+        eyebrow="Article"
+        title="Edit article"
+      >
+        <Card className="p-4 text-sm font-medium text-[var(--status-danger)]">
+          {articleQuery.error instanceof Error
+            ? articleQuery.error.message
+            : "Could not load article."}
+        </Card>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <ArticleEditorPage
+      key={editSlug ?? "create"}
+      editSlug={editSlug}
+      initialArticle={articleQuery.data ?? null}
+    />
+  );
+}
+
+type ArticleEditorPageProps = {
+  editSlug?: string;
+  initialArticle: Article | null;
+};
+
+function isRichTextHtml(value: string) {
+  return /<\/?(p|h[1-6]|ul|ol|li|blockquote|figure|img|video|iframe|table|thead|tbody|tr|td|th|a|strong|em|div|span)\b/i.test(
+    value,
+  );
+}
+
+function hasMeaningfulRichHtml(value: string) {
+  const text = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+
+  return Boolean(text || /<(figure|iframe|img|table|video)\b|class=["'][^"']*article-columns/i.test(value));
+}
+
+function getColumnLeftPercentFromTemplate(template: string) {
+  const calcMatch = template.match(/calc\(([\d.]+)%/);
+  if (calcMatch) return Number.parseFloat(calcMatch[1]);
+
+  const percentMatches = Array.from(template.matchAll(/([\d.]+)%/g));
+  if (percentMatches.length >= 2) {
+    const left = Number.parseFloat(percentMatches[0][1]);
+    const right = Number.parseFloat(percentMatches[1][1]);
+    const total = left + right;
+    return total > 0 ? (left / total) * 100 : left;
+  }
+
+  return null;
+}
+
+function getEditableColumnTemplate(leftPercent: number) {
+  const boundedLeftPercent = Math.min(Math.max(leftPercent, 20), 80);
+  return `calc(${boundedLeftPercent.toFixed(2)}% - 0.375rem) 0.75rem calc(${(100 - boundedLeftPercent).toFixed(2)}% - 0.375rem)`;
+}
+
+function ArticleEditorPage({ editSlug, initialArticle }: ArticleEditorPageProps) {
+  const { t } = useTranslation();
+  const router = useRouter();
   const createArticle = useCreateArticleMutation();
   const updateArticle = useUpdateArticleMutation(editSlug ?? "");
+  const initialBody = initialArticle?.content_markdown_vi ?? "";
+  const initialEditorMode: EditorMode =
+    initialArticle && !isRichTextHtml(initialBody) ? "markdown" : "rich";
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const editorRef = useRef<HTMLDivElement>(null);
+  const initialEditorHtmlRef = useRef(initialBody || "<p><br></p>");
+  const editorInitializedRef = useRef(false);
   const selectionRef = useRef<Range | null>(null);
   const imageResizeRef = useRef<ImageResizeState | null>(null);
   const imagePlaceholderRef = useRef<Element | null>(null);
   const columnResizeRef = useRef<ColumnResizeState | null>(null);
 
   // ── State ──────────────────────────────────────────────────────────────────
-  const [title, setTitle] = useState("");
-  const [excerpt, setExcerpt] = useState("");
-  const [category, setCategory] = useState("community");
-  const [status, setStatus] = useState<ArticleStatus>("draft");
-  const [tags, setTags] = useState("");
-  const [contentHtml, setContentHtml] = useState("");
-  const [editorMode, setEditorMode] = useState<EditorMode>("rich");
-  const [markdownContent, setMarkdownContent] = useState("");
+  const [title, setTitle] = useState(initialArticle?.title_vi || initialArticle?.title_en || "");
+  const [coverImageUrl, setCoverImageUrl] = useState(initialArticle?.cover_image_url ?? "");
+  const [categoryId, setCategoryId] = useState(
+    initialArticle?.category?.id ? String(initialArticle.category.id) : "",
+  );
+  const [status, setStatus] = useState<ArticleStatus>(
+    initialArticle?.status === "published" ? "published" : "draft",
+  );
+  const [contentHtml, setContentHtml] = useState(initialBody);
+  const [editorMode, setEditorMode] = useState<EditorMode>(initialEditorMode);
+  const [markdownContent, setMarkdownContent] = useState(initialBody);
+  const [richContentText, setRichContentText] = useState(() =>
+    initialEditorMode === "rich" ? initialBody.replace(/<[^>]*>/g, "").trim() : "",
+  );
+  const [richHasContent, setRichHasContent] = useState(
+    initialEditorMode === "rich" && hasMeaningfulRichHtml(initialBody),
+  );
   const [imageModal, setImageModal] = useState<ImageModalState | null>(null);
   const [imageForm, setImageForm] = useState<ImageFormState>({ url: "", alt: "", caption: "" });
   const [tableModalOpen, setTableModalOpen] = useState(false);
@@ -90,29 +189,19 @@ export function CreateArticlePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeToolbarKeys, setActiveToolbarKeys] = useState<ToolbarItemKey[]>([]);
 
-  useEffect(() => {
-    const article = articleQuery.data;
-    if (!article) return;
+  const setEditorElement = useCallback((node: HTMLDivElement | null) => {
+    editorRef.current = node;
 
-    setTitle(article.title_vi || article.title_en);
-    setExcerpt(article.cover_image_url ?? "");
-    setCategory(article.category?.name ?? "community");
-    setStatus(article.status === "published" ? "published" : "draft");
-    setTags("");
-    setMarkdownContent(article.content_markdown_vi);
-    setContentHtml(article.content_markdown_vi);
-    window.requestAnimationFrame(() => {
-      if (editorRef.current) {
-        editorRef.current.innerHTML = article.content_markdown_vi || "<p><br></p>";
-        syncEditor();
-      }
-    });
-  }, [articleQuery.data]);
+    if (node && !editorInitializedRef.current) {
+      node.innerHTML = initialEditorHtmlRef.current;
+      editorInitializedRef.current = true;
+      setRichContentText(node.innerText.trim());
+      setRichHasContent(hasMeaningfulRichHtml(node.innerHTML));
+    }
+  }, []);
 
   const hasEditorContent =
-    editorMode === "markdown"
-      ? markdownContent.trim().length > 0
-      : Boolean(editorRef.current?.innerText.trim() || contentHtml.trim());
+    editorMode === "markdown" ? markdownContent.trim().length > 0 : richHasContent;
 
   // ── Toolbar state tracking ─────────────────────────────────────────────────
   const updateToolbarState = useCallback(() => {
@@ -189,7 +278,8 @@ export function CreateArticlePage() {
           Math.max(columnResizeState.startLeftPercent + deltaPercent, 20),
           80,
         );
-        columnResizeState.columns.style.gridTemplateColumns = `calc(${nextLeftPercent.toFixed(2)}% - 0.375rem) 0.75rem calc(${(100 - nextLeftPercent).toFixed(2)}% - 0.375rem)`;
+        columnResizeState.columns.style.gridTemplateColumns =
+          getEditableColumnTemplate(nextLeftPercent);
       }
 
       if (resizeState) {
@@ -239,9 +329,12 @@ export function CreateArticlePage() {
           child instanceof HTMLElement &&
           !child.classList.contains("article-columns-resize-handle"),
       );
+      const leftPercent = getColumnLeftPercentFromTemplate(columnsElement.style.gridTemplateColumns);
+      const hasResizeHandle = Boolean(columns.querySelector(".article-columns-resize-handle"));
 
-      columnsElement.style.gridTemplateColumns ||=
-        "calc(50% - 0.375rem) 0.75rem calc(50% - 0.375rem)";
+      if (!columnsElement.style.gridTemplateColumns || !hasResizeHandle) {
+        columnsElement.style.gridTemplateColumns = getEditableColumnTemplate(leftPercent ?? 50);
+      }
 
       columnItems.forEach((column) => {
         column.classList.add("article-column");
@@ -318,8 +411,64 @@ export function CreateArticlePage() {
     normalizeColumns();
     normalizeMedia();
     normalizeEditorRoot();
-    setContentHtml(editorRef.current?.innerHTML ?? "");
+    const nextHtml = editorRef.current?.innerHTML ?? "";
+    setContentHtml(nextHtml);
+    setRichContentText(editorRef.current?.innerText.trim() ?? "");
+    setRichHasContent(hasMeaningfulRichHtml(nextHtml));
     updateToolbarState();
+  }
+
+  function prepareRichHtmlForSave() {
+    const editor = editorRef.current;
+    if (!editor) return contentHtml;
+
+    normalizeColumns();
+    normalizeMedia();
+    normalizeEditorRoot();
+
+    const clone = editor.cloneNode(true) as HTMLElement;
+
+    clone
+      .querySelectorAll(".article-columns-resize-handle, .article-image-resize-handle")
+      .forEach((handle) => handle.remove());
+
+    clone.querySelectorAll(".article-image-placeholder").forEach((placeholder) => placeholder.remove());
+
+    clone.querySelectorAll(".article-columns").forEach((columns) => {
+      if (!(columns instanceof HTMLElement)) return;
+      const leftPercent = getColumnLeftPercentFromTemplate(columns.style.gridTemplateColumns) ?? 50;
+      columns.style.gridTemplateColumns = `${leftPercent.toFixed(2)}% ${(100 - leftPercent).toFixed(2)}%`;
+      columns.querySelectorAll(".article-column").forEach((column) => {
+        if (column instanceof HTMLElement) {
+          column.removeAttribute("contenteditable");
+        }
+      });
+    });
+
+    clone.querySelectorAll("table").forEach((table) => {
+      if (!(table instanceof HTMLTableElement)) return;
+      table.style.width = "100%";
+      table.style.tableLayout = "fixed";
+      table.style.borderCollapse = "collapse";
+
+      const columnCount = Math.max(
+        ...Array.from(table.querySelectorAll("tr")).map((row) => row.children.length),
+        0,
+      );
+
+      if (columnCount > 0 && !table.querySelector("colgroup")) {
+        const colgroup = document.createElement("colgroup");
+        const width = `${100 / columnCount}%`;
+        Array.from({ length: columnCount }).forEach(() => {
+          const col = document.createElement("col");
+          col.style.width = width;
+          colgroup.appendChild(col);
+        });
+        table.insertBefore(colgroup, table.firstChild);
+      }
+    });
+
+    return clone.innerHTML;
   }
 
   // ── Selection management ───────────────────────────────────────────────────
@@ -367,12 +516,29 @@ export function CreateArticlePage() {
     return false;
   }
 
+  function getSelectedBlockTag() {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0) return null;
+    const range = selection.getRangeAt(0);
+    const container =
+      range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? range.commonAncestorContainer
+        : range.commonAncestorContainer.parentElement;
+    if (!(container instanceof Element) || !editor.contains(container)) return null;
+    return container.closest("h2, h3, p, blockquote, li")?.tagName.toLowerCase() ?? null;
+  }
+
   // ── Editor commands ────────────────────────────────────────────────────────
   function runCommand(command: string, value?: string) {
     editorRef.current?.focus();
     restoreSelection();
     if (alignSelectedFigure(command)) { syncEditor(); saveSelection(); return; }
-    document.execCommand(command, false, value);
+    const nextValue =
+      command === "formatBlock" && value === "blockquote" && getSelectedBlockTag() === "blockquote"
+        ? "p"
+        : value;
+    document.execCommand(command, false, nextValue);
     syncEditor();
     saveSelection();
   }
@@ -435,8 +601,8 @@ export function CreateArticlePage() {
   // ── Column resize ──────────────────────────────────────────────────────────
   function getColumnLeftPercent(columns: HTMLElement) {
     const template = columns.style.gridTemplateColumns;
-    const percentMatch = template.match(/([\d.]+)%/);
-    if (percentMatch) return Number.parseFloat(percentMatch[1]);
+    const templatePercent = getColumnLeftPercentFromTemplate(template);
+    if (templatePercent !== null) return templatePercent;
     const [leftColumn, , rightColumn] = Array.from(columns.children);
     if (leftColumn instanceof HTMLElement && rightColumn instanceof HTMLElement) {
       const leftWidth = leftColumn.getBoundingClientRect().width;
@@ -571,12 +737,19 @@ export function CreateArticlePage() {
     e.preventDefault();
     const rowCount = parseCount(tableForm.rows, 3, 12);
     const columnCount = parseCount(tableForm.columns, 3, 8);
+    const columnWidth = `${100 / columnCount}%`;
+    const colgroup = Array.from(
+      { length: columnCount },
+      () => `<col style="width:${columnWidth};" />`,
+    ).join("");
     const header = Array.from({ length: columnCount }, (_, i) => `<th>Header ${i + 1}</th>`).join("");
     const rows = Array.from({ length: rowCount }, () => {
       const cells = Array.from({ length: columnCount }, () => "<td>Cell</td>").join("");
       return `<tr>${cells}</tr>`;
     }).join("");
-    insertHtml(`<table><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table><p><br></p>`);
+    insertHtml(
+      `<table style="width:100%;table-layout:fixed;border-collapse:collapse;"><colgroup>${colgroup}</colgroup><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table><p><br></p>`,
+    );
     setTableModalOpen(false);
   }
 
@@ -584,7 +757,7 @@ export function CreateArticlePage() {
   function switchEditorMode(nextMode: EditorMode) {
     if (nextMode === editorMode) return;
     if (nextMode === "markdown") {
-      setMarkdownContent(editorRef.current?.innerText ?? markdownContent);
+      setMarkdownContent(prepareRichHtmlForSave());
       setEditorMode("markdown");
       setActiveToolbarKeys([]);
       return;
@@ -608,7 +781,7 @@ export function CreateArticlePage() {
     const isMarkdownMode = editorMode === "markdown";
     const nextContentHtml = isMarkdownMode
       ? markdownToHtml(markdownContent)
-      : editorRef.current?.innerHTML ?? contentHtml;
+      : prepareRichHtmlForSave();
     const contentText = isMarkdownMode
       ? markdownContent.trim()
       : editorRef.current?.innerText.trim() ?? "";
@@ -629,7 +802,8 @@ export function CreateArticlePage() {
     const payload: CreateArticleDto = {
       content_markdown_en: isMarkdownMode ? markdownContent : nextContentHtml,
       content_markdown_vi: isMarkdownMode ? markdownContent : nextContentHtml,
-      cover_image_url: excerpt.trim() || undefined,
+      ...(categoryId ? { category_id: Number(categoryId) } : {}),
+      cover_image_url: coverImageUrl.trim() || undefined,
       slug: nextSlug,
       title_en: title.trim(),
       title_vi: title.trim(),
@@ -648,6 +822,7 @@ export function CreateArticlePage() {
         status: "success",
         message: `${editSlug ? "Updated" : "Created"} article ${article.slug}.`,
       });
+      router.push("/article");
       router.refresh();
     } catch (error) {
       setSubmitState({
@@ -666,29 +841,21 @@ export function CreateArticlePage() {
       eyebrow={t("page.article.eyebrow")}
       title={editSlug ? "Edit article" : t("article.create.title")}
     >
-      {articleQuery.isFetching && editSlug ? (
-        <Card className="mb-4 p-4 text-sm text-[var(--text-secondary)]">
-          Loading article...
-        </Card>
-      ) : null}
-
       <form
         className="grid gap-4 lg:grid-cols-[20rem_1fr] lg:items-start"
         onSubmit={handleSubmit}
       >
         {/* ── Left: metadata panel ── */}
         <ArticleMetadataPanel
-          category={category}
-          excerpt={excerpt}
+          categoryId={categoryId}
+          coverImageUrl={coverImageUrl}
           isSubmitting={isSubmitting}
           status={status}
           submitState={submitState}
-          tags={tags}
           title={title}
-          onCategoryChange={setCategory}
-          onExcerptChange={setExcerpt}
+          onCategoryIdChange={setCategoryId}
+          onCoverImageUrlChange={setCoverImageUrl}
           onStatusChange={setStatus}
-          onTagsChange={setTags}
           onTitleChange={setTitle}
         />
 
@@ -743,14 +910,14 @@ export function CreateArticlePage() {
           {/* Rich editor area */}
           {editorMode === "rich" ? (
             <div
-              className="min-h-[26rem] flex-1 overflow-y-auto overflow-x-auto px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.article-column]:min-h-24 [&_.article-column]:rounded-md [&_.article-column]:border [&_.article-column]:border-dashed [&_.article-column]:border-[var(--border-subtle)] [&_.article-column]:px-3 [&_.article-column]:py-2 [&_.article-columns-resize-handle]:cursor-col-resize [&_.article-columns-resize-handle]:rounded [&_.article-columns-resize-handle]:bg-[var(--border-strong)] [&_.article-columns-resize-handle]:transition [&_.article-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.article-columns]:grid [&_.article-columns]:gap-0 [&_.article-columns]:rounded-md [&_.article-columns]:border [&_.article-columns]:border-[var(--border-subtle)] [&_.article-columns]:p-4 [&_.article-image-frame]:relative [&_.article-image-frame]:max-w-full [&_.article-image-placeholder]:my-4 [&_.article-image-placeholder]:cursor-pointer [&_.article-image-placeholder]:rounded-md [&_.article-image-placeholder]:border [&_.article-image-placeholder]:border-dashed [&_.article-image-placeholder]:border-[var(--brand-primary)] [&_.article-image-placeholder]:bg-[var(--brand-muted)] [&_.article-image-placeholder]:px-4 [&_.article-image-placeholder]:py-10 [&_.article-image-placeholder]:text-center [&_.article-image-placeholder]:text-sm [&_.article-image-placeholder]:font-semibold [&_.article-image-placeholder]:text-[var(--brand-primary)] [&_.article-image-resize-handle]:absolute [&_.article-image-resize-handle]:bottom-2 [&_.article-image-resize-handle]:right-2 [&_.article-image-resize-handle]:h-5 [&_.article-image-resize-handle]:w-5 [&_.article-image-resize-handle]:cursor-nwse-resize [&_.article-image-resize-handle]:rounded [&_.article-image-resize-handle]:border [&_.article-image-resize-handle]:border-white [&_.article-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
+              className="min-h-[26rem] flex-1 overflow-y-auto overflow-x-auto px-5 py-4 text-base leading-7 text-[var(--text-primary)] outline-none [&_.article-column]:min-h-24 [&_.article-column]:rounded-md [&_.article-column]:border [&_.article-column]:border-dashed [&_.article-column]:border-[var(--border-subtle)] [&_.article-column]:px-3 [&_.article-column]:py-2 [&_.article-columns-resize-handle]:cursor-col-resize [&_.article-columns-resize-handle]:rounded [&_.article-columns-resize-handle]:bg-[var(--border-strong)] [&_.article-columns-resize-handle]:transition [&_.article-columns-resize-handle]:hover:bg-[var(--brand-primary)] [&_.article-columns]:grid [&_.article-columns]:gap-0 [&_.article-columns]:rounded-md [&_.article-columns]:border [&_.article-columns]:border-[var(--border-subtle)] [&_.article-columns]:p-4 [&_.article-image-frame]:relative [&_.article-image-frame]:max-w-full [&_.article-image-placeholder]:my-4 [&_.article-image-placeholder]:cursor-pointer [&_.article-image-placeholder]:rounded-md [&_.article-image-placeholder]:border [&_.article-image-placeholder]:border-dashed [&_.article-image-placeholder]:border-[var(--brand-primary)] [&_.article-image-placeholder]:bg-[var(--brand-muted)] [&_.article-image-placeholder]:px-4 [&_.article-image-placeholder]:py-10 [&_.article-image-placeholder]:text-center [&_.article-image-placeholder]:text-sm [&_.article-image-placeholder]:font-semibold [&_.article-image-placeholder]:text-[var(--brand-primary)] [&_.article-image-resize-handle]:absolute [&_.article-image-resize-handle]:bottom-2 [&_.article-image-resize-handle]:right-2 [&_.article-image-resize-handle]:h-5 [&_.article-image-resize-handle]:w-5 [&_.article-image-resize-handle]:cursor-nwse-resize [&_.article-image-resize-handle]:rounded [&_.article-image-resize-handle]:border [&_.article-image-resize-handle]:border-white [&_.article-image-resize-handle]:bg-[var(--brand-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_h3]:font-semibold [&_iframe]:max-w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-6 [&_table]:my-4 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
               contentEditable
               onInput={syncEditor}
               onClick={focusEditableSpace}
               onKeyUp={saveSelection}
               onMouseDown={handleEditorMouseDown}
               onMouseUp={saveSelection}
-              ref={editorRef}
+              ref={setEditorElement}
               role="textbox"
               suppressContentEditableWarning
             />

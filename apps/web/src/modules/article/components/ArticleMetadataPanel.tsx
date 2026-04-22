@@ -1,37 +1,33 @@
 "use client";
 
-import { Button, Card, FormField, Input, Select, Textarea } from "@/components/ui";
+import { Button, Card, FormField, Input, Select } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { SubmitState } from "./articleEditorTypes";
 
 type ArticleMetadataPanelProps = {
   title: string;
-  excerpt: string;
-  category: string;
+  coverImageUrl: string;
+  categoryId: string;
   status: "draft" | "published";
-  tags: string;
   isSubmitting: boolean;
   submitState: SubmitState;
   onTitleChange: (v: string) => void;
-  onExcerptChange: (v: string) => void;
-  onCategoryChange: (v: string) => void;
+  onCoverImageUrlChange: (v: string) => void;
+  onCategoryIdChange: (v: string) => void;
   onStatusChange: (v: "draft" | "published") => void;
-  onTagsChange: (v: string) => void;
 };
 
 export function ArticleMetadataPanel({
   title,
-  excerpt,
-  category,
+  coverImageUrl,
+  categoryId,
   status,
-  tags,
   isSubmitting,
   submitState,
   onTitleChange,
-  onExcerptChange,
-  onCategoryChange,
+  onCoverImageUrlChange,
+  onCategoryIdChange,
   onStatusChange,
-  onTagsChange,
 }: ArticleMetadataPanelProps) {
   const { t } = useTranslation();
 
@@ -51,26 +47,26 @@ export function ArticleMetadataPanel({
         />
       </FormField>
 
-      <FormField htmlFor="article-excerpt" label="Excerpt">
-        <Textarea
-          id="article-excerpt"
-          onChange={(e) => onExcerptChange(e.target.value)}
-          placeholder={t("article.create.excerptPlaceholder")}
-          rows={4}
-          value={excerpt}
+      <FormField htmlFor="article-cover-image-url" label="Cover image URL">
+        <Input
+          id="article-cover-image-url"
+          onChange={(e) => onCoverImageUrlChange(e.target.value)}
+          placeholder="https://example.com/image.jpg"
+          type="url"
+          value={coverImageUrl}
         />
       </FormField>
 
       <FormField htmlFor="article-category" label="Category">
         <Select
           id="article-category"
-          onChange={(e) => onCategoryChange(e.target.value)}
-          value={category}
+          onChange={(e) => onCategoryIdChange(e.target.value)}
+          value={categoryId}
         >
-          <option value="community">Community</option>
-          <option value="discipleship">Discipleship</option>
-          <option value="event">Event</option>
-          <option value="testimony">Testimony</option>
+          <option value="">None</option>
+          <option value="1">Tin tức</option>
+          <option value="2">Bài giảng</option>
+          <option value="3">Tĩnh nguyện</option>
         </Select>
       </FormField>
 
@@ -83,15 +79,6 @@ export function ArticleMetadataPanel({
           <option value="draft">Draft</option>
           <option value="published">Published</option>
         </Select>
-      </FormField>
-
-      <FormField htmlFor="article-tags" label="Tags">
-        <Input
-          id="article-tags"
-          onChange={(e) => onTagsChange(e.target.value)}
-          placeholder={t("article.create.tagsPlaceholder")}
-          value={tags}
-        />
       </FormField>
 
       <Button disabled={isSubmitting} type="submit">

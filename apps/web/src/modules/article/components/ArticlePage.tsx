@@ -11,9 +11,12 @@ import { useArticlesQuery, useDeleteArticleMutation } from "@services/article";
 export function ArticlePage() {
   const { can } = useAuth();
   const { t } = useTranslation();
-  const articlesQuery = useArticlesQuery({ take: 50 });
-  const deleteArticle = useDeleteArticleMutation();
   const canManageArticle = can(PERMISSIONS.manageArticle);
+  const articlesQuery = useArticlesQuery({
+    take: 50,
+    ...(canManageArticle ? {} : { status: "published" }),
+  });
+  const deleteArticle = useDeleteArticleMutation();
 
   async function handleDelete(slug: string) {
     if (!window.confirm("Delete this article?")) return;
