@@ -60,6 +60,7 @@ const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
     { action: "update", resource: "article" },
     { action: "delete", resource: "article" },
   ],
+  [PERMISSIONS.manageLanding]: [{ action: "update", resource: "landing_page" }],
   [PERMISSIONS.manageAbout]: [{ action: "update", resource: "about_page" }],
   [PERMISSIONS.manageContact]: [{ action: "update", resource: "contact_page" }],
   [PERMISSIONS.manageCourses]: [

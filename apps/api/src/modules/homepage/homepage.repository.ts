@@ -2,12 +2,17 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 
 import { PrismaService } from '../../database/prisma.service';
 import type {
+  HomepageContentDto,
   HomepageCourse,
   HomepageData,
   HomepageEvent,
   HomepagePost,
   HomepageQuery,
+  UpdateHomepageContentDto,
 } from './homepage.types';
+
+const DEFAULT_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1400&q=80';
 
 @Injectable()
 export class HomepageRepository {
@@ -15,7 +20,8 @@ export class HomepageRepository {
 
   async getHomepageData(query: HomepageQuery): Promise<HomepageData> {
     try {
-      const [articles, courses, events] = await Promise.all([
+      const [content, articles, courses, events] = await Promise.all([
+        this.findOrCreateContent(),
         query.include.includes('posts') ? this.fetchLatestPosts(query.latestPostsLimit) : [],
         query.include.includes('courses')
           ? this.fetchFeaturedCourses(query.featuredCoursesLimit)
@@ -27,13 +33,9 @@ export class HomepageRepository {
 
       return {
         featured_courses: courses,
-        hero: {
-          cta: { href: '/courses', label: 'Khám phá ngay' },
-          headline: 'Học, kết nối và tăng trưởng cùng HTNC',
-          subheadline:
-            'Nội dung mới, sự kiện sắp tới và khóa học được đề xuất cho cộng đồng',
-        },
+        hero: this.toHeroDto(content),
         latest_posts: articles,
+        section_headers: this.toSectionHeadersDto(content),
         upcoming_events: events,
       };
     } catch (error) {
@@ -48,6 +50,102 @@ export class HomepageRepository {
 
       throw error;
     }
+  }
+
+  async getContent(): Promise<HomepageContentDto> {
+    const content = await this.findOrCreateContent();
+    return {
+      ...this.toHeroDto(content),
+      section_headers: this.toSectionHeadersDto(content),
+      updated_at: content.updated_at.toISOString(),
+    };
+  }
+
+  async updateContent(dto: UpdateHomepageContentDto): Promise<HomepageContentDto> {
+    const data = Object.fromEntries(
+      Object.entries(dto)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [
+          key,
+          Array.isArray(value)
+            ? value.map((item) => item.trim()).filter(Boolean)
+            : typeof value === 'string'
+              ? value.trim()
+              : value,
+        ]),
+    );
+
+    await this.prisma.homepageContent.upsert({
+      create: { id: 1, ...data },
+      update: data,
+      where: { id: 1 },
+    });
+
+    return this.getContent();
+  }
+
+  private findOrCreateContent() {
+    return this.prisma.homepageContent.upsert({
+      create: { id: 1 },
+      update: {},
+      where: { id: 1 },
+    });
+  }
+
+  private toHeroDto(content: Awaited<ReturnType<HomepageRepository['findOrCreateContent']>>) {
+    return {
+      cta: {
+        href: content.primary_cta_href,
+        label: { en: content.primary_cta_label_en, vi: content.primary_cta_label_vi },
+      },
+      eyebrow: { en: content.hero_eyebrow_en, vi: content.hero_eyebrow_vi },
+      headline: { en: content.hero_headline_en, vi: content.hero_headline_vi },
+      image_urls: this.normalizeImageUrls(content.hero_image_urls),
+      secondary_cta: {
+        href: content.secondary_cta_href,
+        label: { en: content.secondary_cta_label_en, vi: content.secondary_cta_label_vi },
+      },
+      stats: [
+        {
+          label: { en: content.stat_1_label_en, vi: content.stat_1_label_vi },
+          value: content.stat_1_value,
+        },
+        {
+          label: { en: content.stat_2_label_en, vi: content.stat_2_label_vi },
+          value: content.stat_2_value,
+        },
+        {
+          label: { en: content.stat_3_label_en, vi: content.stat_3_label_vi },
+          value: content.stat_3_value,
+        },
+      ],
+      subheadline: { en: content.hero_subheadline_en, vi: content.hero_subheadline_vi },
+    };
+  }
+
+  private toSectionHeadersDto(
+    content: Awaited<ReturnType<HomepageRepository['findOrCreateContent']>>,
+  ) {
+    return {
+      articles: {
+        eyebrow: { en: content.articles_eyebrow_en, vi: content.articles_eyebrow_vi },
+        title: { en: content.articles_title_en, vi: content.articles_title_vi },
+      },
+      courses: {
+        eyebrow: { en: content.courses_eyebrow_en, vi: content.courses_eyebrow_vi },
+        title: { en: content.courses_title_en, vi: content.courses_title_vi },
+      },
+      events: {
+        eyebrow: { en: content.events_eyebrow_en, vi: content.events_eyebrow_vi },
+        title: { en: content.events_title_en, vi: content.events_title_vi },
+      },
+    };
+  }
+
+  private normalizeImageUrls(value: unknown): string[] {
+    if (!Array.isArray(value)) return [DEFAULT_HERO_IMAGE];
+    const urls = value.filter((item): item is string => typeof item === 'string' && Boolean(item));
+    return urls.length > 0 ? urls : [DEFAULT_HERO_IMAGE];
   }
 
   private async fetchLatestPosts(limit: number): Promise<HomepagePost[]> {

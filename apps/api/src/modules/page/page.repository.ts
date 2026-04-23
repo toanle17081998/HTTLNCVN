@@ -1,32 +1,150 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../database/prisma.service';
-import type { PageDto } from './page.types';
-
-const PAGE_SLUGS = new Set(['home', 'about', 'contact', 'terms', 'privacy']);
+import type {
+  CreatePageDto,
+  PageDto,
+  PageListDto,
+  PageListResult,
+  UpdatePageDto,
+} from './page.types';
 
 @Injectable()
 export class PageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findBySlug(slug: string): Promise<PageDto | null> {
-    if (!PAGE_SLUGS.has(slug)) return null;
-
-    const a = await this.prisma.article.findUnique({
-      where: { slug, deleted_at: null },
+  async findAll(status?: string): Promise<PageListResult> {
+    const items = await this.prisma.page.findMany({
+      where: {
+        deleted_at: null,
+        ...(status ? { status } : {}),
+      },
+      orderBy: { updated_at: 'desc' },
     });
 
-    if (!a || a.status !== 'published') return null;
-
     return {
-      content_markdown_en: a.content_markdown_en,
-      content_markdown_vi: a.content_markdown_vi,
-      cover_image_url: a.cover_image_url,
-      id: a.id,
-      slug: a.slug,
-      title_en: a.title_en,
-      title_vi: a.title_vi,
-      updated_at: a.updated_at.toISOString(),
+      items: items.map(
+        (page): PageListDto => ({
+          id: page.id,
+          route_path: page.route_path,
+          slug: page.slug,
+          status: page.status as PageDto['status'],
+          title_en: page.title_en,
+          title_vi: page.title_vi,
+          updated_at: page.updated_at.toISOString(),
+        }),
+      ),
+    };
+  }
+
+  async findBySlug(slug: string): Promise<PageDto | null> {
+    const page = await this.prisma.page.findFirst({
+      where: { deleted_at: null, slug },
+    });
+
+    return page ? this.toDto(page) : null;
+  }
+
+  async findByPath(path: string): Promise<PageDto | null> {
+    const page = await this.prisma.page.findFirst({
+      where: {
+        deleted_at: null,
+        route_path: this.normalizeRoutePath(path),
+        status: 'published',
+      },
+    });
+
+    return page ? this.toDto(page) : null;
+  }
+
+  async create(dto: CreatePageDto, creatorId: string): Promise<PageDto> {
+    const page = await this.prisma.page.create({
+      data: {
+        content_json: this.parseContent(dto.content),
+        created_by: creatorId || null,
+        route_path: this.normalizeRoutePath(dto.route_path),
+        slug: dto.slug,
+        title_en: dto.title_en,
+        title_vi: dto.title_vi,
+      },
+    });
+
+    return this.toDto(page);
+  }
+
+  async update(slug: string, dto: UpdatePageDto): Promise<PageDto | null> {
+    const existing = await this.prisma.page.findFirst({
+      where: { deleted_at: null, slug },
+    });
+
+    if (!existing) return null;
+
+    const page = await this.prisma.page.update({
+      where: { id: existing.id },
+      data: {
+        ...(dto.content !== undefined ? { content_json: this.parseContent(dto.content) } : {}),
+        ...(dto.route_path !== undefined
+          ? { route_path: this.normalizeRoutePath(dto.route_path) }
+          : {}),
+        ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
+        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.title_en !== undefined ? { title_en: dto.title_en } : {}),
+        ...(dto.title_vi !== undefined ? { title_vi: dto.title_vi } : {}),
+      },
+    });
+
+    return this.toDto(page);
+  }
+
+  async remove(slug: string): Promise<void> {
+    const existing = await this.prisma.page.findFirst({
+      where: { deleted_at: null, slug },
+      select: { id: true },
+    });
+
+    if (!existing) return;
+
+    await this.prisma.page.update({
+      where: { id: existing.id },
+      data: { deleted_at: new Date() },
+    });
+  }
+
+  private normalizeRoutePath(path: string) {
+    const trimmed = path.trim();
+    if (!trimmed || trimmed === '/') return '/';
+    return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  }
+
+  private parseContent(content: string) {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return {};
+    }
+  }
+
+  private toDto(page: {
+    content_json: unknown;
+    created_at: Date;
+    id: string;
+    route_path: string;
+    slug: string;
+    status: string;
+    title_en: string;
+    title_vi: string;
+    updated_at: Date;
+  }): PageDto {
+    return {
+      content: JSON.stringify(page.content_json),
+      created_at: page.created_at.toISOString(),
+      id: page.id,
+      route_path: page.route_path,
+      slug: page.slug,
+      status: page.status as PageDto['status'],
+      title_en: page.title_en,
+      title_vi: page.title_vi,
+      updated_at: page.updated_at.toISOString(),
     };
   }
 }

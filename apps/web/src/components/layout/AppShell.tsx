@@ -29,9 +29,9 @@ export function AppShell({ children }: AppShellProps) {
       <ThemeInitializer />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header pathname={pathname} />
-        <main className="min-w-0 flex-1 px-4 pb-8 pt-24 sm:px-6 md:pt-28 lg:px-8">
+        <main className="min-w-0 flex-1 mt-19">
           {pathname && pathname !== "/" && (
-            <div className="mx-auto mb-4 w-full max-w-6xl">
+            <div className="mx-auto my-4 w-full max-w-6xl px-4 md:px-0">
               <Breadcrumb pathname={pathname} />
             </div>
           )}

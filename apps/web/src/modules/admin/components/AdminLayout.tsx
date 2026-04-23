@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import {
   BookOpen,
   BarChart3,
+  FileStack,
   Users,
   Menu,
   ShieldCheck,
@@ -23,6 +24,11 @@ type AdminLayoutProps = {
   children: ReactNode;
 };
 
+type AdminLayoutChromeContextValue = {
+  isFullscreen: boolean;
+  setIsFullscreen: (value: boolean) => void;
+};
+
 type AdminNavItem = {
   href: string;
   icon: LucideIcon;
@@ -30,16 +36,24 @@ type AdminNavItem = {
 };
 
 const primaryNavItems: AdminNavItem[] = [
+  { href: "/admin/pages", labelKey: "admin.nav.pages", icon: FileStack },
   { href: "/admin/articles", labelKey: "nav.article.label", icon: BookOpen },
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },
   { href: "/admin/member", labelKey: "nav.member.label", icon: Users },
 ];
+
+const AdminLayoutChromeContext = createContext<AdminLayoutChromeContextValue | null>(null);
+
+export function useAdminLayoutChrome() {
+  return useContext(AdminLayoutChromeContext);
+}
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { canAny, isAuthenticated, isLoading, logout, role, user } = useAuth();
   
   const canAccessAdmin = canAny([
@@ -56,6 +70,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    setIsFullscreen(false);
   }, [pathname]);
 
   function handleLogout() {
@@ -91,21 +109,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
-      {/* Mobile Backdrop */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+    <AdminLayoutChromeContext.Provider value={{ isFullscreen, setIsFullscreen }}>
+      <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
+        {/* Mobile Backdrop */}
+        {isMobileMenuOpen && !isFullscreen && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
 
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
-          isMobileMenuOpen ? "translate-x-0 shadow-2xl shadow-black/50" : "-translate-x-full"
-        )}>
+        <div className="flex min-h-screen">
+          {/* Sidebar */}
+          <aside className={cn(
+            "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+            isFullscreen
+              ? "-translate-x-full lg:hidden"
+              : isMobileMenuOpen
+                ? "translate-x-0 shadow-2xl shadow-black/50"
+                : "-translate-x-full"
+          )}>
           {/* Sidebar Header */}
           <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-6">
             <div className="flex items-center gap-3">
@@ -152,79 +175,82 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </button>
             </div>
           </div>
-        </aside>
+          </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
-            <div className="flex items-center gap-4">
-              <button
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate text-sm font-bold">{t("admin.layout.dashboard")}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <Link
-                className="hidden h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] sm:inline-flex"
-                href="/"
-              >
-                {t("admin.common.viewSite")}
-              </Link>
-              {isAuthenticated ? (
-                <Button onClick={handleLogout} size="sm" variant="secondary" className="rounded-lg">
-                  {t("nav.logout")}
-                </Button>
-              ) : (
-                <Link
-                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-4 text-sm font-semibold text-white transition hover:brightness-110"
-                  href="/auth"
-                >
-                  {t("nav.login")}
-                </Link>
-              )}
-            </div>
-          </header>
-
-          <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto w-full max-w-7xl">
-              {isLoading ? (
-                <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 shadow-sm">
-                  <div className="h-6 w-48 animate-pulse rounded-lg bg-[var(--bg-base)]" />
-                  <div className="mt-4 h-4 w-72 max-w-full animate-pulse rounded-lg bg-[var(--bg-base)]" />
-                </div>
-              ) : canAccessAdmin ? (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  {children}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-12 text-center shadow-sm">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-muted)] text-[var(--brand-primary)]">
-                    <ShieldCheck className="h-8 w-8" />
-                  </div>
-                  <h1 className="mt-6 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-                    {t("admin.layout.restrictedTitle")}
-                  </h1>
-                  <p className="mx-auto mt-2 max-w-md text-base text-[var(--text-secondary)]">
-                    {t("admin.layout.restrictedDescription")}
-                  </p>
-                  <Link
-                    className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-8 text-sm font-bold text-white transition hover:brightness-110 shadow-lg shadow-[var(--brand-primary)]/20"
-                    href="/auth"
+          <div className="flex min-w-0 flex-1 flex-col">
+            {!isFullscreen ? (
+              <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
+                <div className="flex items-center gap-4">
+                  <button
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
+                    onClick={() => setIsMobileMenuOpen(true)}
                   >
-                    {t("nav.login")}
-                  </Link>
+                    <Menu className="h-5 w-5" />
+                  </button>
+                  <div className="hidden min-w-0 sm:block">
+                    <p className="truncate text-sm font-bold">{t("admin.layout.dashboard")}</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </main>
+
+                <div className="flex items-center gap-3">
+                  <ThemeToggle />
+                  <Link
+                    className="hidden h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] sm:inline-flex"
+                    href="/"
+                  >
+                    {t("admin.common.viewSite")}
+                  </Link>
+                  {isAuthenticated ? (
+                    <Button onClick={handleLogout} size="sm" variant="secondary" className="rounded-lg">
+                      {t("nav.logout")}
+                    </Button>
+                  ) : (
+                    <Link
+                      className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-4 text-sm font-semibold text-white transition hover:brightness-110"
+                      href="/auth"
+                    >
+                      {t("nav.login")}
+                    </Link>
+                  )}
+                </div>
+              </header>
+            ) : null}
+
+            <main className={cn("min-w-0 flex-1", isFullscreen ? "p-0" : "p-4 sm:p-6 lg:p-8")}>
+              <div className={cn("mx-auto w-full", isFullscreen ? "max-w-none" : "max-w-7xl")}>
+                {isLoading ? (
+                  <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 shadow-sm">
+                    <div className="h-6 w-48 animate-pulse rounded-lg bg-[var(--bg-base)]" />
+                    <div className="mt-4 h-4 w-72 max-w-full animate-pulse rounded-lg bg-[var(--bg-base)]" />
+                  </div>
+                ) : canAccessAdmin ? (
+                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {children}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-12 text-center shadow-sm">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-muted)] text-[var(--brand-primary)]">
+                      <ShieldCheck className="h-8 w-8" />
+                    </div>
+                    <h1 className="mt-6 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                      {t("admin.layout.restrictedTitle")}
+                    </h1>
+                    <p className="mx-auto mt-2 max-w-md text-base text-[var(--text-secondary)]">
+                      {t("admin.layout.restrictedDescription")}
+                    </p>
+                    <Link
+                      className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-8 text-sm font-bold text-white transition hover:brightness-110 shadow-lg shadow-[var(--brand-primary)]/20"
+                      href="/auth"
+                    >
+                      {t("nav.login")}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </AdminLayoutChromeContext.Provider>
   );
 }

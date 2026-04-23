@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { getEnv } from '../../config/env';
 import { HomepageRepository } from './homepage.repository';
-import type { HomepageQuery, HomepageResult } from './homepage.types';
+import type {
+  HomepageContentDto,
+  HomepageQuery,
+  HomepageResult,
+  UpdateHomepageContentDto,
+} from './homepage.types';
 
 type HomepageCacheEntry = {
   expiresAt: number;
@@ -42,6 +47,15 @@ export class HomepageService {
     this.cache.set(cacheKey, { expiresAt: now + this.cacheTtlMs, result });
 
     return result;
+  }
+
+  getContent(): Promise<HomepageContentDto> {
+    return this.homepageRepository.getContent();
+  }
+
+  async updateContent(dto: UpdateHomepageContentDto): Promise<HomepageContentDto> {
+    this.cache.clear();
+    return this.homepageRepository.updateContent(dto);
   }
 
   private buildCacheKey(query: HomepageQuery): string {

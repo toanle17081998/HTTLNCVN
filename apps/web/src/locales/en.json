@@ -60,6 +60,8 @@
   "admin.dashboard.status.protectedUpdates": "Protected updates use the same authenticated admin session as the rest of the app.",
   "admin.dashboard.status.reservedPages": "About, contact, terms, and privacy pages map to reserved page slugs.",
   "admin.layout.contentManagement": "Content management",
+  "admin.nav.homepage": "Homepage",
+  "admin.nav.pages": "Pages",
   "admin.layout.dashboard": "Admin Dashboard",
   "admin.layout.protectedContent": "Sign in to manage protected content",
   "admin.layout.restrictedDescription": "This workspace is reserved for people who can manage site content, events, courses, members, or system settings.",
