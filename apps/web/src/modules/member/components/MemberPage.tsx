@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
-import { Edit3, Mail, Plus, RefreshCw, Search, Shield, Trash2, UserRound, X } from "lucide-react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
+import { Edit3, Mail, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, FormField, Input, Select, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
+import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import {
   useCreateMemberMutation,
   useDeleteMemberMutation,
@@ -92,7 +94,13 @@ function mutationErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Request failed.";
 }
 
-export function MemberPage() {
+type MemberPageProps = {
+  admin?: boolean;
+};
+
+export function MemberPage({ admin = false }: MemberPageProps) {
+  const { t } = useTranslation();
+  const { confirm } = useFeedback();
   const { can, isAuthenticated, isLoading: authLoading } = useAuth();
   const canReadMembers = can(PERMISSIONS.manageChurchMembers);
   const canCreateMembers = can(PERMISSIONS.createChurchMembers) || canReadMembers;
@@ -107,6 +115,7 @@ export function MemberPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [form, setForm] = useState<MemberForm>(() => createEmptyForm());
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const visibleMembers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -207,25 +216,47 @@ export function MemberPage() {
     deleteMemberMutation.mutate(editingMember.id, { onSuccess: closeModal });
   }
 
+  function handleImportFile(file: File | undefined) {
+    if (!file) return;
+    window.alert(t("admin.members.importPending", { name: file.name }));
+  }
+
   return (
     <PageLayout
       actions={
-        canCreateMembers ? (
-          <Button onClick={openCreateModal}>
-            <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-            Add member
-          </Button>
-        ) : null
+        <div className="flex flex-wrap gap-2">
+          {admin ? (
+            <>
+              <input
+                accept=".csv,.xls,.xlsx"
+                className="hidden"
+                onChange={(event) => handleImportFile(event.target.files?.[0])}
+                ref={importInputRef}
+                type="file"
+              />
+              <Button onClick={() => importInputRef.current?.click()} variant="secondary">
+                <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
+                {t("action.importData")}
+              </Button>
+            </>
+          ) : null}
+          {canCreateMembers ? (
+            <Button onClick={openCreateModal}>
+              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+              {t("action.inviteMember")}
+            </Button>
+          ) : null}
+        </div>
       }
-      description="View and manage the church member directory from the live API."
-      eyebrow="Directory"
-      title="Members"
+      description={admin ? t("admin.members.description") : t("page.member.description")}
+      eyebrow={admin ? t("admin.common.admin") : t("page.member.eyebrow")}
+      title={t("nav.member.label")}
     >
       {!authLoading && !canReadMembers ? (
         <Card className="p-5">
-          <p className="font-semibold text-[var(--text-primary)]">Access restricted</p>
+          <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Your current role does not have permission to read member records.
+            {t("admin.members.restrictedDescription")}
           </p>
         </Card>
       ) : (
@@ -233,7 +264,7 @@ export function MemberPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-5">
               <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                Active members
+                {t("admin.members.active")}
               </p>
               <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                 {activeCount}
@@ -241,7 +272,7 @@ export function MemberPage() {
             </Card>
             <Card className="p-5">
               <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                Admin roles
+                {t("admin.members.adminRoles")}
               </p>
               <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                 {adminCount}
@@ -249,7 +280,7 @@ export function MemberPage() {
             </Card>
             <Card className="p-5">
               <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                Pending review
+                {t("admin.members.pendingReview")}
               </p>
               <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                 {pendingCount}
@@ -257,43 +288,47 @@ export function MemberPage() {
             </Card>
           </div>
 
-          <Card className="overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-5 py-4">
+          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm transition-all duration-300">
+            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-                  Member list
+                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                  {t("admin.members.list")}
                 </h2>
-                <p className="text-sm text-[var(--text-secondary)]">
+                <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
                   {membersQuery.isLoading
-                    ? "Loading members..."
-                    : `${visibleMembers.length} of ${membersQuery.data?.total ?? 0} records`}
+                    ? t("admin.members.loading")
+                    : t("admin.members.records", {
+                        count: String(visibleMembers.length),
+                        total: String(membersQuery.data?.total ?? 0),
+                      })}
                 </p>
               </div>
-              <div className="flex w-full gap-2 sm:w-auto">
-                <div className="relative min-w-0 flex-1 sm:w-72">
+              <div className="flex w-full items-center gap-3 sm:w-auto">
+                <div className="relative min-w-0 flex-1 sm:w-80">
                   <Search
                     aria-hidden="true"
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
+                    className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
                   />
                   <Input
-                    className="pl-9"
+                    className="h-11 rounded-xl pl-11 shadow-sm"
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search members"
+                    placeholder={t("admin.members.search")}
                     value={query}
                   />
                 </div>
                 <Button
-                  aria-label="Refresh members"
+                  aria-label={t("admin.members.refresh")}
+                  className="h-11 w-11 shrink-0 rounded-xl"
                   onClick={() => membersQuery.refetch()}
                   variant="secondary"
                 >
-                  <RefreshCw aria-hidden="true" className="h-4 w-4" />
+                  <RefreshCw aria-hidden="true" className={cn("h-4 w-4", membersQuery.isFetching ? "animate-spin" : "")} />
                 </Button>
               </div>
             </div>
 
             {membersQuery.error ? (
-              <div className="p-5 text-sm text-[var(--status-danger)]">
+              <div className="m-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900">
                 {mutationErrorMessage(membersQuery.error)}
               </div>
             ) : null}
@@ -301,64 +336,75 @@ export function MemberPage() {
             <div className="grid divide-y divide-[var(--border-subtle)]">
               {visibleMembers.map((member) => (
                 <div
-                  className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_11rem_9rem_auto]"
+                  className="group flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-[var(--bg-surface)]/50 sm:flex-row sm:items-center"
                   key={member.id}
                 >
-                  <div className="flex min-w-0 gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-[var(--brand-muted)] text-[var(--brand-primary)]">
-                      <UserRound aria-hidden="true" className="h-5 w-5" />
+                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
+                      <UserRound aria-hidden="true" className="h-6 w-6" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-[var(--text-primary)]">
-                        {displayName(member)}
-                      </p>
-                      <p className="truncate text-sm text-[var(--text-secondary)]">
-                        @{member.username}
-                      </p>
-                      <p className="mt-1 flex min-w-0 items-center gap-2 text-sm text-[var(--text-secondary)]">
-                        <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{member.email}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-base font-bold text-[var(--text-primary)]">
+                          {displayName(member)}
+                        </p>
+                        <span className={cn(
+                          "inline-flex h-2 w-2 shrink-0 rounded-full",
+                          member.status === "active" ? "bg-emerald-500" : member.status === "pending" ? "bg-amber-500" : "bg-red-500"
+                        )} />
+                      </div>
+                      <p className="truncate text-sm font-medium text-[var(--text-tertiary)]">
+                        @{member.username} • {member.email}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Shield
-                      aria-hidden="true"
-                      className="h-4 w-4 text-[var(--brand-primary)]"
-                    />
-                    <span className="text-sm font-semibold capitalize text-[var(--text-primary)]">
-                      {roleLabel(member.role)}
-                    </span>
-                  </div>
+                  <div className="flex flex-wrap items-center gap-3 sm:w-72 sm:justify-end">
+                    <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
+                      <Shield aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                      <span className="capitalize">{roleLabel(member.role)}</span>
+                    </div>
 
-                  <div>
-                    <span
-                      className={cn(
-                        "inline-flex rounded-md px-2.5 py-1 text-xs font-semibold uppercase",
-                        statusClass(member.status),
-                      )}
-                    >
-                      {member.status}
-                    </span>
+                    <div className="flex gap-2">
+                      {canUpdateMembers ? (
+                        <button
+                          aria-label={t("admin.members.editNamed", { name: displayName(member) })}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                          onClick={() => openEditModal(member)}
+                          type="button"
+                        >
+                          <Edit3 aria-hidden="true" className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                      {canDeleteMembers ? (
+                        <button
+                          aria-label={t("admin.members.deleteNamed", { name: displayName(member) })}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition-all hover:bg-red-50"
+                          onClick={async () => {
+                            const ok = await confirm({
+                              variant: "delete",
+                              title: t("admin.members.deleteConfirm", { name: displayName(member) }),
+                            });
+                            if (ok) {
+                              deleteMemberMutation.mutate(member.id);
+                            }
+                          }}
+                          type="button"
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-
-                  {canUpdateMembers ? (
-                    <button
-                      aria-label={`Edit ${displayName(member)}`}
-                      className="justify-self-start rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] lg:justify-self-end"
-                      onClick={() => openEditModal(member)}
-                      type="button"
-                    >
-                      <Edit3 aria-hidden="true" className="h-4 w-4" />
-                    </button>
-                  ) : null}
                 </div>
               ))}
 
               {!membersQuery.isLoading && visibleMembers.length === 0 ? (
-                <div className="p-5 text-sm text-[var(--text-secondary)]">
-                  No members match the current filters.
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <UserRound className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20" />
+                  <p className="text-base font-medium text-[var(--text-secondary)]">
+                    {t("admin.members.empty")}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -375,14 +421,14 @@ export function MemberPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
-                  RBAC protected
+                  {t("admin.members.rbac")}
                 </p>
                 <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-                  {editingMember ? "Edit member" : "Add member"}
+                  {editingMember ? t("admin.members.edit") : t("admin.members.add")}
                 </h2>
               </div>
               <button
-                aria-label="Close"
+                aria-label={t("action.close")}
                 className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
                 onClick={closeModal}
                 type="button"
@@ -398,21 +444,21 @@ export function MemberPage() {
             ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField htmlFor="member-first-name" label="First name">
+              <FormField htmlFor="member-first-name" label={t("admin.members.firstName")}>
                 <Input
                   id="member-first-name"
                   onChange={(event) => setForm((current) => ({ ...current, first_name: event.target.value }))}
                   value={form.first_name}
                 />
               </FormField>
-              <FormField htmlFor="member-last-name" label="Last name">
+              <FormField htmlFor="member-last-name" label={t("admin.members.lastName")}>
                 <Input
                   id="member-last-name"
                   onChange={(event) => setForm((current) => ({ ...current, last_name: event.target.value }))}
                   value={form.last_name}
                 />
               </FormField>
-              <FormField htmlFor="member-username" label="Username">
+              <FormField htmlFor="member-username" label={t("admin.members.username")}>
                 <Input
                   id="member-username"
                   onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
@@ -420,7 +466,7 @@ export function MemberPage() {
                   value={form.username}
                 />
               </FormField>
-              <FormField htmlFor="member-email" label="Email">
+              <FormField htmlFor="member-email" label={t("admin.members.email")}>
                 <Input
                   id="member-email"
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
@@ -430,7 +476,7 @@ export function MemberPage() {
                 />
               </FormField>
               {!editingMember ? (
-                <FormField htmlFor="member-password" label="Initial password">
+                <FormField htmlFor="member-password" label={t("admin.members.initialPassword")}>
                   <Input
                     id="member-password"
                     minLength={8}
@@ -441,14 +487,14 @@ export function MemberPage() {
                   />
                 </FormField>
               ) : null}
-              <FormField htmlFor="member-phone" label="Phone">
+              <FormField htmlFor="member-phone" label={t("admin.members.phone")}>
                 <Input
                   id="member-phone"
                   onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
                   value={form.phone}
                 />
               </FormField>
-              <FormField htmlFor="member-role" label="Role">
+              <FormField htmlFor="member-role" label={t("admin.members.role")}>
                 <Select
                   id="member-role"
                   onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
@@ -461,7 +507,7 @@ export function MemberPage() {
                   ))}
                 </Select>
               </FormField>
-              <FormField htmlFor="member-status" label="Status">
+              <FormField htmlFor="member-status" label={t("course.form.status")}>
                 <Select
                   id="member-status"
                   onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
@@ -474,18 +520,18 @@ export function MemberPage() {
                   ))}
                 </Select>
               </FormField>
-              <FormField htmlFor="member-gender" label="Gender">
+              <FormField htmlFor="member-gender" label={t("admin.members.gender")}>
                 <Select
                   id="member-gender"
                   onChange={(event) => setForm((current) => ({ ...current, gender: event.target.value }))}
                   value={form.gender}
                 >
-                  <option value="">Unspecified</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
+                  <option value="">{t("admin.members.genderUnspecified")}</option>
+                  <option value="female">{t("admin.members.genderFemale")}</option>
+                  <option value="male">{t("admin.members.genderMale")}</option>
                 </Select>
               </FormField>
-              <FormField htmlFor="member-date-of-birth" label="Date of birth">
+              <FormField htmlFor="member-date-of-birth" label={t("admin.members.dateOfBirth")}>
                 <Input
                   id="member-date-of-birth"
                   onChange={(event) => setForm((current) => ({ ...current, date_of_birth: event.target.value }))}
@@ -493,7 +539,7 @@ export function MemberPage() {
                   value={form.date_of_birth}
                 />
               </FormField>
-              <FormField className="sm:col-span-2" htmlFor="member-address" label="Address">
+              <FormField className="sm:col-span-2" htmlFor="member-address" label={t("admin.members.address")}>
                 <Input
                   id="member-address"
                   onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
@@ -511,17 +557,17 @@ export function MemberPage() {
                   variant="danger"
                 >
                   <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Delete
+                  {t("admin.common.delete")}
                 </Button>
               ) : (
                 <span />
               )}
               <div className="flex gap-2">
                 <Button onClick={closeModal} type="button" variant="secondary">
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button isLoading={isSaving} type="submit">
-                  {editingMember ? "Save changes" : "Create member"}
+                  {editingMember ? t("admin.members.saveChanges") : t("admin.members.create")}
                 </Button>
               </div>
             </div>

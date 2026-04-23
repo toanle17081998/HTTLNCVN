@@ -8,7 +8,7 @@ Khoi tao cau truc ban dau cho nen tang hoc tap va sinh hoat voi huong kien truc:
 - Cache / queue bootstrap: `Redis`
 - Kieu repo: `monorepo`
 
-Muc tieu cua phase setup la chot khung repo, convention code, env local, README setup va quy uoc branch/release de team co the scaffold nhanh ma khong phai doi cau truc sau nay.
+Repo nay da co `apps/web` va `apps/api` dang hoat dong. Public pages, bao gom trang chu, hien duoc quan ly qua page builder flow voi du lieu trong bang `pages`.
 
 ## 1. Dinh huong kien truc
 
@@ -261,7 +261,6 @@ API mac dinh:
 
 ```text
 http://localhost:3001
-http://localhost:3001/api/homepage
 ```
 
 ### Chay frontend
@@ -295,27 +294,25 @@ pnpm api:build
 
 Sau do chay `pnpm api:dev` va `pnpm --filter web dev` o hai terminal rieng.
 
-## 5. Scaffold FE/BE theo vi tri da chot
+## 5. Current Flow
 
-Repo nay moi chot khung. Khi bat dau code, scaffold app dung dung vi tri sau:
+### Public pages
 
-### Tao `Next.js` app
+- route cong khai duoc resolve qua `GET /api/pages/resolve?path=/...`
+- du lieu layout duoc luu trong bang `pages`
+- trang chu `/` khong con dung `homepage_content`
 
-```bash
-pnpm dlx create-next-app apps/web --ts --app --src-dir --eslint --use-pnpm
-```
+### Admin page builder
 
-### Tao `NestJS` app
+- vao `http://localhost:5000/admin/pages`
+- de mo dung trang chu: `http://localhost:5000/admin/pages?route=%2F`
+- route `http://localhost:5000/admin/homepage` chi redirect ve page builder cho `/`
 
-```bash
-pnpm dlx @nestjs/cli new apps/api --package-manager pnpm --skip-git
-```
+### Current apps
 
-Sau khi scaffold:
-
-- merge lai `package.json` script o root neu can
-- giu dung cau truc domain trong `docs/repo-structure.md`
-- khong generate app o root repo
+- frontend: `apps/web`
+- backend: `apps/api`
+- local infra: `infra/docker/docker-compose.local.yml`
 
 ## 6. Convention code
 
@@ -371,25 +368,25 @@ Versioning:
 
 Chi tiet xem tai [docs/branching-release.md](docs/branching-release.md).
 
-## 8. Checklist phase setup
+## 8. Checklist
 
 - [x] Chot monorepo structure
 - [x] Chot vi tri FE / BE / packages / infra / docs
 - [x] Co env mau cho root, web, api
 - [x] Co docker compose local cho postgres / redis / adminer
 - [x] Co README setup va quy uoc branch/release
-- [ ] Scaffold app `web`
-- [ ] Scaffold app `api`
+- [x] `apps/web` dang hoat dong
+- [x] `apps/api` dang hoat dong
 - [ ] Them CI cho lint / test / build
 
-## 9. Buoc tiep theo de bat dau code
+## 9. Buoc tiep theo
 
-1. Scaffold `apps/web` va `apps/api`
-2. Them ESLint / Prettier / tsconfig shared vao `packages/`
-3. Dung `auth`, `member`, `blog`, `course` lam 4 domain MVP dau tien
+1. On dinh page builder flow cho desktop va mobile
+2. Them ESLint / Prettier / tsconfig shared vao `packages/` neu can
+3. Tiep tuc domain `auth`, `member`, `article`, `course`, `event`, `page`
 4. Setup CI:
    lint, unit test, build
-5. Tao `docs/api-contract.md` de chot response format va auth flow
+5. Giu `docs/api-contract.md` dong bo voi API thuc te
 
 ## 10. Tai lieu lien quan
 

@@ -9,11 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.1.2",
+    "@craftjs/core": "^0.2.12",
     "@tanstack/react-query": "^5.99.2",
+    "ckeditor5": "^48.0.1",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -57,6 +57,7 @@ model User {
   events_created          Event[]
   attendances             EventAttendance[]
   articles                Article[]
+  pages                   Page[]
   notifications_sent      Notification[]          @relation("NotificationSender")
   notifications_inbox     NotificationRecipient[]
 
@@ -510,6 +511,25 @@ model Article {
   @@index([category_id])
   @@index([created_by])
   @@map("articles")
+}
+
+model Page {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug          String    @unique @db.VarChar(255)
+  route_path    String    @unique @db.VarChar(255)
+  title_en      String    @db.VarChar(255)
+  title_vi      String    @db.VarChar(255)
+  content_json  Json      @default("{}")
+  status        String    @default("draft") @db.VarChar(50)
+  created_by    String?   @db.Uuid
+  created_at    DateTime  @default(now()) @db.Timestamptz
+  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz
+  deleted_at    DateTime? @db.Timestamptz
+
+  creator User? @relation(fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([created_by])
+  @@map("pages")
 }
 
 // ---------------------------------------------------------

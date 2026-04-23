@@ -1,5 +1,5 @@
-import { HomePage } from "@/modules/page/components/HomePage";
+import { CraftPageRenderer } from "@/modules/page-builder/CraftPageRenderer";
 
 export default function Home() {
-  return <HomePage />;
+  return <CraftPageRenderer path="/" />;
 }

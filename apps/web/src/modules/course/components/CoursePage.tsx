@@ -11,6 +11,23 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useCoursesQuery } from "@services/course";
 
 const levels = ["beginner", "intermediate", "advanced"] as const;
+const levelLabelKeys = {
+  advanced: "course.form.level.advanced",
+  beginner: "course.form.level.beginner",
+  intermediate: "course.form.level.intermediate",
+} as const;
+const statusLabelKeys = {
+  draft: "course.form.status.draft",
+  published: "course.form.status.published",
+} as const;
+
+function getLevelLabelKey(level: string) {
+  return level in levelLabelKeys ? levelLabelKeys[level as keyof typeof levelLabelKeys] : "course.form.level.beginner";
+}
+
+function getStatusLabelKey(status: string) {
+  return status in statusLabelKeys ? statusLabelKeys[status as keyof typeof statusLabelKeys] : "course.form.status.draft";
+}
 
 export function CoursePage() {
   const { t, locale } = useTranslation();
@@ -32,7 +49,7 @@ export function CoursePage() {
       title={t("page.course.title")}
       actions={
         canManageCourses ? (
-          <Button onClick={() => router.push("/course/create")}>
+          <Button onClick={() => router.push("/admin/courses/create")}>
             {t("action.createCourse")}
           </Button>
         ) : null
@@ -53,7 +70,7 @@ export function CoursePage() {
             variant={selectedLevel === lvl ? "primary" : "secondary"}
             onClick={() => setSelectedLevel(lvl)}
           >
-            {t(`course.form.level.${lvl}`)}
+            {t(levelLabelKeys[lvl])}
           </Button>
         ))}
       </div>
@@ -94,7 +111,7 @@ export function CoursePage() {
               <div className="p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-                    {t(`course.form.level.${course.level as any}`)}
+                    {t(getLevelLabelKey(course.level))}
                   </span>
                   <span className="text-xs font-medium text-[var(--text-tertiary)]">
                     {course.lesson_count} {t("course.form.lessons")}
@@ -104,7 +121,7 @@ export function CoursePage() {
                       "text-xs font-medium px-2 py-0.5 rounded border",
                       course.status === 'published' ? "border-[var(--brand-primary)] text-[var(--brand-primary)]" : "border-[var(--border-subtle)] text-[var(--text-tertiary)]"
                     )}>
-                      {t(`course.form.status.${course.status as any}`)}
+                      {t(getStatusLabelKey(course.status))}
                     </span>
                   ) : null}
                 </div>

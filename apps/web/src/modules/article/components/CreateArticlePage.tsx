@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
+import { Button, Card, FormField, Input, Select } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import {
   articleApi,
@@ -16,7 +16,6 @@ import {
 } from "@services/article";
 import { type SubmitState } from "./articleEditorTypes";
 import { ModularEditor, type ModularEditorHandle } from "./ModularEditor";
-import { ArticleMetadataPanel } from "./ArticleMetadataPanel";
 
 function slugify(value: string) {
   return (
@@ -33,24 +32,29 @@ function slugify(value: string) {
   );
 }
 
-export function CreateArticlePage() {
+type CreateArticlePageProps = {
+  afterSaveHref?: string;
+};
+
+export function CreateArticlePage({ afterSaveHref = "/article" }: CreateArticlePageProps) {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const editSlug = searchParams.get("slug") ?? undefined;
   const articleQuery = useArticleQuery(editSlug);
 
   if (editSlug && articleQuery.isLoading) {
     return (
-      <PageLayout description="Loading article content." eyebrow="Article" title="Edit article">
-        <Card className="p-4 text-sm text-[var(--text-secondary)]">Loading article...</Card>
+      <PageLayout description={t("article.edit.loadingDescription")} eyebrow={t("page.article.eyebrow")} title={t("article.edit.title")}>
+        <Card className="p-4 text-sm text-[var(--text-secondary)]">{t("article.edit.loading")}</Card>
       </PageLayout>
     );
   }
 
   if (editSlug && articleQuery.error) {
     return (
-      <PageLayout description="The article could not be loaded." eyebrow="Article" title="Edit article">
+      <PageLayout description={t("article.edit.errorDescription")} eyebrow={t("page.article.eyebrow")} title={t("article.edit.title")}>
         <Card className="p-4 text-sm font-medium text-[var(--status-danger)]">
-          {articleQuery.error instanceof Error ? articleQuery.error.message : "Could not load article."}
+          {articleQuery.error instanceof Error ? articleQuery.error.message : t("article.edit.error")}
         </Card>
       </PageLayout>
     );
@@ -59,6 +63,7 @@ export function CreateArticlePage() {
   return (
     <ArticleEditorPage
       key={editSlug ?? "create"}
+      afterSaveHref={afterSaveHref}
       editSlug={editSlug}
       initialArticle={articleQuery.data ?? null}
     />
@@ -66,11 +71,12 @@ export function CreateArticlePage() {
 }
 
 type ArticleEditorPageProps = {
+  afterSaveHref: string;
   editSlug?: string;
   initialArticle: Article | null;
 };
 
-function ArticleEditorPage({ editSlug, initialArticle }: ArticleEditorPageProps) {
+function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleEditorPageProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const editorRef = useRef<ModularEditorHandle>(null);
@@ -93,12 +99,12 @@ function ArticleEditorPage({ editSlug, initialArticle }: ArticleEditorPageProps)
     const nextContent = editorRef.current?.getCleanedValue() || "";
 
     if (!title.trim()) {
-      setSubmitState({ status: "error", message: "Title is required." });
+      setSubmitState({ status: "error", message: t("article.create.titleRequired") });
       return;
     }
 
     if (!nextContent.trim()) {
-      setSubmitState({ status: "error", message: "Content is required." });
+      setSubmitState({ status: "error", message: t("article.create.contentRequired") });
       return;
     }
 
@@ -126,14 +132,14 @@ function ArticleEditorPage({ editSlug, initialArticle }: ArticleEditorPageProps)
 
       setSubmitState({
         status: "success",
-        message: `${editSlug ? "Updated" : "Created"} article ${article.slug}.`,
+        message: t(editSlug ? "article.edit.updated" : "article.create.created", { slug: article.slug }),
       });
-      router.push("/article");
+      router.push(afterSaveHref);
       router.refresh();
     } catch (error) {
       setSubmitState({
         status: "error",
-        message: error instanceof Error ? error.message : "Article submit failed.",
+        message: error instanceof Error ? error.message : t("article.create.submitFailed"),
       });
     } finally {
       setIsSubmitting(false);
@@ -142,33 +148,98 @@ function ArticleEditorPage({ editSlug, initialArticle }: ArticleEditorPageProps)
 
   return (
     <PageLayout
-      description={editSlug ? "Update article content and publishing status." : t("article.create.description")}
+      description={editSlug ? t("article.edit.description") : t("article.create.description")}
       eyebrow={t("page.article.eyebrow")}
-      title={editSlug ? "Edit article" : t("article.create.title")}
+      title={editSlug ? t("article.edit.title") : t("article.create.title")}
     >
-      <form className="grid gap-8 lg:grid-cols-[20rem_1fr] lg:items-start" onSubmit={handleSubmit}>
-        <ArticleMetadataPanel
-          categoryId={categoryId}
-          coverImageUrl={coverImageUrl}
-          isSubmitting={isSubmitting}
-          status={status}
-          submitState={submitState}
-          title={title}
-          onCategoryIdChange={setCategoryId}
-          onCoverImageUrlChange={setCoverImageUrl}
-          onStatusChange={setStatus}
-          onTitleChange={setTitle}
-        />
+      <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
+        <form className="space-y-8" onSubmit={handleSubmit}>
+          <FormField htmlFor="article-title" label={t("form.title")}>
+            <Input
+              id="article-title"
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={t("article.create.titlePlaceholder")}
+              required
+              value={title}
+            />
+          </FormField>
 
-        <ModularEditor
-          label={t("article.create.editor")}
-          initialValue={initialBody}
-          onChange={() => {}} // We use ref for submission
-          ref={editorRef}
-          placeholder="Write your article content here..."
-          className="lg:max-h-[calc(100vh-9rem)]"
-        />
-      </form>
+          <div className="grid min-w-0 gap-6 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-4 md:grid-cols-3">
+            <FormField htmlFor="article-cover-image-url" label={t("course.form.coverImage")}>
+              <Input
+                id="article-cover-image-url"
+                onChange={(event) => setCoverImageUrl(event.target.value)}
+                placeholder="https://example.com/image.jpg"
+                type="url"
+                value={coverImageUrl}
+              />
+            </FormField>
+
+            <FormField htmlFor="article-category" label={t("prayer.form.category")}>
+              <Select
+                id="article-category"
+                onChange={(event) => setCategoryId(event.target.value)}
+                value={categoryId}
+              >
+                <option value="">{t("prayer.form.categoryNone")}</option>
+                <option value="1">{t("article.category.news")}</option>
+                <option value="2">{t("article.category.teaching")}</option>
+                <option value="3">{t("article.category.devotional")}</option>
+              </Select>
+            </FormField>
+
+            <FormField htmlFor="article-status" label={t("course.form.status")}>
+              <Select
+                id="article-status"
+                onChange={(event) => setStatus(event.target.value === "published" ? "published" : "draft")}
+                value={status}
+              >
+                <option value="draft">{t("course.form.status.draft")}</option>
+                <option value="published">{t("course.form.status.published")}</option>
+              </Select>
+            </FormField>
+          </div>
+
+          <ModularEditor
+            label={t("article.create.editor")}
+            initialValue={initialBody}
+            onChange={() => {}} // We use ref for submission
+            ref={editorRef}
+            placeholder={t("article.create.editorPlaceholder")}
+            className="min-w-0 max-w-full"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-6">
+            {submitState.message ? (
+              <p
+                className={
+                  submitState.status === "success"
+                    ? "text-sm font-medium text-[var(--status-success)]"
+                    : "text-sm font-medium text-[var(--status-danger)]"
+                }
+              >
+                {submitState.message}
+              </p>
+            ) : (
+              <span />
+            )}
+
+            <div className="flex justify-end gap-4">
+              <Button
+                disabled={isSubmitting}
+                onClick={() => window.history.back()}
+                type="button"
+                variant="ghost"
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button isLoading={isSubmitting} type="submit">
+                {isSubmitting ? t("article.create.submitting") : t("action.submit")}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Card>
     </PageLayout>
   );
 }

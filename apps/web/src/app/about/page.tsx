@@ -1,5 +1,5 @@
-import { AboutPage } from "@/modules/page/components/AboutPage";
+import { CraftPageRenderer } from "@/modules/page-builder/CraftPageRenderer";
 
 export default function AboutRoute() {
-  return <AboutPage />;
+  return <CraftPageRenderer path="/about" />;
 }

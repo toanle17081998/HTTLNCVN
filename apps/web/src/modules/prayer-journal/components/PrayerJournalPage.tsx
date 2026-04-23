@@ -13,6 +13,7 @@ import {
 } from "@/mockData";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { CategorySidebar } from "./CategorySidebar";
 import { PrayerCard } from "./PrayerCard";
 import { PrayerFilterBar } from "./PrayerFilterBar";
@@ -29,6 +30,7 @@ import {
 export function PrayerJournalPage() {
   const { can } = useAuth();
   const { t } = useTranslation();
+  const { confirm } = useFeedback();
 
   const canModerate = can(PERMISSIONS.moderateChurchPrayers);
   const canManageOwn = can(PERMISSIONS.manageOwnPrayers);
@@ -136,8 +138,14 @@ export function PrayerJournalPage() {
     closeModal();
   }
 
-  function deletePrayer() {
+  async function deletePrayer() {
     if (!activePrayer) return;
+    const ok = await confirm({
+      variant: "delete",
+      title: t("prayer.action.delete"),
+      description: t("action.delete_confirm_desc"),
+    });
+    if (!ok) return;
     setPrayers((prev) => prev.filter((p) => p.id !== activePrayer.id));
     closeModal();
   }

@@ -67,6 +67,7 @@ const rolePermissions = {
   ],
   church_admin: [
     ['read', 'landing_page'],
+    ['update', 'landing_page'],
     ['read', 'about_page'],
     ['update', 'about_page'],
     ['read', 'contact_page'],
@@ -110,6 +111,7 @@ const rolePermissions = {
   ],
   system_admin: [
     ['read', 'landing_page'],
+    ['update', 'landing_page'],
     ['read', 'about_page'],
     ['update', 'about_page'],
     ['read', 'contact_page'],

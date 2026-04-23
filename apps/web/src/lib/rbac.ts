@@ -15,6 +15,7 @@ export const PERMISSIONS = {
   viewEvents: "view:event",
   personalizedSearch: "search:personalized",
   manageArticle: "manage:article",
+  manageLanding: "manage:landing",
   manageAbout: "manage:about",
   manageContact: "manage:contact",
   manageCourses: "manage:course",
