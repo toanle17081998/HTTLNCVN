@@ -20,6 +20,16 @@ type CourseDetailPageProps = {
   slug: string;
 };
 
+const levelLabelKeys = {
+  advanced: "course.form.level.advanced",
+  beginner: "course.form.level.beginner",
+  intermediate: "course.form.level.intermediate",
+} as const;
+
+function getLevelLabelKey(level: string) {
+  return level in levelLabelKeys ? levelLabelKeys[level as keyof typeof levelLabelKeys] : "course.form.level.beginner";
+}
+
 export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -71,7 +81,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
             {can(PERMISSIONS.manageCourses) && (
               <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => router.push(`/course/${slug}/edit`)}>
+                <Button variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
                   {t("course.action.edit")}
                 </Button>
                 <Button
@@ -92,7 +102,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
             <Card className="p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-                  {t(`course.form.level.${course.level as any}`)}
+                  {t(getLevelLabelKey(course.level))}
                 </span>
                 <span className="text-xs font-medium text-[var(--text-tertiary)]">
                   {course.lesson_count} {t("lesson.label").toLowerCase()}s
@@ -116,7 +126,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => router.push(`/course/${slug}/lesson/create`)}
+                    onClick={() => router.push(`/admin/lessons/create?course=${encodeURIComponent(slug)}`)}
                   >
                     {t("lesson.action.add")}
                   </Button>

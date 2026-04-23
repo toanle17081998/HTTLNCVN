@@ -85,11 +85,6 @@ export function Header({ pathname }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    setMobileMenuOpen(false);
-    setSettingsOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
       if (
         settingsRef.current &&
@@ -156,7 +151,7 @@ export function Header({ pathname }: HeaderProps) {
           : "pointer-events-none -translate-y-full opacity-0 shadow-none",
       )}
     >
-      <div className="relative flex min-h-16 items-center gap-3 px-4 py-3 sm:px-6 md:h-20 md:gap-4 lg:px-8">
+      <div className="relative flex min-h-16 items-center gap-3 px-4 py-3 sm:px-6 md:h-20 md:gap-4">
         <Link
           aria-label={t("app.name")}
           className="flex shrink-0 items-center rounded-md"
@@ -167,7 +162,7 @@ export function Header({ pathname }: HeaderProps) {
 
         <nav
           aria-label="Primary"
-          className="mx-auto hidden w-full max-w-3xl min-w-0 flex-nowrap justify-center gap-1 md:flex"
+          className="mx-auto hidden w-full max-w-5xl min-w-0 flex-nowrap justify-center gap-1 md:flex"
         >
           {renderNavLinks()}
         </nav>
@@ -231,6 +226,16 @@ export function Header({ pathname }: HeaderProps) {
                     role="menuitem"
                   >
                     {t("nav.accessFlow")}
+                  </Link>
+                ) : null}
+                {canCreateContent ? (
+                  <Link
+                    className="flex h-10 items-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                    href="/admin"
+                    onClick={() => setSettingsOpen(false)}
+                    role="menuitem"
+                  >
+                    Admin
                   </Link>
                 ) : null}
                 {isAuthenticated ? (

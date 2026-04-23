@@ -40,7 +40,7 @@ export function ArticlePage() {
         canManageArticle ? (
           <Link
             className="inline-flex h-10 items-center justify-center rounded-md border border-transparent bg-[var(--btn-primary-bg)] px-4 text-sm font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-            href="/create-article"
+            href="/admin/articles/create"
           >
             {t("action.createArticle")}
           </Link>
@@ -120,7 +120,7 @@ export function ArticlePage() {
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link
                   className="inline-flex h-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                  href={`/create-article?slug=${encodeURIComponent(article.slug)}`}
+                  href={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
                 >
                   {t("lesson.action.edit")}
                 </Link>

@@ -73,7 +73,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => router.push(`/course/${courseSlug}/lesson/${lessonId}/edit`)}
+                      onClick={() => router.push(`/admin/courses/${courseSlug}/lessons/${lessonId}/edit`)}
                     >
                       {t("lesson.action.edit")}
                     </Button>

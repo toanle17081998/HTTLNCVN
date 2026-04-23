@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import type { PageDto } from './page.types';
 
-const PAGE_SLUGS = new Set(['about', 'contact', 'terms', 'privacy']);
+const PAGE_SLUGS = new Set(['home', 'about', 'contact', 'terms', 'privacy']);
 
 @Injectable()
 export class PageRepository {

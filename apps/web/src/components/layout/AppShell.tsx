@@ -15,7 +15,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
-  if (pathname === "/auth") {
+  if (pathname === "/auth" || pathname.startsWith("/admin")) {
     return (
       <div className="min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
         <ThemeInitializer />
@@ -30,9 +30,11 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Header pathname={pathname} />
         <main className="min-w-0 flex-1 px-4 pb-8 pt-24 sm:px-6 md:pt-28 lg:px-8">
-          <div className="mx-auto mb-4 w-full max-w-6xl">
-            <Breadcrumb pathname={pathname} />
-          </div>
+          {pathname && pathname !== "/" && (
+            <div className="mx-auto mb-4 w-full max-w-6xl">
+              <Breadcrumb pathname={pathname} />
+            </div>
+          )}
           {children}
         </main>
         <Footer />

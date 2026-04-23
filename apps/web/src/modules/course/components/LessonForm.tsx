@@ -51,9 +51,9 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
   };
 
   return (
-    <Card className="max-w-4xl mx-auto p-8 shadow-xl border-[var(--border-subtle)] bg-[var(--bg-card)]">
+    <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
           {title}
         </h1>
         <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
@@ -75,8 +75,8 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_10rem] gap-6">
-          <div className="grid grid-cols-1 gap-6">
+        <div className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_10rem]">
+          <div className="grid min-w-0 grid-cols-1 gap-6">
             <div className={cn(editLang !== "en" && "hidden")}>
               <FormField label={t("lesson.form.title_en")} htmlFor="title_en">
                 <Input
@@ -118,7 +118,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
           </FormField>
         </div>
 
-        <div className="grid gap-8">
+        <div className="grid min-w-0 gap-8">
           <div className={cn(editLang !== "en" && "hidden")}>
             <ModularEditor
               label={t("lesson.form.content_en")}
@@ -126,6 +126,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
               onChange={(val) => handleEditorChange("content_markdown_en", val)}
               placeholder="Write lesson content in English..."
               ref={contentEnRef}
+              className="min-w-0 max-w-full"
             />
           </div>
 
@@ -136,6 +137,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
               onChange={(val) => handleEditorChange("content_markdown_vi", val)}
               placeholder="Viết nội dung bài học bằng tiếng Việt..."
               ref={contentViRef}
+              className="min-w-0 max-w-full"
             />
           </div>
         </div>

@@ -31,7 +31,7 @@ export function ArticleEditorToolbar({
   onAddTable,
 }: ArticleEditorToolbarProps) {
   return (
-    <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
+    <div className="flex w-full min-w-0 max-w-full shrink-0 items-center gap-2 overflow-x-auto overflow-y-hidden border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
       {/* Format groups */}
       {toolbarGroups.map((group, index) => (
         <div
@@ -63,7 +63,7 @@ export function ArticleEditorToolbar({
       ))}
 
       {/* Action buttons */}
-      <div className="ml-auto flex shrink-0 gap-2">
+      <div className="flex shrink-0 gap-2 lg:ml-auto">
         {(
           [
             { key: "action:link", label: "Link", icon: "link", onClick: onAddLink },

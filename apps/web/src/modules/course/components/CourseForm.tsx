@@ -53,9 +53,9 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
   };
 
   return (
-    <Card className="max-w-4xl mx-auto p-8 shadow-xl border-[var(--border-subtle)] bg-[var(--bg-card)]">
+    <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
           {title}
         </h1>
         <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
@@ -77,39 +77,36 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-8">
-          {/* Left Column: Core Info */}
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 gap-6">
-              <div className={cn(editLang !== "en" && "hidden")}>
-                <FormField label={t("course.form.title_en")} htmlFor="title_en">
-                  <Input
-                    id="title_en"
-                    name="title_en"
-                    value={formData.title_en}
-                    onChange={handleChange}
-                    placeholder="English Title"
-                    required={editLang === "en"}
-                    className="bg-[var(--bg-base)]"
-                  />
-                </FormField>
-              </div>
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+          <div className={cn(editLang !== "en" && "hidden")}>
+            <FormField label={t("course.form.title_en")} htmlFor="title_en">
+              <Input
+                id="title_en"
+                name="title_en"
+                value={formData.title_en}
+                onChange={handleChange}
+                placeholder="English Title"
+                required={editLang === "en"}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
 
-              <div className={cn(editLang !== "vi" && "hidden")}>
-                <FormField label={t("course.form.title_vi")} htmlFor="title_vi">
-                  <Input
-                    id="title_vi"
-                    name="title_vi"
-                    value={formData.title_vi}
-                    onChange={handleChange}
-                    placeholder="Tiêu đề tiếng Việt"
-                    required={editLang === "vi"}
-                    className="bg-[var(--bg-base)]"
-                  />
-                </FormField>
-              </div>
-            </div>
+          <div className={cn(editLang !== "vi" && "hidden")}>
+            <FormField label={t("course.form.title_vi")} htmlFor="title_vi">
+              <Input
+                id="title_vi"
+                name="title_vi"
+                value={formData.title_vi}
+                onChange={handleChange}
+                placeholder="Tiêu đề tiếng Việt"
+                required={editLang === "vi"}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+          </div>
 
+          <div className="lg:col-span-2">
             <FormField label={t("course.form.summary")} htmlFor="summary" hint={t("course.form.summaryHint")}>
               <Textarea
                 id="summary"
@@ -121,18 +118,10 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 className="bg-[var(--bg-base)]"
               />
             </FormField>
-
-            <ModularEditor
-              label={t("course.form.description")}
-              initialValue={formData.description}
-              onChange={(val) => handleEditorChange("description", val)}
-              placeholder="Full course description..."
-              ref={descriptionRef}
-            />
           </div>
+        </div>
 
-          {/* Right Column: Metadata */}
-          <div className="space-y-6">
+        <div className="grid min-w-0 gap-6 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-4 md:grid-cols-2 xl:grid-cols-4">
             <FormField label={t("course.form.slug")} htmlFor="slug" hint={t("course.form.slugHint")}>
               <Input
                 id="slug"
@@ -194,8 +183,16 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 <option value="published">{t("course.form.status.published")}</option>
               </Select>
             </FormField>
-          </div>
         </div>
+
+        <ModularEditor
+          label={t("course.form.description")}
+          initialValue={formData.description}
+          onChange={(val) => handleEditorChange("description", val)}
+          placeholder="Full course description..."
+          ref={descriptionRef}
+          className="min-w-0 max-w-full"
+        />
 
         <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border-subtle)]">
           <Button
