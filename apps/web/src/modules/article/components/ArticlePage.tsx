@@ -7,6 +7,7 @@ import { Button, Card, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import {
   useArticlesQuery,
   useArticleCategoriesQuery,
@@ -16,6 +17,7 @@ import {
 export function ArticlePage() {
   const { can } = useAuth();
   const { t, locale } = useTranslation();
+  const { confirm } = useFeedback();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
   
   const canManageArticle = can(PERMISSIONS.manageArticle);
@@ -30,7 +32,12 @@ export function ArticlePage() {
   const deleteArticle = useDeleteArticleMutation();
 
   async function handleDelete(slug: string) {
-    if (!window.confirm("Delete this article?")) return;
+    const ok = await confirm({
+      variant: "delete",
+      title: t("admin.courses.deleteConfirm"),
+      description: `${t("admin.common.delete")} ${slug}?`,
+    });
+    if (!ok) return;
     await deleteArticle.mutateAsync(slug);
   }
 
@@ -84,42 +91,63 @@ export function ArticlePage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {articlesQuery.data?.items.map((article) => (
-          <Card className="p-6 transition hover:border-[var(--brand-primary)] flex flex-col" key={article.id}>
+          <Card className="overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg flex flex-col h-full" key={article.id}>
             <Link
-              className="block flex-1 rounded-md focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+              className="block flex-1 focus:outline-none"
               href={`/article/${encodeURIComponent(article.slug)}`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <span className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-semibold uppercase",
-                  article.status === 'published' ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]" : "bg-[var(--bg-base)] text-[var(--text-tertiary)]"
-                )}>
-                  {article.status}
-                </span>
-                {article.category ? (
-                  <span className="text-xs font-medium text-[var(--text-secondary)]">
-                    {article.category.name}
+              {article.cover_image_url ? (
+                <div className="aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)]">
+                  <img
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                    src={article.cover_image_url}
+                  />
+                </div>
+              ) : (
+                <div className="aspect-[16/9] w-full flex items-center justify-center bg-[var(--bg-base)] border-b border-[var(--border-subtle)]">
+                   <div className="h-12 w-12 rounded-full bg-[var(--brand-muted)] flex items-center justify-center">
+                      <span className="text-xl">📖</span>
+                   </div>
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn(
+                    "rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
+                    article.status === 'published' ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]" : "bg-[var(--bg-base)] text-[var(--text-tertiary)]"
+                  )}>
+                    {article.status}
                   </span>
-                ) : null}
+                  {article.category ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      {article.category.name}
+                    </span>
+                  ) : null}
+                </div>
+                <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
+                  {locale === 'vi' ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi)}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-2">
+                  {locale === 'vi' ? article.title_en : article.title_vi}
+                </p>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="h-7 w-7 rounded-full bg-[var(--bg-base)] flex items-center justify-center text-[10px] font-bold text-[var(--text-tertiary)]">
+                    {article.creator.username.slice(0, 2).toUpperCase()}
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+                    {article.creator.username} • {article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Draft'}
+                  </p>
+                </div>
               </div>
-              <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">
-                {locale === 'vi' ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi)}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-2">
-                {article.title_en}
-              </p>
-              <p className="mt-3 text-xs text-[var(--text-tertiary)]">
-                By {article.creator.username}
-                {article.published_at ? ` - ${new Date(article.published_at).toLocaleDateString()}` : ""}
-              </p>
             </Link>
 
             {canManageArticle ? (
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="px-6 pb-6 mt-auto flex flex-wrap gap-2">
                 <Link
-                  className="inline-flex h-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
                   href={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
                 >
                   {t("lesson.action.edit")}
@@ -129,6 +157,7 @@ export function ArticlePage() {
                   onClick={() => handleDelete(article.slug)}
                   size="sm"
                   variant="danger"
+                  className="h-9 rounded-lg px-4 text-[10px] font-bold uppercase tracking-wider"
                 >
                   {t("prayer.action.delete")}
                 </Button>
@@ -139,8 +168,8 @@ export function ArticlePage() {
       </div>
 
       {articlesQuery.data && articlesQuery.data.items.length === 0 ? (
-        <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed">
-          <div className="text-4xl mb-4">Empty</div>
+        <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed rounded-2xl">
+          <div className="text-4xl mb-4 opacity-20">📭</div>
           No articles found in this category.
         </Card>
       ) : null}

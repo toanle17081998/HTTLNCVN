@@ -5,15 +5,22 @@ import { FileText, Plus } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@services/article";
 
 export function AdminArticles() {
   const { locale, t } = useTranslation();
+  const { confirm } = useFeedback();
   const articlesQuery = useArticlesQuery({ take: 100 });
   const deleteArticle = useDeleteArticleMutation();
 
   async function handleDelete(slug: string) {
-    if (!window.confirm(`${t("admin.common.delete")} ${slug}?`)) return;
+    const ok = await confirm({
+      variant: "delete",
+      title: t("admin.courses.deleteConfirm"), // Reusing the translation for consistency
+      description: `${t("admin.common.delete")} ${slug}?`,
+    });
+    if (!ok) return;
     await deleteArticle.mutateAsync(slug);
   }
 

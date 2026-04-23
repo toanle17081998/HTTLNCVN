@@ -118,7 +118,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
           </FormField>
         </div>
 
-        <div className="grid min-w-0 gap-8">
+        <div className="space-y-8">
           <div className={cn(editLang !== "en" && "hidden")}>
             <ModularEditor
               label={t("lesson.form.content_en")}

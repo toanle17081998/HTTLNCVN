@@ -5,20 +5,27 @@ import { ChevronRight, FileText, GraduationCap, Plus } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import {
   useCourseQuery,
   useCoursesQuery,
   useDeleteCourseMutation,
+  useDeleteLessonMutation,
   type CourseListItem,
 } from "@services/course";
 
 export function AdminCourses() {
   const { locale, t } = useTranslation();
+  const { confirm } = useFeedback();
   const coursesQuery = useCoursesQuery({ take: 100 });
   const deleteCourse = useDeleteCourseMutation();
 
   async function handleDelete(slug: string) {
-    if (!window.confirm(t("admin.courses.deleteConfirm"))) return;
+    const ok = await confirm({
+      variant: "delete",
+      title: t("admin.courses.deleteConfirm"),
+    });
+    if (!ok) return;
     await deleteCourse.mutateAsync(slug);
   }
 
@@ -45,10 +52,10 @@ export function AdminCourses() {
         {coursesQuery.data?.items.map((course) => (
           <CoursePanel
             course={course}
-            isDeleting={deleteCourse.isPending}
+            isDeletingCourse={deleteCourse.isPending}
             key={course.id}
             locale={locale}
-            onDelete={handleDelete}
+            onDeleteCourse={handleDelete}
             t={t}
           />
         ))}
@@ -65,21 +72,33 @@ export function AdminCourses() {
 
 function CoursePanel({
   course,
-  isDeleting,
+  isDeletingCourse,
   locale,
-  onDelete,
+  onDeleteCourse,
   t,
 }: {
   course: CourseListItem;
-  isDeleting: boolean;
+  isDeletingCourse: boolean;
   locale: string;
-  onDelete: (slug: string) => void;
+  onDeleteCourse: (slug: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }) {
   const courseQuery = useCourseQuery(course.slug);
+  const deleteLesson = useDeleteLessonMutation(course.slug);
   const lessons = courseQuery.data?.lessons ?? [];
   const title =
     locale === "vi" ? course.title_vi || course.title_en : course.title_en || course.title_vi;
+
+  const { confirm } = useFeedback();
+
+  async function handleDeleteLesson(lessonId: string) {
+    const ok = await confirm({
+      variant: "delete",
+      title: t("lesson.action.deleteConfirm"),
+    });
+    if (!ok) return;
+    await deleteLesson.mutateAsync(lessonId);
+  }
 
   return (
     <Card className="overflow-hidden rounded-xl shadow-sm transition-all duration-200 hover:shadow-md">
@@ -124,10 +143,10 @@ function CoursePanel({
               {t("admin.common.edit")}
             </Link>
             <Button
-              disabled={isDeleting}
+              disabled={isDeletingCourse}
               onClick={(event) => {
                 event.stopPropagation();
-                onDelete(course.slug);
+                onDeleteCourse(course.slug);
               }}
               size="sm"
               variant="danger"
@@ -170,12 +189,23 @@ function CoursePanel({
                     </p>
                   </div>
                 </div>
-                <Link
-                  className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] sm:ml-auto"
-                  href={`/admin/courses/${encodeURIComponent(course.slug)}/lessons/${encodeURIComponent(lesson.id)}/edit`}
-                >
-                  {t("admin.common.edit")}
-                </Link>
+                <div className="flex gap-2 sm:ml-auto">
+                  <Link
+                    className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                    href={`/admin/courses/${encodeURIComponent(course.slug)}/lessons/${encodeURIComponent(lesson.id)}/edit`}
+                  >
+                    {t("admin.common.edit")}
+                  </Link>
+                  <Button
+                    disabled={deleteLesson.isPending}
+                    onClick={() => handleDeleteLesson(lesson.id)}
+                    size="sm"
+                    variant="danger"
+                    className="h-8 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider"
+                  >
+                    {t("admin.common.delete")}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

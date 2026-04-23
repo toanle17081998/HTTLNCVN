@@ -8,6 +8,7 @@ import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
 import {
   useLessonQuery,
@@ -28,6 +29,7 @@ function renderLessonBody(value: string) {
 
 export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps) {
   const { t, locale } = useTranslation();
+  const { confirm } = useFeedback();
   const router = useRouter();
   const { can, isAuthenticated } = useAuth();
   const canTakeQuiz = can(PERMISSIONS.takeAssessments);
@@ -82,7 +84,11 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                       variant="ghost"
                       className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                       onClick={async () => {
-                        if (confirm(t("lesson.action.deleteConfirm"))) {
+                        const ok = await confirm({
+                          variant: "delete",
+                          title: t("lesson.action.deleteConfirm"),
+                        });
+                        if (ok) {
                           await deleteLesson.mutateAsync(lessonId);
                           router.push(`/course/${courseSlug}`);
                         }
@@ -167,7 +173,11 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                           variant="ghost"
                           className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                           onClick={async () => {
-                            if (confirm("Are you sure you want to delete this template?")) {
+                            const ok = await confirm({
+                              variant: "delete",
+                              title: "Are you sure you want to delete this template?",
+                            });
+                            if (ok) {
                               await deleteTemplate.mutateAsync(template.id);
                             }
                           }}

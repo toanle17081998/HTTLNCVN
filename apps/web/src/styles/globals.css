@@ -1,16 +1,41 @@
 @import "tailwindcss";
 
+@layer utilities {
+  .animate-in {
+    animation-duration: 200ms;
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-in {
+    @starting-style {
+      opacity: 0;
+    }
+
+    opacity: 1;
+  }
+
+  .zoom-in {
+    @starting-style {
+      transform: scale(0.95);
+    }
+
+    transform: scale(1);
+  }
+}
+
+
 :root {
-  --p-blue-50:  239 246 255; 
+  --p-blue-50: 239 246 255;
   --p-blue-600: 37 99 235;
   --p-blue-700: 29 78 216;
 
-  --p-gray-50:  249 250 251;
+  --p-gray-50: 249 250 251;
   --p-gray-900: 17 24 39;
 
   --bg-base: rgb(var(--p-gray-50));
   --bg-surface: #ffffff;
-  --bg-overlay: rgba(var(--p-gray-900) / 0.4); 
+  --bg-overlay: rgba(var(--p-gray-900) / 0.4);
 
   --text-primary: rgb(var(--p-gray-900));
   --text-secondary: #4b5563;
@@ -19,7 +44,7 @@
 
   --brand-primary: rgb(var(--p-blue-600));
   --brand-muted: rgba(var(--p-blue-600) / 0.1);
-  
+
   --status-info: #3b82f6;
   --status-success: #10b981;
   --status-warning: #f59e0b;
@@ -37,12 +62,12 @@
 [data-theme='dark'] {
   --bg-base: #030712;
   --bg-surface: #111827;
-  
+
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
-  
+
   --border-subtle: #1f2937;
-  --brand-primary: #60a5fa; 
+  --brand-primary: #60a5fa;
 }
 
 [data-theme='dark'] .church-logo-light {

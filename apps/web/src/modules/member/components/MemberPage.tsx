@@ -7,6 +7,7 @@ import { Button, Card, FormField, Input, Select, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import {
   useCreateMemberMutation,
   useDeleteMemberMutation,
@@ -99,6 +100,7 @@ type MemberPageProps = {
 
 export function MemberPage({ admin = false }: MemberPageProps) {
   const { t } = useTranslation();
+  const { confirm } = useFeedback();
   const { can, isAuthenticated, isLoading: authLoading } = useAuth();
   const canReadMembers = can(PERMISSIONS.manageChurchMembers);
   const canCreateMembers = can(PERMISSIONS.createChurchMembers) || canReadMembers;
@@ -378,8 +380,12 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                         <button
                           aria-label={t("admin.members.deleteNamed", { name: displayName(member) })}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition-all hover:bg-red-50"
-                          onClick={() => {
-                            if (window.confirm(t("admin.members.deleteConfirm", { name: displayName(member) }))) {
+                          onClick={async () => {
+                            const ok = await confirm({
+                              variant: "delete",
+                              title: t("admin.members.deleteConfirm", { name: displayName(member) }),
+                            });
+                            if (ok) {
                               deleteMemberMutation.mutate(member.id);
                             }
                           }}

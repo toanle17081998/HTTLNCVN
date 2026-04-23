@@ -7,12 +7,14 @@ import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { markdownToHtml, isRichTextHtml } from "@/modules/article/components/articleEditorUtils";
 import {
   useCourseQuery,
   useCourseQuizzesQuery,
   useStartQuizMutation,
   useDeleteCourseMutation,
+  useDeleteLessonMutation,
   type QuizListItem,
 } from "@services/course";
 
@@ -32,6 +34,7 @@ function getLevelLabelKey(level: string) {
 
 export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const { t, locale } = useTranslation();
+  const { confirm } = useFeedback();
   const router = useRouter();
   const { can, isAuthenticated } = useAuth();
   const canTakeQuiz = can(PERMISSIONS.takeAssessments);
@@ -39,6 +42,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const quizzesQuery = useCourseQuizzesQuery(slug);
   const startQuiz = useStartQuizMutation();
   const deleteCourse = useDeleteCourseMutation();
+  const deleteLesson = useDeleteLessonMutation(slug);
   const course = courseQuery.data;
 
   const descriptionHtml = course?.description
@@ -88,7 +92,11 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                   variant="ghost"
                   className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                   onClick={async () => {
-                    if (confirm(t("course.action.deleteConfirm"))) {
+                    const ok = await confirm({
+                      variant: "delete",
+                      title: t("course.action.deleteConfirm"),
+                    });
+                    if (ok) {
                       await deleteCourse.mutateAsync(slug);
                       router.push("/course");
                     }
@@ -133,29 +141,63 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                 )}
               </div>
               {course.lessons.map((lesson) => (
-                <Link
-                  className="rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                  href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
-                  key={lesson.id}
-                >
-                  <Card className="p-5 transition hover:border-[var(--brand-primary)]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                          {t("lesson.label")} {lesson.order_index ?? "-"}
-                        </p>
-                        <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                          {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
-                        </h3>
+                <div key={lesson.id} className="group relative">
+                  <Link
+                    className="block rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                    href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
+                  >
+                    <Card className="p-5 transition hover:border-[var(--brand-primary)]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                            {t("lesson.label")} {lesson.order_index ?? "-"}
+                          </p>
+                          <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
+                            {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {lesson.quiz_count ? (
+                            <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
+                              {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
+                            </span>
+                          ) : null}
+                          {can(PERMISSIONS.manageCourses) && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  router.push(`/admin/courses/${course.slug}/lessons/${lesson.id}/edit`);
+                                }}
+                              >
+                                {t("lesson.action.edit")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  const ok = await confirm({
+                                    variant: "delete",
+                                    title: t("lesson.action.deleteConfirm"),
+                                  });
+                                  if (ok) {
+                                    await deleteLesson.mutateAsync(lesson.id);
+                                  }
+                                }}
+                              >
+                                {t("lesson.action.delete")}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {lesson.quiz_count ? (
-                        <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                          {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
-                        </span>
-                      ) : null}
-                    </div>
-                  </Card>
-                </Link>
+                    </Card>
+                  </Link>
+                </div>
               ))}
             </section>
           </div>
