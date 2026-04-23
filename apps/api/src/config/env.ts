@@ -6,7 +6,6 @@ import { config as loadDotEnv } from 'dotenv';
 type EnvShape = {
   appName: string;
   databaseUrl: string;
-  homepageCacheTtlSeconds: number;
   jwt: {
     accessExpiresIn: string;
     accessSecret: string;
@@ -58,20 +57,6 @@ function parsePort(name: string, fallback: number): number {
   return parsedValue;
 }
 
-function parsePositiveInteger(name: string, fallback: number): number {
-  const rawValue = process.env[name];
-
-  if (!rawValue) {
-    return fallback;
-  }
-
-  if (!/^\d+$/.test(rawValue)) {
-    throw new Error(`Invalid integer value for ${name}: ${rawValue}`);
-  }
-
-  return Number(rawValue);
-}
-
 export function getEnv(): EnvShape {
   if (cachedEnv) {
     return cachedEnv;
@@ -82,7 +67,6 @@ export function getEnv(): EnvShape {
   cachedEnv = {
     appName: process.env.APP_NAME ?? 'htnc-api',
     databaseUrl: requireString('DATABASE_URL'),
-    homepageCacheTtlSeconds: parsePositiveInteger('HOMEPAGE_CACHE_TTL_SECONDS', 300),
     jwt: {
       accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
       accessSecret: requireString('JWT_ACCESS_SECRET'),

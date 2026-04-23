@@ -357,7 +357,7 @@ export function HomePage() {
               <h1 className="text-3xl font-black leading-[1.1] text-white sm:text-5xl lg:text-7xl tracking-tight">
                 {heroContent.headline}
               </h1>
-              <p className="max-w-xl text-sm leading-relaxed text-slate-100/90 font-medium sm:text-lg">
+              <p className="max-w-xl text-sm font-medium leading-relaxed text-white/90 sm:text-lg">
                 {heroContent.subheadline}
               </p>
             </div>
@@ -386,7 +386,7 @@ export function HomePage() {
                   <p className="text-xl sm:text-3xl font-black text-white">
                     {stat.value}
                   </p>
-                  <p className="mt-0.5 text-[7px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
+                  <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.2em] text-white/70 sm:text-[10px]">
                     {stat.label}
                   </p>
                 </div>

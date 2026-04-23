@@ -1508,7 +1508,7 @@ function FeedCard({
       )}
       href={href}
     >
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-black/5 bg-slate-950">
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-black/5 bg-[var(--text-primary)]">
         {hasRealCover ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}

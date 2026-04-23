@@ -8,7 +8,6 @@ import { ArticleModule } from './modules/article/article.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CourseModule } from './modules/course/course.module';
 import { EventModule } from './modules/event/event.module';
-import { HomepageModule } from './modules/homepage/homepage.module';
 import { MemberModule } from './modules/member/member.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PageModule } from './modules/page/page.module';
@@ -19,7 +18,6 @@ import { PrayerJournalModule } from './modules/prayer-journal/prayer-journal.mod
     DatabaseModule,
     PassportModule,
     JwtModule.register({}),
-    HomepageModule,
     AuthModule,
     MemberModule,
     ArticleModule,

@@ -1,6 +1,6 @@
 # HTNC API
 
-NestJS app toi thieu cho homepage aggregate API.
+NestJS app for the HTNC platform APIs.
 
 ## Run
 
@@ -14,22 +14,7 @@ pnpm --filter @htnc/api test
 
 API mac dinh:
 
-- `http://localhost:3001/api/homepage`
-
-## Postman
-
-Method:
-
-- `GET`
-
-URL:
-
-- `http://localhost:3001/api/homepage`
-
-Vi du query params:
-
-- `http://localhost:3001/api/homepage?latest_posts_limit=3&featured_courses_limit=2&upcoming_events_limit=2`
-- `http://localhost:3001/api/homepage?include=posts,events`
+- `http://localhost:3001/api`
 
 ## Structure
 
@@ -42,7 +27,8 @@ src/
 |-- database/
 |   `-- scripts/
 `-- modules/
-    `-- homepage/
+    |-- page/
+    `-- ...
 ```
 
 ## Notes
@@ -51,4 +37,3 @@ src/
 - Service xu ly orchestration
 - Repository doc SQL va query PostgreSQL
 - Migration va seed dang dung file SQL/raw query de boot nhanh MVP
-- Homepage co in-memory cache TTL mac dinh `300` giay, override bang env `HOMEPAGE_CACHE_TTL_SECONDS`

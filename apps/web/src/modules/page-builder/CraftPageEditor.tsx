@@ -90,7 +90,7 @@ function BuilderShell({
           </aside>
 
           <div className="min-w-0">
-            <Card className={cn("overflow-hidden rounded-2xl border-slate-200", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
+            <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Canvas</p>
@@ -151,17 +151,17 @@ function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
     <Card className="rounded-2xl p-6">
       <div className="space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Create page</p>
-          <h2 className="mt-1 text-2xl font-semibold text-slate-950">Start a new route</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Create page</p>
+          <h2 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">Start a new route</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
             Create a page, map it to any public route, and then build its layout visually.
           </p>
         </div>
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
           Route path
           <Input onChange={(event) => setRoutePath(event.target.value)} value={routePath} />
         </label>
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
           Title
           <Input onChange={(event) => setTitle(event.target.value)} value={title} />
         </label>
@@ -169,7 +169,7 @@ function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
           <Plus className="mr-2 h-4 w-4" />
           Create Page
         </Button>
-        {message ? <p className="text-sm text-slate-600">{message}</p> : null}
+        {message ? <p className="text-sm text-[var(--text-secondary)]">{message}</p> : null}
       </div>
     </Card>
   );
@@ -236,15 +236,15 @@ export function CraftPageEditor() {
 
   return (
     <div className="space-y-5">
-      <Card className="rounded-2xl border-slate-200 p-4">
+      <Card className="rounded-2xl border-[var(--border-subtle)] p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--text-primary)] text-[var(--bg-surface)]">
               <PenSquare className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Editor</p>
-              <h1 className="text-xl font-semibold text-slate-950">Page Builder</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Editor</p>
+              <h1 className="text-xl font-semibold text-[var(--text-primary)]">Page Builder</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -278,14 +278,14 @@ export function CraftPageEditor() {
         <main className="space-y-6">
           {selectedPage ? (
             <>
-              <Card className="rounded-2xl border-slate-200 p-4">
+              <Card className="rounded-2xl border-[var(--border-subtle)] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
                       Editing
                     </p>
-                    <h2 className="mt-1 text-lg font-semibold text-slate-950">{selectedPage.title_en}</h2>
-                    <p className="mt-1 text-sm text-slate-600">Route {selectedPage.route_path}</p>
+                    <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{selectedPage.title_en}</h2>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">Route {selectedPage.route_path}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Link href={selectedPage.route_path} target="_blank">
@@ -307,7 +307,7 @@ export function CraftPageEditor() {
                     </Button>
                   </div>
                 </div>
-                {message ? <p className="mt-4 text-sm text-slate-600">{message}</p> : null}
+                {message ? <p className="mt-4 text-sm text-[var(--text-secondary)]">{message}</p> : null}
               </Card>
 
               <BuilderShell
@@ -318,13 +318,13 @@ export function CraftPageEditor() {
             </>
           ) : selectedPageSummary && selectedPageQuery.isLoading ? (
             <Card className="rounded-2xl p-8">
-              <div className="h-6 w-48 animate-pulse rounded bg-slate-100" />
-              <div className="mt-3 h-4 w-72 animate-pulse rounded bg-slate-100" />
-              <div className="mt-6 h-[32rem] animate-pulse rounded-2xl bg-slate-100" />
+              <div className="h-6 w-48 animate-pulse rounded bg-[var(--bg-base)]" />
+              <div className="mt-3 h-4 w-72 animate-pulse rounded bg-[var(--bg-base)]" />
+              <div className="mt-6 h-[32rem] animate-pulse rounded-2xl bg-[var(--bg-base)]" />
             </Card>
           ) : (
             <Card className="rounded-2xl p-8">
-              <p className="text-sm leading-6 text-slate-600">
+              <p className="text-sm leading-6 text-[var(--text-secondary)]">
                 Pick a page from the header or create one. To map a homepage, create a page with route `/`.
               </p>
             </Card>

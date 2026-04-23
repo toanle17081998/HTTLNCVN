@@ -19,9 +19,9 @@ export function CraftPageRenderer({ path }: { path: string }) {
     return (
       <div className="w-full px-4 py-10 sm:px-6">
         <Card className="rounded-2xl p-8">
-          <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-100" />
-          <div className="mt-4 h-4 w-80 max-w-full animate-pulse rounded-lg bg-slate-100" />
-          <div className="mt-8 h-[26rem] animate-pulse rounded-2xl bg-slate-100" />
+          <div className="h-8 w-48 animate-pulse rounded-lg bg-[var(--bg-base)]" />
+          <div className="mt-4 h-4 w-80 max-w-full animate-pulse rounded-lg bg-[var(--bg-base)]" />
+          <div className="mt-8 h-[26rem] animate-pulse rounded-2xl bg-[var(--bg-base)]" />
         </Card>
       </div>
     );
@@ -36,8 +36,8 @@ export function CraftPageRenderer({ path }: { path: string }) {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
         <Card className="rounded-2xl p-8">
-          <h1 className="text-2xl font-semibold text-slate-950">Page unavailable</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{message}</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Page unavailable</h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{message}</p>
           {canEdit ? (
             <div className="mt-6">
               <Link href={`/admin/pages?route=${encodeURIComponent(path)}`}>
