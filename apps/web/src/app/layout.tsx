@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { I18nProvider } from "@/providers/I18nProvider";
 import { TanStackProvider } from "@/providers/TanStackProvider";
+import "ckeditor5/ckeditor5.css";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
