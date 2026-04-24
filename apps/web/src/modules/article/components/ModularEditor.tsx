@@ -20,7 +20,7 @@ import {
 const CkDocumentEditor = dynamic(() => import("./CkDocumentEditor"), {
   ssr: false,
   loading: () => (
-    <div className="grid min-h-[36rem] place-items-center bg-[#f8fafc] text-sm font-semibold text-[var(--text-secondary)]">
+    <div className="grid min-h-[36rem] place-items-center bg-[var(--bg-card)] text-sm font-semibold text-[var(--text-secondary)]">
       Loading editor...
     </div>
   ),

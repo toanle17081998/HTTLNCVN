@@ -328,7 +328,14 @@ export function MemberPage({ admin = false }: MemberPageProps) {
             </div>
 
             {membersQuery.error ? (
-              <div className="m-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900">
+              <div
+                className="m-6 rounded-xl border p-4 text-sm font-medium"
+                style={{
+                  backgroundColor: "var(--status-danger-bg)",
+                  borderColor: "color-mix(in srgb, var(--status-danger) 24%, var(--border-subtle))",
+                  color: "var(--status-danger)",
+                }}
+              >
                 {mutationErrorMessage(membersQuery.error)}
               </div>
             ) : null}
@@ -350,7 +357,11 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                         </p>
                         <span className={cn(
                           "inline-flex h-2 w-2 shrink-0 rounded-full",
-                          member.status === "active" ? "bg-emerald-500" : member.status === "pending" ? "bg-amber-500" : "bg-red-500"
+                          member.status === "active"
+                            ? "bg-[var(--status-success)]"
+                            : member.status === "pending"
+                              ? "bg-[var(--status-warning)]"
+                              : "bg-[var(--status-danger)]"
                         )} />
                       </div>
                       <p className="truncate text-sm font-medium text-[var(--text-tertiary)]">
@@ -379,7 +390,7 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                       {canDeleteMembers ? (
                         <button
                           aria-label={t("admin.members.deleteNamed", { name: displayName(member) })}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl text-red-500 transition-all hover:bg-red-50"
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--status-danger)] transition-all hover:bg-[var(--status-danger-bg)]"
                           onClick={async () => {
                             const ok = await confirm({
                               variant: "delete",

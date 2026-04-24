@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import {
   getToolbarItemKey,
   toolbarActionButtonClass,
@@ -30,6 +31,10 @@ export function ArticleEditorToolbar({
   onAddColumns,
   onAddTable,
 }: ArticleEditorToolbarProps) {
+  const { t } = useTranslation();
+  const getToolbarLabel = (command: string, value: string | undefined, fallback: string) =>
+    t(`editor.toolbar.${command}.${value ?? "default"}` as any, { defaultValue: fallback });
+
   return (
     <div className="flex w-full min-w-0 max-w-full shrink-0 items-center gap-2 overflow-x-auto overflow-y-hidden border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3">
       {/* Format groups */}
@@ -42,7 +47,7 @@ export function ArticleEditorToolbar({
             const isActive = activeToolbarKeys.includes(getToolbarItemKey(item));
             return (
               <button
-                aria-label={item.label}
+                aria-label={getToolbarLabel(item.command, item.value, item.label)}
                 aria-pressed={isActive}
                 className={cn(
                   toolbarButtonClass,
@@ -52,7 +57,7 @@ export function ArticleEditorToolbar({
                 key={`${item.command}-${item.label}`}
                 onClick={() => onRunCommand(item.command, item.value)}
                 onMouseDown={(e) => e.preventDefault()}
-                title={item.label}
+                title={getToolbarLabel(item.command, item.value, item.label)}
                 type="button"
               >
                 <ToolbarIcon name={item.icon} />
@@ -66,11 +71,11 @@ export function ArticleEditorToolbar({
       <div className="flex shrink-0 gap-2 lg:ml-auto">
         {(
           [
-            { key: "action:link", label: "Link", icon: "link", onClick: onAddLink },
-            { key: "action:image", label: "Image", icon: "image", onClick: onAddImage },
-            { key: "action:video", label: "Video", icon: "video", onClick: onAddVideo },
-            { key: "action:columns", label: "Columns", icon: "columns", onClick: onAddColumns },
-            { key: "action:table", label: "Table", icon: "table", onClick: onAddTable },
+            { key: "action:link", label: t("editor.action.link"), icon: "link", onClick: onAddLink },
+            { key: "action:image", label: t("editor.action.image"), icon: "image", onClick: onAddImage },
+            { key: "action:video", label: t("editor.action.video"), icon: "video", onClick: onAddVideo },
+            { key: "action:columns", label: t("editor.action.columns"), icon: "columns", onClick: onAddColumns },
+            { key: "action:table", label: t("editor.action.table"), icon: "table", onClick: onAddTable },
           ] as const
         ).map(({ key, label, icon, onClick }) => (
           <button

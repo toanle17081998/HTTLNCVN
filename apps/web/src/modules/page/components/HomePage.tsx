@@ -341,37 +341,47 @@ export function HomePage() {
   return (
     <div className="flex flex-col gap-12 lg:gap-20 pb-16">
       {/* Full-Width Hero Section */}
-      <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-10 lg:-mt-12 relative min-h-[22rem] sm:min-h-[28rem] flex items-center overflow-hidden bg-[var(--bg-card)] border-b border-[var(--border-subtle)] shadow-sm">
+      <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 sm:-mt-10 lg:-mt-12 relative flex min-h-[22rem] items-center overflow-hidden border-b border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-sm sm:min-h-[28rem]">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000"
           style={{ backgroundImage: `url(${heroContent.image})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/60 to-transparent lg:from-black/80 lg:via-black/20" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, var(--hero-scrim-from) 0%, var(--hero-scrim-mid) 52%, transparent 100%)",
+          }}
+        />
         
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6">
-          <div className="flex flex-col justify-center gap-6 py-12 lg:px-4 w-full lg:max-w-4xl">
+          <div className="flex w-full flex-col justify-center gap-6 py-12 lg:max-w-4xl lg:px-4">
             <div className="space-y-3">
               <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-[var(--brand-primary)] drop-shadow-sm">
                 {heroContent.eyebrow}
               </p>
-              <h1 className="text-3xl font-black leading-[1.1] text-white sm:text-5xl lg:text-7xl tracking-tight">
+              <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-[var(--text-inverse)] sm:text-5xl lg:text-7xl">
                 {heroContent.headline}
               </h1>
-              <p className="max-w-xl text-sm font-medium leading-relaxed text-white/90 sm:text-lg">
+              <p className="max-w-xl text-sm font-medium leading-relaxed text-[var(--text-inverse-muted)] sm:text-lg">
                 {heroContent.subheadline}
               </p>
             </div>
             
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <Link
-                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-lg shadow-[var(--brand-primary)]/20 transition-all hover:brightness-110 active:scale-95"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 text-sm font-bold text-[var(--text-inverse)] shadow-lg transition-all hover:bg-[var(--brand-primary-strong)] active:scale-95 sm:h-12 sm:px-8 sm:text-base"
                 href="/course"
               >
                 {t("home.hero.cta")}
               </Link>
               <Link
-                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border-2 border-white/30 bg-white/5 backdrop-blur-md px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-xl transition-all hover:bg-white/20 active:scale-95"
+                className="inline-flex h-11 items-center justify-center rounded-xl border-2 px-6 text-sm font-bold text-[var(--text-inverse)] shadow-xl backdrop-blur-md transition-all active:scale-95 sm:h-12 sm:px-8 sm:text-base"
                 href="/event"
+                style={{
+                  backgroundColor: "var(--hero-secondary-bg)",
+                  borderColor: "var(--hero-panel-border)",
+                }}
               >
                 {t("home.hero.secondaryCta")}
               </Link>
@@ -380,13 +390,17 @@ export function HomePage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-6 mt-2 max-w-2xl">
               {stats.map((stat) => (
                 <div
-                  className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-md px-3 py-2 sm:px-6 sm:py-4 transition-all"
+                  className="rounded-xl border px-3 py-2 backdrop-blur-md transition-all sm:px-6 sm:py-4"
                   key={stat.label}
+                  style={{
+                    backgroundColor: "var(--hero-panel)",
+                    borderColor: "var(--hero-panel-border)",
+                  }}
                 >
-                  <p className="text-xl sm:text-3xl font-black text-white">
+                  <p className="text-xl font-black text-[var(--text-inverse)] sm:text-3xl">
                     {stat.value}
                   </p>
-                  <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.2em] text-white/70 sm:text-[10px]">
+                  <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--text-inverse-muted)] sm:text-[10px]">
                     {stat.label}
                   </p>
                 </div>
@@ -398,7 +412,7 @@ export function HomePage() {
 
       {/* Constrained Content Sections */}
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 space-y-12 lg:gap-20">
-        <section className="grid gap-6">
+        <section className="grid gap-6 rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-6 sm:px-6 sm:py-8">
           <SectionHeader
             action={{ href: "/article", label: t("nav.article.label") }}
             eyebrow={t("page.article.eyebrow")}
@@ -423,7 +437,7 @@ export function HomePage() {
           )}
         </section>
 
-        <section className="grid gap-6">
+        <section className="grid gap-6 rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-6 sm:px-6 sm:py-8">
           <SectionHeader
             action={{ href: "/event", label: t("event.calendar.view") }}
             eyebrow={t("page.event.eyebrow")}
@@ -445,7 +459,7 @@ export function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-6">
+        <section className="grid gap-6 rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-6 sm:px-6 sm:py-8">
           <SectionHeader
             action={{ href: "/course", label: t("nav.course.label") }}
             eyebrow={t("nav.course.label")}

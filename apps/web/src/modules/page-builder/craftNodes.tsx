@@ -864,7 +864,7 @@ export function ButtonBlock({
   borderRadius = "12px",
   borderStyle = "solid",
   borderWidth = "1px",
-  color = "#ffffff",
+  color = "var(--text-inverse)",
   href = "/",
   label = "Button",
   paddingBottom = "12px",
@@ -978,7 +978,7 @@ ButtonBlock.craft = {
     borderRadius: "12px",
     borderStyle: "solid",
     borderWidth: "1px",
-    color: "#ffffff",
+    color: "var(--text-inverse)",
     href: "/",
     label: "Button",
     paddingBottom: "12px",
@@ -1418,7 +1418,7 @@ export function TabsBlock({
               className={cn(
                 "rounded-full px-4 py-2 text-sm font-medium transition",
                 activeIndex === index
-                  ? "bg-[var(--brand-primary)] text-white"
+                  ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]"
                   : "bg-[var(--bg-base)] text-[var(--text-secondary)]",
               )}
               key={`${item.title}-${index}`}
@@ -1496,19 +1496,17 @@ function FeedCard({
   title: string;
 }) {
   const hasRealCover = Boolean(coverImage) && !isPlaceholderImage(coverImage);
-  const accentColor = resolveStyleToken(accent) ?? "#2563eb";
+  const accentColor = resolveStyleToken(accent) ?? "var(--brand-primary)";
 
   return (
     <Link
       className={cn(
         "group relative block overflow-hidden rounded-[2rem] transition duration-500",
-        isActive
-          ? "scale-100 opacity-100 shadow-2xl shadow-black/20"
-          : "scale-[0.94] opacity-55",
+        isActive ? "scale-100 opacity-100 shadow-[var(--shadow-lg)]" : "scale-[0.94] opacity-55",
       )}
       href={href}
     >
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-black/5 bg-[var(--text-primary)]">
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-[var(--hero-panel-border)] bg-[var(--text-primary)]">
         {hasRealCover ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1524,24 +1522,24 @@ function FeedCard({
             <div
               className="absolute inset-0"
               style={{
-                background: `radial-gradient(circle at 20% 20%, ${accentColor}55 0%, transparent 26%), radial-gradient(circle at 78% 30%, #ffffff14 0%, transparent 18%), linear-gradient(145deg, #111827 0%, #020617 100%)`,
+                background: `radial-gradient(circle at 20% 20%, color-mix(in srgb, ${accentColor} 38%, transparent) 0%, transparent 26%), radial-gradient(circle at 78% 30%, rgba(255,255,255,0.08) 0%, transparent 18%), linear-gradient(145deg, color-mix(in srgb, var(--text-primary) 88%, black) 0%, color-mix(in srgb, var(--bg-base) 92%, black) 100%)`,
               }}
             />
-            <div className="absolute -left-10 top-10 h-28 w-28 rounded-full border border-white/10" />
-            <div className="absolute right-10 top-16 h-3 w-20 rounded-full bg-white/10 backdrop-blur-sm" />
-            <div className="absolute bottom-24 left-10 h-px w-32 bg-white/10" />
-            <div className="absolute bottom-14 right-16 h-24 w-24 rotate-12 rounded-2xl bg-white/6" />
+            <div className="absolute -left-10 top-10 h-28 w-28 rounded-full border border-[var(--hero-panel-border)]" />
+            <div className="absolute right-10 top-16 h-3 w-20 rounded-full bg-[var(--hero-panel)] backdrop-blur-sm" />
+            <div className="absolute bottom-24 left-10 h-px w-32 bg-[var(--hero-panel-border)]" />
+            <div className="absolute bottom-14 right-16 h-24 w-24 rotate-12 rounded-2xl bg-[var(--hero-secondary-bg)]" />
           </>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 grid gap-3 p-6">
-          <span className="inline-flex w-fit rounded-full border border-white/10 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md">
+          <span className="inline-flex w-fit rounded-full border border-[var(--hero-panel-border)] bg-[var(--hero-panel)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-inverse)] backdrop-blur-md">
             {kicker}
           </span>
-          <h3 className="max-w-[24rem] text-[clamp(1.35rem,2.2vw,2.15rem)] font-semibold leading-[1.08] text-white">
+          <h3 className="max-w-[24rem] text-[clamp(1.35rem,2.2vw,2.15rem)] font-semibold leading-[1.08] text-[var(--text-inverse)]">
             {title}
           </h3>
-          <p className="max-w-[28rem] text-sm leading-6 text-white/78">
+          <p className="max-w-[28rem] text-sm leading-6 text-[var(--text-inverse-muted)]">
             {description}
           </p>
         </div>
@@ -1885,7 +1883,7 @@ export function RenderNodeSettings() {
 
   return (
     <div className="fixed right-6 top-24 z-50 w-[26rem] max-w-[calc(100vw-2rem)]">
-      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-2xl shadow-black/10">
+      <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)]">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">

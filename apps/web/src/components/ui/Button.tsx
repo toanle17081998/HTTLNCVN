@@ -18,7 +18,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost:
     "border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
   danger:
-    "border-transparent bg-[var(--status-danger)] text-white shadow-sm hover:brightness-95",
+    "border-transparent bg-[var(--status-danger)] text-[var(--text-inverse)] shadow-sm hover:brightness-95",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

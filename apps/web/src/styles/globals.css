@@ -33,26 +33,47 @@
   --p-gray-50: 249 250 251;
   --p-gray-900: 17 24 39;
 
-  --bg-base: rgb(var(--p-gray-50));
-  --bg-surface: #ffffff;
-  --bg-overlay: rgba(var(--p-gray-900) / 0.4);
+  --bg-app: #f6f2ea;
+  --bg-base: #f6f2ea;
+  --bg-surface: #fffdf8;
+  --bg-card: #ede4d6;
+  --bg-card-strong: #e3d6c1;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(var(--p-gray-900) / 0.48);
+  --bg-scrim: rgba(15 23 42 / 0.4);
 
   --text-primary: rgb(var(--p-gray-900));
-  --text-secondary: #4b5563;
-  --text-tertiary: #9ca3af;
-  --text-inverse: #ffffff;
+  --text-secondary: #4f5b69;
+  --text-tertiary: #8b97a5;
+  --text-inverse: #fffdf8;
+  --text-inverse-muted: rgba(255 253 248 / 0.78);
 
-  --brand-primary: rgb(var(--p-blue-600));
-  --brand-muted: rgba(var(--p-blue-600) / 0.1);
+  --brand-primary: rgb(var(--p-blue-700));
+  --brand-primary-strong: #173ea9;
+  --brand-muted: rgba(var(--p-blue-600) / 0.14);
+  --brand-soft: rgba(var(--p-blue-50) / 0.9);
 
   --status-info: #3b82f6;
   --status-success: #10b981;
   --status-warning: #f59e0b;
   --status-danger: #ef4444;
+  --status-info-bg: color-mix(in srgb, var(--status-info) 12%, var(--bg-surface));
+  --status-success-bg: color-mix(in srgb, var(--status-success) 12%, var(--bg-surface));
+  --status-warning-bg: color-mix(in srgb, var(--status-warning) 14%, var(--bg-surface));
+  --status-danger-bg: color-mix(in srgb, var(--status-danger) 12%, var(--bg-surface));
 
-  --border-subtle: #e5e7eb;
-  --border-strong: #d1d5db;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --border-subtle: #ddd1bf;
+  --border-strong: #cdbda8;
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 24px 48px -16px rgb(15 23 42 / 0.18);
+  --brand-shadow: color-mix(in srgb, var(--brand-primary) 22%, transparent);
+
+  --hero-scrim-from: rgba(15 23 42 / 0.82);
+  --hero-scrim-mid: rgba(15 23 42 / 0.52);
+  --hero-panel: rgba(255 253 248 / 0.12);
+  --hero-panel-border: rgba(255 253 248 / 0.18);
+  --hero-secondary-bg: rgba(255 253 248 / 0.1);
+  --hero-secondary-hover: rgba(255 253 248 / 0.18);
 
   --btn-primary-bg: var(--brand-primary);
   --btn-primary-text: var(--text-inverse);
@@ -60,14 +81,39 @@
 }
 
 [data-theme='dark'] {
-  --bg-base: #030712;
-  --bg-surface: #111827;
+  --bg-app: #06101c;
+  --bg-base: #06101c;
+  --bg-surface: #0f1b2a;
+  --bg-card: #152335;
+  --bg-card-strong: #1b2d43;
+  --bg-elevated: #132235;
+  --bg-overlay: rgba(2 6 23 / 0.68);
+  --bg-scrim: rgba(2 6 23 / 0.52);
 
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
+  --text-primary: #f7f4ee;
+  --text-secondary: #c9d3df;
+  --text-tertiary: #8ea0b5;
+  --text-inverse: #f7f4ee;
+  --text-inverse-muted: rgba(247 244 238 / 0.76);
 
-  --border-subtle: #1f2937;
-  --brand-primary: #60a5fa;
+  --border-subtle: #243448;
+  --border-strong: #314660;
+  --brand-primary: #8bb8ff;
+  --brand-primary-strong: #b5d1ff;
+  --brand-muted: rgba(139 184 255 / 0.18);
+  --brand-soft: rgba(139 184 255 / 0.12);
+  --status-info-bg: color-mix(in srgb, var(--status-info) 18%, var(--bg-surface));
+  --status-success-bg: color-mix(in srgb, var(--status-success) 18%, var(--bg-surface));
+  --status-warning-bg: color-mix(in srgb, var(--status-warning) 20%, var(--bg-surface));
+  --status-danger-bg: color-mix(in srgb, var(--status-danger) 18%, var(--bg-surface));
+  --hero-scrim-from: rgba(2 6 23 / 0.72);
+  --hero-scrim-mid: rgba(6 16 28 / 0.42);
+  --hero-panel: rgba(6 16 28 / 0.38);
+  --hero-panel-border: rgba(139 184 255 / 0.24);
+  --hero-secondary-bg: rgba(6 16 28 / 0.24);
+  --hero-secondary-hover: rgba(6 16 28 / 0.36);
+  --shadow-lg: 0 24px 48px -16px rgb(2 6 23 / 0.42);
+  --brand-shadow: color-mix(in srgb, var(--brand-primary) 18%, transparent);
 }
 
 [data-theme='dark'] .church-logo-light {
@@ -79,7 +125,7 @@
 }
 
 body {
-  background-color: var(--bg-base);
+  background-color: var(--bg-app);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;

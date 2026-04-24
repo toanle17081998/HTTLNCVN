@@ -47,42 +47,42 @@ export function ArticleMetadataPanel({
         />
       </FormField>
 
-      <FormField htmlFor="article-cover-image-url" label="Cover image URL">
+      <FormField htmlFor="article-cover-image-url" label={t("article.form.coverImageUrl")}>
         <Input
           id="article-cover-image-url"
           onChange={(e) => onCoverImageUrlChange(e.target.value)}
-          placeholder="https://example.com/image.jpg"
+          placeholder={t("article.form.coverImagePlaceholder")}
           type="url"
           value={coverImageUrl}
         />
       </FormField>
 
-      <FormField htmlFor="article-category" label="Category">
+      <FormField htmlFor="article-category" label={t("article.form.category")}>
         <Select
           id="article-category"
           onChange={(e) => onCategoryIdChange(e.target.value)}
           value={categoryId}
         >
-          <option value="">None</option>
-          <option value="1">Tin tức</option>
-          <option value="2">Bài giảng</option>
-          <option value="3">Tĩnh nguyện</option>
+          <option value="">{t("common.none")}</option>
+          <option value="1">{t("article.category.news")}</option>
+          <option value="2">{t("article.category.teaching")}</option>
+          <option value="3">{t("article.category.devotional")}</option>
         </Select>
       </FormField>
 
-      <FormField htmlFor="article-status" label="Status">
+      <FormField htmlFor="article-status" label={t("article.form.status")}>
         <Select
           id="article-status"
           onChange={(e) => onStatusChange(e.target.value === "published" ? "published" : "draft")}
           value={status}
         >
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
+          <option value="draft">{t("course.form.status.draft")}</option>
+          <option value="published">{t("course.form.status.published")}</option>
         </Select>
       </FormField>
 
       <Button disabled={isSubmitting} type="submit">
-        {isSubmitting ? "Submitting..." : t("action.submit")}
+        {isSubmitting ? t("article.create.submitting") : t("action.submit")}
       </Button>
 
       {submitState.message ? (

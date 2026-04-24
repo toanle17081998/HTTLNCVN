@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { Button, FormField, Input, Textarea } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import type { ImageFormState, ImageModalState } from "./articleEditorTypes";
 
 type MediaInsertModalProps = {
@@ -20,53 +21,57 @@ export function MediaInsertModal({
   onClose,
 }: MediaInsertModalProps) {
   const isImage = imageModal.kind === "image";
+  const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center px-4"
+      style={{ backgroundColor: "var(--bg-scrim)" }}
+    >
       <form
-        className="grid max-h-[calc(100vh-3rem)] w-full max-w-lg gap-4 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
+        className="grid max-h-[calc(100vh-3rem)] w-full max-w-lg gap-4 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-lg)]"
         onSubmit={onSubmit}
       >
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-            {isImage ? "Image details" : "Video details"}
+            {isImage ? t("editor.media.imageTitle") : t("editor.media.videoTitle")}
           </h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
             {isImage
-              ? "Paste an online image URL or a shared Google Drive image link."
-              : "Paste a YouTube, Vimeo, or direct video URL."}
+              ? t("editor.media.imageDescription")
+              : t("editor.media.videoDescription")}
           </p>
         </div>
 
-        <FormField htmlFor="media-url" label={isImage ? "Image URL" : "Video URL"}>
+        <FormField htmlFor="media-url" label={isImage ? t("editor.media.imageUrl") : t("editor.media.videoUrl")}>
           <Input
             autoFocus
             id="media-url"
             onChange={(e) => onImageFormChange({ ...imageForm, url: e.target.value })}
             placeholder={
               isImage
-                ? "https://drive.google.com/file/d/..."
-                : "https://www.youtube.com/watch?v=..."
+                ? t("editor.media.imageUrlPlaceholder")
+                : t("editor.media.videoUrlPlaceholder")
             }
             required
             value={imageForm.url}
           />
         </FormField>
 
-        <FormField htmlFor="media-alt" label={isImage ? "Alt text" : "Title"}>
+        <FormField htmlFor="media-alt" label={isImage ? t("editor.media.altText") : t("form.title")}>
           <Input
             id="media-alt"
             onChange={(e) => onImageFormChange({ ...imageForm, alt: e.target.value })}
-            placeholder={isImage ? "Describe the image" : "Name the video"}
+            placeholder={isImage ? t("editor.media.altPlaceholder") : t("editor.media.videoTitlePlaceholder")}
             value={imageForm.alt}
           />
         </FormField>
 
-        <FormField htmlFor="media-caption" label="Caption">
+        <FormField htmlFor="media-caption" label={t("editor.media.caption")}>
           <Textarea
             id="media-caption"
             onChange={(e) => onImageFormChange({ ...imageForm, caption: e.target.value })}
-            placeholder="Optional caption"
+            placeholder={t("editor.media.captionPlaceholder")}
             rows={3}
             value={imageForm.caption}
           />
@@ -74,10 +79,10 @@ export function MediaInsertModal({
 
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} type="button" variant="secondary">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit">
-            {isImage ? "Insert image" : "Insert video"}
+            {isImage ? t("editor.media.insertImage") : t("editor.media.insertVideo")}
           </Button>
         </div>
       </form>

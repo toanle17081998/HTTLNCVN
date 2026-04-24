@@ -1,7 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  Settings,
+  LogOut,
+  User,
+  Shield,
+  Plus,
+  Send,
+  ChevronDown,
+  LayoutDashboard,
+  Info,
+  BookOpen,
+  GraduationCap,
+  Calendar,
+  Users,
+  Bell,
+  Heart,
+  LogIn,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, cn } from "@/components/ui";
@@ -11,35 +30,45 @@ import { useTranslation } from "@/providers/I18nProvider";
 import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
-import { navItems } from "./navigation";
+import { navItems, type NavItem } from "./navigation";
 
 type HeaderProps = {
   pathname: string;
 };
 
+const navIconMap: Record<string, React.ReactNode> = {
+  "/": <LayoutDashboard className="h-4 w-4" />,
+  "/about": <Info className="h-4 w-4" />,
+  "/article": <BookOpen className="h-4 w-4" />,
+  "/course": <GraduationCap className="h-4 w-4" />,
+  "/event": <Calendar className="h-4 w-4" />,
+  "/member": <Users className="h-4 w-4" />,
+  "/notification": <Bell className="h-4 w-4" />,
+  "/prayer-journal": <Heart className="h-4 w-4" />,
+  "/auth": <LogIn className="h-4 w-4" />,
+};
+
 export function Header({ pathname }: HeaderProps) {
   const router = useRouter();
   const { t } = useTranslation();
-  const {
-    can,
-    canAny,
-    isAuthenticated,
-    logout,
-    role,
-    user,
-  } = useAuth();
-  const settingsNavItem = navItems.find((item) => item.href === "/auth");
+  const { can, canAny, isAuthenticated, logout, role, user } = useAuth();
+  
   const menuNavItems = navItems.filter(
     (item) =>
       item.href !== "/auth" &&
       (!item.permissions || canAny(item.permissions)),
   );
+
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  
   const [isVisible, setIsVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [moreNavOpen, setMoreNavOpen] = useState(false);
+
   const canCreateContent = canAny([
     PERMISSIONS.manageArticle,
     PERMISSIONS.manageAbout,
@@ -69,19 +98,13 @@ export function Header({ pathname }: HeaderProps) {
     }
 
     function handleScroll() {
-      if (tickingRef.current) {
-        return;
-      }
-
+      if (tickingRef.current) return;
       tickingRef.current = true;
       window.requestAnimationFrame(updateHeaderVisibility);
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -93,46 +116,53 @@ export function Header({ pathname }: HeaderProps) {
       ) {
         setSettingsOpen(false);
       }
+      if (
+        navRef.current &&
+        event.target instanceof Node &&
+        !navRef.current.contains(event.target)
+      ) {
+        setMoreNavOpen(false);
+      }
     }
 
-    if (settingsOpen) {
+    if (settingsOpen || moreNavOpen) {
       document.addEventListener("pointerdown", handlePointerDown);
     }
 
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [settingsOpen]);
+  }, [settingsOpen, moreNavOpen]);
 
-  function renderNavLinks({ mobile = false }: { mobile?: boolean } = {}) {
-    return menuNavItems.map((item) => {
-      const isActive =
-        item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-
-      return (
-        <Link
-          aria-current={isActive ? "page" : undefined}
-          className={cn(
-            mobile
-              ? "flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition"
-              : "min-w-0 rounded-md px-2 py-2 text-center text-xs font-semibold transition sm:px-3 sm:text-sm",
-            isActive
-              ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
-              : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
-          )}
-          href={item.href}
-          key={item.href}
-          onClick={() => {
-            if (mobile) {
-              setMobileMenuOpen(false);
-            }
-          }}
-        >
-          <span className="block truncate">{t(item.labelKey)}</span>
-        </Link>
-      );
-    });
+  function renderNavItem(item: NavItem, mobile = false) {
+    const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+    return (
+      <Link
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "flex items-center gap-2 transition-all duration-200",
+          mobile
+            ? "min-h-12 rounded-xl px-4 text-sm font-semibold"
+            : "rounded-xl px-4 py-2 text-sm font-semibold",
+          isActive
+            ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-shadow)]"
+            : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]",
+        )}
+        href={item.href}
+        key={item.href}
+        onClick={() => {
+          setMobileMenuOpen(false);
+          setMoreNavOpen(false);
+        }}
+      >
+        {!mobile && navIconMap[item.href]}
+        <span className="truncate">{t(item.labelKey)}</span>
+      </Link>
+    );
   }
+
+  const visibleNavItems = menuNavItems.slice(0, 5);
+  const hiddenNavItems = menuNavItems.slice(5);
 
   function handleLogout() {
     logout();
@@ -145,133 +175,242 @@ export function Header({ pathname }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/95 shadow-sm backdrop-blur transition-[opacity,transform,box-shadow] duration-300 ease-out",
+        "fixed inset-x-0 top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/80 shadow-sm backdrop-blur-md transition-all duration-300 ease-out",
         isVisible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none -translate-y-full opacity-0 shadow-none",
       )}
     >
-      <div className="relative flex min-h-16 items-center gap-3 px-4 py-3 sm:px-6 md:h-20 md:gap-4">
+      <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-24">
         <Link
           aria-label={t("app.name")}
-          className="flex shrink-0 items-center rounded-md"
+          className="flex shrink-0 items-center rounded-xl transition-transform hover:scale-105 active:scale-95"
           href="/"
         >
-          <ChurchLogo className="h-14 w-14 drop-shadow-sm md:h-20 md:w-20" />
+          <ChurchLogo className="h-12 w-12 drop-shadow-md md:h-16 md:w-16" />
         </Link>
 
+        {/* Desktop Navigation */}
         <nav
           aria-label="Primary"
-          className="mx-auto hidden w-full max-w-5xl min-w-0 flex-nowrap justify-center gap-1 md:flex"
+          className="hidden flex-1 items-center justify-center md:flex"
+          ref={navRef}
         >
-          {renderNavLinks()}
+          <div className="flex items-center gap-2">
+            {visibleNavItems.map((item) => renderNavItem(item))}
+            
+            {hiddenNavItems.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setMoreNavOpen(!moreNavOpen)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all",
+                    moreNavOpen
+                      ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--text-primary)]"
+                  )}
+                >
+                  {t("common.more")}
+                  <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", moreNavOpen && "rotate-180")} />
+                </button>
+                
+                {moreNavOpen && (
+                  <div className="animate-in fade-in zoom-in-95 absolute left-0 top-full mt-2 w-48 origin-top-left rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5">
+                    {hiddenNavItems.map((item) => renderNavItem(item))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          {/* Mobile Menu Toggle */}
           <button
             aria-controls="mobile-primary-navigation"
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? t("nav.closeNavigation") : t("nav.openNavigation")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] active:scale-95 md:hidden"
             onClick={() => {
               setMobileMenuOpen((open) => !open);
               setSettingsOpen(false);
             }}
             type="button"
           >
-            {mobileMenuOpen ? (
-              <X aria-hidden="true" className="h-5 w-5" />
-            ) : (
-              <Menu aria-hidden="true" className="h-5 w-5" />
-            )}
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <div className="relative shrink-0" ref={settingsRef}>
+          {/* User Settings Dropdown */}
+          <div className="relative" ref={settingsRef}>
             <button
               aria-expanded={settingsOpen}
               aria-haspopup="menu"
-              className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+              className={cn(
+                "flex h-10 items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-sm font-semibold transition-all shadow-sm hover:border-[var(--brand-primary)] hover:bg-[var(--brand-soft)] active:scale-95 md:h-11 md:px-4",
+                settingsOpen && "ring-2 ring-[var(--brand-primary)] ring-offset-2"
+              )}
               onClick={() => {
                 setSettingsOpen((open) => !open);
                 setMobileMenuOpen(false);
               }}
               type="button"
             >
-              {t("nav.settings")}
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[10px] text-white md:h-7 md:w-7">
+                {isAuthenticated ? (user?.username?.[0] ?? "U").toUpperCase() : <User className="h-3.5 w-3.5" />}
+              </div>
+              <span className="hidden max-w-[100px] truncate md:block">
+                {isAuthenticated ? user?.username : t("nav.settings")}
+              </span>
+              <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform duration-200", settingsOpen && "rotate-180")} />
             </button>
 
-            {settingsOpen ? (
+            {settingsOpen && (
               <div
-                className="absolute right-0 top-full z-30 mt-2 grid w-56 gap-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 shadow-lg"
+                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-64 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-2xl ring-1 ring-black/5"
                 role="menu"
               >
-                <LanguageToggle />
-                <ThemeToggle />
-                <div className="rounded-md border border-[var(--border-subtle)] px-3 py-2">
-                  <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                {/* Profile Section */}
+                <div className="px-3 py-3 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
                     {t("nav.access")}
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                    {role}
-                  </p>
-                  <p className="text-xs text-[var(--text-secondary)]">
-                    {user?.email ?? t("nav.publicBrowsing")}
-                  </p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-[var(--brand-muted)] flex items-center justify-center text-[var(--brand-primary)] font-bold">
+                       {(user?.username?.[0] ?? "P").toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[var(--text-primary)] truncate">
+                        {user?.username ?? t("nav.publicBrowsing")}
+                      </p>
+                      <p className="text-[10px] font-medium text-[var(--text-secondary)]">
+                        {role}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                {settingsNavItem ? (
-                  <Link
-                    className="flex h-10 items-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                    href={settingsNavItem.href}
-                    onClick={() => setSettingsOpen(false)}
-                    role="menuitem"
-                  >
-                    {t("nav.accessFlow")}
-                  </Link>
-                ) : null}
-                {canCreateContent ? (
-                  <Link
-                    className="flex h-10 items-center rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                    href="/admin"
-                    onClick={() => setSettingsOpen(false)}
-                    role="menuitem"
-                  >
-                    Admin
-                  </Link>
-                ) : null}
-                {isAuthenticated ? (
-                  <Button onClick={handleLogout} size="sm" variant="secondary">
-                    {t("nav.logout")}
-                  </Button>
-                ) : (
-                  <Link
-                    className="inline-flex h-9 items-center justify-center rounded-md border border-transparent bg-[var(--btn-primary-bg)] px-3 text-sm font-semibold text-[var(--btn-primary-text)] shadow-sm transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                    href="/auth"
-                  >
-                    {t("nav.login")}
-                  </Link>
+
+                <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
+
+                {/* Preferences Section */}
+                <div className="p-2 space-y-2">
+                   <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.language")}</span>
+                      <LanguageToggle />
+                   </div>
+                   <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.theme")}</span>
+                      <ThemeToggle />
+                   </div>
+                </div>
+
+                <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
+
+                {/* Actions Section */}
+                <div className="p-1 space-y-1">
+                  {canCreateContent && (
+                    <Link
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                      href="/admin"
+                      onClick={() => setSettingsOpen(false)}
+                      role="menuitem"
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  
+                  {isAuthenticated ? (
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)]"
+                      role="menuitem"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t("nav.logout")}
+                    </button>
+                  ) : (
+                    <Link
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
+                      href="/auth"
+                      onClick={() => setSettingsOpen(false)}
+                      role="menuitem"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      {t("nav.login")}
+                    </Link>
+                  )}
+                </div>
+
+                {/* Admin Quick Actions */}
+                {(canCreateContent || canPublish) && (
+                   <>
+                    <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
+                    <div className="p-1 grid grid-cols-2 gap-1">
+                      {canCreateContent && (
+                        <Button size="sm" variant="secondary" className="h-9 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                          <Plus className="h-3 w-3 mr-1" />
+                          {t("action.newItem")}
+                        </Button>
+                      )}
+                      {canPublish && (
+                        <Button size="sm" className="h-9 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                          <Send className="h-3 w-3 mr-1" />
+                          {t("action.publish")}
+                        </Button>
+                      )}
+                    </div>
+                   </>
                 )}
-                {canCreateContent ? (
-                  <Button size="sm" variant="secondary">
-                    {t("action.newItem")}
-                  </Button>
-                ) : null}
-                {canPublish ? (
-                  <Button size="sm">{t("action.publish")}</Button>
-                ) : null}
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
-      {mobileMenuOpen ? (
+
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
         <nav
           aria-label="Primary"
-          className="grid gap-1 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 shadow-sm md:hidden"
+          className="animate-in slide-in-from-top-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-6 shadow-xl md:hidden"
           id="mobile-primary-navigation"
         >
-          {renderNavLinks({ mobile: true })}
+          <div className="grid gap-2">
+            {menuNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-4 rounded-2xl px-4 py-4 transition-all active:scale-95",
+                  pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                    ? "bg-[var(--brand-primary)] text-white shadow-lg"
+                    : "bg-[var(--bg-base)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)]"
+                )}
+              >
+                <div className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-xl",
+                  pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                    ? "bg-white/20"
+                    : "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
+                )}>
+                  {navIconMap[item.href] || <Menu className="h-5 w-5" />}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold">{t(item.labelKey)}</span>
+                  <span className={cn(
+                    "text-[10px] font-medium",
+                    pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                      ? "text-white/70"
+                      : "text-[var(--text-secondary)]"
+                  )}>
+                    {t(item.descriptionKey)}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </nav>
-      ) : null}
+      )}
     </header>
   );
 }

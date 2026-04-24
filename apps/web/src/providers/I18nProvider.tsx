@@ -98,15 +98,19 @@ export function I18nProvider({ children }: I18nProviderProps) {
         document.documentElement.lang = nextLocale;
       },
       t(key: TranslationKey, params?: Record<string, string>) {
-        let value: string = messages[locale][key] ?? messages[defaultLocale][key];
+        let value: string | undefined = (messages[locale] as any)[key] ?? (messages[defaultLocale] as any)[key];
+
+        if (value === undefined) {
+          return key;
+        }
 
         if (params) {
           Object.entries(params).forEach(([k, v]) => {
-            value = value.replaceAll(`{${k}}`, v);
+            value = (value as string).replaceAll(`{${k}}`, v);
           });
         }
 
-        return value;
+        return value as string;
       },
     };
   }, [locale]);

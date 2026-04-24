@@ -35,7 +35,10 @@ export function ErrorDisplay({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-      <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400">
+      <div
+        className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl"
+        style={{ backgroundColor: "var(--status-danger-bg)", color: "var(--status-danger)" }}
+      >
         <AlertCircle className="h-12 w-12" />
       </div>
 

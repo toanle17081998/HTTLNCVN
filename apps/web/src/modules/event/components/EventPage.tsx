@@ -403,7 +403,7 @@ export function EventPage() {
                       <div className="mt-2 grid gap-1">
                         {dayEvents.slice(0, 3).map((event) => (
                           <button
-                            className="min-w-0 rounded-md px-2 py-1 text-left text-xs font-semibold text-white shadow-sm"
+                            className="min-w-0 rounded-md px-2 py-1 text-left text-xs font-semibold text-[var(--text-inverse)] shadow-sm"
                             key={`${event.id}-${event.startsAt}`}
                             onClick={() => openViewModal(event)}
                             style={{ backgroundColor: event.color }}

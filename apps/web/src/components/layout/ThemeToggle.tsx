@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { Moon, Sun } from "lucide-react";
 import { cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 
@@ -32,7 +33,6 @@ function getPreferredTheme(): Theme {
 
 function getThemeSnapshot() {
   clientTheme ??= getPreferredTheme();
-
   return clientTheme;
 }
 
@@ -42,7 +42,6 @@ function getServerThemeSnapshot(): Theme {
 
 function subscribeToTheme(listener: () => void) {
   listeners.add(listener);
-
   return () => {
     listeners.delete(listener);
   };
@@ -73,7 +72,6 @@ export function ThemeInitializer() {
 }
 
 export function ThemeToggle() {
-  const { t } = useTranslation();
   const theme = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
@@ -87,25 +85,22 @@ export function ThemeToggle() {
 
   return (
     <button
+      aria-label="Toggle Theme"
       aria-pressed={isDark}
-      className="flex h-10 items-center justify-between gap-3 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+      className="group relative flex h-7 w-12 items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1 transition-all duration-300 hover:border-[var(--brand-primary)]"
       onClick={() => updateTheme(isDark ? "light" : "dark")}
       type="button"
     >
-      <span>{t("common.theme")}</span>
-      <span
+      <div
         className={cn(
-          "relative h-5 w-9 rounded-full border border-[var(--border-strong)] transition",
-          isDark ? "bg-[var(--brand-primary)]" : "bg-[var(--bg-base)]",
+          "flex h-5 w-5 transform items-center justify-center rounded-full shadow-md transition-all duration-300",
+          isDark
+            ? "translate-x-5 bg-[var(--brand-primary)] text-white"
+            : "translate-x-0 bg-white text-[var(--brand-primary)]"
         )}
       >
-        <span
-          className={cn(
-            "absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[var(--bg-surface)] shadow-sm transition",
-            isDark ? "left-4" : "left-0.5",
-          )}
-        />
-      </span>
+        {isDark ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
+      </div>
     </button>
   );
 }
