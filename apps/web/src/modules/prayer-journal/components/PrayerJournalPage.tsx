@@ -159,246 +159,245 @@ export function PrayerJournalPage() {
   }
 
   async function deletePrayer() {
-    async function deletePrayer() {
-      if (!activePrayer) return;
+    if (!activePrayer) return;
 
-      const ok = await confirm({
-        description: t("action.delete_confirm_desc"),
-        title: t("prayer.action.delete"),
-        variant: "delete",
-      });
-      if (!ok) return;
+    const ok = await confirm({
+      description: t("action.delete_confirm_desc"),
+      title: t("prayer.action.delete"),
+      variant: "delete",
+    });
+    if (!ok) return;
 
-      deletePrayerMutation.mutate(activePrayer.id, {
+    deletePrayerMutation.mutate(activePrayer.id, {
+      onSuccess() {
+        toast({ title: t("prayer.toast.deleted"), variant: "success" });
+        closeModal();
+      },
+    });
+  }
+
+  function closePrayer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activePrayer) return;
+
+    updatePrayerMutation.mutate(
+      {
+        dto: {
+          close_reason: closeReason.trim() || undefined,
+          status: "closed",
+        },
+        id: activePrayer.id,
+      },
+      {
         onSuccess() {
-          toast({ title: t("prayer.toast.deleted"), variant: "success" });
+          toast({ title: t("prayer.toast.closed"), variant: "success" });
           closeModal();
         },
-      });
-    }
-
-    function closePrayer(event: FormEvent<HTMLFormElement>) {
-      event.preventDefault();
-      if (!activePrayer) return;
-
-      updatePrayerMutation.mutate(
-        {
-          dto: {
-            close_reason: closeReason.trim() || undefined,
-            status: "closed",
-          },
-          id: activePrayer.id,
-        },
-        {
-          onSuccess() {
-            toast({ title: t("prayer.toast.closed"), variant: "success" });
-            closeModal();
-          },
-        },
-      );
-    }
-
-    function reopenPrayer(prayer: Prayer) {
-      updatePrayerMutation.mutate(
-        {
-          dto: { status: "open" },
-          id: prayer.id,
-        },
-        {
-          onSuccess() {
-            toast({ title: t("prayer.toast.reopened"), variant: "success" });
-            closeModal();
-          },
-        },
-      );
-    }
-
-    function togglePrayerStatus(prayer: Prayer) {
-      if (prayer.status === "open") {
-        openCloseModal(prayer);
-        return;
-      }
-
-      reopenPrayer(prayer);
-    }
-
-    return (
-      <PageLayout
-        actions={
-          canManageOwn ? (
-            <Button onClick={openCreateModal}>
-              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-              {t("prayer.action.add")}
-            </Button>
-          ) : null
-        }
-        description={t("page.prayerJournal.description")}
-        eyebrow={t("page.prayerJournal.eyebrow")}
-        title={t("page.prayerJournal.title")}
-      >
-        {!authLoading && !canRead ? (
-          <Card className="p-5">
-            <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {t("admin.members.restrictedDescription")}
-            </p>
-          </Card>
-        ) : (
-          <>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="p-5">
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                  {t("prayer.summary.mine")}
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{ownPrayerCount}</p>
-              </Card>
-              <Card className="p-5">
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                  {t("prayer.summary.shared")}
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{sharedPrayerCount}</p>
-              </Card>
-              <Card className="p-5">
-                <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                  {t("prayer.summary.answered")}
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{answeredPrayerCount}</p>
-              </Card>
-            </div>
-
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-              <div className="grid gap-4">
-                <Card className="overflow-hidden rounded-[1.75rem]">
-                  <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 text-sm font-semibold uppercase text-[var(--brand-primary)]">
-                        <ListTodo aria-hidden="true" className="h-4 w-4" />
-                        {t("prayer.todo.label")}
-                      </div>
-                      <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-                        {t("prayer.todo.title")}
-                      </h2>
-                      <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                        {t("prayer.todo.description")}
-                      </p>
-                    </div>
-
-                    <div className="flex w-full items-center gap-3 lg:w-auto">
-                      <div className="relative min-w-0 flex-1 lg:w-80">
-                        <Search
-                          aria-hidden="true"
-                          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
-                        />
-                        <Input
-                          className="pl-10"
-                          onChange={(event) => setQuery(event.target.value)}
-                          placeholder={t("prayer.search.placeholder")}
-                          value={query}
-                        />
-                      </div>
-                      <Button
-                        aria-label={t("admin.members.refresh")}
-                        onClick={() => {
-                          void prayersQuery.refetch();
-                          void metaQuery.refetch();
-                        }}
-                        variant="secondary"
-                      >
-                        <RefreshCw
-                          aria-hidden="true"
-                          className={cn(
-                            "h-4 w-4",
-                            prayersQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                          )}
-                        />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 px-5 py-5">
-                    <PrayerFilterBar
-                      onStatusChange={setStatusFilter}
-                      onVisibilityChange={setVisibilityFilter}
-                      statusFilter={statusFilter}
-                      visibilityFilter={visibilityFilter}
-                    />
-
-                    {prayersQuery.error || metaQuery.error || mutationError ? (
-                      <div className="rounded-2xl border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]">
-                        {mutationErrorMessage(prayersQuery.error ?? metaQuery.error ?? mutationError)}
-                      </div>
-                    ) : null}
-
-                    {prayersQuery.isLoading ? (
-                      <div className="grid gap-3">
-                        {Array.from({ length: 4 }).map((_, index) => (
-                          <div
-                            className="h-28 animate-pulse rounded-2xl bg-[var(--bg-base)]"
-                            key={index}
-                          />
-                        ))}
-                      </div>
-                    ) : visiblePrayers.length === 0 ? (
-                      <Card className="grid place-items-center gap-2 rounded-2xl py-16 text-center">
-                        <BookOpen aria-hidden="true" className="h-10 w-10 text-[var(--text-tertiary)]" />
-                        <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                          {t("prayer.list.empty")}
-                        </p>
-                        <p className="text-xs text-[var(--text-tertiary)]">
-                          {t("prayer.list.emptyHint")}
-                        </p>
-                      </Card>
-                    ) : (
-                      <div className="grid gap-3">
-                        {visiblePrayers.map((prayer) => (
-                          <PrayerCard
-                            canEdit={prayer.created_by === user?.id || canModerate}
-                            key={prayer.id}
-                            onEdit={openEditModal}
-                            onToggleStatus={togglePrayerStatus}
-                            onView={openViewModal}
-                            prayer={prayer}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </div>
-
-              <CategorySidebar
-                categories={categories}
-                categoryFilter={categoryFilter}
-                onCategoryChange={setCategoryFilter}
-                prayers={prayers}
-              />
-            </div>
-          </>
-        )}
-
-        {modalOpen ? (
-          <PrayerModal
-            activePrayer={activePrayer}
-            canManageOwn={Boolean(
-              activePrayer ? activePrayer.created_by === user?.id || canModerate : canManageOwn,
-            )}
-            categories={categories}
-            closeReason={closeReason}
-            form={form}
-            isSaving={isSaving}
-            members={members}
-            modalMode={modalMode}
-            onClose={closeModal}
-            onClosePrayer={closePrayer}
-            onCloseReasonChange={setCloseReason}
-            onDelete={deletePrayer}
-            onFormChange={setForm}
-            onOpenClose={openCloseModal}
-            onOpenEdit={openEditModal}
-            onReopenPrayer={reopenPrayer}
-            onSubmitPrayer={submitPrayer}
-          />
-        ) : null}
-      </PageLayout>
+      },
     );
   }
+
+  function reopenPrayer(prayer: Prayer) {
+    updatePrayerMutation.mutate(
+      {
+        dto: { status: "open" },
+        id: prayer.id,
+      },
+      {
+        onSuccess() {
+          toast({ title: t("prayer.toast.reopened"), variant: "success" });
+          closeModal();
+        },
+      },
+    );
+  }
+
+  function togglePrayerStatus(prayer: Prayer) {
+    if (prayer.status === "open") {
+      openCloseModal(prayer);
+      return;
+    }
+
+    reopenPrayer(prayer);
+  }
+
+  return (
+    <PageLayout
+      actions={
+        canManageOwn ? (
+          <Button onClick={openCreateModal}>
+            <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+            {t("prayer.action.add")}
+          </Button>
+        ) : null
+      }
+      description={t("page.prayerJournal.description")}
+      eyebrow={t("page.prayerJournal.eyebrow")}
+      title={t("page.prayerJournal.title")}
+    >
+      {!authLoading && !canRead ? (
+        <Card className="p-5">
+          <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {t("admin.members.restrictedDescription")}
+          </p>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="p-5">
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                {t("prayer.summary.mine")}
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{ownPrayerCount}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                {t("prayer.summary.shared")}
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{sharedPrayerCount}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                {t("prayer.summary.answered")}
+              </p>
+              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{answeredPrayerCount}</p>
+            </Card>
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="grid gap-4">
+              <Card className="overflow-hidden rounded-[1.75rem]">
+                <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                      <ListTodo aria-hidden="true" className="h-4 w-4" />
+                      {t("prayer.todo.label")}
+                    </div>
+                    <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+                      {t("prayer.todo.title")}
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                      {t("prayer.todo.description")}
+                    </p>
+                  </div>
+
+                  <div className="flex w-full items-center gap-3 lg:w-auto">
+                    <div className="relative min-w-0 flex-1 lg:w-80">
+                      <Search
+                        aria-hidden="true"
+                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
+                      />
+                      <Input
+                        className="pl-10"
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={t("prayer.search.placeholder")}
+                        value={query}
+                      />
+                    </div>
+                    <Button
+                      aria-label={t("admin.members.refresh")}
+                      onClick={() => {
+                        void prayersQuery.refetch();
+                        void metaQuery.refetch();
+                      }}
+                      variant="secondary"
+                    >
+                      <RefreshCw
+                        aria-hidden="true"
+                        className={cn(
+                          "h-4 w-4",
+                          prayersQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
+                        )}
+                      />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 px-5 py-5">
+                  <PrayerFilterBar
+                    onStatusChange={setStatusFilter}
+                    onVisibilityChange={setVisibilityFilter}
+                    statusFilter={statusFilter}
+                    visibilityFilter={visibilityFilter}
+                  />
+
+                  {prayersQuery.error || metaQuery.error || mutationError ? (
+                    <div className="rounded-2xl border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]">
+                      {mutationErrorMessage(prayersQuery.error ?? metaQuery.error ?? mutationError)}
+                    </div>
+                  ) : null}
+
+                  {prayersQuery.isLoading ? (
+                    <div className="grid gap-3">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                          className="h-28 animate-pulse rounded-2xl bg-[var(--bg-base)]"
+                          key={index}
+                        />
+                      ))}
+                    </div>
+                  ) : visiblePrayers.length === 0 ? (
+                    <Card className="grid place-items-center gap-2 rounded-2xl py-16 text-center">
+                      <BookOpen aria-hidden="true" className="h-10 w-10 text-[var(--text-tertiary)]" />
+                      <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                        {t("prayer.list.empty")}
+                      </p>
+                      <p className="text-xs text-[var(--text-tertiary)]">
+                        {t("prayer.list.emptyHint")}
+                      </p>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-3">
+                      {visiblePrayers.map((prayer) => (
+                        <PrayerCard
+                          canEdit={prayer.created_by === user?.id || canModerate}
+                          key={prayer.id}
+                          onEdit={openEditModal}
+                          onToggleStatus={togglePrayerStatus}
+                          onView={openViewModal}
+                          prayer={prayer}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            <CategorySidebar
+              categories={categories}
+              categoryFilter={categoryFilter}
+              onCategoryChange={setCategoryFilter}
+              prayers={prayers}
+            />
+          </div>
+        </>
+      )}
+
+      {modalOpen ? (
+        <PrayerModal
+          activePrayer={activePrayer}
+          canManageOwn={Boolean(
+            activePrayer ? activePrayer.created_by === user?.id || canModerate : canManageOwn,
+          )}
+          categories={categories}
+          closeReason={closeReason}
+          form={form}
+          isSaving={isSaving}
+          members={members}
+          modalMode={modalMode}
+          onClose={closeModal}
+          onClosePrayer={closePrayer}
+          onCloseReasonChange={setCloseReason}
+          onDelete={deletePrayer}
+          onFormChange={setForm}
+          onOpenClose={openCloseModal}
+          onOpenEdit={openEditModal}
+          onReopenPrayer={reopenPrayer}
+          onSubmitPrayer={submitPrayer}
+        />
+      ) : null}
+    </PageLayout>
+  );
+}
