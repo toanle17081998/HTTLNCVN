@@ -8,6 +8,7 @@ import {
   BarChart3,
   FileStack,
   Users,
+  Network,
   Menu,
   ShieldCheck,
   X,
@@ -39,6 +40,7 @@ const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/pages", labelKey: "admin.nav.pages", icon: FileStack },
   { href: "/admin/articles", labelKey: "nav.article.label", icon: BookOpen },
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },
+  { href: "/admin/church-unit", labelKey: "nav.churchUnit.label", icon: Network },
   { href: "/admin/member", labelKey: "nav.member.label", icon: Users },
 ];
 
@@ -59,12 +61,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const canAccessAdmin = canAny([
     PERMISSIONS.manageAbout,
     PERMISSIONS.manageArticle,
+    PERMISSIONS.createChurchUnits,
+    PERMISSIONS.deleteChurchUnits,
     PERMISSIONS.createChurchMembers,
     PERMISSIONS.deleteChurchMembers,
+    PERMISSIONS.manageChurchUnits,
     PERMISSIONS.manageChurchMembers,
     PERMISSIONS.manageCourses,
     PERMISSIONS.manageEvents,
     PERMISSIONS.manageSystemSettings,
+    PERMISSIONS.updateChurchUnits,
     PERMISSIONS.updateChurchMembers,
   ]);
 

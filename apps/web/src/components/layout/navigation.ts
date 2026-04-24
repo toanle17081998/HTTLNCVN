@@ -40,6 +40,12 @@ export const navItems: NavItem[] = [
     permissions: [PERMISSIONS.viewEvents],
   },
   {
+    href: "/church-unit",
+    labelKey: "nav.churchUnit.label",
+    descriptionKey: "nav.churchUnit.description",
+    permissions: [PERMISSIONS.manageChurchUnits],
+  },
+  {
     href: "/member",
     labelKey: "nav.member.label",
     descriptionKey: "nav.member.description",

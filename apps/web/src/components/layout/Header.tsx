@@ -45,6 +45,7 @@ const navIconMap: Record<string, React.ReactNode> = {
   "/member": <Users className="h-4 w-4" />,
   "/notification": <Bell className="h-4 w-4" />,
   "/prayer-journal": <Heart className="h-4 w-4" />,
+  "/church-unit": <ChurchLogo className="h-4 w-4"/>,
   "/auth": <LogIn className="h-4 w-4" />,
 };
 

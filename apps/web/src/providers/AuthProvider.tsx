@@ -93,6 +93,18 @@ const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
   [PERMISSIONS.deleteChurchMembers]: [
     { action: "delete", resource: "member" },
   ],
+  [PERMISSIONS.manageChurchUnits]: [
+    { action: "read", resource: "church_unit" },
+  ],
+  [PERMISSIONS.createChurchUnits]: [
+    { action: "create", resource: "church_unit" },
+  ],
+  [PERMISSIONS.updateChurchUnits]: [
+    { action: "update", resource: "church_unit" },
+  ],
+  [PERMISSIONS.deleteChurchUnits]: [
+    { action: "delete", resource: "church_unit" },
+  ],
   [PERMISSIONS.manageRoleSchemas]: [{ action: "manage", resource: "role_schema" }],
   [PERMISSIONS.manageSystemSettings]: [{ action: "manage", resource: "system_setting" }],
   [PERMISSIONS.manageIntegrations]: [{ action: "manage", resource: "integration" }],
