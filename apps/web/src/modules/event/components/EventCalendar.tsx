@@ -59,14 +59,66 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
 
   const eventsByDay = useMemo(() => {
     const map: Record<string, EventItem[]> = {};
+
     events.forEach((event) => {
-      const date = new Date(event.starts_at);
-      const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-      if (!map[key]) map[key] = [];
-      map[key].push(event);
+      const startDate = new Date(event.starts_at);
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
+      const startDateNum = startDate.getDate();
+      const startDayOfWeek = startDate.getDay();
+
+      const startNormalized = new Date(startYear, startMonth, startDateNum).getTime();
+
+      calendarDays.forEach((day) => {
+        const currentDate = day.date;
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+        const currentDateNum = currentDate.getDate();
+        const currentDayOfWeek = currentDate.getDay();
+
+        const currentNormalized = new Date(currentYear, currentMonth, currentDateNum).getTime();
+
+        if (currentNormalized < startNormalized) return;
+
+        let isMatch = false;
+
+        switch (event.repeat) {
+          case "none":
+            isMatch = currentNormalized === startNormalized;
+            break;
+          case "daily":
+            isMatch = true;
+            break;
+          case "weekly":
+            isMatch = currentDayOfWeek === startDayOfWeek;
+            break;
+          case "monthly":
+            isMatch = currentDateNum === startDateNum;
+            break;
+          case "weekdays":
+            isMatch = currentDayOfWeek !== 0 && currentDayOfWeek !== 6;
+            break;
+        }
+
+        if (isMatch) {
+          const key = `${currentYear}-${currentMonth}-${currentDateNum}`;
+          if (!map[key]) map[key] = [];
+          map[key].push(event);
+        }
+      });
     });
+
+    // Sort events by start time within each day
+    Object.values(map).forEach((dayEvents) => {
+      dayEvents.sort((a, b) => {
+        const timeA = new Date(a.starts_at).getHours() * 60 + new Date(a.starts_at).getMinutes();
+        const timeB = new Date(b.starts_at).getHours() * 60 + new Date(b.starts_at).getMinutes();
+        return timeA - timeB;
+      });
+    });
+
     return map;
-  }, [events]);
+  }, [events, calendarDays]);
 
   const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));

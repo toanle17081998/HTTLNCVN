@@ -215,6 +215,7 @@ export function EventPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
   const [form, setForm] = useState<EventForm>(() => createEmptyForm());
   const [categoryForm, setCategoryForm] = useState<CategoryForm>({ description: "", name: "" });
@@ -406,14 +407,6 @@ export function EventPage() {
 
   return (
     <PageLayout
-      actions={
-        canManageEvents ? (
-          <Button onClick={openCreateModal}>
-            <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-            {t("event.action.add")}
-          </Button>
-        ) : null
-      }
       description={t("page.event.description")}
       eyebrow={t("page.event.eyebrow")}
       title={t("page.event.title")}
@@ -442,23 +435,24 @@ export function EventPage() {
         </Card>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,0.9fr)]">
+      <div className="grid gap-5">
         <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
           <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-                  {t("event.list.title")}
-                </h2>
-                <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
-                  {t("event.list.records", {
-                    count: String(visibleEvents.length),
-                    total: String(eventsQuery.data?.total ?? 0),
-                  })}
-                </p>
-              </div>
 
-              <div className="flex w-full items-center gap-3 lg:w-auto">
+              <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto">
+                {canManageEvents ? (
+                  <div className="flex items-center gap-2 mr-auto lg:mr-2">
+                    <Button onClick={() => setCategoryModalOpen(true)} variant="secondary" className="h-11 rounded-xl px-4 hidden sm:flex">
+                      <LayoutList aria-hidden="true" className="mr-2 h-4 w-4" />
+                      {t("event.category.title")}
+                    </Button>
+                    <Button onClick={openCreateModal} className="h-11 rounded-xl px-4">
+                      <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+                      {t("event.action.add")}
+                    </Button>
+                  </div>
+                ) : null}
                 <div className="flex bg-[var(--bg-base)] p-1 rounded-xl border border-[var(--border-subtle)]">
                   <Button
                     variant={viewMode === "calendar" ? "secondary" : "ghost"}
@@ -658,91 +652,7 @@ export function EventPage() {
           )}
         </Card>
 
-        <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
-          <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
-              {t("event.category.eyebrow")}
-            </p>
-            <h2 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
-              {t("event.category.title")}
-            </h2>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              {t("event.category.description")}
-            </p>
-          </div>
 
-          <div className="space-y-5 px-6 py-5">
-            {canManageEvents ? (
-              <form className="space-y-4" onSubmit={submitCategory}>
-                <FormField htmlFor="event-category-name" label={t("event.category.name")}>
-                  <Input
-                    id="event-category-name"
-                    onChange={(event) =>
-                      setCategoryForm((current) => ({ ...current, name: event.target.value }))
-                    }
-                    placeholder={t("event.category.namePlaceholder")}
-                    value={categoryForm.name}
-                  />
-                </FormField>
-                <FormField
-                  htmlFor="event-category-description"
-                  label={t("event.category.descriptionLabel")}
-                >
-                  <Textarea
-                    id="event-category-description"
-                    onChange={(event) =>
-                      setCategoryForm((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
-                    }
-                    placeholder={t("event.category.descriptionPlaceholder")}
-                    rows={3}
-                    value={categoryForm.description}
-                  />
-                </FormField>
-                <Button isLoading={createCategoryMutation.isPending} type="submit">
-                  <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                  {t("event.category.add")}
-                </Button>
-              </form>
-            ) : null}
-
-            <div className="space-y-3">
-              {(meta?.categories ?? []).map((category) => (
-                <div
-                  className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4"
-                  key={category.id}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-[var(--text-primary)]">{category.name}</p>
-                      {category.description ? (
-                        <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
-                          {category.description}
-                        </p>
-                      ) : null}
-                    </div>
-                    {canManageEvents ? (
-                      <Button
-                        className="h-9 w-9 rounded-xl p-0"
-                        onClick={() => handleDeleteCategory(category.id, category.name)}
-                        variant="ghost"
-                      >
-                        <Trash2 aria-hidden="true" className="h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-4 text-sm text-[var(--text-secondary)]">
-              <p className="font-semibold text-[var(--text-primary)]">{t("event.utc.title")}</p>
-              <p className="mt-2 leading-6">{t("event.utc.description")}</p>
-            </div>
-          </div>
-        </Card>
       </div>
 
       {modalOpen ? (
@@ -1020,6 +930,109 @@ export function EventPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {categoryModalOpen ? (
+        <div
+          aria-modal="true"
+          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          role="dialog"
+        >
+          <div
+            className="absolute inset-0 bg-[var(--bg-scrim)]/80 backdrop-blur-sm"
+            onClick={() => setCategoryModalOpen(false)}
+          />
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)]">
+            <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-6 py-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
+                  {t("event.category.eyebrow")}
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
+                  {t("event.category.title")}
+                </h2>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  {t("event.category.description")}
+                </p>
+              </div>
+              <Button className="h-10 w-10 rounded-xl p-0" onClick={() => setCategoryModalOpen(false)} variant="ghost">
+                <X aria-hidden="true" className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              {canManageEvents ? (
+                <form className="space-y-4" onSubmit={submitCategory}>
+                  <FormField htmlFor="event-category-name" label={t("event.category.name")}>
+                    <Input
+                      id="event-category-name"
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({ ...current, name: event.target.value }))
+                      }
+                      placeholder={t("event.category.namePlaceholder")}
+                      value={categoryForm.name}
+                    />
+                  </FormField>
+                  <FormField
+                    htmlFor="event-category-description"
+                    label={t("event.category.descriptionLabel")}
+                  >
+                    <Textarea
+                      id="event-category-description"
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          description: event.target.value,
+                        }))
+                      }
+                      placeholder={t("event.category.descriptionPlaceholder")}
+                      rows={3}
+                      value={categoryForm.description}
+                    />
+                  </FormField>
+                  <Button isLoading={createCategoryMutation.isPending} type="submit">
+                    <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+                    {t("event.category.add")}
+                  </Button>
+                </form>
+              ) : null}
+
+              <div className="space-y-3">
+                {(meta?.categories ?? []).map((category) => (
+                  <div
+                    className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4"
+                    key={category.id}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-[var(--text-primary)]">{category.name}</p>
+                        {category.description ? (
+                          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
+                            {category.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      {canManageEvents ? (
+                        <Button
+                          className="h-9 w-9 rounded-xl p-0"
+                          onClick={() => handleDeleteCategory(category.id, category.name)}
+                          variant="ghost"
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-4 text-sm text-[var(--text-secondary)]">
+                <p className="font-semibold text-[var(--text-primary)]">{t("event.utc.title")}</p>
+                <p className="mt-2 leading-6">{t("event.utc.description")}</p>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
