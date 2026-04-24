@@ -57,7 +57,9 @@ export function AdminArticles() {
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                   <span className={cn(
                     "rounded px-1.5 py-0.5",
-                    article.status === 'published' ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
+                    article.status === 'published'
+                      ? "bg-[var(--status-success-bg)] text-[var(--status-success)]"
+                      : "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
                   )}>
                     {article.status}
                   </span>

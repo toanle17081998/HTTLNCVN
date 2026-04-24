@@ -40,7 +40,7 @@ export function AdminDashboard() {
           </p>
         </div>
         <Link
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 text-sm font-bold text-white shadow-lg shadow-[var(--brand-primary)]/20 transition hover:brightness-110 active:scale-95"
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 text-sm font-bold text-[var(--text-inverse)] shadow-lg shadow-[var(--brand-shadow)] transition hover:bg-[var(--brand-primary-strong)] active:scale-95"
           href="/admin/pages"
         >
           {t("admin.dashboard.action.pages")}
@@ -61,7 +61,10 @@ export function AdminDashboard() {
       <section className="grid gap-6 lg:grid-cols-12">
         <Card className="rounded-2xl border-[var(--border-subtle)] p-6 shadow-sm lg:col-span-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "var(--status-info-bg)", color: "var(--status-info)" }}
+            >
               <ShieldCheck aria-hidden="true" className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.dashboard.quickActions")}</h2>
@@ -71,11 +74,11 @@ export function AdminDashboard() {
               const Icon = action.icon;
               return (
                 <Link
-                  className="group flex min-h-32 flex-col justify-between rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 transition-all duration-200 hover:border-[var(--brand-primary)] hover:shadow-md hover:shadow-[var(--brand-primary)]/5"
+                  className="group flex min-h-32 flex-col justify-between rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 transition-all duration-200 hover:border-[var(--brand-primary)] hover:shadow-md hover:shadow-[var(--brand-shadow)]"
                   href={action.href}
                   key={action.href}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--brand-muted)] text-[var(--brand-primary)] transition-colors group-hover:bg-[var(--brand-primary)] group-hover:text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--brand-muted)] text-[var(--brand-primary)] transition-colors group-hover:bg-[var(--brand-primary)] group-hover:text-[var(--text-inverse)]">
                     <Icon aria-hidden="true" className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-bold text-[var(--text-primary)]">{t(action.labelKey)}</span>
@@ -87,15 +90,18 @@ export function AdminDashboard() {
 
         <Card className="rounded-2xl border-[var(--border-subtle)] p-6 shadow-sm lg:col-span-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: "var(--status-success-bg)", color: "var(--status-success)" }}
+            >
               <Activity aria-hidden="true" className="h-5 w-5" />
             </div>
             <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.dashboard.siteStatus")}</h2>
           </div>
           <div className="mt-6 space-y-3">
             {activityItems.map((item) => (
-              <div 
-                className="flex gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-sm leading-relaxed text-[var(--text-secondary)] shadow-sm transition-colors hover:bg-[var(--bg-surface)]" 
+              <div
+                className="flex gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-sm leading-relaxed text-[var(--text-secondary)] shadow-sm transition-colors hover:bg-[var(--bg-surface)]"
                 key={item}
               >
                 <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" />

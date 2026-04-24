@@ -3,7 +3,7 @@
 import { BookOpen, CheckCircle2, Globe, Lock, Users } from "lucide-react";
 import { cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { PrayerStatus, PrayerVisibility } from "@/mockData";
+import type { PrayerStatus, PrayerVisibility } from "@services/prayer-journal";
 
 // ─── VisibilityIcon ───────────────────────────────────────────────────────────
 

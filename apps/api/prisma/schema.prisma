@@ -353,6 +353,7 @@ model ChurchUnit {
   children ChurchUnit[]       @relation("ChurchUnitTree")
   leader   User?              @relation("ChurchUnitLeader", fields: [leader_id], references: [id], onDelete: SetNull)
   members  ChurchUnitMember[]
+  event_targets EventChurchUnitTarget[]
 
   @@index([parent_id])
   @@index([leader_id])
@@ -406,10 +407,23 @@ model Event {
   category  EventCategory?    @relation(fields: [category_id], references: [id], onDelete: SetNull)
   creator   User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
   attendees EventAttendance[]
+  church_unit_targets EventChurchUnitTarget[]
 
   @@index([category_id])
   @@index([created_by])
   @@map("events")
+}
+
+model EventChurchUnitTarget {
+  event_id       String @db.Uuid
+  church_unit_id String @db.Uuid
+
+  event       Event      @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  church_unit ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
+
+  @@id([event_id, church_unit_id])
+  @@index([church_unit_id])
+  @@map("event_church_unit_targets")
 }
 
 model EventAttendance {

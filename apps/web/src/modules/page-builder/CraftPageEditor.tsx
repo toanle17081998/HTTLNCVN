@@ -137,9 +137,9 @@ function BuilderShell({
 function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
   const createPage = useCreatePageMutation();
   const [routePath, setRoutePath] = useState("/");
-  const [title, setTitle] = useState("Home");
   const { toast } = useFeedback();
   const { t } = useTranslation();
+  const [title, setTitle] = useState(() => t("pageBuilder.defaultPageTitle"));
 
   async function handleCreate() {
     const slug = slugifyPageTitle(routePath === "/" ? "home" : routePath);

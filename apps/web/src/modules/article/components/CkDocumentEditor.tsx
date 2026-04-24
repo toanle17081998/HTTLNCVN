@@ -269,9 +269,9 @@ export default function CkDocumentEditor({
   );
 
   return (
-    <div className="ckeditor-document-shell min-w-0 bg-[#eef2f7]">
+    <div className="ckeditor-document-shell min-w-0 bg-[var(--bg-card)]">
       <div
-        className="ckeditor-document-toolbar sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-white px-3 py-2"
+        className="ckeditor-document-toolbar sticky top-0 z-10 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2"
         ref={toolbarRef}
       />
       <div className="ckeditor-document-scroll min-h-[36rem] overflow-auto px-4 py-6">

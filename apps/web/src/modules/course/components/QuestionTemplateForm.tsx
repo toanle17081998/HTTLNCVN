@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { CreateQuestionTemplateDto, QuestionTemplate } from "@services/course";
+import { QuestionTemplate } from "@services/course";
 
 type QuestionTemplateFormProps = {
   initialData?: QuestionTemplate;
@@ -37,9 +37,9 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
   };
 
   return (
-    <Card className="max-w-2xl mx-auto p-8 shadow-xl border-[var(--border-subtle)] bg-[var(--bg-card)]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+    <Card className="mx-auto max-w-2xl border-[var(--border-subtle)] bg-[var(--bg-card)] p-8 shadow-xl">
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
           {title}
         </h1>
         <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
@@ -55,51 +55,51 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
                   : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
               )}
             >
-              {lang === "en" ? "English" : "Tiếng Việt"}
+              {lang === "en" ? t("common.language.english") : t("common.language.vietnamese")}
             </button>
           ))}
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField label="Type" htmlFor="template_type">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <FormField label={t("questionTemplate.type")} htmlFor="template_type">
             <Select
               id="template_type"
               name="template_type"
               value={formData.template_type}
               onChange={handleChange}
-              className="bg-[var(--bg-base)] w-full"
+              className="w-full bg-[var(--bg-base)]"
             >
-              <option value="short_answer">Short Answer</option>
-              <option value="multiple_choice">Multiple Choice</option>
-              <option value="true_false">True/False</option>
+              <option value="short_answer">{t("questionTemplate.type.shortAnswer")}</option>
+              <option value="multiple_choice">{t("questionTemplate.type.multipleChoice")}</option>
+              <option value="true_false">{t("questionTemplate.type.trueFalse")}</option>
             </Select>
           </FormField>
 
-          <FormField label="Difficulty" htmlFor="difficulty">
+          <FormField label={t("questionTemplate.difficulty")} htmlFor="difficulty">
             <Select
               id="difficulty"
               name="difficulty"
               value={formData.difficulty}
               onChange={handleChange}
-              className="bg-[var(--bg-base)] w-full"
+              className="w-full bg-[var(--bg-base)]"
             >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
+              <option value="easy">{t("questionTemplate.difficulty.easy")}</option>
+              <option value="medium">{t("questionTemplate.difficulty.medium")}</option>
+              <option value="hard">{t("questionTemplate.difficulty.hard")}</option>
             </Select>
           </FormField>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
           <div className={cn(editLang !== "en" && "hidden")}>
-            <FormField label="Question (English)" htmlFor="body_template_en">
+            <FormField label={t("questionTemplate.questionEnglish")} htmlFor="body_template_en">
               <Textarea
                 id="body_template_en"
                 name="body_template_en"
                 value={formData.body_template_en}
                 onChange={handleChange}
-                placeholder="Question template in English..."
+                placeholder={t("questionTemplate.questionEnglishPlaceholder")}
                 required={editLang === "en"}
                 rows={4}
                 className="bg-[var(--bg-base)]"
@@ -108,13 +108,13 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           </div>
 
           <div className={cn(editLang !== "vi" && "hidden")}>
-            <FormField label="Câu hỏi (Tiếng Việt)" htmlFor="body_template_vi">
+            <FormField label={t("questionTemplate.questionVietnamese")} htmlFor="body_template_vi">
               <Textarea
                 id="body_template_vi"
                 name="body_template_vi"
                 value={formData.body_template_vi}
                 onChange={handleChange}
-                placeholder="Nhập nội dung câu hỏi bằng tiếng Việt..."
+                placeholder={t("questionTemplate.questionVietnamesePlaceholder")}
                 required={editLang === "vi"}
                 rows={4}
                 className="bg-[var(--bg-base)]"
@@ -123,26 +123,30 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           </div>
         </div>
 
-        <FormField label="Answer Formula" htmlFor="answer_formula" hint="Formula or value to calculate the correct answer.">
+        <FormField
+          label={t("questionTemplate.answerFormula")}
+          htmlFor="answer_formula"
+          hint={t("questionTemplate.answerFormulaHint")}
+        >
           <Input
             id="answer_formula"
             name="answer_formula"
             value={formData.answer_formula}
             onChange={handleChange}
-            placeholder="Answer formula"
+            placeholder={t("questionTemplate.answerFormulaPlaceholder")}
             className="bg-[var(--bg-base)]"
           />
         </FormField>
 
         <div className="grid grid-cols-1 gap-6">
           <div className={cn(editLang !== "en" && "hidden")}>
-            <FormField label="Explanation (English)" htmlFor="explanation_template_en">
+            <FormField label={t("questionTemplate.explanationEnglish")} htmlFor="explanation_template_en">
               <Textarea
                 id="explanation_template_en"
                 name="explanation_template_en"
                 value={formData.explanation_template_en}
                 onChange={handleChange}
-                placeholder="Explanation in English..."
+                placeholder={t("questionTemplate.explanationEnglishPlaceholder")}
                 rows={3}
                 className="bg-[var(--bg-base)]"
               />
@@ -150,13 +154,13 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           </div>
 
           <div className={cn(editLang !== "vi" && "hidden")}>
-            <FormField label="Giải thích (Tiếng Việt)" htmlFor="explanation_template_vi">
+            <FormField label={t("questionTemplate.explanationVietnamese")} htmlFor="explanation_template_vi">
               <Textarea
                 id="explanation_template_vi"
                 name="explanation_template_vi"
                 value={formData.explanation_template_vi}
                 onChange={handleChange}
-                placeholder="Giải thích bằng tiếng Việt..."
+                placeholder={t("questionTemplate.explanationVietnamesePlaceholder")}
                 rows={3}
                 className="bg-[var(--bg-base)]"
               />
@@ -164,7 +168,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           </div>
         </div>
 
-        <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border-subtle)]">
+        <div className="flex justify-end gap-4 border-t border-[var(--border-subtle)] pt-6">
           <Button
             type="button"
             variant="ghost"
@@ -173,7 +177,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
+          <Button type="submit" isLoading={isLoading} className="px-8">
             {initialData ? t("course.action.update") : t("course.action.create")}
           </Button>
         </div>

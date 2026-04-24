@@ -46,10 +46,13 @@ const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 function ConfirmVariantIcon({ variant }: { variant: ConfirmVariant }) {
   const baseClasses = "flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm";
-  
+
   if (variant === "delete") {
     return (
-      <span className={cn(baseClasses, "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400")}>
+      <span
+        className={cn(baseClasses)}
+        style={{ backgroundColor: "var(--status-danger-bg)", color: "var(--status-danger)" }}
+      >
         <Trash2 className="h-6 w-6" />
       </span>
     );
@@ -57,7 +60,10 @@ function ConfirmVariantIcon({ variant }: { variant: ConfirmVariant }) {
 
   if (variant === "update") {
     return (
-      <span className={cn(baseClasses, "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400")}>
+      <span
+        className={cn(baseClasses)}
+        style={{ backgroundColor: "var(--status-info-bg)", color: "var(--status-info)" }}
+      >
         <Save className="h-6 w-6" />
       </span>
     );
@@ -65,14 +71,20 @@ function ConfirmVariantIcon({ variant }: { variant: ConfirmVariant }) {
 
   if (variant === "warning") {
     return (
-      <span className={cn(baseClasses, "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400")}>
+      <span
+        className={cn(baseClasses)}
+        style={{ backgroundColor: "var(--status-warning-bg)", color: "var(--status-warning)" }}
+      >
         <AlertTriangle className="h-6 w-6" />
       </span>
     );
   }
 
   return (
-    <span className={cn(baseClasses, "bg-slate-50 text-slate-600 dark:bg-slate-900/30 dark:text-slate-400")}>
+    <span
+      className={cn(baseClasses)}
+      style={{ backgroundColor: "var(--brand-soft)", color: "var(--brand-primary)" }}
+    >
       <Info className="h-6 w-6" />
     </span>
   );
@@ -111,7 +123,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     (options: ConfirmOptions) => {
       return new Promise<boolean>((resolve) => {
         const variant = options.variant ?? "info";
-        
+
         // Default values based on variant
         let defaultTitle = t("common.confirm");
         let defaultConfirmLabel = t("common.confirm");
@@ -173,16 +185,17 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   return (
     <FeedbackContext.Provider value={value}>
       {children}
-      <Toaster 
-        position="top-right" 
-        richColors 
+      <Toaster
+        position="top-right"
+        richColors
         closeButton
         toastOptions={{
           style: {
             borderRadius: '1rem',
             border: '1px solid var(--border-subtle)',
-            background: 'var(--bg-surface)',
+            background: 'var(--bg-elevated)',
             color: 'var(--text-primary)',
+            boxShadow: 'var(--shadow-lg)',
           }
         }}
       />
@@ -194,15 +207,16 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           role="dialog"
         >
           {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-slate-950/20 backdrop-blur-sm" 
+          <div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "var(--bg-scrim)" }}
             onClick={() => closeConfirm(false)}
           />
-          
-          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] animate-in fade-in zoom-in duration-200">
+
+          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-8 shadow-[var(--shadow-lg)] animate-in fade-in zoom-in duration-200">
             <div className="flex flex-col items-center text-center">
               <ConfirmVariantIcon variant={confirmState.variant ?? "info"} />
-              
+
               <div className="mt-5">
                 <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
                   {confirmState.title}
@@ -216,8 +230,8 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button 
-                onClick={() => closeConfirm(false)} 
+              <Button
+                onClick={() => closeConfirm(false)}
                 variant="secondary"
                 className="order-2 w-full rounded-xl sm:order-1 sm:w-32"
               >

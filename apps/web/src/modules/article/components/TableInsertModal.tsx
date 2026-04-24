@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { Button, FormField, Input } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import type { TableFormState } from "./articleEditorTypes";
 
 type TableInsertModalProps = {
@@ -17,21 +18,26 @@ export function TableInsertModal({
   onSubmit,
   onClose,
 }: TableInsertModalProps) {
+  const { t } = useTranslation();
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center px-4"
+      style={{ backgroundColor: "var(--bg-scrim)" }}
+    >
       <form
-        className="grid max-h-[calc(100vh-3rem)] w-full max-w-md gap-4 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
+        className="grid max-h-[calc(100vh-3rem)] w-full max-w-md gap-4 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-lg)]"
         onSubmit={onSubmit}
       >
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Table size</h2>
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("editor.table.title")}</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Choose up to 12 rows and 8 columns.
+            {t("editor.table.description")}
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField htmlFor="table-rows" label="Rows">
+          <FormField htmlFor="table-rows" label={t("editor.table.rows")}>
             <Input
               id="table-rows"
               max={12}
@@ -42,7 +48,7 @@ export function TableInsertModal({
               value={tableForm.rows}
             />
           </FormField>
-          <FormField htmlFor="table-columns" label="Columns">
+          <FormField htmlFor="table-columns" label={t("editor.table.columns")}>
             <Input
               id="table-columns"
               max={8}
@@ -57,9 +63,9 @@ export function TableInsertModal({
 
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} type="button" variant="secondary">
-            Cancel
+            {t("common.cancel")}
           </Button>
-          <Button type="submit">Insert table</Button>
+          <Button type="submit">{t("editor.table.insert")}</Button>
         </div>
       </form>
     </div>

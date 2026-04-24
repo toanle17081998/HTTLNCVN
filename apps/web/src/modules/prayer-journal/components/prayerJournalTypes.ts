@@ -1,11 +1,14 @@
-import type { Prayer, PrayerCategory, PrayerVisibility } from "@/mockData";
-import { memberMockData } from "@/mockData";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import type {
+  Prayer,
+  PrayerCategory,
+  PrayerMember,
+  PrayerVisibility,
+} from "@services/prayer-journal";
 
 export type PrayerForm = {
-  title: string;
   content: string;
+  selected_member_ids: string[];
+  title: string;
   visibility: PrayerVisibility;
   category_id: number | "";
 };
@@ -14,39 +17,49 @@ export type StatusFilter = "all" | "open" | "closed";
 export type VisibilityFilter = "all" | PrayerVisibility;
 export type ModalMode = "create" | "edit" | "view" | "close";
 
-// ─── Pure helpers ─────────────────────────────────────────────────────────────
-
 export function createEmptyForm(): PrayerForm {
-  return { title: "", content: "", visibility: "private", category_id: "" };
+  return {
+    category_id: "",
+    content: "",
+    selected_member_ids: [],
+    title: "",
+    visibility: "private",
+  };
 }
 
 export function prayerToForm(prayer: Prayer): PrayerForm {
   return {
-    title: prayer.title ?? "",
+    category_id: prayer.category?.id ?? "",
     content: prayer.content,
+    selected_member_ids: prayer.shared_with.map((member) => member.id),
+    title: prayer.title ?? "",
     visibility: prayer.visibility,
-    category_id: prayer.category_id ?? "",
   };
 }
 
-export function formatRelativeDate(iso: string): string {
+export function formatPrayerDate(iso: string): string {
   return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
     day: "numeric",
-    timeZone: "UTC",
+    month: "short",
+    year: "numeric",
   }).format(new Date(iso));
 }
 
-export function getMemberName(id: string): string {
-  const member = memberMockData.find((m) => m.id === id);
-  return member?.display_name ?? member?.full_name ?? "Unknown";
-}
-
 export function getCategoryName(
-  id: number | null,
+  category: PrayerCategory | null | undefined,
   categories: PrayerCategory[],
 ): string | null {
-  if (id === null) return null;
-  return categories.find((c) => c.id === id)?.name ?? null;
+  if (category) {
+    return category.name;
+  }
+
+  return null;
+}
+
+export function getMemberNames(memberIds: string[], members: PrayerMember[]): string {
+  const names = memberIds
+    .map((memberId) => members.find((member) => member.id === memberId)?.display_name)
+    .filter(Boolean);
+
+  return names.join(", ");
 }

@@ -19,6 +19,7 @@ import type {
   CreatePrayerDto,
   PrayerDto,
   PrayerListResult,
+  PrayerJournalMetaDto,
   SharePrayerDto,
   UpdatePrayerDto,
 } from './prayer-journal.types';
@@ -26,6 +27,12 @@ import type {
 @Controller('prayer-journal')
 export class PrayerJournalController {
   constructor(private readonly prayerJournalService: PrayerJournalService) {}
+
+  @Get('meta')
+  @Can('read', 'prayer_journal')
+  getMeta(@Request() req: { user: JwtPayload }): Promise<PrayerJournalMetaDto> {
+    return this.prayerJournalService.getMeta(req.user.sub);
+  }
 
   @Get()
   @Can('read', 'prayer_journal')
@@ -42,7 +49,7 @@ export class PrayerJournalController {
   findById(
     @Param('id') id: string,
     @Request() req: { user: JwtPayload },
-  ): Promise<PrayerDto | null> {
+  ): Promise<PrayerDto> {
     return this.prayerJournalService.findById(id, req.user.sub);
   }
 
@@ -63,7 +70,7 @@ export class PrayerJournalController {
     @Body() dto: UpdatePrayerDto,
     @Request() req: { user: JwtPayload },
   ): Promise<PrayerDto> {
-    return this.prayerJournalService.update(id, dto, req.user.sub);
+    return this.prayerJournalService.update(id, dto, req.user.sub, req.user.role);
   }
 
   @Delete(':id')
@@ -73,7 +80,7 @@ export class PrayerJournalController {
     @Param('id') id: string,
     @Request() req: { user: JwtPayload },
   ): Promise<void> {
-    return this.prayerJournalService.delete(id, req.user.sub);
+    return this.prayerJournalService.delete(id, req.user.sub, req.user.role);
   }
 
   @Post(':id/share')
@@ -84,6 +91,6 @@ export class PrayerJournalController {
     @Body() dto: SharePrayerDto,
     @Request() req: { user: JwtPayload },
   ): Promise<void> {
-    return this.prayerJournalService.share(id, dto, req.user.sub);
+    return this.prayerJournalService.share(id, dto, req.user.sub, req.user.role);
   }
 }
