@@ -100,8 +100,8 @@ export function AdminDashboard() {
           </div>
           <div className="mt-6 space-y-3">
             {activityItems.map((item) => (
-              <div 
-                className="flex gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-sm leading-relaxed text-[var(--text-secondary)] shadow-sm transition-colors hover:bg-[var(--bg-surface)]" 
+              <div
+                className="flex gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-4 text-sm leading-relaxed text-[var(--text-secondary)] shadow-sm transition-colors hover:bg-[var(--bg-surface)]"
                 key={item}
               >
                 <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" />

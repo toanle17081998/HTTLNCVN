@@ -158,6 +158,7 @@
   "article.create.description": "Write, format, and submit an article as JSON.",
   "article.create.editor": "Editor",
   "article.create.editorPlaceholder": "Write your article content here...",
+  "article.create.editorPlaceholder": "Write your article content here...",
   "article.create.excerptPlaceholder": "Add a short summary",
   "article.create.metadata": "Article details",
   "article.create.tagsPlaceholder": "discipleship, community, update",

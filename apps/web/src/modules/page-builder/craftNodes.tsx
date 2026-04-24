@@ -468,13 +468,13 @@ export function PageCanvas({
           ...buildBoxStyle(props),
           ...(isMobile
             ? {
-                minHeight: "auto",
-                padding: props.padding ? "24px 12px 40px" : undefined,
-                paddingBottom: capSpacing(props.paddingBottom, 40, "40px"),
-                paddingLeft: capSpacing(props.paddingLeft, 12, "12px"),
-                paddingRight: capSpacing(props.paddingRight, 12, "12px"),
-                paddingTop: capSpacing(props.paddingTop, 24, "24px"),
-              }
+              minHeight: "auto",
+              padding: props.padding ? "24px 12px 40px" : undefined,
+              paddingBottom: capSpacing(props.paddingBottom, 40, "40px"),
+              paddingLeft: capSpacing(props.paddingLeft, 12, "12px"),
+              paddingRight: capSpacing(props.paddingRight, 12, "12px"),
+              paddingTop: capSpacing(props.paddingTop, 24, "24px"),
+            }
             : {}),
         }}
       >
@@ -530,10 +530,10 @@ export function SectionBlock({ children, ...props }: LayoutBlockProps) {
           ...getGridStyle(props),
           ...(isMobile
             ? {
-                ...mobileBoxOverrides(props),
-                gap: capSpacing(props.gap, 16, "16px"),
-                gridTemplateColumns: "minmax(0, 1fr)",
-              }
+              ...mobileBoxOverrides(props),
+              gap: capSpacing(props.gap, 16, "16px"),
+              gridTemplateColumns: "minmax(0, 1fr)",
+            }
             : {}),
         }}
       >
@@ -596,10 +596,10 @@ export function ColumnsBlock({ children, ...props }: LayoutBlockProps) {
           ...getGridStyle({ ...props, columns: props.columns ?? 2 }),
           ...(isMobile
             ? {
-                ...mobileBoxOverrides(props),
-                gap: capSpacing(props.gap, 14, "14px"),
-                gridTemplateColumns: "minmax(0, 1fr)",
-              }
+              ...mobileBoxOverrides(props),
+              gap: capSpacing(props.gap, 14, "14px"),
+              gridTemplateColumns: "minmax(0, 1fr)",
+            }
             : {}),
         }}
       >
@@ -689,10 +689,10 @@ export function RowBlock({ children, ...props }: StackProps) {
           ...stackStyle(props, "row"),
           ...(isMobile
             ? {
-                ...mobileBoxOverrides(props),
-                flexDirection: "column",
-                gap: capSpacing(props.gap, 14, "14px"),
-              }
+              ...mobileBoxOverrides(props),
+              flexDirection: "column",
+              gap: capSpacing(props.gap, 14, "14px"),
+            }
             : {}),
         }}
       >
@@ -725,9 +725,9 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
           ...stackStyle(props, "column"),
           ...(isMobile
             ? {
-                ...mobileBoxOverrides(props),
-                gap: capSpacing(props.gap, 14, "14px"),
-              }
+              ...mobileBoxOverrides(props),
+              gap: capSpacing(props.gap, 14, "14px"),
+            }
             : {}),
         }}
       >
@@ -928,8 +928,8 @@ export function ButtonBlock({
     textDecoration: "none",
     ...(isMobile
       ? {
-          maxWidth: "100%",
-        }
+        maxWidth: "100%",
+      }
       : {}),
   };
 
@@ -1065,35 +1065,35 @@ export function ImageBlock({
           style={
             mobileHeight
               ? {
-                  height: mobileHeight,
-                }
+                height: mobileHeight,
+              }
               : undefined
           }
         >
-        {url ? (
-          kind === "image" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt={alt}
-              className="block h-full w-full"
-              src={effectiveUrl}
-              style={{ objectFit: fit }}
-            />
+          {url ? (
+            kind === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={alt}
+                className="block h-full w-full"
+                src={effectiveUrl}
+                style={{ objectFit: fit }}
+              />
+            ) : (
+              <iframe
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="block h-full w-full"
+                referrerPolicy="strict-origin-when-cross-origin"
+                src={effectiveUrl}
+                title={title}
+              />
+            )
           ) : (
-            <iframe
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="block h-full w-full"
-              referrerPolicy="strict-origin-when-cross-origin"
-              src={effectiveUrl}
-              title={title}
-            />
-          )
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-[var(--text-secondary)]">
-            Add a media URL
-          </div>
-        )}
+            <div className="flex h-full items-center justify-center text-sm text-[var(--text-secondary)]">
+              Add a media URL
+            </div>
+          )}
         </div>
       </div>
     </NodeFrame>
@@ -1631,36 +1631,36 @@ export function FeedCarouselBlock({
   const items: FeedItem[] =
     feedType === "courses"
       ? courseItems.map((course) => ({
-          accent: "var(--brand-primary)",
-          coverImage: course.cover_image_url,
-          description: course.summary ?? "Published course",
-          href: `/course/${course.slug}`,
-          id: course.id,
-          kicker: course.level,
-          slug: course.slug,
-          title: course.title_vi || course.title_en,
-        }))
+        accent: "var(--brand-primary)",
+        coverImage: course.cover_image_url,
+        description: course.summary ?? "Published course",
+        href: `/course/${course.slug}`,
+        id: course.id,
+        kicker: course.level,
+        slug: course.slug,
+        title: course.title_vi || course.title_en,
+      }))
       : feedType === "events"
         ? eventItems.map((event) => ({
-            accent: event.color,
-            coverImage: event.cover_image_url ?? null,
-            description: event.description,
-            href: "/event",
-            id: event.id,
+          accent: event.color,
+          coverImage: event.cover_image_url ?? null,
+          description: event.description,
+          href: "/event",
+          id: event.id,
           kicker: event.location,
           slug: event.slug,
           title: event.title,
         }))
         : articleItems.map((article) => ({
-            accent: "var(--brand-primary)",
-            coverImage: article.cover_image_url,
-            description: article.category?.name ?? "Published article",
-            href: `/article/${article.slug}`,
-            id: article.id,
-            kicker: article.status,
-            slug: article.slug,
-            title: article.title_vi || article.title_en,
-          }));
+          accent: "var(--brand-primary)",
+          coverImage: article.cover_image_url,
+          description: article.category?.name ?? "Published article",
+          href: `/article/${article.slug}`,
+          id: article.id,
+          kicker: article.status,
+          slug: article.slug,
+          title: article.title_vi || article.title_en,
+        }));
 
   const isLoading =
     feedType === "articles"

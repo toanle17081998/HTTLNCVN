@@ -46,7 +46,7 @@ const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 function ConfirmVariantIcon({ variant }: { variant: ConfirmVariant }) {
   const baseClasses = "flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm";
-  
+
   if (variant === "delete") {
     return (
       <span
@@ -123,7 +123,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     (options: ConfirmOptions) => {
       return new Promise<boolean>((resolve) => {
         const variant = options.variant ?? "info";
-        
+
         // Default values based on variant
         let defaultTitle = t("common.confirm");
         let defaultConfirmLabel = t("common.confirm");
@@ -185,9 +185,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   return (
     <FeedbackContext.Provider value={value}>
       {children}
-      <Toaster 
-        position="top-right" 
-        richColors 
+      <Toaster
+        position="top-right"
+        richColors
         closeButton
         toastOptions={{
           style: {
@@ -207,16 +207,16 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           role="dialog"
         >
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 backdrop-blur-sm"
             style={{ backgroundColor: "var(--bg-scrim)" }}
             onClick={() => closeConfirm(false)}
           />
-          
+
           <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-8 shadow-[var(--shadow-lg)] animate-in fade-in zoom-in duration-200">
             <div className="flex flex-col items-center text-center">
               <ConfirmVariantIcon variant={confirmState.variant ?? "info"} />
-              
+
               <div className="mt-5">
                 <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
                   {confirmState.title}
@@ -230,8 +230,8 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button 
-                onClick={() => closeConfirm(false)} 
+              <Button
+                onClick={() => closeConfirm(false)}
                 variant="secondary"
                 className="order-2 w-full rounded-xl sm:order-1 sm:w-32"
               >

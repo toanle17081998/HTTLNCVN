@@ -45,7 +45,7 @@ const navIconMap: Record<string, React.ReactNode> = {
   "/member": <Users className="h-4 w-4" />,
   "/notification": <Bell className="h-4 w-4" />,
   "/prayer-journal": <Heart className="h-4 w-4" />,
-  "/church-unit": <ChurchLogo className="h-4 w-4"/>,
+  "/church-unit": <ChurchLogo className="h-4 w-4" />,
   "/auth": <LogIn className="h-4 w-4" />,
 };
 
@@ -53,7 +53,7 @@ export function Header({ pathname }: HeaderProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const { can, canAny, isAuthenticated, logout, role, user } = useAuth();
-  
+
   const menuNavItems = navItems.filter(
     (item) =>
       item.href !== "/auth" &&
@@ -64,7 +64,7 @@ export function Header({ pathname }: HeaderProps) {
   const tickingRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
-  
+
   const [isVisible, setIsVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -199,7 +199,7 @@ export function Header({ pathname }: HeaderProps) {
         >
           <div className="flex items-center gap-2">
             {visibleNavItems.map((item) => renderNavItem(item))}
-            
+
             {hiddenNavItems.length > 0 && (
               <div className="relative">
                 <button
@@ -214,7 +214,7 @@ export function Header({ pathname }: HeaderProps) {
                   {t("common.more")}
                   <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", moreNavOpen && "rotate-180")} />
                 </button>
-                
+
                 {moreNavOpen && (
                   <div className="animate-in fade-in zoom-in-95 absolute left-0 top-full mt-2 w-48 origin-top-left rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5">
                     {hiddenNavItems.map((item) => renderNavItem(item))}
@@ -277,7 +277,7 @@ export function Header({ pathname }: HeaderProps) {
                   </p>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-[var(--brand-muted)] flex items-center justify-center text-[var(--brand-primary)] font-bold">
-                       {(user?.username?.[0] ?? "P").toUpperCase()}
+                      {(user?.username?.[0] ?? "P").toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-[var(--text-primary)] truncate">
@@ -294,14 +294,14 @@ export function Header({ pathname }: HeaderProps) {
 
                 {/* Preferences Section */}
                 <div className="p-2 space-y-2">
-                   <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.language")}</span>
-                      <LanguageToggle />
-                   </div>
-                   <div className="flex items-center justify-between px-2 py-1">
-                      <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.theme")}</span>
-                      <ThemeToggle />
-                   </div>
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.language")}</span>
+                    <LanguageToggle />
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.theme")}</span>
+                    <ThemeToggle />
+                  </div>
                 </div>
 
                 <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
@@ -319,7 +319,7 @@ export function Header({ pathname }: HeaderProps) {
                       Admin Dashboard
                     </Link>
                   )}
-                  
+
                   {isAuthenticated ? (
                     <button
                       onClick={handleLogout}
@@ -344,7 +344,7 @@ export function Header({ pathname }: HeaderProps) {
 
                 {/* Admin Quick Actions */}
                 {(canCreateContent || canPublish) && (
-                   <>
+                  <>
                     <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
                     <div className="p-1 grid grid-cols-2 gap-1">
                       {canCreateContent && (
@@ -360,7 +360,7 @@ export function Header({ pathname }: HeaderProps) {
                         </Button>
                       )}
                     </div>
-                   </>
+                  </>
                 )}
               </div>
             )}
