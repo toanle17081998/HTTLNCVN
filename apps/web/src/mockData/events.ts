@@ -10,7 +10,9 @@ export type ChurchEvent = {
   location: string;
   description: string;
   color: string;
+  cover_image_url?: string | null;
   repeat: EventRepeat;
+  slug?: string;
 };
 
 export const eventColors = [
@@ -32,7 +34,10 @@ export const eventMockData: ChurchEvent[] = [
     location: "Main Hall",
     description: "Dinner, worship, and newcomer conversations.",
     color: "#2563eb",
+    cover_image_url:
+      "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
     repeat: "none",
+    slug: "community-night",
   },
   {
     id: "member-prayer",
@@ -43,7 +48,10 @@ export const eventMockData: ChurchEvent[] = [
     location: "Online",
     description: "Shared prayer requests and guided intercession.",
     color: "#9333ea",
+    cover_image_url:
+      "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=1200&q=80",
     repeat: "weekly",
+    slug: "member-prayer-room",
   },
   {
     id: "serve-day",
@@ -54,7 +62,10 @@ export const eventMockData: ChurchEvent[] = [
     location: "Community Center",
     description: "Volunteer morning for local neighborhood support.",
     color: "#16a34a",
+    cover_image_url:
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80",
     repeat: "none",
+    slug: "serve-day",
   },
   {
     id: "leaders-sync",
@@ -65,6 +76,9 @@ export const eventMockData: ChurchEvent[] = [
     location: "Room 204",
     description: "Planning, follow-up, and ministry calendar alignment.",
     color: "#ea580c",
+    cover_image_url:
+      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80",
     repeat: "monthly",
+    slug: "leaders-sync",
   },
 ];

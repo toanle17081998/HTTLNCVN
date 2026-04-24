@@ -3,7 +3,7 @@
 import { Tag } from "lucide-react";
 import { cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { Prayer, PrayerCategory } from "@/mockData";
+import type { Prayer, PrayerCategory } from "@services/prayer-journal";
 
 type CategorySidebarProps = {
   prayers: Prayer[];
@@ -20,7 +20,7 @@ export function CategorySidebar({
 }: CategorySidebarProps) {
   const { t } = useTranslation();
 
-  const uncategorisedCount = prayers.filter((p) => p.category_id === null).length;
+  const uncategorisedCount = prayers.filter((p) => p.category === null).length;
 
   return (
     <div className="h-max rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
@@ -48,7 +48,7 @@ export function CategorySidebar({
           <CategoryButton
             key={cat.id}
             active={categoryFilter === cat.id}
-            count={prayers.filter((p) => p.category_id === cat.id).length}
+            count={prayers.filter((p) => p.category?.id === cat.id).length}
             label={cat.name}
             onClick={() =>
               onCategoryChange(categoryFilter === cat.id ? "all" : cat.id)

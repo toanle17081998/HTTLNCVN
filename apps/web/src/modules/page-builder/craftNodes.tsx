@@ -31,6 +31,16 @@ import { eventMockData } from "@/mockData";
 type Align = "left" | "center" | "right";
 type SizeValue = number | string;
 type FeedType = "articles" | "courses" | "events";
+type FeedItem = {
+  accent?: string;
+  coverImage?: string | null;
+  description: string;
+  href?: string;
+  id?: string;
+  kicker: string;
+  slug?: string;
+  title: string;
+};
 
 type BoxProps = {
   background?: string;
@@ -135,18 +145,6 @@ function toEmbedUrl(url: string, kind: "embed" | "image") {
   return url;
 }
 
-function isPlaceholderImage(url?: string | null) {
-  if (!url) return true;
-
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "");
-    return host === "placehold.co" || host === "via.placeholder.com";
-  } catch {
-    return false;
-  }
-}
-
 function buildBoxStyle(props: BoxProps): CSSProperties {
   const paddingTop = withUnitFallback(props.paddingTop);
   const paddingRight = withUnitFallback(props.paddingRight);
@@ -217,6 +215,37 @@ function parseNumberLike(value: unknown, fallback: number) {
     if (Number.isFinite(parsed)) return parsed;
   }
   return fallback;
+}
+
+function resolveFeedCardHref(item: FeedItem, hrefTemplate?: string) {
+  const template = hrefTemplate?.trim();
+
+  if (!template || (template === "/" && item.href)) {
+    return item.href || "#";
+  }
+
+  if (template.includes("{slug}") || template.includes("{id}")) {
+    return template
+      .replaceAll("{slug}", item.slug ?? "")
+      .replaceAll("{id}", item.id ?? "");
+  }
+
+  if (item.slug) {
+    const normalizedTemplate = template.replace(/\/+$/, "");
+    if (
+      normalizedTemplate === "/article" ||
+      normalizedTemplate === "/course" ||
+      normalizedTemplate === "/event"
+    ) {
+      return `${normalizedTemplate}/${item.slug}`;
+    }
+  }
+
+  return template;
+}
+
+function isAnchorTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement && Boolean(target.closest("a"));
 }
 
 function Field({
@@ -1495,55 +1524,72 @@ function FeedCard({
   kicker: string;
   title: string;
 }) {
-  const hasRealCover = Boolean(coverImage) && !isPlaceholderImage(coverImage);
+  const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const hasRealCover = Boolean(coverImage);
   const accentColor = resolveStyleToken(accent) ?? "var(--brand-primary)";
+
+  const cardContent = (
+    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-[var(--hero-panel-border)] bg-[var(--text-primary)]">
+      {hasRealCover ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt={title}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            src={coverImage}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+        </>
+      ) : (
+        <>
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(circle at 20% 20%, color-mix(in srgb, ${accentColor} 38%, transparent) 0%, transparent 26%), radial-gradient(circle at 78% 30%, rgba(255,255,255,0.08) 0%, transparent 18%), linear-gradient(145deg, color-mix(in srgb, var(--text-primary) 88%, black) 0%, color-mix(in srgb, var(--bg-base) 92%, black) 100%)`,
+            }}
+          />
+          <div className="absolute -left-10 top-10 h-28 w-28 rounded-full border border-[var(--hero-panel-border)]" />
+          <div className="absolute right-10 top-16 h-3 w-20 rounded-full bg-[var(--hero-panel)] backdrop-blur-sm" />
+          <div className="absolute bottom-24 left-10 h-px w-32 bg-[var(--hero-panel-border)]" />
+          <div className="absolute bottom-14 right-16 h-24 w-24 rotate-12 rounded-2xl bg-[var(--hero-secondary-bg)]" />
+        </>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 grid gap-3 p-6">
+        <span className="inline-flex w-fit rounded-full border border-[var(--hero-panel-border)] bg-[var(--hero-panel)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-inverse)] backdrop-blur-md">
+          {kicker}
+        </span>
+        <h3 className="max-w-[24rem] text-[clamp(1.35rem,2.2vw,2.15rem)] font-semibold leading-[1.08] text-[var(--text-inverse)]">
+          {title}
+        </h3>
+        <p className="max-w-[28rem] text-sm leading-6 text-[var(--text-inverse-muted)]">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+
+  const sharedClassName = cn(
+    "group relative block overflow-hidden rounded-[2rem] transition duration-500",
+    isActive ? "scale-100 opacity-100 shadow-[var(--shadow-lg)]" : "scale-[0.94] opacity-55",
+  );
+
+  if (enabled) {
+    return (
+      <div className={sharedClassName}>
+        {cardContent}
+      </div>
+    );
+  }
 
   return (
     <Link
       className={cn(
-        "group relative block overflow-hidden rounded-[2rem] transition duration-500",
-        isActive ? "scale-100 opacity-100 shadow-[var(--shadow-lg)]" : "scale-[0.94] opacity-55",
+        sharedClassName,
       )}
       href={href}
     >
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-[var(--hero-panel-border)] bg-[var(--text-primary)]">
-        {hasRealCover ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt={title}
-              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              src={coverImage}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
-          </>
-        ) : (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `radial-gradient(circle at 20% 20%, color-mix(in srgb, ${accentColor} 38%, transparent) 0%, transparent 26%), radial-gradient(circle at 78% 30%, rgba(255,255,255,0.08) 0%, transparent 18%), linear-gradient(145deg, color-mix(in srgb, var(--text-primary) 88%, black) 0%, color-mix(in srgb, var(--bg-base) 92%, black) 100%)`,
-              }}
-            />
-            <div className="absolute -left-10 top-10 h-28 w-28 rounded-full border border-[var(--hero-panel-border)]" />
-            <div className="absolute right-10 top-16 h-3 w-20 rounded-full bg-[var(--hero-panel)] backdrop-blur-sm" />
-            <div className="absolute bottom-24 left-10 h-px w-32 bg-[var(--hero-panel-border)]" />
-            <div className="absolute bottom-14 right-16 h-24 w-24 rotate-12 rounded-2xl bg-[var(--hero-secondary-bg)]" />
-          </>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 grid gap-3 p-6">
-          <span className="inline-flex w-fit rounded-full border border-[var(--hero-panel-border)] bg-[var(--hero-panel)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-inverse)] backdrop-blur-md">
-            {kicker}
-          </span>
-          <h3 className="max-w-[24rem] text-[clamp(1.35rem,2.2vw,2.15rem)] font-semibold leading-[1.08] text-[var(--text-inverse)]">
-            {title}
-          </h3>
-          <p className="max-w-[28rem] text-sm leading-6 text-[var(--text-inverse-muted)]">
-            {description}
-          </p>
-        </div>
-      </div>
+      {cardContent}
     </Link>
   );
 }
@@ -1582,31 +1628,37 @@ export function FeedCarouselBlock({
   const courseItems = coursesQuery.data?.items ?? [];
   const eventItems = eventMockData.slice(0, 3);
 
-  const items =
+  const items: FeedItem[] =
     feedType === "courses"
       ? courseItems.map((course) => ({
           accent: "var(--brand-primary)",
           coverImage: course.cover_image_url,
           description: course.summary ?? "Published course",
           href: `/course/${course.slug}`,
+          id: course.id,
           kicker: course.level,
+          slug: course.slug,
           title: course.title_vi || course.title_en,
         }))
       : feedType === "events"
         ? eventItems.map((event) => ({
             accent: event.color,
-            coverImage: null,
+            coverImage: event.cover_image_url ?? null,
             description: event.description,
             href: "/event",
-            kicker: event.location,
-            title: event.title,
-          }))
+            id: event.id,
+          kicker: event.location,
+          slug: event.slug,
+          title: event.title,
+        }))
         : articleItems.map((article) => ({
             accent: "var(--brand-primary)",
             coverImage: article.cover_image_url,
             description: article.category?.name ?? "Published article",
             href: `/article/${article.slug}`,
+            id: article.id,
             kicker: article.status,
+            slug: article.slug,
             title: article.title_vi || article.title_en,
           }));
 
@@ -1650,6 +1702,7 @@ export function FeedCarouselBlock({
   }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (isAnchorTarget(event.target)) return;
     if (items.length <= 1) return;
     dragStartXRef.current = event.clientX;
     dragDeltaRef.current = 0;
@@ -1658,6 +1711,7 @@ export function FeedCarouselBlock({
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if (isAnchorTarget(event.target)) return;
     if (dragStartXRef.current === null) return;
     const delta = event.clientX - dragStartXRef.current;
     dragDeltaRef.current = delta;
@@ -1729,7 +1783,7 @@ export function FeedCarouselBlock({
                         accent={item.accent}
                         coverImage={item.coverImage}
                         description={item.description}
-                        href={item.href || href}
+                        href={resolveFeedCardHref(item, href)}
                         isActive={index === activeIndex}
                         kicker={item.kicker}
                         title={item.title}
@@ -1826,8 +1880,12 @@ function FeedCarouselBlockSettings() {
       <Field label="Gap">
         <Input onChange={(event) => setProp((props: any) => (props.gap = event.target.value))} value={String(gap ?? "16px")} />
       </Field>
-      <Field label="Fallback link">
-        <Input onChange={(event) => setProp((props: any) => (props.href = event.target.value))} value={href} />
+      <Field label="Feed card href">
+        <Input
+          onChange={(event) => setProp((props: any) => (props.href = event.target.value))}
+          placeholder="Leave blank for built-in post links, or use /article/{slug}"
+          value={href}
+        />
       </Field>
       <Field label="Empty state">
         <Textarea
@@ -1853,7 +1911,7 @@ FeedCarouselBlock.craft = {
     emptyMessage: "No content yet.",
     feedType: "articles",
     gap: "16px",
-    href: "/",
+    href: "",
     intervalMs: 5000,
     slideWidth: "56%",
   },
