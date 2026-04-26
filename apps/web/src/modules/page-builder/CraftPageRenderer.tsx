@@ -72,7 +72,7 @@ export function CraftPageRenderer({ path }: { path: string }) {
 
       <Editor enabled={false} resolver={craftResolver}>
         <Frame data={safeContent}>
-          <Element canvas is={PageCanvas} />
+          <Element canvas is={PageCanvas} snapType={path === "/" ? "mandatory" : "none"} />
         </Frame>
       </Editor>
     </div>

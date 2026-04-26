@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, Textarea, cn } from "@/components/ui";
+import { Button, Card, FormField, Input, Pagination, Select, Textarea, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -84,7 +84,12 @@ export function ChurchUnitPage({ admin = false }: ChurchUnitPageProps) {
   const canCreateUnits = can(PERMISSIONS.createChurchUnits) || canReadUnits;
   const canUpdateUnits = can(PERMISSIONS.updateChurchUnits);
   const canDeleteUnits = can(PERMISSIONS.deleteChurchUnits);
-  const unitsQuery = useChurchUnitsQuery({ take: 100 }, isAuthenticated && canReadUnits);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const unitsQuery = useChurchUnitsQuery(
+    { take: pageSize, skip: page * pageSize },
+    isAuthenticated && canReadUnits,
+  );
   const metaQuery = useChurchUnitMetaQuery(isAuthenticated && canReadUnits);
   const createMutation = useCreateChurchUnitMutation();
   const updateMutation = useUpdateChurchUnitMutation();
@@ -425,6 +430,18 @@ export function ChurchUnitPage({ admin = false }: ChurchUnitPageProps) {
                 </div>
               ) : null}
             </div>
+
+            {/* Pagination */}
+            {(unitsQuery.data?.total ?? 0) > 0 ? (
+              <Pagination
+                className="rounded-none border-x-0 border-b-0"
+                page={page}
+                pageSize={pageSize}
+                total={unitsQuery.data?.total ?? 0}
+                onPageChange={setPage}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              />
+            ) : null}
           </Card>
         </>
       )}

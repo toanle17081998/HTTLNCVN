@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, cn } from "@/components/ui";
+import { Button, Card, Pagination, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCoursesQuery } from "@services/course";
 
+const PAGE_SIZE_DEFAULT = 12;
 const levels = ["beginner", "intermediate", "advanced"] as const;
 const levelLabelKeys = {
   advanced: "course.form.level.advanced",
@@ -34,13 +35,31 @@ export function CoursePage() {
   const router = useRouter();
   const { can } = useAuth();
   const [selectedLevel, setSelectedLevel] = useState<string | undefined>();
-  
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+
   const canManageCourses = can(PERMISSIONS.manageCourses);
   const coursesQuery = useCoursesQuery({
-    take: 50,
+    take: pageSize,
+    skip: page * pageSize,
     status: canManageCourses ? undefined : "published",
     level: selectedLevel,
+    q: q || undefined,
   });
+
+  const total = coursesQuery.data?.total ?? 0;
+
+  const handleSearch = useCallback(() => {
+    setQ(searchInput.trim());
+    setPage(0);
+  }, [searchInput]);
+
+  const handleLevelChange = (lvl: string | undefined) => {
+    setSelectedLevel(lvl);
+    setPage(0);
+  };
 
   return (
     <PageLayout
@@ -55,11 +74,26 @@ export function CoursePage() {
         ) : null
       }
     >
+      {/* Search bar */}
+      <div className="mb-4 flex gap-2">
+        <input
+          className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
+          placeholder="Search courses…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+        />
+        <Button size="sm" variant="primary" onClick={handleSearch}>
+          Search
+        </Button>
+      </div>
+
+      {/* Level filters */}
       <div className="mb-8 flex flex-wrap gap-2">
         <Button
           size="sm"
           variant={selectedLevel === undefined ? "primary" : "secondary"}
-          onClick={() => setSelectedLevel(undefined)}
+          onClick={() => handleLevelChange(undefined)}
         >
           {t("prayer.filter.all")}
         </Button>
@@ -68,7 +102,7 @@ export function CoursePage() {
             key={lvl}
             size="sm"
             variant={selectedLevel === lvl ? "primary" : "secondary"}
-            onClick={() => setSelectedLevel(lvl)}
+            onClick={() => handleLevelChange(lvl)}
           >
             {t(levelLabelKeys[lvl])}
           </Button>
@@ -144,6 +178,19 @@ export function CoursePage() {
           No courses found matching your criteria.
         </Card>
       ) : null}
+
+      {/* Pagination */}
+      {total > 0 ? (
+        <Pagination
+          className="mt-6"
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+        />
+      ) : null}
     </PageLayout>
   );
 }
+

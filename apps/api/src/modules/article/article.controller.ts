@@ -32,11 +32,12 @@ export class ArticleController {
   findAll(
     @Query('status') status?: string,
     @Query('category_id') categoryId?: string,
+    @Query('q') q?: string,
     @Query('skip') skip = '0',
     @Query('take') take = '20',
   ): Promise<ArticleListResult> {
     return this.articleService.findAll(
-      { status, category_id: categoryId !== undefined ? Number(categoryId) : undefined },
+      { q, status, category_id: categoryId !== undefined ? Number(categoryId) : undefined },
       Number(skip),
       Number(take),
     );

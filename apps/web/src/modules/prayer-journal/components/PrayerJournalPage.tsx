@@ -3,7 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { BookOpen, ListTodo, Plus, RefreshCw, Search } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Input, cn } from "@/components/ui";
+import { Button, Card, Input, Pagination, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -42,7 +42,12 @@ export function PrayerJournalPage() {
   const canModerate = can(PERMISSIONS.moderateChurchPrayers);
   const canShare = can(PERMISSIONS.shareChurchPrayers) || canManageOwn;
   const canRead = canManageOwn;
-  const prayersQuery = usePrayerJournalQuery({ take: 100 }, isAuthenticated && canRead);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const prayersQuery = usePrayerJournalQuery(
+    { take: pageSize, skip: page * pageSize },
+    isAuthenticated && canRead,
+  );
   const metaQuery = usePrayerJournalMetaQuery(isAuthenticated && canRead);
   const createPrayerMutation = useCreatePrayerMutation();
   const updatePrayerMutation = useUpdatePrayerMutation();
@@ -361,6 +366,18 @@ export function PrayerJournalPage() {
                       ))}
                     </div>
                   )}
+
+                  {/* Pagination */}
+                  {(prayersQuery.data?.total ?? 0) > 0 ? (
+                    <Pagination
+                      className="rounded-2xl"
+                      page={page}
+                      pageSize={pageSize}
+                      total={prayersQuery.data?.total ?? 0}
+                      onPageChange={(p) => setPage(p)}
+                      onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                    />
+                  ) : null}
                 </div>
               </Card>
             </div>

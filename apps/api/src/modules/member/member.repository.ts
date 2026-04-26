@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 
+import { Prisma } from '@prisma/client';
+
 import { PrismaService } from '../../database/prisma.service';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
@@ -46,8 +48,24 @@ function toDto(u: {
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(skip: number, take: number): Promise<MemberListResult> {
-    const where = { deleted_at: null };
+  async findAll(skip: number, take: number, q?: string): Promise<MemberListResult> {
+    const where: Prisma.UserWhereInput = {
+      deleted_at: null,
+      ...(q && {
+        OR: [
+          { email: { contains: q, mode: 'insensitive' } },
+          { username: { contains: q, mode: 'insensitive' } },
+          {
+            profile: {
+              OR: [
+                { first_name: { contains: q, mode: 'insensitive' } },
+                { last_name: { contains: q, mode: 'insensitive' } },
+              ],
+            },
+          },
+        ],
+      }),
+    };
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({ include: MEMBER_INCLUDE, orderBy: { created_at: 'desc' }, skip, take, where }),

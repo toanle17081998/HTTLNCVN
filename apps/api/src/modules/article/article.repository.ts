@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { Prisma } from '@prisma/client';
+
 import { PrismaService } from '../../database/prisma.service';
 import type {
   ArticleDto,
@@ -14,14 +16,20 @@ export class ArticleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
-    filters: { category_id?: number; status?: string },
+    filters: { category_id?: number; status?: string; q?: string },
     skip: number,
     take: number,
   ): Promise<ArticleListResult> {
-    const where = {
+    const where: Prisma.ArticleWhereInput = {
       deleted_at: null,
       ...(filters.status !== undefined && { status: filters.status }),
       ...(filters.category_id !== undefined && { category_id: filters.category_id }),
+      ...(filters.q && {
+        OR: [
+          { title_en: { contains: filters.q, mode: 'insensitive' } },
+          { title_vi: { contains: filters.q, mode: 'insensitive' } },
+        ],
+      }),
     };
 
     const [items, total] = await this.prisma.$transaction([

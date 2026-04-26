@@ -82,6 +82,7 @@ export class EventController {
       Number(skip),
       Number(take),
       req?.user?.sub,
+      req?.user?.role,
     );
   }
 
@@ -91,7 +92,7 @@ export class EventController {
     @Param('slug') slug: string,
     @Request() req?: { user?: JwtPayload },
   ): Promise<EventDto> {
-    return this.eventService.findBySlug(slug, req?.user?.sub);
+    return this.eventService.findBySlug(slug, req?.user?.sub, req?.user?.role);
   }
 
   @Can('create', 'event')

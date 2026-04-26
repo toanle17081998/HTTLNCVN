@@ -13,7 +13,7 @@ export class ArticleService {
   constructor(private readonly articleRepository: ArticleRepository) {}
 
   findAll(
-    filters: { category_id?: number; status?: string },
+    filters: { category_id?: number; q?: string; status?: string },
     skip: number,
     take: number,
   ): Promise<ArticleListResult> {

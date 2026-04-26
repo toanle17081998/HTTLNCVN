@@ -152,9 +152,13 @@ function toEventDto(event: {
   };
 }
 
-function buildVisibilityWhere(viewerId?: string): Prisma.EventWhereInput {
+function buildVisibilityWhere(viewerId?: string, viewerRole?: string): Prisma.EventWhereInput {
   if (!viewerId) {
     return { audience: 'public' };
+  }
+
+  if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+    return {};
   }
 
   return {
@@ -162,21 +166,6 @@ function buildVisibilityWhere(viewerId?: string): Prisma.EventWhereInput {
       { audience: 'public' },
       { audience: 'church' },
       {
-        audience: 'church_unit',
-        church_unit_targets: {
-          some: {
-            church_unit: {
-              members: {
-                some: {
-                  user_id: viewerId,
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        audience: 'people',
         attendees: {
           some: {
             user_id: viewerId,
@@ -239,8 +228,9 @@ export class EventRepository {
     skip: number,
     take: number,
     viewerId?: string,
+    viewerRole?: string,
   ): Promise<EventListResult> {
-    const and: Prisma.EventWhereInput[] = [buildVisibilityWhere(viewerId), { deleted_at: null }];
+    const and: Prisma.EventWhereInput[] = [buildVisibilityWhere(viewerId, viewerRole), { deleted_at: null }];
 
     if (filters.audience !== undefined) {
       and.push({ audience: filters.audience });
@@ -287,14 +277,14 @@ export class EventRepository {
     };
   }
 
-  async findBySlug(slug: string, viewerId?: string): Promise<EventDto | null> {
+  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<EventDto | null> {
     const event = await this.prisma.event.findFirst({
       include: EVENT_INCLUDE,
       where: {
         AND: [
           { deleted_at: null },
           { slug },
-          buildVisibilityWhere(viewerId),
+          buildVisibilityWhere(viewerId, viewerRole),
         ],
       },
     });
@@ -306,7 +296,6 @@ export class EventRepository {
     const event = await this.prisma.event.findFirst({
       include: EVENT_INCLUDE,
       where: {
-        deleted_at: null,
         slug,
       },
     });
@@ -372,6 +361,24 @@ export class EventRepository {
     const churchUnitIds = [...new Set(dto.church_unit_ids ?? [])];
     const userIds = [...new Set(dto.user_ids ?? [])];
 
+    // If audience is church_unit, we also add all members of those units to userIds
+    // for targeting/attendance tracking as per requirements.
+    if (dto.audience === 'church_unit' && churchUnitIds.length > 0) {
+      const units = await this.prisma.churchUnit.findMany({
+        where: { id: { in: churchUnitIds } },
+        select: {
+          leader_id: true,
+          members: { select: { user_id: true } },
+        },
+      });
+
+      for (const unit of units) {
+        if (unit.leader_id) userIds.push(unit.leader_id);
+        userIds.push(...unit.members.map((m) => m.user_id));
+      }
+      userIds.splice(0, userIds.length, ...new Set(userIds));
+    }
+
     const event = await this.prisma.event.create({
       data: {
         audience: dto.audience ?? 'public',
@@ -398,6 +405,7 @@ export class EventRepository {
           attendees: {
             createMany: {
               data: userIds.map((userId) => ({ user_id: userId })),
+              skipDuplicates: true,
             },
           },
         }),
@@ -415,7 +423,7 @@ export class EventRepository {
 
     const event = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.event.findUnique({
-        select: { id: true },
+        select: { id: true, audience: true },
         where: { slug },
       });
 
@@ -423,7 +431,7 @@ export class EventRepository {
         return null;
       }
 
-      await tx.event.update({
+      const updated = await tx.event.update({
         data: {
           ...(dto.audience !== undefined && { audience: dto.audience }),
           ...(dto.category_id !== undefined && { category_id: dto.category_id ?? null }),
@@ -441,6 +449,7 @@ export class EventRepository {
         where: { id: existing.id },
       });
 
+      // Update church unit targets
       if (churchUnitIds !== undefined) {
         await tx.eventChurchUnitTarget.deleteMany({ where: { event_id: existing.id } });
         if (churchUnitIds.length > 0) {
@@ -453,15 +462,65 @@ export class EventRepository {
         }
       }
 
-      if (userIds !== undefined) {
-        await tx.eventAttendance.deleteMany({ where: { event_id: existing.id } });
-        if (userIds.length > 0) {
-          await tx.eventAttendance.createMany({
-            data: userIds.map((userId) => ({
-              event_id: existing.id,
-              user_id: userId,
-            })),
+      // Sync attendees if audience or targets changed
+      if (
+        dto.audience !== undefined ||
+        churchUnitIds !== undefined ||
+        userIds !== undefined
+      ) {
+        const finalAudience = dto.audience ?? updated.audience;
+        
+        // Clear existing attendees for targeted audiences
+        if (finalAudience === 'church_unit' || finalAudience === 'people') {
+          // Fetch current attendees before clearing to preserve them if not provided in DTO
+          const currentAttendees = await tx.eventAttendance.findMany({
+            where: { event_id: existing.id },
+            select: { user_id: true }
           });
+
+          await tx.eventAttendance.deleteMany({ where: { event_id: existing.id } });
+
+          let finalUserIds: string[] = [];
+
+          if (finalAudience === 'people') {
+            finalUserIds = userIds ?? currentAttendees.map(a => a.user_id);
+          } else if (finalAudience === 'church_unit') {
+            let unitIds: string[] = [];
+            if (churchUnitIds !== undefined) {
+              unitIds = churchUnitIds;
+            } else {
+              const currentUnits = await tx.eventChurchUnitTarget.findMany({
+                where: { event_id: existing.id },
+                select: { church_unit_id: true }
+              });
+              unitIds = currentUnits.map(t => t.church_unit_id);
+            }
+
+            const units = await tx.churchUnit.findMany({
+              where: { id: { in: unitIds } },
+              select: {
+                leader_id: true,
+                members: { select: { user_id: true } },
+              },
+            });
+            const memberUserIds = units.flatMap((u) =>
+              [u.leader_id, ...u.members.map((m) => m.user_id)].filter(Boolean),
+            ) as string[];
+            finalUserIds = [...new Set(memberUserIds)];
+          }
+
+          if (finalUserIds.length > 0) {
+            await tx.eventAttendance.createMany({
+              data: finalUserIds.map(userId => ({
+                event_id: existing.id,
+                user_id: userId,
+              })),
+              skipDuplicates: true,
+            });
+          }
+        } else {
+          // For public/church, clear targeted attendees
+          await tx.eventAttendance.deleteMany({ where: { event_id: existing.id } });
         }
       }
 

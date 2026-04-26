@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Edit3, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, cn } from "@/components/ui";
+import { Button, Card, FormField, Input, Pagination, Select, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -96,44 +96,36 @@ export function MemberPage({ admin = false }: MemberPageProps) {
   const canUpdateMembers = can(PERMISSIONS.updateChurchMembers);
   const canDeleteMembers = can(PERMISSIONS.deleteChurchMembers);
 
-  const membersQuery = useMembersQuery({ take: 100 }, isAuthenticated && canReadMembers);
+  const [q, setQ] = useState("");
+  const [queryInput, setQueryInput] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+
+  const membersQuery = useMembersQuery(
+    { take: pageSize, skip: page * pageSize, q: q || undefined },
+    isAuthenticated && canReadMembers,
+  );
   const createMemberMutation = useCreateMemberMutation();
   const updateMemberMutation = useUpdateMemberMutation();
   const deleteMemberMutation = useDeleteMemberMutation();
 
   const members = membersQuery.data?.items ?? [];
-  const [query, setQuery] = useState("");
+  const total = membersQuery.data?.total ?? 0;
+  const activeCount = members.filter((member) => member.status === "active").length;
+  const adminCount = members.filter((member) => member.role.includes("admin")).length;
+  const pendingCount = members.filter((member) => member.status === "pending").length;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [form, setForm] = useState<MemberForm>(() => createEmptyForm());
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const visibleMembers = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+  const visibleMembers = members;
 
-    if (!normalizedQuery) {
-      return members;
-    }
-
-    return members.filter((member) =>
-      [
-        displayName(member),
-        member.email,
-        member.username,
-        member.role,
-        member.status,
-        member.profile?.phone ?? "",
-      ].some((value) => value.toLowerCase().includes(normalizedQuery)),
-    );
-  }, [members, query]);
-
-  const activeCount = members.filter((member) => member.status === "active").length;
-  const adminCount = members.filter((member) => member.role.includes("admin")).length;
-  const pendingCount = members.filter((member) => member.status === "pending").length;
-
-  const isSaving = createMemberMutation.isPending || updateMemberMutation.isPending;
   const mutationError =
     createMemberMutation.error ?? updateMemberMutation.error ?? deleteMemberMutation.error;
+
+  const isSaving = createMemberMutation.isPending || updateMemberMutation.isPending;
 
   function openCreateModal() {
     setEditingMember(null);
@@ -300,18 +292,20 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                   />
                   <Input
                     className="h-11 rounded-xl pl-11 shadow-sm"
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(event) => setQueryInput(event.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { setQ(queryInput.trim()); setPage(0); }
+                    }}
                     placeholder={t("admin.members.search")}
-                    value={query}
+                    value={queryInput}
                   />
                 </div>
                 <Button
-                  aria-label={t("admin.members.refresh")}
-                  className="h-11 w-11 shrink-0 rounded-xl"
-                  onClick={() => membersQuery.refetch()}
+                  className="h-11 shrink-0 rounded-xl"
+                  onClick={() => { setQ(queryInput.trim()); setPage(0); }}
                   variant="secondary"
                 >
-                  <RefreshCw aria-hidden="true" className={cn("h-4 w-4", membersQuery.isFetching ? "animate-spin" : "")} />
+                  <Search aria-hidden="true" className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -408,6 +402,18 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                 </div>
               ) : null}
             </div>
+
+            {/* Pagination */}
+            {total > 0 ? (
+              <Pagination
+                className="rounded-none border-x-0 border-b-0"
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                onPageChange={setPage}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              />
+            ) : null}
           </Card>
         </>
       )}

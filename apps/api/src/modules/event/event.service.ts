@@ -30,15 +30,16 @@ export class EventService {
     skip: number,
     take: number,
     viewerId?: string,
+    viewerRole?: string,
   ): Promise<EventListResult> {
     const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
     const safeTake = Number.isFinite(take) && take > 0 ? Math.min(Math.floor(take), 100) : 20;
 
-    return this.eventRepository.findAll(filters, safeSkip, safeTake, viewerId);
+    return this.eventRepository.findAll(filters, safeSkip, safeTake, viewerId, viewerRole);
   }
 
-  async findBySlug(slug: string, viewerId?: string): Promise<EventDto> {
-    const event = await this.eventRepository.findBySlug(slug, viewerId);
+  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<EventDto> {
+    const event = await this.eventRepository.findBySlug(slug, viewerId, viewerRole);
 
     if (!event) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
@@ -88,7 +89,7 @@ export class EventService {
     if (!existing) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
     }
-    await this.validateWrite(dto);
+    await this.validateWrite(dto, existing.id);
 
     const event = await this.eventRepository.update(slug, dto);
 
@@ -107,13 +108,24 @@ export class EventService {
     await this.eventRepository.delete(slug);
   }
 
-  private async validateWrite(dto: CreateEventDto | UpdateEventDto): Promise<void> {
+  private async validateWrite(dto: CreateEventDto | UpdateEventDto, currentEventId?: string): Promise<void> {
     if ('title' in dto && dto.title !== undefined && !dto.title.trim()) {
       throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Event title is required.' });
     }
 
-    if ('slug' in dto && dto.slug !== undefined && !dto.slug.trim()) {
-      throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Event slug is required.' });
+    if ('slug' in dto && dto.slug !== undefined) {
+      const slug = dto.slug.trim();
+      if (!slug) {
+        throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Event slug is required.' });
+      }
+
+      const existing = await this.eventRepository.findBySlugForWrite(slug);
+      if (existing && existing.id !== currentEventId) {
+        throw new BadRequestException({
+          code: 'BAD_REQUEST',
+          message: 'Event slug already exists.',
+        });
+      }
     }
 
     if (dto.audience !== undefined && !DEFAULT_EVENT_AUDIENCES.includes(dto.audience as never)) {

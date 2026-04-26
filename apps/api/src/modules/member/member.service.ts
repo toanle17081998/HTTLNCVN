@@ -9,11 +9,11 @@ const allowedStatuses = new Set(['active', 'pending', 'suspended']);
 export class MemberService {
   constructor(private readonly memberRepository: MemberRepository) {}
 
-  findAll(skip: number, take: number): Promise<MemberListResult> {
+  findAll(skip: number, take: number, q?: string): Promise<MemberListResult> {
     const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
     const safeTake = Number.isFinite(take) && take > 0 ? Math.min(Math.floor(take), 100) : 20;
 
-    return this.memberRepository.findAll(safeSkip, safeTake);
+    return this.memberRepository.findAll(safeSkip, safeTake, q);
   }
 
   async findById(id: string): Promise<MemberDto> {
