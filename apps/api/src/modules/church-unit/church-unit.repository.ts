@@ -183,7 +183,7 @@ export class ChurchUnitRepository {
   }
 
   async create(dto: CreateChurchUnitDto): Promise<ChurchUnitDto> {
-    const memberIds = [...new Set(dto.member_ids ?? [])];
+    const memberIds = [...new Set([...(dto.member_ids ?? []), dto.leader_id].filter(Boolean) as string[])];
 
     const unit = await this.prisma.churchUnit.create({
       data: {
@@ -209,9 +209,21 @@ export class ChurchUnitRepository {
   }
 
   async update(id: string, dto: UpdateChurchUnitDto): Promise<ChurchUnitDto | null> {
-    const memberIds = dto.member_ids ? [...new Set(dto.member_ids)] : null;
-
     const unit = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.churchUnit.findUnique({
+        select: { leader_id: true },
+        where: { id },
+      });
+
+      if (!existing) {
+        return null;
+      }
+
+      const finalLeaderId = dto.leader_id !== undefined ? dto.leader_id : existing.leader_id;
+      const memberIds = dto.member_ids
+        ? [...new Set([...dto.member_ids, finalLeaderId].filter(Boolean) as string[])]
+        : null;
+
       await tx.churchUnit.update({
         data: {
           ...(dto.description !== undefined && { description: dto.description ?? null }),

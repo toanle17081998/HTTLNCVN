@@ -1,7 +1,5 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Clock3, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, MapPin, X } from "lucide-react";
 import { Button, Card, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { EventItem } from "@services/event";
@@ -11,9 +9,12 @@ interface EventCalendarProps {
   onEventClick?: (event: EventItem) => void;
 }
 
+const MAX_VISIBLE_EVENTS = 3;
+
 export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
   const { locale, t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDayEvents, setSelectedDayEvents] = useState<{ date: Date; events: EventItem[] } | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -174,63 +175,132 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
-        {weekDays.map((day, i) => (
-          <div
-            key={i}
-            className="py-3 text-center text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]"
-          >
-            {day}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="min-w-[800px] lg:min-w-full">
+          <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
+            {weekDays.map((day, i) => (
+              <div
+                key={i}
+                className="py-3 text-center text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]"
+              >
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
+
+          <div className="max-h-[70vh] overflow-y-auto snap-y snap-proximity scroll-smooth bg-[var(--border-subtle)] border-b border-[var(--border-subtle)]">
+            {Array.from({ length: 6 }).map((_, weekIdx) => (
+              <div key={weekIdx} className="grid grid-cols-7 gap-[1px] snap-start">
+                {calendarDays.slice(weekIdx * 7, (weekIdx + 1) * 7).map((day, i) => {
+                  const dateKey = `${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`;
+                  const dayEvents = eventsByDay[dateKey] || [];
+                  const today = isToday(day.date);
+
+                  const visibleEvents = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
+                  const hasMore = dayEvents.length > MAX_VISIBLE_EVENTS;
+                  const moreCount = dayEvents.length - MAX_VISIBLE_EVENTS;
+
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "min-h-[140px] bg-[var(--bg-surface)] p-1.5 transition-all duration-200 flex flex-col border-b",
+                        !day.isCurrentMonth && "bg-[var(--bg-base)]/40 text-[var(--text-tertiary)]",
+                        day.isCurrentMonth && "hover:bg-[var(--brand-muted)]/5"
+                      )}
+                    >
+                      <div className="flex items-center justify-center mb-1">
+                        <span
+                          className={cn(
+                            "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
+                            today
+                              ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-primary)]/20"
+                              : day.isCurrentMonth
+                                ? "text-[var(--text-primary)] hover:bg-[var(--bg-base)]"
+                                : "text-[var(--text-tertiary)]"
+                          )}
+                        >
+                          {day.date.getDate()}
+                        </span>
+                      </div>
+                      <div className="flex-1 space-y-0.5 overflow-hidden">
+                        {visibleEvents.map((event) => (
+                          <button
+                            key={event.id}
+                            onClick={() => onEventClick?.(event)}
+                            className="w-full text-left px-2 py-1 rounded-md transition-all group relative overflow-hidden flex items-center gap-1.5 hover:brightness-95 active:scale-[0.98]"
+                            style={{
+                              backgroundColor: `${event.color || "var(--brand-primary)"}15`,
+                              borderLeft: `3px solid ${event.color || "var(--brand-primary)"}`
+                            }}
+                          >
+                            <span className="text-[10px] font-bold text-[var(--text-primary)] truncate">
+                              {new Intl.DateTimeFormat(locale, {
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: false,
+                              }).format(new Date(event.starts_at))} {event.title}
+                            </span>
+                          </button>
+                        ))}
+                        {hasMore && (
+                          <button
+                            onClick={() => setSelectedDayEvents({ date: day.date, events: dayEvents })}
+                            className="w-full text-left px-2 py-0.5 text-[10px] font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-muted)]/20 rounded-md transition-colors mt-1"
+                          >
+                            +{moreCount} {t("event.calendar.more") || "more"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-7 grid-rows-6 bg-[var(--border-subtle)] gap-[1px]">
-        {calendarDays.map((day, i) => {
-          const dateKey = `${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`;
-          const dayEvents = eventsByDay[dateKey] || [];
-          const today = isToday(day.date);
-
-          return (
-            <div
-              key={i}
-              className={cn(
-                "min-h-[120px] bg-[var(--bg-surface)] p-2 transition-all duration-200",
-                !day.isCurrentMonth && "bg-[var(--bg-base)]/40 text-[var(--text-tertiary)]",
-                day.isCurrentMonth && "hover:bg-[var(--brand-muted)]/10"
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold transition-all",
-                    today
-                      ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-primary)]/20 scale-110"
-                      : day.isCurrentMonth
-                      ? "text-[var(--text-primary)] hover:bg-[var(--bg-base)]"
-                      : "text-[var(--text-tertiary)]"
-                  )}
+      {selectedDayEvents && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-[var(--bg-scrim)]/40 backdrop-blur-sm"
+            onClick={() => setSelectedDayEvents(null)}
+          />
+          <Card className="relative w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-6 py-4">
+              <h3 className="text-lg font-bold text-[var(--text-primary)]">
+                {new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(selectedDayEvents.date)}
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-lg"
+                onClick={() => setSelectedDayEvents(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3 snap-y snap-proximity scroll-smooth">
+              {selectedDayEvents.events.map((event) => (
+                <button
+                  key={event.id}
+                  onClick={() => {
+                    onEventClick?.(event);
+                    setSelectedDayEvents(null);
+                  }}
+                  className="w-full text-left p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-all shadow-sm flex items-start gap-3 group snap-start"
                 >
-                  {day.date.getDate()}
-                </span>
-              </div>
-              <div className="space-y-1.5">
-                {dayEvents.map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => onEventClick?.(event)}
-                    className="w-full text-left p-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-all shadow-sm hover:shadow-md group relative overflow-hidden"
-                    style={{ borderLeft: `4px solid ${event.color || "var(--brand-primary)"}` }}
-                  >
-                    <div 
-                      className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity" 
-                      style={{ backgroundColor: event.color || "var(--brand-primary)" }}
-                    />
-                    <p className="text-xs font-bold truncate text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] leading-tight">
+                  <div
+                    className="w-1.5 h-10 rounded-full shrink-0"
+                    style={{ backgroundColor: event.color || "var(--brand-primary)" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
                       {event.title}
                     </p>
-                    <div className="flex items-center gap-1 mt-1 text-[10px] text-[var(--text-tertiary)] font-medium">
-                      <Clock3 className="h-3 w-3" />
+                    <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-tertiary)] font-medium">
+                      <Clock3 className="h-3.5 w-3.5" />
                       <span>
                         {new Intl.DateTimeFormat(locale, {
                           hour: "numeric",
@@ -238,14 +308,21 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                           hour12: false,
                         }).format(new Date(event.starts_at))}
                       </span>
+                      {event.location && (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span className="truncate">{event.location}</span>
+                        </>
+                      )}
                     </div>
-                  </button>
-                ))}
-              </div>
+                  </div>
+                </button>
+              ))}
             </div>
-          );
-        })}
-      </div>
+          </Card>
+        </div>
+      )}
     </Card>
   );
 }

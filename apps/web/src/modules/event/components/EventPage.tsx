@@ -564,9 +564,9 @@ export function EventPage() {
           ) : null}
 
           {viewMode === "list" ? (
-            <div className="grid divide-y divide-[var(--border-subtle)]">
+            <div className="grid divide-y divide-[var(--border-subtle)] max-h-[70vh] overflow-y-auto snap-y snap-proximity scroll-smooth">
               {visibleEvents.map((event) => (
-                <div className="px-6 py-5" key={event.id}>
+                <div className="px-6 py-5 snap-start" key={event.id}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">

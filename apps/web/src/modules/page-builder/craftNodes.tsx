@@ -456,14 +456,18 @@ function defaultBoxProps(overrides: Partial<BoxProps> = {}): BoxProps {
 
 export function PageCanvas({
   children,
+  snapType = "none",
   ...props
-}: BoxProps & { children?: ReactNode }) {
+}: BoxProps & { children?: ReactNode; snapType?: "mandatory" | "proximity" | "none" }) {
   const isMobile = useIsMobile();
 
   return (
     <NodeFrame className="min-h-[70vh] rounded-2xl">
       <div
-        className="mx-auto min-h-[70vh] w-full"
+        className={cn(
+          "mx-auto min-h-[70vh] w-full",
+          snapType !== "none" && (snapType === "mandatory" ? "snap-y snap-mandatory" : "snap-y snap-proximity")
+        )}
         style={{
           ...buildBoxStyle(props),
           ...(isMobile
@@ -478,7 +482,15 @@ export function PageCanvas({
             : {}),
         }}
       >
-        <div className="grid gap-6">{children}</div>
+        <div className={cn("grid gap-6", snapType !== "none" && "snap-y snap-mandatory")}>
+          {snapType !== "none"
+            ? (children as any)?.map?.((child: any, i: number) => (
+                <div className="snap-start" key={i}>
+                  {child}
+                </div>
+              )) || children
+            : children}
+        </div>
       </div>
     </NodeFrame>
   );
@@ -520,7 +532,7 @@ function getGridStyle(props: LayoutBlockProps) {
   } satisfies CSSProperties;
 }
 
-export function SectionBlock({ children, ...props }: LayoutBlockProps) {
+export function SectionBlock({ children, snapAlign = "none", ...props }: LayoutBlockProps & { snapAlign?: "start" | "center" | "none" }) {
   const isMobile = useIsMobile();
 
   return (
@@ -586,7 +598,7 @@ SectionBlock.craft = {
   related: { settings: SectionBlockSettings },
 };
 
-export function ColumnsBlock({ children, ...props }: LayoutBlockProps) {
+export function ColumnsBlock({ children, snapAlign = "none", ...props }: LayoutBlockProps & { snapAlign?: "start" | "center" | "none" }) {
   const isMobile = useIsMobile();
 
   return (
@@ -636,7 +648,7 @@ function stackStyle(props: StackProps, direction: "row" | "column") {
     flexDirection: direction,
     gap: withUnitFallback(props.gap, 16),
     justifyContent: props.justifyContent || "flex-start",
-    flexWrap: props.wrap || "nowrap",
+    flexWrap: (props.wrap as any) || "nowrap",
   } satisfies CSSProperties;
 }
 
@@ -692,6 +704,7 @@ export function RowBlock({ children, ...props }: StackProps) {
               ...mobileBoxOverrides(props),
               flexDirection: "column",
               gap: capSpacing(props.gap, 14, "14px"),
+              flexWrap: "nowrap" as any,
             }
             : {}),
         }}
@@ -727,6 +740,7 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
             ? {
               ...mobileBoxOverrides(props),
               gap: capSpacing(props.gap, 14, "14px"),
+              flexWrap: "nowrap" as any,
             }
             : {}),
         }}
@@ -1077,7 +1091,7 @@ export function ImageBlock({
                 alt={alt}
                 className="block h-full w-full"
                 src={effectiveUrl}
-                style={{ objectFit: fit }}
+                style={{ objectFit: fit as any }}
               />
             ) : (
               <iframe
@@ -1536,7 +1550,7 @@ function FeedCard({
           <img
             alt={title}
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            src={coverImage}
+            src={coverImage || ""}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
         </>

@@ -205,7 +205,7 @@ export function Header({ pathname }: HeaderProps) {
                 <button
                   onClick={() => setMoreNavOpen(!moreNavOpen)}
                   className={cn(
-                    "flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all",
+                    "hover:cursor-pointer flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all",
                     moreNavOpen
                       ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
                       : "text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--text-primary)]"
