@@ -245,7 +245,13 @@ export class EventRepository {
     }
 
     if (filters.upcoming === true) {
-      and.push({ starts_at: { gte: new Date() } });
+      and.push({
+        OR: [
+          { starts_at: { gte: new Date() } },
+          { ends_at: { gte: new Date() } },
+          { repeat: { not: 'none' } },
+        ],
+      });
     }
 
     if (filters.q) {

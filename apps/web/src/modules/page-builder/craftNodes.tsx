@@ -25,8 +25,8 @@ import {
 import Link from "next/link";
 import { useArticlesQuery } from "@services/article";
 import { useCoursesQuery } from "@services/course";
+import { useEventsQuery } from "@services/event";
 import { Input, Textarea, cn } from "@/components/ui";
-import { eventMockData } from "@/mockData";
 
 type Align = "left" | "center" | "right";
 type SizeValue = number | string;
@@ -485,10 +485,10 @@ export function PageCanvas({
         <div className={cn("grid gap-6", snapType !== "none" && "snap-y snap-mandatory")}>
           {snapType !== "none"
             ? (children as any)?.map?.((child: any, i: number) => (
-                <div className="snap-start" key={i}>
-                  {child}
-                </div>
-              )) || children
+              <div className="snap-start" key={i}>
+                {child}
+              </div>
+            )) || children
             : children}
         </div>
       </div>
@@ -1637,10 +1637,11 @@ export function FeedCarouselBlock({
   const dragDeltaRef = useRef(0);
   const articlesQuery = useArticlesQuery({ status: "published", take: 3 });
   const coursesQuery = useCoursesQuery({ status: "published", take: 3 });
+  const eventsQuery = useEventsQuery({ audience: "public", status: "published", upcoming: true, take: 3 });
 
   const articleItems = articlesQuery.data?.items ?? [];
   const courseItems = coursesQuery.data?.items ?? [];
-  const eventItems = eventMockData.slice(0, 3);
+  const eventItems = eventsQuery.data?.items ?? [];
 
   const items: FeedItem[] =
     feedType === "courses"
@@ -1656,12 +1657,12 @@ export function FeedCarouselBlock({
       }))
       : feedType === "events"
         ? eventItems.map((event) => ({
-          accent: event.color,
+          accent: event.color ?? undefined,
           coverImage: event.cover_image_url ?? null,
-          description: event.description,
+          description: event.description ?? "",
           href: "/event",
           id: event.id,
-          kicker: event.location,
+          kicker: event.location ?? "",
           slug: event.slug,
           title: event.title,
         }))
@@ -1681,7 +1682,9 @@ export function FeedCarouselBlock({
       ? articlesQuery.isLoading
       : feedType === "courses"
         ? coursesQuery.isLoading
-        : false;
+        : feedType === "events"
+          ? eventsQuery.isLoading
+          : false;
 
   const slideInterval = Math.max(1000, parseNumberLike(intervalMs, 5000));
   const [activeIndex, setActiveIndex] = useState(0);
@@ -1770,7 +1773,7 @@ export function FeedCarouselBlock({
           </div>
         ) : items.length ? (
           <div className="grid gap-4">
-            <div className="relative mx-auto w-full max-w-[1100px] overflow-hidden">
+            <div className="relative mx-auto w-full overflow-hidden">
               <div
                 className="overflow-hidden py-2"
                 onPointerCancel={finishDrag}
