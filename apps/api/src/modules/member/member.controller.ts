@@ -11,10 +11,11 @@ export class MemberController {
   @Get()
   @Can('read', 'member')
   findAll(
+    @Query('q') q?: string,
     @Query('skip') skip = '0',
     @Query('take') take = '20',
   ): Promise<MemberListResult> {
-    return this.memberService.findAll(Number(skip), Number(take));
+    return this.memberService.findAll(Number(skip), Number(take), q);
   }
 
   @Get(':id')

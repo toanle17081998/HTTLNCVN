@@ -40,6 +40,7 @@ export type ArticleListParams = {
   skip?: number;
   status?: string;
   take?: number;
+  q?: string;
 };
 
 export type CreateArticleDto = {
@@ -62,6 +63,7 @@ function articleListSearch(params: ArticleListParams = {}) {
   if (params.category_id !== undefined) search.set("category_id", String(params.category_id));
   if (params.skip !== undefined) search.set("skip", String(params.skip));
   if (params.take !== undefined) search.set("take", String(params.take));
+  if (params.q) search.set("q", params.q);
   const query = search.toString();
   return query ? `?${query}` : "";
 }

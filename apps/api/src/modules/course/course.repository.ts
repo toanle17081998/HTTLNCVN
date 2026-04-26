@@ -206,11 +206,17 @@ export class CourseRepository {
     };
   }
 
-  async findAll(skip: number, take: number, status?: string, level?: string): Promise<CourseListResult> {
-    const where = {
+  async findAll(skip: number, take: number, status?: string, level?: string, q?: string): Promise<CourseListResult> {
+    const where: Prisma.CourseWhereInput = {
       deleted_at: null,
       ...(status !== undefined && { status }),
       ...(level !== undefined && { level }),
+      ...(q && {
+        OR: [
+          { title_en: { contains: q, mode: 'insensitive' } },
+          { title_vi: { contains: q, mode: 'insensitive' } },
+        ],
+      }),
     };
 
     const [items, total] = await this.prisma.$transaction([

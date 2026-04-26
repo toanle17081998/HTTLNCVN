@@ -47,6 +47,7 @@ export type CourseListParams = {
   skip?: number;
   status?: CourseStatus;
   take?: number;
+  q?: string;
 };
 
 export type CreateCourseDto = {
@@ -70,6 +71,7 @@ function courseListSearch(params: CourseListParams = {}) {
   if (params.level) search.set("level", params.level);
   if (params.skip !== undefined) search.set("skip", String(params.skip));
   if (params.take !== undefined) search.set("take", String(params.take));
+  if (params.q) search.set("q", params.q);
   const query = search.toString();
   return query ? `?${query}` : "";
 }

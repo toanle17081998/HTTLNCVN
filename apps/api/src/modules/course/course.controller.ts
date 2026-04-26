@@ -47,8 +47,9 @@ export class CourseController {
     @Query('take') take = '20',
     @Query('status') status?: string,
     @Query('level') level?: string,
+    @Query('q') q?: string,
   ): Promise<CourseListResult> {
-    return this.courseService.findAll(Number(skip), Number(take), status, level);
+    return this.courseService.findAll(Number(skip), Number(take), status, level, q);
   }
 
   @Public()

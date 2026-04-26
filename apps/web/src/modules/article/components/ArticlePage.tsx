@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, cn } from "@/components/ui";
+import { Button, Card, Pagination, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -14,22 +14,42 @@ import {
   useDeleteArticleMutation,
 } from "@services/article";
 
+const PAGE_SIZE_DEFAULT = 12;
+
 export function ArticlePage() {
   const { can } = useAuth();
   const { t, locale } = useTranslation();
   const { confirm } = useFeedback();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
-  
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+
   const canManageArticle = can(PERMISSIONS.manageArticle);
-  
+
   const categoriesQuery = useArticleCategoriesQuery();
   const articlesQuery = useArticlesQuery({
-    take: 50,
+    take: pageSize,
+    skip: page * pageSize,
     status: canManageArticle ? undefined : "published",
     category_id: selectedCategoryId,
+    q: q || undefined,
   });
-  
+
   const deleteArticle = useDeleteArticleMutation();
+
+  const total = articlesQuery.data?.total ?? 0;
+
+  const handleSearch = useCallback(() => {
+    setQ(searchInput.trim());
+    setPage(0);
+  }, [searchInput]);
+
+  const handleCategoryChange = (id: number | undefined) => {
+    setSelectedCategoryId(id);
+    setPage(0);
+  };
 
   async function handleDelete(slug: string) {
     const ok = await confirm({
@@ -57,11 +77,26 @@ export function ArticlePage() {
       eyebrow={t("page.article.eyebrow")}
       title={t("page.article.title")}
     >
+      {/* Search bar */}
+      <div className="mb-4 flex gap-2">
+        <input
+          className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
+          placeholder="Search articles…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+        />
+        <Button size="sm" variant="primary" onClick={handleSearch}>
+          Search
+        </Button>
+      </div>
+
+      {/* Category filters */}
       <div className="mb-8 flex flex-wrap gap-2">
         <Button
           size="sm"
           variant={selectedCategoryId === undefined ? "primary" : "secondary"}
-          onClick={() => setSelectedCategoryId(undefined)}
+          onClick={() => handleCategoryChange(undefined)}
         >
           {t("prayer.filter.all")}
         </Button>
@@ -70,7 +105,7 @@ export function ArticlePage() {
             key={cat.id}
             size="sm"
             variant={selectedCategoryId === cat.id ? "primary" : "secondary"}
-            onClick={() => setSelectedCategoryId(cat.id)}
+            onClick={() => handleCategoryChange(cat.id)}
           >
             {cat.name}
           </Button>
@@ -170,9 +205,22 @@ export function ArticlePage() {
       {articlesQuery.data && articlesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed rounded-2xl">
           <div className="text-4xl mb-4 opacity-20">📭</div>
-          No articles found in this category.
+          No articles found.
         </Card>
+      ) : null}
+
+      {/* Pagination */}
+      {total > 0 ? (
+        <Pagination
+          className="mt-6"
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+        />
       ) : null}
     </PageLayout>
   );
 }
+

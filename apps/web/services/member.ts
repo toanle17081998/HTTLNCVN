@@ -31,6 +31,7 @@ export type MemberListResult = {
 export type MemberListParams = {
   skip?: number;
   take?: number;
+  q?: string;
 };
 
 export type CreateMemberDto = {
@@ -48,6 +49,7 @@ function memberListSearch(params: MemberListParams = {}) {
   const search = new URLSearchParams();
   if (params.skip !== undefined) search.set("skip", String(params.skip));
   if (params.take !== undefined) search.set("take", String(params.take));
+  if (params.q) search.set("q", params.q);
   const query = search.toString();
   return query ? `?${query}` : "";
 }
