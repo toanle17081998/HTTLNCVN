@@ -194,7 +194,7 @@ function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
   );
 }
 
-export function CraftPageEditor() {
+export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const searchParams = useSearchParams();
   const requestedRoute = searchParams.get("route");
   const pagesQuery = usePagesQuery();
@@ -202,8 +202,8 @@ export function CraftPageEditor() {
   const queryClient = useQueryClient();
   const { confirm, toast } = useFeedback();
   const { t } = useTranslation();
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(initialSlug || null);
+  const [isCreating, setIsCreating] = useState(initialSlug === "");
   const pages = pagesQuery.data?.items ?? [];
 
   const effectiveSlug = useMemo(() => {

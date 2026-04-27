@@ -4,5 +4,6 @@ export { FormField } from "./FormField";
 export { Input } from "./Input";
 export { Pagination } from "./Pagination";
 export { Select } from "./Select";
+export { Switch } from "./Switch";
 export { Textarea } from "./Textarea";
 export { cn } from "./cn";
