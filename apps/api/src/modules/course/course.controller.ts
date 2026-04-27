@@ -35,6 +35,7 @@ import type {
   UpdateQuestionTemplateDto,
   UpdateQuizDto,
   EnrollOthersDto,
+  EnrollPreviewDto,
 } from './course.types';
 
 @Controller('courses')
@@ -99,6 +100,15 @@ export class CourseController {
     @Body() dto: EnrollOthersDto,
   ): Promise<void> {
     return this.courseService.enrollOthers(id, dto);
+  }
+
+  @Post(':id/enroll-preview')
+  @Can('update', 'course')
+  previewEnrollment(
+    @Param('id') id: string,
+    @Body() dto: EnrollOthersDto,
+  ): Promise<EnrollPreviewDto> {
+    return this.courseService.previewEnrollment(id, dto);
   }
 
   @Get(':slug/lessons/:lessonId')

@@ -119,8 +119,7 @@ export function useLoginMutation() {
     mutationFn: authApi.login,
     onSuccess(tokens) {
       setStoredTokens(tokens);
-      queryClient.removeQueries({ queryKey: authKeys.all });
-      queryClient.invalidateQueries({ queryKey: authKeys.all });
+      queryClient.invalidateQueries();
     },
   });
 }
@@ -133,7 +132,6 @@ export function useLogoutMutation() {
     onSuccess() {
       clearStoredTokens();
       queryClient.setQueryData(authKeys.session(), null);
-      queryClient.removeQueries({ queryKey: authKeys.all });
       queryClient.invalidateQueries();
     },
   });

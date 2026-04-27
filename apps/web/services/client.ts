@@ -107,6 +107,12 @@ async function requestWithToken<T>(
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   let token = options.token;
+  
+  // If no token provided in options, try to get from storage
+  if (token === undefined) {
+    token = readStoredTokens()?.accessToken;
+  }
+
   let { payload, response } = await requestWithToken<T>(path, options, token);
 
   if (response.status === 401 && token) {

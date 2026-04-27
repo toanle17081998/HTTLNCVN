@@ -179,6 +179,22 @@ export type SubmitAnswerResultDto = {
 };
 
 export type EnrollOthersDto = {
-  user_ids?: string[];
+  emails?: string[];
   church_unit_id?: string;
+  member_ids?: string[];
+};
+
+export type EnrollPreviewMemberDto = {
+  id: string;
+  email: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  is_enrolled: boolean;
+  is_authorized: boolean;
+};
+
+export type EnrollPreviewDto = {
+  members: EnrollPreviewMemberDto[];
+  invalid_emails: string[];
 };

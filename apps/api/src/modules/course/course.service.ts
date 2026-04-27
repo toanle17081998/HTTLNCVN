@@ -66,6 +66,10 @@ export class CourseService {
     return this.courseRepository.enrollOthers(courseId, dto);
   }
 
+  previewEnrollment(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<import('./course.types').EnrollPreviewDto> {
+    return this.courseRepository.previewEnrollment(courseId, dto);
+  }
+
   async findLessonById(id: string, userId: string, userRole?: string): Promise<LessonDto> {
     const lesson = await this.courseRepository.findLessonById(id, userId, userRole);
 
