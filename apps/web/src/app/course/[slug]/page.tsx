@@ -12,10 +12,10 @@ export async function generateMetadata({ params }: CourseDetailRouteProps): Prom
     const course = await courseApi.detail(slug);
     return {
       title: `${course.title_vi || course.title_en} | HTNC`,
-      description: course.summary ?? undefined,
+      description: course.summary_vi ?? course.summary_en ?? undefined,
       openGraph: {
         title: course.title_vi || course.title_en,
-        description: course.summary ?? undefined,
+        description: course.summary_vi ?? course.summary_en ?? undefined,
         images: course.cover_image_url ? [course.cover_image_url] : [],
         type: "website",
       },

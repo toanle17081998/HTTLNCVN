@@ -48,10 +48,13 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const course = courseQuery.data;
 
-  const descriptionHtml = course?.description
-    ? isRichTextHtml(course.description)
-      ? course.description
-      : markdownToHtml(course.description)
+  const rawDescription = locale === "vi"
+    ? (course?.description_vi || course?.description_en)
+    : (course?.description_en || course?.description_vi);
+  const descriptionHtml = rawDescription
+    ? isRichTextHtml(rawDescription)
+      ? rawDescription
+      : markdownToHtml(rawDescription)
     : "";
 
   async function handleStartQuiz(quiz: QuizListItem) {
@@ -61,7 +64,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
   return (
     <PageLayout
-      description={course?.summary || (locale === "vi" ? "Bài học và câu hỏi trắc nghiệm của khóa học." : "Course lessons and quizzes.")}
+      description={(locale === "vi" ? (course?.summary_vi || course?.summary_en) : (course?.summary_en || course?.summary_vi)) ?? (locale === "vi" ? "Bài học và câu hỏi trắc nghiệm của khóa học." : "Course lessons and quizzes.")}
       eyebrow={t("nav.course.label")}
       title={locale === "vi" ? (course?.title_vi || course?.title_en || "Khóa học") : (course?.title_en || course?.title_vi || "Course")}
     >

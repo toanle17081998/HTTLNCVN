@@ -68,9 +68,9 @@ export function getEnv(): EnvShape {
     appName: process.env.APP_NAME ?? 'htnc-api',
     databaseUrl: requireString('DATABASE_URL'),
     jwt: {
-      accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
+      accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '24h',
       accessSecret: requireString('JWT_ACCESS_SECRET'),
-      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '30d',
       refreshSecret: requireString('JWT_REFRESH_SECRET'),
     },
     port: parsePort('PORT', 3001),

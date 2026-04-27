@@ -20,6 +20,7 @@ import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -236,7 +237,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 ) : canAccessAdmin ? (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {children}
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-12 text-center shadow-sm">

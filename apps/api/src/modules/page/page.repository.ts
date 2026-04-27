@@ -60,7 +60,8 @@ export class PageRepository {
   async create(dto: CreatePageDto, creatorId: string): Promise<PageDto> {
     const page = await this.prisma.page.create({
       data: {
-        content_json: this.parseContent(dto.content),
+        content_json_en: this.parseContent(dto.content_en),
+        content_json_vi: this.parseContent(dto.content_vi),
         created_by: creatorId || null,
         route_path: this.normalizeRoutePath(dto.route_path),
         slug: dto.slug,
@@ -82,7 +83,8 @@ export class PageRepository {
     const page = await this.prisma.page.update({
       where: { id: existing.id },
       data: {
-        ...(dto.content !== undefined ? { content_json: this.parseContent(dto.content) } : {}),
+        ...(dto.content_en !== undefined ? { content_json_en: this.parseContent(dto.content_en) } : {}),
+        ...(dto.content_vi !== undefined ? { content_json_vi: this.parseContent(dto.content_vi) } : {}),
         ...(dto.route_path !== undefined
           ? { route_path: this.normalizeRoutePath(dto.route_path) }
           : {}),
@@ -125,7 +127,8 @@ export class PageRepository {
   }
 
   private toDto(page: {
-    content_json: unknown;
+    content_json_en: unknown;
+    content_json_vi: unknown;
     created_at: Date;
     id: string;
     route_path: string;
@@ -136,7 +139,8 @@ export class PageRepository {
     updated_at: Date;
   }): PageDto {
     return {
-      content: JSON.stringify(page.content_json),
+      content_en: JSON.stringify(page.content_json_en),
+      content_vi: JSON.stringify(page.content_json_vi),
       created_at: page.created_at.toISOString(),
       id: page.id,
       route_path: page.route_path,

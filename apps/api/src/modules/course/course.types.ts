@@ -12,7 +12,8 @@ export type CourseDto = {
   cover_image_url: string | null;
   created_at: string;
   creator: { id: string; username: string } | null;
-  description: string | null;
+  description_en: string | null;
+  description_vi: string | null;
   estimated_duration_minutes: number;
   id: string;
   is_enrolled?: boolean;
@@ -23,7 +24,8 @@ export type CourseDto = {
   published_at: string | null;
   slug: string;
   status: string;
-  summary: string | null;
+  summary_en: string | null;
+  summary_vi: string | null;
   title_en: string;
   title_vi: string;
 };
@@ -38,7 +40,8 @@ export type CourseListDto = {
   published_at: string | null;
   slug: string;
   status: string;
-  summary: string | null;
+  summary_en: string | null;
+  summary_vi: string | null;
   title_en: string;
   title_vi: string;
 };
@@ -50,11 +53,13 @@ export type CourseListResult = {
 
 export type CreateCourseDto = {
   cover_image_url?: string;
-  description?: string;
+  description_en?: string;
+  description_vi?: string;
   estimated_duration_minutes?: number;
   level?: string;
   slug: string;
-  summary?: string;
+  summary_en?: string;
+  summary_vi?: string;
   title_en: string;
   title_vi: string;
 };

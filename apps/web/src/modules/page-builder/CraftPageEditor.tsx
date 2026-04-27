@@ -28,6 +28,7 @@ import { Button, Card, Input, Select, cn } from "@/components/ui";
 import { useAdminLayoutChrome } from "@/modules/admin/components/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { craftResolver, PageBuilderToolbox, PageCanvas, RenderNodeSettings } from "./craftNodes";
 import { createDefaultPageContent, ensureValidPageContent, slugifyPageTitle } from "./defaultContent";
 
@@ -145,8 +146,10 @@ function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
     const slug = slugifyPageTitle(routePath === "/" ? "home" : routePath);
 
     try {
+      const defaultContent = createDefaultPageContent(title, routePath);
       const page = await createPage.mutateAsync({
-        content: createDefaultPageContent(title, routePath),
+        content_en: defaultContent,
+        content_vi: defaultContent,
         route_path: routePath,
         slug,
         title_en: title,
@@ -204,6 +207,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const { t } = useTranslation();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(initialSlug || null);
   const [isCreating, setIsCreating] = useState(initialSlug === "");
+  const [editLang, setEditLang] = useState<"en" | "vi">("vi");
   const pages = pagesQuery.data?.items ?? [];
 
   const effectiveSlug = useMemo(() => {
@@ -223,7 +227,11 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
     if (!selectedPage) return;
 
     try {
-      await updatePage.mutateAsync({ content });
+      if (editLang === "en") {
+        await updatePage.mutateAsync({ content_en: content });
+      } else {
+        await updatePage.mutateAsync({ content_vi: content });
+      }
       toast({ title: t("toast.page.saved"), variant: "success" });
       queryClient.invalidateQueries({ queryKey: pageKeys.resolve(selectedPage.route_path) });
     } catch (error) {
@@ -345,6 +353,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    <LanguageSelector activeLanguage={editLang} onLanguageChange={setEditLang} />
                     <Link href={selectedPage.route_path} target="_blank">
                       <Button size="sm" variant="secondary">
                         <Eye className="mr-2 h-4 w-4" />
@@ -367,7 +376,12 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               </Card>
 
               <BuilderShell
-                content={ensureValidPageContent(selectedPage.content, selectedPage.title_en, selectedPage.route_path)}
+                key={editLang}
+                content={ensureValidPageContent(
+                  editLang === "en" ? selectedPage.content_en : selectedPage.content_vi,
+                  editLang === "en" ? selectedPage.title_en : selectedPage.title_vi,
+                  selectedPage.route_path
+                )}
                 onSave={handleSave}
                 saveLabel={t("pageBuilder.saveLayout")}
                 saving={updatePage.isPending}

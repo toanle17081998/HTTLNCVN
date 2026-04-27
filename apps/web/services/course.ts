@@ -26,14 +26,18 @@ export type CourseListItem = {
   published_at: string | null;
   slug: string;
   status: string;
-  summary: string | null;
+  summary_en: string | null;
+  summary_vi: string | null;
   title_en: string;
   title_vi: string;
 };
 
 export type Course = CourseListItem & {
   created_at: string;
-  description: string | null;
+  description_en: string | null;
+  description_vi: string | null;
+  is_enrolled?: boolean;
+  is_allowed?: boolean;
   lessons: LessonSummary[];
 };
 
@@ -52,11 +56,13 @@ export type CourseListParams = {
 
 export type CreateCourseDto = {
   cover_image_url?: string;
-  description?: string;
+  description_en?: string;
+  description_vi?: string;
   estimated_duration_minutes?: number;
   level?: string;
   slug: string;
-  summary?: string;
+  summary_en?: string;
+  summary_vi?: string;
   title_en: string;
   title_vi: string;
 };

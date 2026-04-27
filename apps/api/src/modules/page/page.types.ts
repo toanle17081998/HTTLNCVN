@@ -1,5 +1,6 @@
 export type PageDto = {
-  content: string;
+  content_en: string;
+  content_vi: string;
   created_at: string;
   id: string;
   route_path: string;
@@ -20,7 +21,8 @@ export type PageListResult = {
 };
 
 export type CreatePageDto = {
-  content: string;
+  content_en: string;
+  content_vi: string;
   route_path: string;
   slug: string;
   title_en: string;

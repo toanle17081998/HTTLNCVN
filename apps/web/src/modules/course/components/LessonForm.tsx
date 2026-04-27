@@ -5,6 +5,7 @@ import { Button, Card, FormField, Input, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { CreateLessonDto, Lesson } from "@services/course";
 import { ModularEditor, type ModularEditorHandle } from "@/modules/article/components/ModularEditor";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 type LessonFormProps = {
   initialData?: Lesson;
@@ -56,23 +57,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
         <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
           {title}
         </h1>
-        <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
-          {(["en", "vi"] as const).map((lang) => (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => setEditLang(lang)}
-              className={cn(
-                "h-8 rounded px-4 text-sm font-semibold transition",
-                editLang === lang
-                  ? "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
-              )}
-            >
-              {lang === "en" ? "English" : "Tiếng Việt"}
-            </button>
-          ))}
-        </div>
+        <LanguageSelector activeLanguage={editLang} onLanguageChange={setEditLang} />
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_10rem]">

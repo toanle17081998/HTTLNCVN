@@ -134,8 +134,10 @@ model Course {
   slug                      String    @unique @db.VarChar(100)
   title_en                  String    @db.VarChar(255)
   title_vi                  String    @db.VarChar(255)
-  summary                   String?   @db.Text
-  description               String?   @db.Text
+  summary_en              String?   @db.Text
+  summary_vi              String?   @db.Text
+  description_en          String?   @db.Text
+  description_vi          String?   @db.Text
   cover_image_url           String?   @db.Text
   level                     String    @default("beginner") @db.VarChar(50)
   status                    String    @default("draft") @db.VarChar(20)
@@ -547,7 +549,8 @@ model Page {
   route_path    String    @unique @db.VarChar(255)
   title_en      String    @db.VarChar(255)
   title_vi      String    @db.VarChar(255)
-  content_json  Json      @default("{}")
+  content_json_en Json      @default("{}")
+  content_json_vi Json      @default("{}")
   status        String    @default("draft") @db.VarChar(50)
   created_by    String?   @db.Uuid
   created_at    DateTime  @default(now()) @db.Timestamptz
