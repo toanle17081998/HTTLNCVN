@@ -34,6 +34,7 @@ import type {
   UpdateLessonDto,
   UpdateQuestionTemplateDto,
   UpdateQuizDto,
+  EnrollOthersDto,
 } from './course.types';
 
 @Controller('courses')
@@ -54,8 +55,8 @@ export class CourseController {
 
   @Public()
   @Get(':slug')
-  findBySlug(@Param('slug') slug: string): Promise<CourseDto> {
-    return this.courseService.findBySlug(slug);
+  findBySlug(@Param('slug') slug: string, @Request() req: { user?: JwtPayload }): Promise<CourseDto> {
+    return this.courseService.findBySlug(slug, req.user?.sub, req.user?.role);
   }
 
   @Can('create', 'course')
@@ -90,10 +91,22 @@ export class CourseController {
     return this.courseService.enroll(id, req.user.sub);
   }
 
-  @Public()
+  @Post(':id/enroll-others')
+  @Can('update', 'course')
+  @HttpCode(HttpStatus.CREATED)
+  enrollOthers(
+    @Param('id') id: string,
+    @Body() dto: EnrollOthersDto,
+  ): Promise<void> {
+    return this.courseService.enrollOthers(id, dto);
+  }
+
   @Get(':slug/lessons/:lessonId')
-  findLessonById(@Param('lessonId') lessonId: string): Promise<LessonDto> {
-    return this.courseService.findLessonById(lessonId);
+  findLessonById(
+    @Param('lessonId') lessonId: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<LessonDto> {
+    return this.courseService.findLessonById(lessonId, req.user?.sub, req.user?.role);
   }
 
   @Can('create', 'lesson')

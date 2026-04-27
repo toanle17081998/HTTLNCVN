@@ -17,6 +17,8 @@ import {
   useDeleteLessonMutation,
   type QuizListItem,
 } from "@services/course";
+import { CourseEnrollmentModal } from "./CourseEnrollmentModal";
+import { useState } from "react";
 
 type CourseDetailPageProps = {
   slug: string;
@@ -43,6 +45,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
   const startQuiz = useStartQuizMutation();
   const deleteCourse = useDeleteCourseMutation();
   const deleteLesson = useDeleteLessonMutation(slug);
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const course = courseQuery.data;
 
   const descriptionHtml = course?.description
@@ -85,6 +88,9 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
             {can(PERMISSIONS.manageCourses) && (
               <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setIsEnrollModalOpen(true)}>
+                  Enroll Others
+                </Button>
                 <Button variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
                   {t("course.action.edit")}
                 </Button>
@@ -140,65 +146,71 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                   </Button>
                 )}
               </div>
-              {course.lessons.map((lesson) => (
-                <div key={lesson.id} className="group relative">
-                  <Link
-                    className="block rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                    href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
-                  >
-                    <Card className="p-5 transition hover:border-[var(--brand-primary)]">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                            {t("lesson.label")} {lesson.order_index ?? "-"}
-                          </p>
-                          <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                            {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {lesson.quiz_count ? (
-                            <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                              {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
-                            </span>
-                          ) : null}
-                          {can(PERMISSIONS.manageCourses) && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  router.push(`/admin/courses/${course.slug}/lessons/${lesson.id}/edit`);
-                                }}
-                              >
-                                {t("lesson.action.edit")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
-                                onClick={async (e) => {
-                                  e.preventDefault();
-                                  const ok = await confirm({
-                                    variant: "delete",
-                                    title: t("lesson.action.deleteConfirm"),
-                                  });
-                                  if (ok) {
-                                    await deleteLesson.mutateAsync(lesson.id);
-                                  }
-                                }}
-                              >
-                                {t("lesson.action.delete")}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
+              {course.is_allowed === false ? (
+                <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-muted)] p-5 text-center text-sm font-medium text-[var(--text-secondary)]">
+                  Ask church admin to enroll your self in this course
                 </div>
-              ))}
+              ) : (
+                course.lessons.map((lesson) => (
+                  <div key={lesson.id} className="group relative">
+                    <Link
+                      className="block rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
+                      href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
+                    >
+                      <Card className="p-5 transition hover:border-[var(--brand-primary)]">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                              {t("lesson.label")} {lesson.order_index ?? "-"}
+                            </p>
+                            <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
+                              {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {lesson.quiz_count ? (
+                              <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
+                                {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
+                              </span>
+                            ) : null}
+                            {can(PERMISSIONS.manageCourses) && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    router.push(`/admin/courses/${course.slug}/lessons/${lesson.id}/edit`);
+                                  }}
+                                >
+                                  {t("lesson.action.edit")}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    const ok = await confirm({
+                                      variant: "delete",
+                                      title: t("lesson.action.deleteConfirm"),
+                                    });
+                                    if (ok) {
+                                      await deleteLesson.mutateAsync(lesson.id);
+                                    }
+                                  }}
+                                >
+                                  {t("lesson.action.delete")}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  </div>
+                ))
+              )}
             </section>
           </div>
 
@@ -219,7 +231,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                     </p>
                     <Button
                       className="mt-3 w-full"
-                      disabled={!isAuthenticated || !canTakeQuiz || startQuiz.isPending}
+                      disabled={!isAuthenticated || !canTakeQuiz || course.is_allowed === false || startQuiz.isPending}
                       onClick={() => handleStartQuiz(quiz)}
                       size="sm"
                     >
@@ -235,11 +247,22 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                 <p className="mt-3 text-xs leading-5 text-[var(--text-tertiary)]">
                   Sign in to start quizzes.
                 </p>
+              ) : course.is_allowed === false ? (
+                <p className="mt-3 text-xs leading-5 text-[var(--text-tertiary)]">
+                  Enroll to start quizzes.
+                </p>
               ) : null}
             </Card>
           </aside>
         </div>
       ) : null}
+
+      {isEnrollModalOpen && course && (
+        <CourseEnrollmentModal
+          courseId={course.id}
+          onClose={() => setIsEnrollModalOpen(false)}
+        />
+      )}
     </PageLayout>
   );
 }

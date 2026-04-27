@@ -15,6 +15,8 @@ export type CourseDto = {
   description: string | null;
   estimated_duration_minutes: number;
   id: string;
+  is_enrolled?: boolean;
+  is_allowed?: boolean;
   lesson_count: number;
   lessons: LessonSummary[];
   level: string;
@@ -174,4 +176,9 @@ export type SubmitAnswerResultDto = {
   explanation: string | null;
   is_correct: boolean;
   right_answer: string | null;
+};
+
+export type EnrollOthersDto = {
+  user_ids?: string[];
+  church_unit_id?: string;
 };

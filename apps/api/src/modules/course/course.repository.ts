@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
@@ -112,7 +112,7 @@ export class CourseRepository {
     };
   }
 
-  private mapCourseDetail(c: CourseWithDetailRelations): CourseDto {
+  private mapCourseDetail(c: CourseWithDetailRelations, isEnrolled = false, isAllowed = true): CourseDto {
     return {
       cover_image_url: c.cover_image_url,
       created_at: c.created_at.toISOString(),
@@ -120,8 +120,10 @@ export class CourseRepository {
       description: c.description,
       estimated_duration_minutes: c.estimated_duration_minutes,
       id: c.id,
+      is_enrolled: isEnrolled,
+      is_allowed: isAllowed,
       lesson_count: c._count.lessons,
-      lessons: c.lessons.map((l) => ({
+      lessons: isAllowed ? c.lessons.map((l) => ({
         content_markdown_en: l.content_markdown_en,
         content_markdown_vi: l.content_markdown_vi,
         id: l.id,
@@ -129,7 +131,7 @@ export class CourseRepository {
         quiz_count: new Set(l.templates.flatMap((t) => t.quiz_maps.map((m) => m.quiz_id))).size,
         title_en: l.title_en,
         title_vi: l.title_vi,
-      })),
+      })) : [],
       level: c.level,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
@@ -233,11 +235,13 @@ export class CourseRepository {
     return { items: items.map((c) => this.mapCourseList(c)), total };
   }
 
-  async findBySlug(slug: string): Promise<CourseDto | null> {
+  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<CourseDto | null> {
     const c = await this.prisma.course.findFirst({
       include: {
         _count: { select: { lessons: true } },
+        attendees: true,
         creator: true,
+        grades: viewerId ? { where: { user_id: viewerId } } : false,
         lessons: {
           include: {
             templates: { select: { quiz_maps: { select: { quiz_id: true } } } },
@@ -248,7 +252,30 @@ export class CourseRepository {
       where: { slug, deleted_at: null },
     });
 
-    return c ? this.mapCourseDetail(c) : null;
+    if (!c) return null;
+
+    let isEnrolled = false;
+    let isAllowed = true;
+
+    if (viewerId) {
+      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+        isEnrolled = true;
+        isAllowed = true;
+      } else {
+        isEnrolled = c.grades && c.grades.length > 0;
+        if (c.attendees.length > 0) {
+          const isAttendee = c.attendees.some((a) => a.user_id === viewerId);
+          isAllowed = isAttendee && isEnrolled;
+        } else {
+          isAllowed = isEnrolled;
+        }
+      }
+    } else {
+      isAllowed = false;
+    }
+
+    // Cast needed because attendees and grades are dynamically added to the payload
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, isEnrolled, isAllowed);
   }
 
   async create(dto: CreateCourseDto, creatorId: string): Promise<CourseDto> {
@@ -271,7 +298,7 @@ export class CourseRepository {
       },
     });
 
-    return this.mapCourseDetail(c);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
   }
 
   async update(slug: string, dto: UpdateCourseDto): Promise<CourseDto | null> {
@@ -291,7 +318,7 @@ export class CourseRepository {
       where: { slug },
     });
 
-    return this.mapCourseDetail(c);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
   }
 
   async delete(slug: string): Promise<void> {
@@ -318,10 +345,52 @@ export class CourseRepository {
     }
   }
 
-  async findLessonById(id: string): Promise<LessonDto | null> {
+  async enrollOthers(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<void> {
+    let userIds = dto.user_ids ?? [];
+    if (dto.church_unit_id) {
+      const members = await this.prisma.churchUnitMember.findMany({
+        where: { church_unit_id: dto.church_unit_id },
+        select: { user_id: true },
+      });
+      userIds = [...new Set([...userIds, ...members.map((m) => m.user_id)])];
+    }
+
+    if (userIds.length === 0) return;
+
+    // Check if course has restricted audience
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: { attendees: { select: { user_id: true } } },
+    });
+
+    const hasAttendees = course && course.attendees.length > 0;
+
+    await this.prisma.$transaction([
+      ...userIds.map((userId) =>
+        this.prisma.courseGrade.upsert({
+          where: { user_id_course_id: { user_id: userId, course_id: courseId } },
+          create: { course_id: courseId, status: 'enrolled', user_id: userId },
+          update: { status: 'enrolled' },
+        }),
+      ),
+      ...(hasAttendees
+        ? userIds.map((userId) =>
+            this.prisma.courseAttendance.upsert({
+              where: { course_id_user_id: { course_id: courseId, user_id: userId } },
+              create: { course_id: courseId, user_id: userId },
+              update: {},
+            }),
+          )
+        : []),
+    ]);
+  }
+
+  async findLessonById(id: string, viewerId?: string, viewerRole?: string): Promise<LessonDto | null> {
     const lesson = await this.prisma.lesson.findUnique({
       include: {
-        course: true,
+        course: {
+          include: { attendees: true }
+        },
         templates: {
           select: {
             quiz_maps: {
@@ -333,7 +402,39 @@ export class CourseRepository {
       where: { id },
     });
 
-    return lesson ? this.mapLesson(lesson) : null;
+    if (!lesson) return null;
+
+    if (viewerId) {
+      // Admins can see all lessons
+      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+        return this.mapLesson(lesson);
+      }
+
+      // Check attendance restriction if the course has a specific audience
+      if (lesson.course.attendees.length > 0) {
+        const isAttendee = lesson.course.attendees.some((a) => a.user_id === viewerId);
+        if (!isAttendee) {
+          throw new ForbiddenException({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to view this lesson.',
+          });
+        }
+      }
+
+      // Check if user is enrolled
+      const enrollment = await this.prisma.courseGrade.findUnique({
+        where: { user_id_course_id: { user_id: viewerId, course_id: lesson.course_id } },
+      });
+
+      if (!enrollment) {
+        throw new ForbiddenException({
+          code: 'FORBIDDEN',
+          message: 'You must be enrolled to view this lesson.',
+        });
+      }
+    }
+
+    return this.mapLesson(lesson);
   }
 
   async createLesson(courseSlug: string, dto: CreateLessonDto, creatorId: string): Promise<LessonDto | null> {

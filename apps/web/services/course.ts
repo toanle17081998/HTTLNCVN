@@ -190,6 +190,11 @@ export type SubmitAnswerResult = {
   right_answer: string | null;
 };
 
+export type EnrollOthersDto = {
+  user_ids?: string[];
+  church_unit_id?: string;
+};
+
 export const courseKeys = {
   all: ["courses"] as const,
   attempt: (id: string) => [...courseKeys.all, "attempt", id] as const,
@@ -330,6 +335,13 @@ export const courseApi = {
         token: getStoredTokens()?.accessToken,
       },
     );
+  },
+  enrollOthers(courseId: string, dto: EnrollOthersDto) {
+    return apiRequest<void>(`/courses/${encodeURIComponent(courseId)}/enroll-others`, {
+      body: JSON.stringify(dto),
+      method: "POST",
+      token: getStoredTokens()?.accessToken,
+    });
   },
 };
 
@@ -552,6 +564,17 @@ export function useFinishAttemptMutation(attemptId: string) {
     mutationFn: () => courseApi.finishAttempt(attemptId),
     onSuccess(attempt) {
       queryClient.setQueryData(courseKeys.attempt(attempt.id), attempt);
+    },
+  });
+}
+
+export function useEnrollOthersMutation(courseId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: EnrollOthersDto) => courseApi.enrollOthers(courseId, dto),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.all });
     },
   });
 }
