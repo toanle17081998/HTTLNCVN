@@ -167,7 +167,6 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
                     <span>{new Date(article.published_at).toLocaleDateString()}</span>
                   ) : null}
                 </div>
-                <LanguageSelector activeLanguage={readerLang} onLanguageChange={setReaderLang} />
               </div>
 
               <div
