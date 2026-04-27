@@ -21,6 +21,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LanguageToggle } from "@/components/layout";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -205,7 +206,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <ThemeToggle />
                   <Link
                     className="hidden h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] sm:inline-flex"
                     href="/"
@@ -224,6 +224,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       {t("nav.login")}
                     </Link>
                   )}
+                  <LanguageToggle />
+                  <ThemeToggle />
                 </div>
               </header>
             ) : null}
