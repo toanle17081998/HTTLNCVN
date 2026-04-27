@@ -12,16 +12,20 @@ export type CourseDto = {
   cover_image_url: string | null;
   created_at: string;
   creator: { id: string; username: string } | null;
-  description: string | null;
+  description_en: string | null;
+  description_vi: string | null;
   estimated_duration_minutes: number;
   id: string;
+  is_enrolled?: boolean;
+  is_allowed?: boolean;
   lesson_count: number;
   lessons: LessonSummary[];
   level: string;
   published_at: string | null;
   slug: string;
   status: string;
-  summary: string | null;
+  summary_en: string | null;
+  summary_vi: string | null;
   title_en: string;
   title_vi: string;
 };
@@ -36,7 +40,8 @@ export type CourseListDto = {
   published_at: string | null;
   slug: string;
   status: string;
-  summary: string | null;
+  summary_en: string | null;
+  summary_vi: string | null;
   title_en: string;
   title_vi: string;
 };
@@ -48,11 +53,13 @@ export type CourseListResult = {
 
 export type CreateCourseDto = {
   cover_image_url?: string;
-  description?: string;
+  description_en?: string;
+  description_vi?: string;
   estimated_duration_minutes?: number;
   level?: string;
   slug: string;
-  summary?: string;
+  summary_en?: string;
+  summary_vi?: string;
   title_en: string;
   title_vi: string;
 };
@@ -174,4 +181,27 @@ export type SubmitAnswerResultDto = {
   explanation: string | null;
   is_correct: boolean;
   right_answer: string | null;
+};
+
+export type EnrollOthersDto = {
+  emails?: string[];
+  church_unit_id?: string;
+  member_ids?: string[];
+};
+
+export type EnrollPreviewMemberDto = {
+  id: string;
+  email: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  is_enrolled: boolean;
+  is_authorized: boolean;
+};
+
+export type EnrollPreviewDto = {
+  members: EnrollPreviewMemberDto[];
+  invalid_emails: string[];
+  enrolled_count: number;
+  authorized_count: number;
 };

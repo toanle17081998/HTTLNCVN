@@ -20,6 +20,7 @@ import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -118,7 +119,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <AdminLayoutChromeContext.Provider value={{ isFullscreen, setIsFullscreen }}>
       <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
         {/* Mobile Backdrop */}
-        {isMobileMenuOpen && !isFullscreen && (
+        {isMobileMenuOpen && !isFullscreen && canAccessAdmin && (
           <div
             className="fixed inset-0 z-40 backdrop-blur-sm lg:hidden"
             style={{ backgroundColor: "var(--bg-scrim)" }}
@@ -128,72 +129,76 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         <div className="flex min-h-screen">
           {/* Sidebar */}
-          <aside className={cn(
-            "fixed inset-y-0 left-0 z-50 flex h-dvh w-[280px] flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
-            isFullscreen
-              ? "-translate-x-full lg:hidden"
-              : isMobileMenuOpen
-                ? "translate-x-0 shadow-[var(--shadow-lg)]"
-                : "-translate-x-full"
-          )}>
-            {/* Sidebar Header */}
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-primary)] text-sm font-black text-[var(--text-inverse)] shadow-lg shadow-[var(--brand-shadow)]">
-                  H
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold tracking-tight text-[var(--text-primary)]">{t("admin.layout.title")}</p>
-                  <p className="truncate text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] opacity-70">{t("admin.layout.contentManagement")}</p>
-                </div>
-              </div>
-              <button
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--brand-muted)] lg:hidden"
-                onClick={() => setIsMobileMenuOpen(false)}
-                aria-label={t("nav.closeNavigation")}
-              >
-                <X aria-hidden="true" className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Navigation */}
-            <nav aria-label={t("admin.common.admin")} className="flex-1 space-y-1.5 overflow-y-auto bg-[var(--bg-surface)] px-4 py-6">
-              {primaryNavItems.map(renderNavItem)}
-            </nav>
-
-            {/* Sidebar Footer / User Profile */}
-            <div className="mt-auto border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-              <div className="group relative flex items-center gap-3 rounded-2xl bg-[var(--bg-base)] p-3 transition-colors hover:bg-[var(--brand-muted)]/50">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
-                  <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-primary)]/20 to-[var(--brand-primary)]/5 text-sm font-bold">
-                    {user?.email?.charAt(0).toUpperCase() || "A"}
+          {canAccessAdmin && (
+            <aside className={cn(
+              "fixed inset-y-0 left-0 z-50 flex h-dvh w-[280px] flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
+              isFullscreen
+                ? "-translate-x-full lg:hidden"
+                : isMobileMenuOpen
+                  ? "translate-x-0 shadow-[var(--shadow-lg)]"
+                  : "-translate-x-full"
+            )}>
+              {/* Sidebar Header */}
+              <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-primary)] text-sm font-black text-[var(--text-inverse)] shadow-lg shadow-[var(--brand-shadow)]">
+                    H
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold tracking-tight text-[var(--text-primary)]">{t("admin.layout.title")}</p>
+                    <p className="truncate text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] opacity-70">{t("admin.layout.contentManagement")}</p>
                   </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[var(--text-primary)]">{user?.email?.split("@")[0] || t("admin.layout.defaultUser")}</p>
-                  <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{role || t("admin.layout.defaultRole")}</p>
-                </div>
                 <button
-                  onClick={handleLogout}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
-                  title={t("nav.logout")}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--brand-muted)] lg:hidden"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-label={t("nav.closeNavigation")}
                 >
-                  <LogOut className="h-4 w-4" />
+                  <X aria-hidden="true" className="h-5 w-5" />
                 </button>
               </div>
-            </div>
-          </aside>
+
+              {/* Navigation */}
+              <nav aria-label={t("admin.common.admin")} className="flex-1 space-y-1.5 overflow-y-auto bg-[var(--bg-surface)] px-4 py-6">
+                {primaryNavItems.map(renderNavItem)}
+              </nav>
+
+              {/* Sidebar Footer / User Profile */}
+              <div className="mt-auto border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+                <div className="group relative flex items-center gap-3 rounded-2xl bg-[var(--bg-base)] p-3 transition-colors hover:bg-[var(--brand-muted)]/50">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
+                    <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-primary)]/20 to-[var(--brand-primary)]/5 text-sm font-bold">
+                      {user?.email?.charAt(0).toUpperCase() || "A"}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[var(--text-primary)]">{user?.email?.split("@")[0] || t("admin.layout.defaultUser")}</p>
+                    <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{role || t("admin.layout.defaultRole")}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
+                    title={t("nav.logout")}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </aside>
+          )}
 
           <div className="flex min-w-0 flex-1 flex-col">
             {!isFullscreen ? (
               <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
                 <div className="flex items-center gap-4">
-                  <button
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
-                    onClick={() => setIsMobileMenuOpen(true)}
-                  >
-                    <Menu className="h-5 w-5" />
-                  </button>
+                  {canAccessAdmin && (
+                    <button
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
+                      onClick={() => setIsMobileMenuOpen(true)}
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
+                  )}
                   <div className="hidden min-w-0 sm:block">
                     <p className="truncate text-sm font-bold">{t("admin.layout.dashboard")}</p>
                   </div>
@@ -232,7 +237,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 ) : canAccessAdmin ? (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {children}
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-12 text-center shadow-sm">

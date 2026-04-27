@@ -36,6 +36,7 @@ type ModularEditorProps = {
 
 export type ModularEditorHandle = {
   getCleanedValue: () => string;
+  setData: (value: string) => void;
 };
 
 function normalizeInitialValue(value: string) {
@@ -59,6 +60,13 @@ export const ModularEditor = forwardRef(function ModularEditor(
 
   useImperativeHandle(ref, () => ({
     getCleanedValue: () => editorRef.current?.getData() ?? contentHtml,
+    setData: (value: string) => {
+      const normalized = normalizeInitialValue(value);
+      setContentHtml(normalized);
+      if (editorRef.current) {
+        editorRef.current.setData(normalized);
+      }
+    },
   }));
 
   return (

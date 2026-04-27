@@ -1,11 +1,13 @@
 "use client";
 
+// Force rebuild 2
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredTokens } from "./auth";
-import { apiRequest } from "./client";
+import { apiRequest, ApiError } from "./client";
 
 export type Page = {
-  content: string;
+  content_en: string;
+  content_vi: string;
   created_at: string;
   id: string;
   route_path: string;
@@ -22,7 +24,7 @@ export type PageListResult = {
   >;
 };
 
-export type CreatePageDto = Pick<Page, "content" | "route_path" | "slug" | "title_en" | "title_vi">;
+export type CreatePageDto = Pick<Page, "content_en" | "content_vi" | "route_path" | "slug" | "title_en" | "title_vi">;
 export type UpdatePageDto = Partial<CreatePageDto> & { status?: Page["status"] };
 
 function listSearch(status?: string) {

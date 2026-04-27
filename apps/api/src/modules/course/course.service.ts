@@ -29,8 +29,8 @@ export class CourseService {
     return this.courseRepository.findAll(skip, take, status, level, q);
   }
 
-  async findBySlug(slug: string): Promise<CourseDto> {
-    const course = await this.courseRepository.findBySlug(slug);
+  async findBySlug(slug: string, userId?: string, userRole?: string): Promise<CourseDto> {
+    const course = await this.courseRepository.findBySlug(slug, userId, userRole);
 
     if (!course) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Course not found.' });
@@ -62,8 +62,16 @@ export class CourseService {
     return this.courseRepository.enroll(courseId, userId);
   }
 
-  async findLessonById(id: string): Promise<LessonDto> {
-    const lesson = await this.courseRepository.findLessonById(id);
+  enrollOthers(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<void> {
+    return this.courseRepository.enrollOthers(courseId, dto);
+  }
+
+  previewEnrollment(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<import('./course.types').EnrollPreviewDto> {
+    return this.courseRepository.previewEnrollment(courseId, dto);
+  }
+
+  async findLessonById(id: string, userId: string, userRole?: string): Promise<LessonDto> {
+    const lesson = await this.courseRepository.findLessonById(id, userId, userRole);
 
     if (!lesson) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Lesson not found.' });
@@ -93,7 +101,10 @@ export class CourseService {
   }
 
   async deleteLesson(id: string): Promise<void> {
-    await this.findLessonById(id);
+    const lesson = await this.courseRepository.findLessonById(id);
+    if (!lesson) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Lesson not found.' });
+    }
     await this.courseRepository.deleteLesson(id);
   }
 

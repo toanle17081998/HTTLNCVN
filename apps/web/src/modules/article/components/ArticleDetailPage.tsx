@@ -7,6 +7,8 @@ import { Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleQuery } from "@services/article";
 import { markdownToHtml } from "./articleEditorUtils";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { useState, useEffect } from "react";
 
 type ArticleDetailPageProps = {
   slug: string;
@@ -90,14 +92,29 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
   const { t, locale } = useTranslation();
   const articleQuery = useArticleQuery(slug);
   const article = articleQuery.data;
-  const body = article?.content_markdown_vi || article?.content_markdown_en || "";
-  const renderedBody = useMemo(() => renderArticleBody(body), [body]);
+
+  const [readerLang, setReaderLang] = useState<"en" | "vi">((locale as any) === "vi" ? "vi" : "en");
+
+  // Sync with global locale changes
+  useEffect(() => {
+    setReaderLang((locale as any) === "vi" ? "vi" : "en");
+  }, [locale]);
+
+  const activeTitle = readerLang === "vi"
+    ? article?.title_vi || article?.title_en
+    : article?.title_en || article?.title_vi;
+
+  const activeBody = readerLang === "vi"
+    ? article?.content_markdown_vi || article?.content_markdown_en || ""
+    : article?.content_markdown_en || article?.content_markdown_vi || "";
+
+  const renderedBody = useMemo(() => renderArticleBody(activeBody), [activeBody]);
 
   return (
     <PageLayout
-      description={locale === "vi" ? (article?.title_vi || "Xem chi tiết bài viết.") : (article?.title_en || "Read article details.")}
+      description={readerLang === "vi" ? (article?.title_vi || "Xem chi tiết bài viết.") : (article?.title_en || "Read article details.")}
       eyebrow={article?.category?.name ?? t("nav.article.label")}
-      title={locale === "vi" ? (article?.title_vi || article?.title_en || "Bài viết") : (article?.title_en || article?.title_vi || "Article")}
+      title={activeTitle || t("nav.article.label")}
     >
       {articleQuery.isLoading ? (
         <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
@@ -119,7 +136,7 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "Article",
-                headline: locale === "vi" ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi),
+                headline: activeTitle,
                 image: article.cover_image_url ? [article.cover_image_url] : [],
                 datePublished: article.published_at,
                 dateModified: article.updated_at,
@@ -142,12 +159,14 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
             ) : null}
 
             <Card className="p-6">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                <span>{article.status}</span>
-                <span>By {article.creator.username}</span>
-                {article.published_at ? (
-                  <span>{new Date(article.published_at).toLocaleDateString()}</span>
-                ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                  <span>{article.status}</span>
+                  <span>By {article.creator.username}</span>
+                  {article.published_at ? (
+                    <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                  ) : null}
+                </div>
               </div>
 
               <div

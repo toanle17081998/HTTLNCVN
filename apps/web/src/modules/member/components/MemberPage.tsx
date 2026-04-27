@@ -111,7 +111,6 @@ export function MemberPage({ admin = false }: MemberPageProps) {
 
   const members = membersQuery.data?.items ?? [];
   const total = membersQuery.data?.total ?? 0;
-  const activeCount = members.filter((member) => member.status === "active").length;
   const adminCount = members.filter((member) => member.role.includes("admin")).length;
   const pendingCount = members.filter((member) => member.status === "pending").length;
 
@@ -248,7 +247,7 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                 {t("admin.members.active")}
               </p>
               <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-                {activeCount}
+                {String(membersQuery.data?.total ?? 0)}
               </p>
             </Card>
             <Card className="p-5">
@@ -279,9 +278,9 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                   {membersQuery.isLoading
                     ? t("admin.members.loading")
                     : t("admin.members.records", {
-                        count: String(visibleMembers.length),
-                        total: String(membersQuery.data?.total ?? 0),
-                      })}
+                      count: String(visibleMembers.length),
+                      total: String(membersQuery.data?.total ?? 0),
+                    })}
                 </p>
               </div>
               <div className="flex w-full items-center gap-3 sm:w-auto">

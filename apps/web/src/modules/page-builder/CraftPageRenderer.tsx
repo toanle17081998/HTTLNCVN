@@ -9,11 +9,16 @@ import { Button, Card } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";
 import { ensureValidPageContent } from "./defaultContent";
+import { useTranslation } from "@/providers/I18nProvider";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { useState, useEffect } from "react";
 
 export function CraftPageRenderer({ path }: { path: string }) {
   const pageQuery = useResolvedPageQuery(path);
   const { can } = useAuth();
+  const { locale, setLocale } = useTranslation();
   const canEdit = can(PERMISSIONS.manageArticle);
+  const readerLang = (locale as any) === "vi" ? "vi" : "en";
 
   if (pageQuery.isLoading) {
     return (
@@ -55,12 +60,18 @@ export function CraftPageRenderer({ path }: { path: string }) {
 
   const page = pageQuery.data;
   if (!page) return null;
-  const safeContent = ensureValidPageContent(page.content, page.title_en, page.route_path);
+
+  const activeContent = readerLang === "vi" ? page.content_vi : page.content_en;
+  const safeContent = ensureValidPageContent(
+    activeContent || page.content_en || page.content_vi,
+    readerLang === "vi" ? page.title_vi || page.title_en : page.title_en || page.title_vi,
+    page.route_path
+  );
 
   return (
     <div className="relative w-full">
       {canEdit ? (
-        <div className="fixed bottom-5 right-5 z-40">
+        <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3 items-end">
           <Link href={`/admin/pages?route=${encodeURIComponent(path)}`}>
             <Button className="rounded-full shadow-lg">
               <SquarePen className="mr-2 h-4 w-4" />
@@ -70,7 +81,7 @@ export function CraftPageRenderer({ path }: { path: string }) {
         </div>
       ) : null}
 
-      <Editor enabled={false} resolver={craftResolver}>
+      <Editor key={readerLang} enabled={false} resolver={craftResolver}>
         <Frame data={safeContent}>
           <Element canvas is={PageCanvas} snapType={path === "/" ? "mandatory" : "none"} />
         </Frame>

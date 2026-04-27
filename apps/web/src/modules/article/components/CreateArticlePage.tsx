@@ -16,6 +16,7 @@ import {
 } from "@services/article";
 import { type SubmitState } from "./articleEditorTypes";
 import { ModularEditor, type ModularEditorHandle } from "./ModularEditor";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 function slugify(value: string) {
   return (
@@ -83,42 +84,69 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
   const createArticle = useCreateArticleMutation();
   const updateArticle = useUpdateArticleMutation(editSlug ?? "");
 
-  const initialBody = initialArticle?.content_markdown_vi || initialArticle?.content_markdown_en || "";
+  const { locale } = useTranslation();
+  const [activeLang, setActiveLang] = useState<"en" | "vi">((locale as any) === "vi" ? "vi" : "en");
 
-  const [title, setTitle] = useState(initialArticle?.title_vi || initialArticle?.title_en || "");
+  const [titles, setTitles] = useState({
+    en: initialArticle?.title_en || "",
+    vi: initialArticle?.title_vi || "",
+  });
+  const [contents, setContents] = useState({
+    en: initialArticle?.content_markdown_en || "",
+    vi: initialArticle?.content_markdown_vi || "",
+  });
+
   const [coverImageUrl, setCoverImageUrl] = useState(initialArticle?.cover_image_url ?? "");
   const [categoryId, setCategoryId] = useState(initialArticle?.category?.id ? String(initialArticle.category.id) : "");
   const [status, setStatus] = useState<ArticleStatus>(initialArticle?.status === "published" ? "published" : "draft");
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleLangChange = (newLang: "en" | "vi") => {
+    if (newLang === activeLang) return;
+
+    // Save current content to state before switching
+    const currentEditorValue = editorRef.current?.getCleanedValue() || "";
+    setContents((prev) => ({ ...prev, [activeLang]: currentEditorValue }));
+
+    // Switch
+    setActiveLang(newLang);
+
+    // Load new content into editor
+    editorRef.current?.setData(contents[newLang]);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitState({ status: "idle", message: "" });
 
-    const nextContent = editorRef.current?.getCleanedValue() || "";
+    // Sync current editor value to contents state
+    const currentEditorValue = editorRef.current?.getCleanedValue() || "";
+    const finalContents = { ...contents, [activeLang]: currentEditorValue };
 
-    if (!title.trim()) {
+    const activeTitle = titles[activeLang];
+
+    if (!activeTitle.trim()) {
       setSubmitState({ status: "error", message: t("article.create.titleRequired") });
       return;
     }
 
-    if (!nextContent.trim()) {
+    if (!currentEditorValue.trim()) {
       setSubmitState({ status: "error", message: t("article.create.contentRequired") });
       return;
     }
 
     setIsSubmitting(true);
 
-    const nextSlug = editSlug ?? slugify(title);
+    const nextSlug = editSlug || slugify(titles.en || titles.vi || "article");
     const payload: CreateArticleDto = {
-      content_markdown_en: nextContent,
-      content_markdown_vi: nextContent,
+      content_markdown_en: finalContents.en || finalContents.vi,
+      content_markdown_vi: finalContents.vi || finalContents.en,
       ...(categoryId ? { category_id: Number(categoryId) } : {}),
       cover_image_url: coverImageUrl.trim() || undefined,
       slug: nextSlug,
-      title_en: title.trim(),
-      title_vi: title.trim(),
+      title_en: titles.en || titles.vi,
+      title_vi: titles.vi || titles.en,
     };
 
     try {
@@ -154,13 +182,20 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
     >
       <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
         <form className="space-y-8" onSubmit={handleSubmit}>
-          <FormField htmlFor="article-title" label={t("form.title")}>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+              {t("placeholder.content")}
+            </h3>
+            <LanguageSelector activeLanguage={activeLang} onLanguageChange={handleLangChange} />
+          </div>
+
+          <FormField htmlFor="article-title" label={`${t("form.title")} (${activeLang.toUpperCase()})`}>
             <Input
               id="article-title"
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => setTitles((prev) => ({ ...prev, [activeLang]: event.target.value }))}
               placeholder={t("article.create.titlePlaceholder")}
               required
-              value={title}
+              value={titles[activeLang]}
             />
           </FormField>
 
@@ -201,8 +236,8 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
           </div>
 
           <ModularEditor
-            label={t("article.create.editor")}
-            initialValue={initialBody}
+            label={`${t("article.create.editor")} (${activeLang.toUpperCase()})`}
+            initialValue={contents[activeLang]}
             onChange={() => {}} // We use ref for submission
             ref={editorRef}
             placeholder={t("article.create.editorPlaceholder")}

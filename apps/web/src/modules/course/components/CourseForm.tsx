@@ -5,6 +5,7 @@ import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/componen
 import { useTranslation } from "@/providers/I18nProvider";
 import { CreateCourseDto, Course } from "@services/course";
 import { ModularEditor, type ModularEditorHandle } from "@/modules/article/components/ModularEditor";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 type CourseFormProps = {
   initialData?: Course;
@@ -15,15 +16,18 @@ type CourseFormProps = {
 
 export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFormProps) {
   const { t } = useTranslation();
-  const descriptionRef = useRef<ModularEditorHandle>(null);
+  const descriptionEnRef = useRef<ModularEditorHandle>(null);
+  const descriptionViRef = useRef<ModularEditorHandle>(null);
   const [editLang, setEditLang] = useState<"en" | "vi">("vi");
 
   const [formData, setFormData] = useState({
     slug: initialData?.slug || "",
     title_en: initialData?.title_en || "",
     title_vi: initialData?.title_vi || "",
-    summary: initialData?.summary || "",
-    description: initialData?.description || "",
+    summary_en: initialData?.summary_en || "",
+    summary_vi: initialData?.summary_vi || "",
+    description_en: initialData?.description_en || "",
+    description_vi: initialData?.description_vi || "",
     cover_image_url: initialData?.cover_image_url || "",
     level: initialData?.level || "beginner",
     estimated_duration_minutes: (initialData?.estimated_duration_minutes as number | string) ?? 0,
@@ -46,7 +50,8 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
     e.preventDefault();
     const submissionData = {
       ...formData,
-      description: descriptionRef.current?.getCleanedValue() ?? formData.description,
+      description_en: descriptionEnRef.current?.getCleanedValue() ?? formData.description_en,
+      description_vi: descriptionViRef.current?.getCleanedValue() ?? formData.description_vi,
       estimated_duration_minutes: formData.estimated_duration_minutes === "" ? 0 : Number(formData.estimated_duration_minutes),
     };
     await onSubmit(submissionData);
@@ -58,23 +63,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
         <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
           {title}
         </h1>
-        <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
-          {(["en", "vi"] as const).map((lang) => (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => setEditLang(lang)}
-              className={cn(
-                "h-8 rounded px-4 text-sm font-semibold transition",
-                editLang === lang
-                  ? "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
-              )}
-            >
-              {lang === "en" ? "English" : "Tiếng Việt"}
-            </button>
-          ))}
-        </div>
+        <LanguageSelector activeLanguage={editLang} onLanguageChange={setEditLang} />
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid min-w-0 gap-6 lg:grid-cols-2">
@@ -107,16 +96,29 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
           </div>
 
           <div className="lg:col-span-2">
-            <FormField label={t("course.form.summary")} htmlFor="summary" hint={t("course.form.summaryHint")}>
-              <Textarea
-                id="summary"
-                name="summary"
-                value={formData.summary}
-                onChange={handleChange}
-                placeholder="A brief summary of the course..."
-                rows={3}
-                className="bg-[var(--bg-base)]"
-              />
+            <FormField label={t("course.form.summary")} htmlFor={editLang === "en" ? "summary_en" : "summary_vi"} hint={t("course.form.summaryHint")}>
+              <div className={cn(editLang !== "en" && "hidden")}>
+                <Textarea
+                  id="summary_en"
+                  name="summary_en"
+                  value={formData.summary_en}
+                  onChange={handleChange}
+                  placeholder="A brief summary of the course..."
+                  rows={3}
+                  className="bg-[var(--bg-base)]"
+                />
+              </div>
+              <div className={cn(editLang !== "vi" && "hidden")}>
+                <Textarea
+                  id="summary_vi"
+                  name="summary_vi"
+                  value={formData.summary_vi}
+                  onChange={handleChange}
+                  placeholder="Mô tả ngắn về khóa học..."
+                  rows={3}
+                  className="bg-[var(--bg-base)]"
+                />
+              </div>
             </FormField>
           </div>
         </div>
@@ -185,14 +187,26 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             </FormField>
         </div>
 
-        <ModularEditor
-          label={t("course.form.description")}
-          initialValue={formData.description}
-          onChange={(val) => handleEditorChange("description", val)}
-          placeholder="Full course description..."
-          ref={descriptionRef}
-          className="min-w-0 max-w-full"
-        />
+        <div className={cn(editLang !== "en" && "hidden")}>
+          <ModularEditor
+            label={t("course.form.description") + " (English)"}
+            initialValue={formData.description_en}
+            onChange={(val) => handleEditorChange("description_en", val)}
+            placeholder="Full course description (English)..."
+            ref={descriptionEnRef}
+            className="min-w-0 max-w-full"
+          />
+        </div>
+        <div className={cn(editLang !== "vi" && "hidden")}>
+          <ModularEditor
+            label={t("course.form.description") + " (Tiếng Việt)"}
+            initialValue={formData.description_vi}
+            onChange={(val) => handleEditorChange("description_vi", val)}
+            placeholder="Mô tả đầy đủ về khóa học..."
+            ref={descriptionViRef}
+            className="min-w-0 max-w-full"
+          />
+        </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border-subtle)]">
           <Button

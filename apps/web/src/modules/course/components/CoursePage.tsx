@@ -164,7 +164,7 @@ export function CoursePage() {
                   {locale === "vi" ? (course.title_vi || course.title_en) : (course.title_en || course.title_vi)}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
-                  {course.summary || (locale === "vi" ? course.title_vi : course.title_en)}
+                  {locale === "vi" ? (course.summary_vi || course.summary_en) : (course.summary_en || course.summary_vi)}
                 </p>
               </div>
             </Card>

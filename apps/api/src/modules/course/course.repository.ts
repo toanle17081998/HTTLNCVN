@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
@@ -106,22 +106,26 @@ export class CourseRepository {
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
       status: c.status,
-      summary: c.summary,
+      summary_en: c.summary_en,
+      summary_vi: c.summary_vi,
       title_en: c.title_en,
       title_vi: c.title_vi,
     };
   }
 
-  private mapCourseDetail(c: CourseWithDetailRelations): CourseDto {
+  private mapCourseDetail(c: CourseWithDetailRelations, isEnrolled = false, isAllowed = true): CourseDto {
     return {
       cover_image_url: c.cover_image_url,
       created_at: c.created_at.toISOString(),
       creator: c.creator ? { id: c.creator.id, username: c.creator.username } : null,
-      description: c.description,
+      description_en: c.description_en,
+      description_vi: c.description_vi,
       estimated_duration_minutes: c.estimated_duration_minutes,
       id: c.id,
+      is_enrolled: isEnrolled,
+      is_allowed: isAllowed,
       lesson_count: c._count.lessons,
-      lessons: c.lessons.map((l) => ({
+      lessons: isAllowed ? c.lessons.map((l) => ({
         content_markdown_en: l.content_markdown_en,
         content_markdown_vi: l.content_markdown_vi,
         id: l.id,
@@ -129,12 +133,13 @@ export class CourseRepository {
         quiz_count: new Set(l.templates.flatMap((t) => t.quiz_maps.map((m) => m.quiz_id))).size,
         title_en: l.title_en,
         title_vi: l.title_vi,
-      })),
+      })) : [],
       level: c.level,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
       status: c.status,
-      summary: c.summary,
+      summary_en: c.summary_en,
+      summary_vi: c.summary_vi,
       title_en: c.title_en,
       title_vi: c.title_vi,
     };
@@ -233,11 +238,13 @@ export class CourseRepository {
     return { items: items.map((c) => this.mapCourseList(c)), total };
   }
 
-  async findBySlug(slug: string): Promise<CourseDto | null> {
+  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<CourseDto | null> {
     const c = await this.prisma.course.findFirst({
       include: {
         _count: { select: { lessons: true } },
+        attendees: true,
         creator: true,
+        grades: viewerId ? { where: { user_id: viewerId } } : false,
         lessons: {
           include: {
             templates: { select: { quiz_maps: { select: { quiz_id: true } } } },
@@ -248,7 +255,30 @@ export class CourseRepository {
       where: { slug, deleted_at: null },
     });
 
-    return c ? this.mapCourseDetail(c) : null;
+    if (!c) return null;
+
+    let isEnrolled = false;
+    let isAllowed = true;
+
+    if (viewerId) {
+      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+        isEnrolled = true;
+        isAllowed = true;
+      } else {
+        isEnrolled = c.grades && c.grades.length > 0;
+        if (c.attendees.length > 0) {
+          const isAttendee = c.attendees.some((a) => a.user_id === viewerId);
+          isAllowed = isAttendee && isEnrolled;
+        } else {
+          isAllowed = isEnrolled;
+        }
+      }
+    } else {
+      isAllowed = false;
+    }
+
+    // Cast needed because attendees and grades are dynamically added to the payload
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, isEnrolled, isAllowed);
   }
 
   async create(dto: CreateCourseDto, creatorId: string): Promise<CourseDto> {
@@ -256,11 +286,13 @@ export class CourseRepository {
       data: {
         cover_image_url: dto.cover_image_url,
         created_by: creatorId,
-        description: dto.description,
+        description_en: dto.description_en,
+        description_vi: dto.description_vi,
         estimated_duration_minutes: dto.estimated_duration_minutes ?? 0,
         level: dto.level ?? 'beginner',
         slug: dto.slug,
-        summary: dto.summary,
+        summary_en: dto.summary_en,
+        summary_vi: dto.summary_vi,
         title_en: dto.title_en,
         title_vi: dto.title_vi,
       },
@@ -271,7 +303,7 @@ export class CourseRepository {
       },
     });
 
-    return this.mapCourseDetail(c);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
   }
 
   async update(slug: string, dto: UpdateCourseDto): Promise<CourseDto | null> {
@@ -291,7 +323,7 @@ export class CourseRepository {
       where: { slug },
     });
 
-    return this.mapCourseDetail(c);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
   }
 
   async delete(slug: string): Promise<void> {
@@ -301,10 +333,28 @@ export class CourseRepository {
     });
   }
 
+  private async resolveCourseId(idOrSlug: string): Promise<string> {
+    // Check if it's already a UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(idOrSlug)) return idOrSlug;
+
+    const course = await this.prisma.course.findFirst({
+      select: { id: true },
+      where: { slug: idOrSlug, deleted_at: null },
+    });
+
+    if (!course) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Course not found.' });
+    }
+
+    return course.id;
+  }
+
   async enroll(courseId: string, userId: string): Promise<void> {
+    const realId = await this.resolveCourseId(courseId);
     try {
       await this.prisma.courseGrade.create({
-        data: { course_id: courseId, status: 'enrolled', user_id: userId },
+        data: { course_id: realId, status: 'enrolled', user_id: userId },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -318,10 +368,145 @@ export class CourseRepository {
     }
   }
 
-  async findLessonById(id: string): Promise<LessonDto | null> {
+  async enrollOthers(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<void> {
+    const realId = await this.resolveCourseId(courseId);
+    let allUserIds: string[] = [];
+
+    if (dto.member_ids && dto.member_ids.length > 0) {
+      allUserIds = dto.member_ids;
+    } else {
+      const { userIds } = await this.getUserIdsFromEmails(dto.emails ?? []);
+      allUserIds = [...userIds];
+
+      if (dto.church_unit_id) {
+        const unitIds = await this.getChurchUnitMemberIds(dto.church_unit_id);
+        allUserIds = [...new Set([...allUserIds, ...unitIds])];
+      }
+    }
+
+    if (allUserIds.length === 0) return;
+
+    await this.prisma.$transaction([
+      ...allUserIds.map((userId) =>
+        this.prisma.courseGrade.upsert({
+          where: { user_id_course_id: { user_id: userId, course_id: realId } },
+          create: { course_id: realId, status: 'enrolled', user_id: userId },
+          update: { status: 'enrolled' },
+        }),
+      ),
+      ...allUserIds.map((userId) =>
+        this.prisma.courseAttendance.upsert({
+          where: { course_id_user_id: { course_id: realId, user_id: userId } },
+          create: { course_id: realId, user_id: userId },
+          update: {},
+        }),
+      ),
+    ]);
+  }
+
+  async previewEnrollment(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<import('./course.types').EnrollPreviewDto> {
+    const realId = await this.resolveCourseId(courseId);
+
+    const [enrolledTotal, authorizedTotal] = await Promise.all([
+      this.prisma.courseGrade.count({ where: { course_id: realId } }),
+      this.prisma.courseAttendance.count({ where: { course_id: realId } }),
+    ]);
+
+    const { userIds, invalidEmails } = await this.getUserIdsFromEmails(dto.emails ?? []);
+    let allTargetIds = [...userIds];
+
+    if (dto.church_unit_id) {
+      const unitIds = await this.getChurchUnitMemberIds(dto.church_unit_id);
+      allTargetIds = [...new Set([...allTargetIds, ...unitIds])];
+    }
+
+    if (allTargetIds.length === 0) {
+      return {
+        members: [],
+        invalid_emails: invalidEmails,
+        enrolled_count: enrolledTotal,
+        authorized_count: authorizedTotal,
+      };
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: allTargetIds } },
+      include: {
+        profile: { select: { first_name: true, last_name: true } },
+        course_grades: {
+          where: { course_id: realId },
+          select: { id: true },
+        },
+        course_attendances: {
+          where: { course_id: realId },
+          select: { course_id: true },
+        },
+      },
+    });
+
+    const members: import('./course.types').EnrollPreviewMemberDto[] = users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      first_name: u.profile?.first_name,
+      last_name: u.profile?.last_name,
+      is_enrolled: u.course_grades.length > 0,
+      is_authorized: u.course_attendances.length > 0,
+    }));
+
+    return {
+      members,
+      invalid_emails: invalidEmails,
+      enrolled_count: enrolledTotal,
+      authorized_count: authorizedTotal,
+    };
+  }
+
+  private async getUserIdsFromEmails(emails: string[]): Promise<{ userIds: string[]; invalidEmails: string[] }> {
+    if (!emails.length) return { userIds: [], invalidEmails: [] };
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        email: { in: emails, mode: 'insensitive' },
+        deleted_at: null,
+      },
+      select: { id: true, email: true },
+    });
+
+    const userIds = users.map((u) => u.id);
+    const foundEmails = new Set(users.map((u) => u.email.toLowerCase()));
+    const invalidEmails = emails.filter((e) => !foundEmails.has(e.toLowerCase()));
+
+    return { userIds, invalidEmails };
+  }
+
+  private async getChurchUnitMemberIds(unitId: string): Promise<string[]> {
+    const unit = await this.prisma.churchUnit.findUnique({
+      where: { id: unitId },
+      include: {
+        members: { select: { user_id: true } },
+      },
+    });
+
+    if (!unit) return [];
+
+    const ids = unit.members.map((m) => m.user_id);
+    if (unit.leader_id) {
+      ids.push(unit.leader_id);
+    }
+
+    return [...new Set(ids)];
+  }
+
+  async findLessonById(id: string, viewerId?: string, viewerRole?: string): Promise<LessonDto | null> {
     const lesson = await this.prisma.lesson.findUnique({
       include: {
-        course: true,
+        course: {
+          include: {
+            attendees: true,
+            grades: viewerId ? { where: { user_id: viewerId } } : false,
+          },
+        },
         templates: {
           select: {
             quiz_maps: {
@@ -333,7 +518,34 @@ export class CourseRepository {
       where: { id },
     });
 
-    return lesson ? this.mapLesson(lesson) : null;
+    if (!lesson) return null;
+
+    if (viewerId) {
+      // Admins can see all lessons
+      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+        return this.mapLesson(lesson);
+      }
+
+      // Check access
+      const isEnrolled = lesson.course.grades && lesson.course.grades.length > 0;
+      let isAllowed = false;
+
+      if (lesson.course.attendees.length > 0) {
+        const isAttendee = lesson.course.attendees.some((a) => a.user_id === viewerId);
+        isAllowed = isAttendee && isEnrolled;
+      } else {
+        isAllowed = isEnrolled;
+      }
+
+      if (!isAllowed) {
+        throw new ForbiddenException({
+          code: 'FORBIDDEN',
+          message: 'You must be enrolled and authorized to view this lesson.',
+        });
+      }
+    }
+
+    return this.mapLesson(lesson);
   }
 
   async createLesson(courseSlug: string, dto: CreateLessonDto, creatorId: string): Promise<LessonDto | null> {
