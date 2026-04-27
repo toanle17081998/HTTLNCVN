@@ -197,4 +197,6 @@ export type EnrollPreviewMemberDto = {
 export type EnrollPreviewDto = {
   members: EnrollPreviewMemberDto[];
   invalid_emails: string[];
+  enrolled_count: number;
+  authorized_count: number;
 };

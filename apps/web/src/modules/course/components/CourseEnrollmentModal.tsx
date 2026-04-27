@@ -28,11 +28,6 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
 
   useEffect(() => {
     const emails = emailsText.split(/[\s,]+/).map(e => e.trim()).filter(Boolean);
-    if (!churchUnitId && emails.length === 0) {
-      setPreview(null);
-      setSelectedMemberIds(new Set());
-      return;
-    }
     
     const timer = setTimeout(async () => {
       try {
@@ -43,13 +38,15 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
         setPreview(result);
         
         // Auto-select members who are NOT fully enrolled and authorized
-        const newSelected = new Set<string>();
-        result.members.forEach(m => {
-          if (!m.is_enrolled || !m.is_authorized) {
-            newSelected.add(m.id);
-          }
-        });
-        setSelectedMemberIds(newSelected);
+        if (result.members.length > 0) {
+          const newSelected = new Set<string>();
+          result.members.forEach(m => {
+            if (!m.is_enrolled || !m.is_authorized) {
+              newSelected.add(m.id);
+            }
+          });
+          setSelectedMemberIds(newSelected);
+        }
       } catch (error) {
         console.error("Preview failed", error);
       }
@@ -230,14 +227,18 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
             )}
           </div>
 
-          <div className="p-6 bg-[var(--bg-base)] border-t border-[var(--border-subtle)]">
-            <div className="flex justify-between text-xs mb-1">
+          <div className="p-6 bg-[var(--bg-base)] border-t border-[var(--border-subtle)] space-y-2">
+            <div className="flex justify-between text-xs">
               <span className="text-[var(--text-secondary)]">To be enrolled:</span>
               <span className="font-bold text-[var(--text-primary)]">{selectedMemberIds.size}</span>
             </div>
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-xs" title="Total members currently enrolled in this course (have a Grade record)">
               <span className="text-[var(--text-secondary)]">Already in course:</span>
-              <span className="text-[var(--text-tertiary)]">{preview?.members.filter(m => m.is_enrolled).length || 0}</span>
+              <span className="font-bold text-[var(--text-primary)]">{preview?.enrolled_count ?? 0}</span>
+            </div>
+            <div className="flex justify-between text-xs" title="Total members explicitly whitelisted for this course (have an Attendance record). If > 0, only these members can see lessons.">
+              <span className="text-[var(--text-secondary)]">Whitelisted (Restricted):</span>
+              <span className="font-bold text-[var(--text-primary)]">{preview?.authorized_count ?? 0}</span>
             </div>
           </div>
         </div>

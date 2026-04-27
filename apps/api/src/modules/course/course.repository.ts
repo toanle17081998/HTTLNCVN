@@ -401,6 +401,12 @@ export class CourseRepository {
 
   async previewEnrollment(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<import('./course.types').EnrollPreviewDto> {
     const realId = await this.resolveCourseId(courseId);
+
+    const [enrolledTotal, authorizedTotal] = await Promise.all([
+      this.prisma.courseGrade.count({ where: { course_id: realId } }),
+      this.prisma.courseAttendance.count({ where: { course_id: realId } }),
+    ]);
+
     const { userIds, invalidEmails } = await this.getUserIdsFromEmails(dto.emails ?? []);
     let allTargetIds = [...userIds];
 
@@ -410,7 +416,12 @@ export class CourseRepository {
     }
 
     if (allTargetIds.length === 0) {
-      return { members: [], invalid_emails: invalidEmails };
+      return {
+        members: [],
+        invalid_emails: invalidEmails,
+        enrolled_count: enrolledTotal,
+        authorized_count: authorizedTotal,
+      };
     }
 
     const users = await this.prisma.user.findMany({
@@ -441,6 +452,8 @@ export class CourseRepository {
     return {
       members,
       invalid_emails: invalidEmails,
+      enrolled_count: enrolledTotal,
+      authorized_count: authorizedTotal,
     };
   }
 
