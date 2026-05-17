@@ -63,7 +63,16 @@ const EVENT_INCLUDE = {
       username: true,
     },
   },
+  series: {
+    select: {
+      id: true,
+      repeat: true,
+      slug: true,
+    },
+  },
 } as const;
+
+const RECURRING_OCCURRENCE_LIMIT = 60;
 
 function toMemberDto(member: {
   id: string;
@@ -102,6 +111,78 @@ function toCategoryDto(category: {
   };
 }
 
+function buildOccurrenceSlug(baseSlug: string, startsAt: Date): string {
+  const year = startsAt.getUTCFullYear();
+  const month = String(startsAt.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(startsAt.getUTCDate()).padStart(2, '0');
+  const hour = String(startsAt.getUTCHours()).padStart(2, '0');
+  const minute = String(startsAt.getUTCMinutes()).padStart(2, '0');
+  return `${baseSlug}-${year}${month}${day}${hour}${minute}`;
+}
+
+function buildRecurringStarts(startsAt: Date, repeat: string): Date[] {
+  if (repeat === 'none') {
+    return [startsAt];
+  }
+
+  const occurrences: Date[] = [];
+  let cursor = new Date(startsAt);
+
+  while (occurrences.length < RECURRING_OCCURRENCE_LIMIT) {
+    occurrences.push(new Date(cursor));
+
+    switch (repeat) {
+      case 'daily':
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        break;
+      case 'weekly':
+        cursor.setUTCDate(cursor.getUTCDate() + 7);
+        break;
+      case 'monthly':
+        cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+        break;
+      case 'weekdays':
+        do {
+          cursor.setUTCDate(cursor.getUTCDate() + 1);
+        } while (cursor.getUTCDay() === 0 || cursor.getUTCDay() === 6);
+        break;
+      default:
+        return occurrences;
+    }
+  }
+
+  return occurrences;
+}
+
+async function expandAudienceUserIds(
+  prisma: PrismaService | Prisma.TransactionClient,
+  audience: string | undefined,
+  churchUnitIds: string[],
+  userIds: string[],
+): Promise<string[]> {
+  if (audience !== 'church_unit' || churchUnitIds.length === 0) {
+    return [...new Set(userIds)];
+  }
+
+  const units = await prisma.churchUnit.findMany({
+    where: { id: { in: churchUnitIds } },
+    select: {
+      leader_id: true,
+      members: { select: { user_id: true } },
+    },
+  });
+
+  const expanded = [...userIds];
+  for (const unit of units) {
+    if (unit.leader_id) {
+      expanded.push(unit.leader_id);
+    }
+    expanded.push(...unit.members.map((member) => member.user_id));
+  }
+
+  return [...new Set(expanded)];
+}
+
 function toEventDto(event: {
   attendees: Array<{
     user: {
@@ -122,8 +203,10 @@ function toEventDto(event: {
   description: string | null;
   ends_at: Date;
   id: string;
+  is_all_day: boolean;
   location: string | null;
   repeat: string;
+  series: { id: string; repeat: string; slug: string } | null;
   slug: string;
   starts_at: Date;
   status: string;
@@ -140,8 +223,10 @@ function toEventDto(event: {
     description: event.description,
     ends_at: event.ends_at.toISOString(),
     id: event.id,
+    is_all_day: event.is_all_day,
     location: event.location,
-    repeat: event.repeat,
+    repeat: event.series?.repeat ?? event.repeat,
+    series: event.series,
     slug: event.slug,
     starts_at: event.starts_at.toISOString(),
     status: event.status,
@@ -283,13 +368,13 @@ export class EventRepository {
     };
   }
 
-  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<EventDto | null> {
+  async findById(id: string, viewerId?: string, viewerRole?: string): Promise<EventDto | null> {
     const event = await this.prisma.event.findFirst({
       include: EVENT_INCLUDE,
       where: {
         AND: [
           { deleted_at: null },
-          { slug },
+          { id },
           buildVisibilityWhere(viewerId, viewerRole),
         ],
       },
@@ -298,15 +383,36 @@ export class EventRepository {
     return event ? toEventDto(event) : null;
   }
 
-  async findBySlugForWrite(slug: string): Promise<EventDto | null> {
+  async findByIdForWrite(id: string): Promise<EventDto | null> {
     const event = await this.prisma.event.findFirst({
       include: EVENT_INCLUDE,
       where: {
-        slug,
+        id,
       },
     });
 
     return event ? toEventDto(event) : null;
+  }
+
+  async findStandaloneBySlugForWrite(slug: string): Promise<EventDto | null> {
+    const event = await this.prisma.event.findFirst({
+      include: EVENT_INCLUDE,
+      where: {
+        series_id: null,
+        slug,
+      } as any,
+    } as any);
+
+    return event ? toEventDto(event as any) : null;
+  }
+
+  async seriesExistsBySlug(slug: string): Promise<boolean> {
+    const series = await (this.prisma as any).eventSeries.findUnique({
+      select: { id: true },
+      where: { slug },
+    });
+
+    return Boolean(series);
   }
 
   createCategory(dto: CreateEventCategoryDto): Promise<EventCategoryDto> {
@@ -365,73 +471,139 @@ export class EventRepository {
 
   async create(dto: CreateEventDto, creatorId: string): Promise<EventDto> {
     const churchUnitIds = [...new Set(dto.church_unit_ids ?? [])];
-    const userIds = [...new Set(dto.user_ids ?? [])];
+    const baseUserIds = [...new Set(dto.user_ids ?? [])];
+    const startsAt = new Date(dto.starts_at);
+    const endsAt = new Date(dto.ends_at);
+    const repeat = dto.repeat ?? 'none';
+    const audience = dto.audience ?? 'public';
+    const title = dto.title.trim();
+    const description = dto.description?.trim() || null;
+    const location = dto.location?.trim() || null;
+    const slug = dto.slug.trim();
+    const isAllDay = dto.is_all_day ?? false;
+    const status = dto.status ?? 'published';
+    const categoryId = dto.category_id ?? null;
+    const color = dto.color ?? null;
+    const coverImageUrl = dto.cover_image_url ?? null;
+    const durationMs = Math.max(endsAt.getTime() - startsAt.getTime(), 0);
+    const expandedUserIds = await expandAudienceUserIds(this.prisma, audience, churchUnitIds, baseUserIds);
 
-    // If audience is church_unit, we also add all members of those units to userIds
-    // for targeting/attendance tracking as per requirements.
-    if (dto.audience === 'church_unit' && churchUnitIds.length > 0) {
-      const units = await this.prisma.churchUnit.findMany({
-        where: { id: { in: churchUnitIds } },
-        select: {
-          leader_id: true,
-          members: { select: { user_id: true } },
+    const event = await this.prisma.$transaction(async (tx) => {
+      if (repeat === 'none') {
+        return tx.event.create({
+          data: {
+            audience,
+            category_id: categoryId,
+            color,
+            cover_image_url: coverImageUrl,
+            created_by: creatorId,
+            description,
+            ends_at: endsAt,
+            is_all_day: isAllDay,
+            location,
+            repeat,
+            slug,
+            starts_at: startsAt,
+            status,
+            title,
+            ...(churchUnitIds.length > 0 && {
+              church_unit_targets: {
+                createMany: {
+                  data: churchUnitIds.map((churchUnitId) => ({ church_unit_id: churchUnitId })),
+                },
+              },
+            }),
+            ...(expandedUserIds.length > 0 && {
+              attendees: {
+                createMany: {
+                  data: expandedUserIds.map((userId) => ({ user_id: userId })),
+                  skipDuplicates: true,
+                },
+              },
+            }),
+          },
+          include: EVENT_INCLUDE,
+        });
+      }
+
+      const series = await (tx as any).eventSeries.create({
+        data: {
+          category_id: categoryId,
+          color,
+          cover_image_url: coverImageUrl,
+          created_by: creatorId,
+          description,
+          ends_at: endsAt,
+          is_all_day: isAllDay,
+          location,
+          repeat,
+          slug,
+          starts_at: startsAt,
+          title,
         },
       });
 
-      for (const unit of units) {
-        if (unit.leader_id) userIds.push(unit.leader_id);
-        userIds.push(...unit.members.map((m) => m.user_id));
+      const occurrenceStarts = buildRecurringStarts(startsAt, repeat);
+      for (const occurrenceStart of occurrenceStarts) {
+        const occurrenceEnd = new Date(occurrenceStart.getTime() + durationMs);
+        await tx.event.create({
+          data: {
+            audience,
+            category_id: categoryId,
+            color,
+            cover_image_url: coverImageUrl,
+            created_by: creatorId,
+            description,
+            ends_at: occurrenceEnd,
+            is_all_day: isAllDay,
+            location,
+            repeat,
+            series_id: series.id,
+            slug: buildOccurrenceSlug(slug, occurrenceStart),
+            starts_at: occurrenceStart,
+            status,
+            title,
+            ...(churchUnitIds.length > 0 && {
+              church_unit_targets: {
+                createMany: {
+                  data: churchUnitIds.map((churchUnitId) => ({ church_unit_id: churchUnitId })),
+                },
+              },
+            }),
+            ...(expandedUserIds.length > 0 && {
+              attendees: {
+                createMany: {
+                  data: expandedUserIds.map((userId) => ({ user_id: userId })),
+                  skipDuplicates: true,
+                },
+              },
+            }),
+          } as any,
+        } as any);
       }
-      userIds.splice(0, userIds.length, ...new Set(userIds));
-    }
 
-    const event = await this.prisma.event.create({
-      data: {
-        audience: dto.audience ?? 'public',
-        category_id: dto.category_id ?? null,
-        color: dto.color ?? null,
-        cover_image_url: dto.cover_image_url ?? null,
-        created_by: creatorId,
-        description: dto.description?.trim() || null,
-        ends_at: new Date(dto.ends_at),
-        location: dto.location?.trim() || null,
-        repeat: dto.repeat ?? 'none',
-        slug: dto.slug.trim(),
-        starts_at: new Date(dto.starts_at),
-        status: dto.status ?? 'published',
-        title: dto.title.trim(),
-        ...(churchUnitIds.length > 0 && {
-          church_unit_targets: {
-            createMany: {
-              data: churchUnitIds.map((churchUnitId) => ({ church_unit_id: churchUnitId })),
-            },
-          },
-        }),
-        ...(userIds.length > 0 && {
-          attendees: {
-            createMany: {
-              data: userIds.map((userId) => ({ user_id: userId })),
-              skipDuplicates: true,
-            },
-          },
-        }),
-      },
-      include: EVENT_INCLUDE,
+      return tx.event.findFirstOrThrow({
+        include: EVENT_INCLUDE,
+        where: {
+          series_id: series.id,
+          starts_at: startsAt,
+        } as any,
+      } as any);
     });
 
-    return toEventDto(event);
+    return toEventDto(event as any);
   }
 
-  async update(slug: string, dto: UpdateEventDto): Promise<EventDto | null> {
+  async update(id: string, dto: UpdateEventDto): Promise<EventDto | null> {
     const churchUnitIds =
       dto.church_unit_ids !== undefined ? [...new Set(dto.church_unit_ids)] : undefined;
     const userIds = dto.user_ids !== undefined ? [...new Set(dto.user_ids)] : undefined;
 
     const event = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.event.findUnique({
-        select: { id: true, audience: true },
-        where: { slug },
-      });
+        select: { id: true, audience: true, series_id: true },
+        where: { id },
+      } as any) as { id: string; audience: string; series_id: string | null } | null;
 
       if (!existing) {
         return null;
@@ -445,9 +617,10 @@ export class EventRepository {
           ...(dto.cover_image_url !== undefined && { cover_image_url: dto.cover_image_url ?? null }),
           ...(dto.description !== undefined && { description: dto.description?.trim() || null }),
           ...(dto.ends_at !== undefined && { ends_at: new Date(dto.ends_at) }),
+          ...(dto.is_all_day !== undefined && { is_all_day: dto.is_all_day }),
           ...(dto.location !== undefined && { location: dto.location?.trim() || null }),
-          ...(dto.repeat !== undefined && { repeat: dto.repeat }),
-          ...(dto.slug !== undefined && { slug: dto.slug.trim() }),
+          ...(existing.series_id === null && dto.repeat !== undefined && { repeat: dto.repeat }),
+          ...(existing.series_id === null && dto.slug !== undefined && { slug: dto.slug.trim() }),
           ...(dto.starts_at !== undefined && { starts_at: new Date(dto.starts_at) }),
           ...(dto.status !== undefined && { status: dto.status }),
           ...(dto.title !== undefined && { title: dto.title.trim() }),
@@ -489,7 +662,7 @@ export class EventRepository {
           let finalUserIds: string[] = [];
 
           if (finalAudience === 'people') {
-            finalUserIds = userIds ?? currentAttendees.map(a => a.user_id);
+            finalUserIds = userIds ?? currentAttendees.map((attendance) => attendance.user_id);
           } else if (finalAudience === 'church_unit') {
             let unitIds: string[] = [];
             if (churchUnitIds !== undefined) {
@@ -497,27 +670,17 @@ export class EventRepository {
             } else {
               const currentUnits = await tx.eventChurchUnitTarget.findMany({
                 where: { event_id: existing.id },
-                select: { church_unit_id: true }
+                select: { church_unit_id: true },
               });
-              unitIds = currentUnits.map(t => t.church_unit_id);
+              unitIds = currentUnits.map((target) => target.church_unit_id);
             }
 
-            const units = await tx.churchUnit.findMany({
-              where: { id: { in: unitIds } },
-              select: {
-                leader_id: true,
-                members: { select: { user_id: true } },
-              },
-            });
-            const memberUserIds = units.flatMap((u) =>
-              [u.leader_id, ...u.members.map((m) => m.user_id)].filter(Boolean),
-            ) as string[];
-            finalUserIds = [...new Set(memberUserIds)];
+            finalUserIds = await expandAudienceUserIds(tx, finalAudience, unitIds, []);
           }
 
           if (finalUserIds.length > 0) {
             await tx.eventAttendance.createMany({
-              data: finalUserIds.map(userId => ({
+              data: finalUserIds.map((userId) => ({
                 event_id: existing.id,
                 user_id: userId,
               })),
@@ -533,16 +696,16 @@ export class EventRepository {
       return tx.event.findUnique({
         include: EVENT_INCLUDE,
         where: { id: existing.id },
-      });
+      } as any);
     });
 
-    return event ? toEventDto(event) : null;
+    return event ? toEventDto(event as any) : null;
   }
 
-  async delete(slug: string): Promise<void> {
+  async delete(id: string): Promise<void> {
     await this.prisma.event.update({
       data: { deleted_at: new Date() },
-      where: { slug },
+      where: { id },
     });
   }
 }

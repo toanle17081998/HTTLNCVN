@@ -54,6 +54,7 @@ model User {
   profile                 Profile?
   church_units_led        ChurchUnit[]            @relation("ChurchUnitLeader")
   church_unit_memberships ChurchUnitMember[]
+  event_series_created    EventSeries[]
   events_created          Event[]
   attendances             EventAttendance[]
   course_attendances      CourseAttendance[]
@@ -396,9 +397,37 @@ model EventCategory {
   name        String  @unique @db.VarChar(100)
   description String? @db.Text
 
+  event_series EventSeries[]
   events Event[]
 
   @@map("event_categories")
+}
+
+model EventSeries {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String    @unique @db.VarChar(150)
+  title           String    @db.VarChar(255)
+  description     String?   @db.Text
+  starts_at       DateTime  @db.Timestamptz
+  ends_at         DateTime  @db.Timestamptz
+  is_all_day      Boolean   @default(false)
+  location        String?   @db.VarChar(255)
+  cover_image_url String?   @db.Text
+  color           String?   @db.VarChar(50)
+  repeat          String    @default("none") @db.VarChar(50)
+  category_id     Int?
+  created_by      String    @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz
+  updated_at      DateTime  @default(now()) @updatedAt @db.Timestamptz
+  deleted_at      DateTime? @db.Timestamptz
+
+  category EventCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator  User           @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  events   Event[]
+
+  @@index([category_id])
+  @@index([created_by])
+  @@map("event_series")
 }
 
 model Event {
@@ -408,12 +437,14 @@ model Event {
   description     String?   @db.Text
   starts_at       DateTime  @db.Timestamptz
   ends_at         DateTime  @db.Timestamptz
+  is_all_day      Boolean   @default(false)
   location        String?   @db.VarChar(255)
   cover_image_url String?   @db.Text
   status          String    @default("draft") @db.VarChar(20)
   audience        String    @default("public") @db.VarChar(50)
   color           String?   @db.VarChar(50)
   repeat          String    @default("none") @db.VarChar(50)
+  series_id       String?   @db.Uuid
   category_id     Int?
   created_by      String    @db.Uuid
   created_at      DateTime  @default(now()) @db.Timestamptz
@@ -422,11 +453,13 @@ model Event {
 
   category  EventCategory?    @relation(fields: [category_id], references: [id], onDelete: SetNull)
   creator   User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  series    EventSeries?      @relation(fields: [series_id], references: [id], onDelete: SetNull)
   attendees EventAttendance[]
   church_unit_targets EventChurchUnitTarget[]
 
   @@index([category_id])
   @@index([created_by])
+  @@index([series_id])
   @@map("events")
 }
 

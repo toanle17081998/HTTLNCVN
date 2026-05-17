@@ -333,6 +333,7 @@
   "event.form.repeat.weekly": "Every week",
   "event.form.repeat.monthly": "Every month",
   "event.form.repeat.weekdays": "Mon-Fri",
+  "event.form.allDay": "All day",
   "event.form.starts": "Starts",
   "event.form.ends": "Ends",
   "event.form.location": "Location",

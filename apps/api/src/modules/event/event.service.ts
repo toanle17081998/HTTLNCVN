@@ -38,8 +38,8 @@ export class EventService {
     return this.eventRepository.findAll(filters, safeSkip, safeTake, viewerId, viewerRole);
   }
 
-  async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<EventDto> {
-    const event = await this.eventRepository.findBySlug(slug, viewerId, viewerRole);
+  async findById(id: string, viewerId?: string, viewerRole?: string): Promise<EventDto> {
+    const event = await this.eventRepository.findById(id, viewerId, viewerRole);
 
     if (!event) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
@@ -84,14 +84,14 @@ export class EventService {
     return this.eventRepository.create(dto, creatorId);
   }
 
-  async update(slug: string, dto: UpdateEventDto): Promise<EventDto> {
-    const existing = await this.eventRepository.findBySlugForWrite(slug);
+  async update(id: string, dto: UpdateEventDto): Promise<EventDto> {
+    const existing = await this.eventRepository.findByIdForWrite(id);
     if (!existing) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
     }
-    await this.validateWrite(dto, existing.id);
+    await this.validateWrite(dto, existing);
 
-    const event = await this.eventRepository.update(slug, dto);
+    const event = await this.eventRepository.update(id, dto);
 
     if (!event) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
@@ -100,15 +100,15 @@ export class EventService {
     return event;
   }
 
-  async delete(slug: string): Promise<void> {
-    const existing = await this.eventRepository.findBySlugForWrite(slug);
+  async delete(id: string): Promise<void> {
+    const existing = await this.eventRepository.findByIdForWrite(id);
     if (!existing) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
     }
-    await this.eventRepository.delete(slug);
+    await this.eventRepository.delete(id);
   }
 
-  private async validateWrite(dto: CreateEventDto | UpdateEventDto, currentEventId?: string): Promise<void> {
+  private async validateWrite(dto: CreateEventDto | UpdateEventDto, currentEvent?: EventDto): Promise<void> {
     if ('title' in dto && dto.title !== undefined && !dto.title.trim()) {
       throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Event title is required.' });
     }
@@ -119,12 +119,27 @@ export class EventService {
         throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Event slug is required.' });
       }
 
-      const existing = await this.eventRepository.findBySlugForWrite(slug);
-      if (existing && existing.id !== currentEventId) {
-        throw new BadRequestException({
-          code: 'BAD_REQUEST',
-          message: 'Event slug already exists.',
-        });
+      const editingRecurringOccurrence = Boolean(currentEvent?.series);
+      if (!editingRecurringOccurrence) {
+        const existing = await this.eventRepository.findStandaloneBySlugForWrite(slug);
+        if (existing && existing.id !== currentEvent?.id) {
+          throw new BadRequestException({
+            code: 'BAD_REQUEST',
+            message: 'Event slug already exists.',
+          });
+        }
+      }
+
+      if ((dto.repeat ?? currentEvent?.repeat) !== 'none') {
+        const seriesExists = await this.eventRepository.seriesExistsBySlug(slug);
+        if (!currentEvent?.series || currentEvent.series.slug !== slug) {
+          if (seriesExists) {
+            throw new BadRequestException({
+              code: 'BAD_REQUEST',
+              message: 'Event slug already exists.',
+            });
+          }
+        }
       }
     }
 
@@ -138,6 +153,10 @@ export class EventService {
 
     if (dto.status !== undefined && !DEFAULT_EVENT_STATUSES.includes(dto.status as never)) {
       throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Invalid event status.' });
+    }
+
+    if (dto.is_all_day !== undefined && typeof dto.is_all_day !== 'boolean') {
+      throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Invalid all-day flag.' });
     }
 
     const startsAt = dto.starts_at !== undefined ? new Date(dto.starts_at) : null;

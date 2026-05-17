@@ -45,6 +45,7 @@ type EventForm = {
   cover_image_url: string;
   description: string;
   ends_at: string;
+  is_all_day: boolean;
   location: string;
   repeat: EventRepeat;
   slug: string;
@@ -79,6 +80,14 @@ function toLocalDateTimeInput(value: string | Date) {
   return `${year}-${month}-${day}T${hour}:${minute}`;
 }
 
+function toLocalDateInput(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function createEmptyForm(now = new Date()): EventForm {
   const startsAt = new Date(now);
   startsAt.setMinutes(0, 0, 0);
@@ -94,6 +103,7 @@ function createEmptyForm(now = new Date()): EventForm {
     cover_image_url: "",
     description: "",
     ends_at: toLocalDateTimeInput(endsAt),
+    is_all_day: false,
     location: "",
     repeat: "none",
     slug: "",
@@ -105,6 +115,9 @@ function createEmptyForm(now = new Date()): EventForm {
 }
 
 function eventToForm(event: EventItem): EventForm {
+  const allDayEndDate = new Date(event.ends_at);
+  allDayEndDate.setDate(allDayEndDate.getDate() - 1);
+
   return {
     audience: event.audience,
     category_id: event.category ? String(event.category.id) : "",
@@ -112,11 +125,12 @@ function eventToForm(event: EventItem): EventForm {
     color: event.color ?? "#5b8def",
     cover_image_url: event.cover_image_url ?? "",
     description: event.description ?? "",
-    ends_at: toLocalDateTimeInput(event.ends_at),
+    ends_at: event.is_all_day ? toLocalDateInput(allDayEndDate) : toLocalDateTimeInput(event.ends_at),
+    is_all_day: event.is_all_day,
     location: event.location ?? "",
-    repeat: event.repeat,
-    slug: event.slug,
-    starts_at: toLocalDateTimeInput(event.starts_at),
+    repeat: event.series?.repeat ?? event.repeat,
+    slug: event.series?.slug ?? event.slug,
+    starts_at: event.is_all_day ? toLocalDateInput(event.starts_at) : toLocalDateTimeInput(event.starts_at),
     status: event.status,
     title: event.title,
     user_ids: event.target_users.map((user) => user.id),
@@ -125,6 +139,16 @@ function eventToForm(event: EventItem): EventForm {
 
 function localInputToIso(value: string) {
   return new Date(value).toISOString();
+}
+
+function allDayDateRangeToIso(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T00:00`);
+  const end = new Date(`${endDate}T00:00`);
+  end.setDate(end.getDate() + 1);
+  return {
+    ends_at: end.toISOString(),
+    starts_at: start.toISOString(),
+  };
 }
 
 function mutationErrorMessage(error: unknown) {
@@ -167,7 +191,22 @@ function formatEventDateRange(
   locale: string,
   startsAt: string,
   endsAt: string,
+  isAllDay: boolean,
+  t: (key: any, params?: any) => string,
 ) {
+  if (isAllDay) {
+    const start = new Date(startsAt);
+    const end = new Date(endsAt);
+    end.setDate(end.getDate() - 1);
+    const dateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+
+    if (start.toDateString() === end.toDateString()) {
+      return `${dateFormatter.format(start)} - ${t("event.form.allDay")}`;
+    }
+
+    return `${dateFormatter.format(start)} - ${dateFormatter.format(end)} (${t("event.form.allDay")})`;
+  }
+
   const formatter = new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -274,7 +313,7 @@ export function EventPage() {
 
   function openEditModal(event: EventItem) {
     setEditingEvent(event);
-    setSlugTouched(true);
+    setSlugTouched(Boolean(event.series));
     setForm(eventToForm(event));
     setModalOpen(true);
   }
@@ -305,6 +344,13 @@ export function EventPage() {
   }
 
   function buildEventPayload(): CreateEventDto {
+    const dateRange = form.is_all_day
+      ? allDayDateRangeToIso(form.starts_at, form.ends_at)
+      : {
+          ends_at: localInputToIso(form.ends_at),
+          starts_at: localInputToIso(form.starts_at),
+        };
+
     return {
       audience: form.audience,
       category_id: form.category_id ? Number(form.category_id) : null,
@@ -312,11 +358,12 @@ export function EventPage() {
       color: form.color.trim() || null,
       cover_image_url: form.cover_image_url.trim() || null,
       description: form.description.trim() || null,
-      ends_at: localInputToIso(form.ends_at),
+      ends_at: dateRange.ends_at,
+      is_all_day: form.is_all_day,
       location: form.location.trim() || null,
       repeat: form.repeat,
       slug: form.slug.trim(),
-      starts_at: localInputToIso(form.starts_at),
+      starts_at: dateRange.starts_at,
       status: form.status,
       title: form.title.trim(),
       user_ids: form.audience === "people" ? form.user_ids : [],
@@ -329,7 +376,7 @@ export function EventPage() {
 
     if (editingEvent) {
       updateMutation.mutate(
-        { dto: payload, slug: editingEvent.slug },
+        { dto: payload, id: editingEvent.id },
         {
           onSuccess() {
             toast({ title: t("event.toast.saved"), variant: "success" });
@@ -358,7 +405,7 @@ export function EventPage() {
       return;
     }
 
-    deleteMutation.mutate(event.slug, {
+    deleteMutation.mutate(event.id, {
       onSuccess() {
         toast({ title: t("event.toast.deleted"), variant: "success" });
         if (editingEvent?.id === event.id) {
@@ -589,7 +636,7 @@ export function EventPage() {
                       <div className="mt-3 grid gap-2 text-sm text-[var(--text-secondary)]">
                         <div className="flex items-center gap-2">
                           <Clock3 aria-hidden="true" className="h-4 w-4" />
-                          <span>{formatEventDateRange(locale, event.starts_at, event.ends_at)}</span>
+                          <span>{formatEventDateRange(locale, event.starts_at, event.ends_at, event.is_all_day, t)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Users aria-hidden="true" className="h-4 w-4" />
@@ -698,6 +745,7 @@ export function EventPage() {
                       setForm((current) => ({ ...current, slug: slugify(event.target.value) }));
                     }}
                     placeholder={t("event.form.slugPlaceholder")}
+                    readOnly={Boolean(editingEvent?.series)}
                     value={form.slug}
                   />
                 </FormField>
@@ -744,6 +792,7 @@ export function EventPage() {
                         repeat: event.target.value as EventRepeat,
                       }))
                     }
+                    disabled={Boolean(editingEvent?.series)}
                     value={form.repeat}
                   >
                     <option value="none">{t("event.form.repeat.none")}</option>
@@ -762,7 +811,7 @@ export function EventPage() {
                     onChange={(event) =>
                       setForm((current) => ({ ...current, starts_at: event.target.value }))
                     }
-                    type="datetime-local"
+                    type={form.is_all_day ? "date" : "datetime-local"}
                     value={form.starts_at}
                   />
                 </FormField>
@@ -772,11 +821,42 @@ export function EventPage() {
                     onChange={(event) =>
                       setForm((current) => ({ ...current, ends_at: event.target.value }))
                     }
-                    type="datetime-local"
+                    type={form.is_all_day ? "date" : "datetime-local"}
                     value={form.ends_at}
                   />
                 </FormField>
               </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
+                <input
+                  checked={form.is_all_day}
+                  onChange={(event) =>
+                    setForm((current) => {
+                      if (event.target.checked) {
+                        const startDate = toLocalDateInput(current.starts_at);
+                        const endDate = toLocalDateInput(current.ends_at);
+                        return {
+                          ...current,
+                          ends_at: endDate < startDate ? startDate : endDate,
+                          is_all_day: true,
+                          starts_at: startDate,
+                        };
+                      }
+
+                      const startsAt = new Date(`${current.starts_at}T09:00`);
+                      const endsAt = new Date(`${current.ends_at}T10:00`);
+                      return {
+                        ...current,
+                        ends_at: toLocalDateTimeInput(endsAt),
+                        is_all_day: false,
+                        starts_at: toLocalDateTimeInput(startsAt),
+                      };
+                    })
+                  }
+                  type="checkbox"
+                />
+                <span>{t("event.form.allDay")}</span>
+              </label>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField htmlFor="event-location" label={t("event.form.location")}>
@@ -1039,3 +1119,4 @@ export function EventPage() {
     </PageLayout>
   );
 }
+

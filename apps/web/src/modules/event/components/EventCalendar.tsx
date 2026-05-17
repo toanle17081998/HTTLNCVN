@@ -10,6 +10,130 @@ interface EventCalendarProps {
 }
 
 const MAX_VISIBLE_EVENTS = 3;
+const MAX_OCCURRENCES_PER_EVENT = 366;
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function addMonths(date: Date, months: number) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
+
+function getDateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function sameDay(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+}
+
+function isWeekday(date: Date) {
+  const day = date.getDay();
+  return day !== 0 && day !== 6;
+}
+
+function formatEventTime(locale: string, event: EventItem, allDayLabel: string) {
+  if (event.is_all_day) {
+    return allDayLabel;
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).format(new Date(event.starts_at));
+}
+
+function buildOccurrences(
+  event: EventItem,
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  const baseStart = new Date(event.starts_at);
+  const baseEnd = new Date(event.ends_at);
+  const durationMs = Math.max(baseEnd.getTime() - baseStart.getTime(), 0);
+  const occurrences: Array<{ start: Date; end: Date }> = [];
+
+  const pushOccurrence = (start: Date) => {
+    const end = new Date(start.getTime() + durationMs);
+    if (end <= rangeStart || start >= rangeEnd) {
+      return;
+    }
+    occurrences.push({ end, start });
+  };
+
+  if (event.repeat === "none") {
+    pushOccurrence(baseStart);
+    return occurrences;
+  }
+
+  let cursor = new Date(baseStart);
+  let guard = 0;
+
+  while (cursor < rangeStart && guard < MAX_OCCURRENCES_PER_EVENT) {
+    switch (event.repeat) {
+      case "daily":
+        cursor = addDays(cursor, 1);
+        break;
+      case "weekly":
+        cursor = addDays(cursor, 7);
+        break;
+      case "monthly":
+        cursor = addMonths(cursor, 1);
+        break;
+      case "weekdays":
+        cursor = addDays(cursor, 1);
+        while (!isWeekday(cursor)) {
+          cursor = addDays(cursor, 1);
+        }
+        break;
+    }
+    guard += 1;
+  }
+
+  guard = 0;
+  while (cursor < rangeEnd && guard < MAX_OCCURRENCES_PER_EVENT) {
+    pushOccurrence(cursor);
+
+    switch (event.repeat) {
+      case "daily":
+        cursor = addDays(cursor, 1);
+        break;
+      case "weekly":
+        cursor = addDays(cursor, 7);
+        break;
+      case "monthly":
+        cursor = addMonths(cursor, 1);
+        break;
+      case "weekdays":
+        cursor = addDays(cursor, 1);
+        while (!isWeekday(cursor)) {
+          cursor = addDays(cursor, 1);
+        }
+        break;
+      default:
+        cursor = rangeEnd;
+        break;
+    }
+
+    guard += 1;
+  }
+
+  return occurrences;
+}
 
 export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
   const { locale, t } = useTranslation();
@@ -28,7 +152,6 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
   const calendarDays = useMemo(() => {
     const days = [];
 
-    // Previous month padding
     for (let i = prevMonthPadding - 1; i >= 0; i--) {
       days.push({
         date: new Date(year, month - 1, prevMonthDays - i),
@@ -36,7 +159,6 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
       });
     }
 
-    // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       days.push({
         date: new Date(year, month, i),
@@ -44,8 +166,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
       });
     }
 
-    // Next month padding
-    const remainingDays = 42 - days.length; // 6 rows of 7 days
+    const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       days.push({
         date: new Date(year, month + 1, i),
@@ -60,79 +181,46 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
 
   const eventsByDay = useMemo(() => {
     const map: Record<string, EventItem[]> = {};
+    const rangeStart = startOfDay(calendarDays[0].date);
+    const rangeEnd = addDays(startOfDay(calendarDays[calendarDays.length - 1].date), 1);
 
     events.forEach((event) => {
-      const startDate = new Date(event.starts_at);
-      const startYear = startDate.getFullYear();
-      const startMonth = startDate.getMonth();
-      const startDateNum = startDate.getDate();
-      const startDayOfWeek = startDate.getDay();
+      const occurrences = buildOccurrences(event, rangeStart, rangeEnd);
 
-      const startNormalized = new Date(startYear, startMonth, startDateNum).getTime();
+      occurrences.forEach(({ start, end }) => {
+        calendarDays.forEach((day) => {
+          const dayStart = startOfDay(day.date);
+          const dayEnd = addDays(dayStart, 1);
 
-      calendarDays.forEach((day) => {
-        const currentDate = day.date;
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth();
-        const currentDateNum = currentDate.getDate();
-        const currentDayOfWeek = currentDate.getDay();
-
-        const currentNormalized = new Date(currentYear, currentMonth, currentDateNum).getTime();
-
-        if (currentNormalized < startNormalized) return;
-
-        let isMatch = false;
-
-        switch (event.repeat) {
-          case "none":
-            isMatch = currentNormalized === startNormalized;
-            break;
-          case "daily":
-            isMatch = true;
-            break;
-          case "weekly":
-            isMatch = currentDayOfWeek === startDayOfWeek;
-            break;
-          case "monthly":
-            isMatch = currentDateNum === startDateNum;
-            break;
-          case "weekdays":
-            isMatch = currentDayOfWeek !== 0 && currentDayOfWeek !== 6;
-            break;
-        }
-
-        if (isMatch) {
-          const key = `${currentYear}-${currentMonth}-${currentDateNum}`;
-          if (!map[key]) map[key] = [];
-          map[key].push(event);
-        }
+          if (start < dayEnd && end > dayStart) {
+            const key = getDateKey(day.date);
+            if (!map[key]) {
+              map[key] = [];
+            }
+            map[key].push(event);
+          }
+        });
       });
     });
 
-    // Sort events by start time within each day
     Object.values(map).forEach((dayEvents) => {
       dayEvents.sort((a, b) => {
-        const timeA = new Date(a.starts_at).getHours() * 60 + new Date(a.starts_at).getMinutes();
-        const timeB = new Date(b.starts_at).getHours() * 60 + new Date(b.starts_at).getMinutes();
-        return timeA - timeB;
+        if (a.is_all_day !== b.is_all_day) {
+          return a.is_all_day ? -1 : 1;
+        }
+
+        return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
       });
     });
 
     return map;
-  }, [events, calendarDays]);
+  }, [calendarDays, events]);
 
   const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const goToToday = () => setCurrentDate(new Date());
 
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  const isToday = (date: Date) => sameDay(date, new Date());
 
   const weekDays = [
     t("event.days.sun"),
@@ -155,7 +243,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
             <Button
               variant="ghost"
               size="lg"
-              className="h-16 w-16 p-0 rounded-lg"
+              className="h-16 w-16 rounded-lg p-0"
               onClick={goToPrevMonth}
             >
               <ChevronLeft />
@@ -163,7 +251,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
             <Button
               variant="ghost"
               size="lg"
-              className="h-16 w-16 p-0 rounded-lg"
+              className="h-16 w-16 rounded-lg p-0"
               onClick={goToNextMonth}
             >
               <ChevronRight />
@@ -188,11 +276,11 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
             ))}
           </div>
 
-          <div className="max-h-[70vh] overflow-y-auto snap-y snap-proximity scroll-smooth bg-[var(--border-subtle)] border-b border-[var(--border-subtle)]">
+          <div className="max-h-[70vh] overflow-y-auto snap-y snap-proximity scroll-smooth border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
             {Array.from({ length: 6 }).map((_, weekIdx) => (
               <div key={weekIdx} className="grid grid-cols-7 gap-[1px] snap-start">
                 {calendarDays.slice(weekIdx * 7, (weekIdx + 1) * 7).map((day, i) => {
-                  const dateKey = `${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`;
+                  const dateKey = getDateKey(day.date);
                   const dayEvents = eventsByDay[dateKey] || [];
                   const today = isToday(day.date);
 
@@ -204,12 +292,12 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                     <div
                       key={i}
                       className={cn(
-                        "min-h-[140px] bg-[var(--bg-surface)] p-1.5 transition-all duration-200 flex flex-col border-b",
+                        "flex min-h-[140px] flex-col border-b bg-[var(--bg-surface)] p-1.5 transition-all duration-200",
                         !day.isCurrentMonth && "bg-[var(--bg-base)]/40 text-[var(--text-tertiary)]",
-                        day.isCurrentMonth && "hover:bg-[var(--brand-muted)]/5"
+                        day.isCurrentMonth && "hover:bg-[var(--brand-muted)]/5",
                       )}
                     >
-                      <div className="flex items-center justify-center mb-1">
+                      <div className="mb-1 flex items-center justify-center">
                         <span
                           className={cn(
                             "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all",
@@ -217,36 +305,32 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                               ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-primary)]/20"
                               : day.isCurrentMonth
                                 ? "text-[var(--text-primary)] hover:bg-[var(--bg-base)]"
-                                : "text-[var(--text-tertiary)]"
+                                : "text-[var(--text-tertiary)]",
                           )}
                         >
                           {day.date.getDate()}
                         </span>
                       </div>
                       <div className="flex-1 space-y-0.5 overflow-hidden">
-                        {visibleEvents.map((event) => (
+                        {visibleEvents.map((event, index) => (
                           <button
-                            key={event.id}
+                            key={`${event.id}-${dateKey}-${index}`}
                             onClick={() => onEventClick?.(event)}
-                            className="w-full text-left px-2 py-1 rounded-md transition-all group relative overflow-hidden flex items-center gap-1.5 hover:brightness-95 active:scale-[0.98]"
+                            className="group relative flex w-full items-center gap-1.5 overflow-hidden rounded-md px-2 py-1 text-left transition-all hover:brightness-95 active:scale-[0.98]"
                             style={{
                               backgroundColor: `${event.color || "var(--brand-primary)"}15`,
-                              borderLeft: `3px solid ${event.color || "var(--brand-primary)"}`
+                              borderLeft: `3px solid ${event.color || "var(--brand-primary)"}`,
                             }}
                           >
-                            <span className="text-[10px] font-bold text-[var(--text-primary)] truncate">
-                              {new Intl.DateTimeFormat(locale, {
-                                hour: "numeric",
-                                minute: "numeric",
-                                hour12: false,
-                              }).format(new Date(event.starts_at))} {event.title}
+                            <span className="truncate text-[10px] font-bold text-[var(--text-primary)]">
+                              {event.is_all_day ? `${t("event.form.allDay")} ${event.title}` : `${formatEventTime(locale, event, t("event.form.allDay"))} ${event.title}`}
                             </span>
                           </button>
                         ))}
                         {hasMore && (
                           <button
                             onClick={() => setSelectedDayEvents({ date: day.date, events: dayEvents })}
-                            className="w-full text-left px-2 py-0.5 text-[10px] font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-muted)]/20 rounded-md transition-colors mt-1"
+                            className="mt-1 w-full rounded-md px-2 py-0.5 text-left text-[10px] font-bold text-[var(--brand-primary)] transition-colors hover:bg-[var(--brand-muted)]/20"
                           >
                             +{moreCount} {t("event.calendar.more") || "more"}
                           </button>
@@ -275,42 +359,36 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 rounded-lg"
+                className="h-8 w-8 rounded-lg p-0"
                 onClick={() => setSelectedDayEvents(null)}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3 snap-y snap-proximity scroll-smooth">
-              {selectedDayEvents.events.map((event) => (
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 snap-y snap-proximity scroll-smooth">
+              {selectedDayEvents.events.map((event, index) => (
                 <button
-                  key={event.id}
+                  key={`${event.id}-${getDateKey(selectedDayEvents.date)}-${index}`}
                   onClick={() => {
                     onEventClick?.(event);
                     setSelectedDayEvents(null);
                   }}
-                  className="w-full text-left p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] transition-all shadow-sm flex items-start gap-3 group snap-start"
+                  className="group flex snap-start items-start gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 text-left shadow-sm transition-all hover:bg-[var(--bg-elevated)]"
                 >
                   <div
-                    className="w-1.5 h-10 rounded-full shrink-0"
+                    className="h-10 w-1.5 shrink-0 rounded-full"
                     style={{ backgroundColor: event.color || "var(--brand-primary)" }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
+                    <p className="text-sm font-bold text-[var(--text-primary)] transition-colors group-hover:text-[var(--brand-primary)]">
                       {event.title}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-[var(--text-tertiary)] font-medium">
+                    <div className="mt-1 flex items-center gap-2 text-xs font-medium text-[var(--text-tertiary)]">
                       <Clock3 className="h-3.5 w-3.5" />
-                      <span>
-                        {new Intl.DateTimeFormat(locale, {
-                          hour: "numeric",
-                          minute: "numeric",
-                          hour12: false,
-                        }).format(new Date(event.starts_at))}
-                      </span>
+                      <span>{formatEventTime(locale, event, t("event.form.allDay"))}</span>
                       {event.location && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
+                          <span className="h-1 w-1 rounded-full bg-[var(--border-subtle)]" />
                           <MapPin className="h-3.5 w-3.5" />
                           <span className="truncate">{event.location}</span>
                         </>

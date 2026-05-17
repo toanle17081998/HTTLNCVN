@@ -24,6 +24,12 @@ export type EventChurchUnitDto = {
   type: string;
 };
 
+export type EventSeriesDto = {
+  id: string;
+  repeat: string;
+  slug: string;
+};
+
 export type EventDto = {
   audience: string;
   category: EventCategoryDto | null;
@@ -34,8 +40,10 @@ export type EventDto = {
   description: string | null;
   ends_at: string;
   id: string;
+  is_all_day: boolean;
   location: string | null;
   repeat: string;
+  series: EventSeriesDto | null;
   slug: string;
   starts_at: string;
   status: string;
@@ -76,6 +84,7 @@ export type CreateEventDto = {
   cover_image_url?: string | null;
   description?: string | null;
   ends_at: string;
+  is_all_day?: boolean;
   location?: string | null;
   repeat?: EventRepeat;
   slug: string;
