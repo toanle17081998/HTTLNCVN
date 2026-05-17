@@ -99,7 +99,7 @@ export function MemberPage({ admin = false }: MemberPageProps) {
   const [q, setQ] = useState("");
   const [queryInput, setQueryInput] = useState("");
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   const membersQuery = useMembersQuery(
     { take: pageSize, skip: page * pageSize, q: q || undefined },
@@ -408,6 +408,7 @@ export function MemberPage({ admin = false }: MemberPageProps) {
                 className="rounded-none border-x-0 border-b-0"
                 page={page}
                 pageSize={pageSize}
+                pageSizeOptions={[10, 20, 50]}
                 total={total}
                 onPageChange={setPage}
                 onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}

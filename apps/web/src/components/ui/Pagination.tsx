@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { cn } from "./cn";
 
 type PaginationProps = {
@@ -52,21 +53,20 @@ export function Pagination({
         </span>
       </div>
 
-      {/* Right: «  <  Page N / T  >  » */}
       <div className="flex items-center gap-1">
         <PagBtn
           onClick={() => onPageChange(0)}
           disabled={page === 0}
           aria-label="First page"
         >
-          «
+          <ChevronsLeft />
         </PagBtn>
         <PagBtn
           onClick={() => onPageChange(page - 1)}
           disabled={page === 0}
           aria-label="Previous page"
         >
-          ‹
+          <ChevronLeft />
         </PagBtn>
 
         <span className="px-3 font-medium text-[var(--text-primary)]">
@@ -78,14 +78,14 @@ export function Pagination({
           disabled={page + 1 >= totalPages}
           aria-label="Next page"
         >
-          ›
+          <ChevronRight />
         </PagBtn>
         <PagBtn
           onClick={() => onPageChange(totalPages - 1)}
           disabled={page + 1 >= totalPages}
           aria-label="Last page"
         >
-          »
+          <ChevronsRight />
         </PagBtn>
       </div>
     </div>

@@ -21,6 +21,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
   const [preview, setPreview] = useState<EnrollPreviewDto | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
+  const [removedMemberIds, setRemovedMemberIds] = useState<Set<string>>(new Set());
   
   const churchUnitMetaQuery = useChurchUnitMetaQuery();
   const enrollOthers = useEnrollOthersMutation(courseId);
@@ -37,15 +38,23 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
         });
         setPreview(result);
         
-        // Auto-select members who are NOT fully enrolled and authorized
+        // Auto-select members who are NOT fully enrolled and authorized, 
+        // and keep already enrolled members selected unless explicitly removed
         if (result.members.length > 0) {
-          const newSelected = new Set<string>();
-          result.members.forEach(m => {
-            if (!m.is_enrolled || !m.is_authorized) {
-              newSelected.add(m.id);
-            }
+          setSelectedMemberIds(prev => {
+            const next = new Set(prev);
+            result.members.forEach(m => {
+              if (m.is_enrolled || m.is_authorized) {
+                if (!removedMemberIds.has(m.id)) {
+                  next.add(m.id);
+                }
+              } else {
+                // Auto-select new members found via search
+                next.add(m.id);
+              }
+            });
+            return next;
           });
-          setSelectedMemberIds(newSelected);
         }
       } catch (error) {
         console.error("Preview failed", error);
@@ -61,6 +70,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
     try {
       await enrollOthers.mutateAsync({
         member_ids: Array.from(selectedMemberIds),
+        remove_member_ids: Array.from(removedMemberIds),
       });
       
       toast({
@@ -77,14 +87,22 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
     }
   }
 
-  const toggleMember = (id: string) => {
-    const next = new Set(selectedMemberIds);
-    if (next.has(id)) {
-      next.delete(id);
+  const toggleMember = (member: EnrollPreviewMemberDto) => {
+    const nextSelected = new Set(selectedMemberIds);
+    const nextRemoved = new Set(removedMemberIds);
+    
+    if (nextSelected.has(member.id)) {
+      nextSelected.delete(member.id);
+      if (member.is_enrolled || member.is_authorized) {
+        nextRemoved.add(member.id);
+      }
     } else {
-      next.add(id);
+      nextSelected.add(member.id);
+      nextRemoved.delete(member.id);
     }
-    setSelectedMemberIds(next);
+    
+    setSelectedMemberIds(nextSelected);
+    setRemovedMemberIds(nextRemoved);
   };
 
   const filteredMembers = preview?.members.filter(m => 
@@ -157,9 +175,9 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
             <Button
               className="flex-1"
               onClick={handleEnroll}
-              disabled={enrollOthers.isPending || selectedMemberIds.size === 0}
+              disabled={enrollOthers.isPending || (selectedMemberIds.size === 0 && removedMemberIds.size === 0)}
             >
-              {enrollOthers.isPending ? t("common.ready") + "..." : `Enroll ${selectedMemberIds.size} Members`}
+              {enrollOthers.isPending ? t("common.ready") + "..." : `Save Changes`}
             </Button>
           </div>
         </div>
@@ -192,15 +210,14 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                       ? 'border-[var(--brand-primary)] bg-[var(--bg-base)] shadow-sm' 
                       : 'border-transparent hover:bg-[var(--bg-soft)]'
                   }`}
-                  onClick={() => !(member.is_enrolled && member.is_authorized) && toggleMember(member.id)}
+                  onClick={() => toggleMember(member)}
                 >
                   <div className="relative flex items-center justify-center">
                     <input
                       type="checkbox"
                       checked={selectedMemberIds.has(member.id)}
-                      onChange={() => toggleMember(member.id)}
-                      disabled={member.is_enrolled && member.is_authorized}
-                      className="h-4 w-4 rounded border-[var(--border-strong)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] cursor-pointer disabled:cursor-not-allowed"
+                      onChange={() => toggleMember(member)}
+                      className="h-4 w-4 rounded border-[var(--border-strong)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] cursor-pointer"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -213,8 +230,8 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                     <p className="text-xs text-[var(--text-tertiary)] truncate">{member.email}</p>
                   </div>
                   {member.is_enrolled && (
-                    <span className="flex-shrink-0 text-[var(--status-success)]" title={member.is_authorized ? "Fully enrolled and authorized" : "Enrolled, but access not yet configured"}>
-                      {member.is_authorized ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4 opacity-50" />}
+                    <span className={`flex-shrink-0 ${removedMemberIds.has(member.id) ? 'text-[var(--status-danger)]' : 'text-[var(--status-success)]'}`} title={removedMemberIds.has(member.id) ? "To be removed" : (member.is_authorized ? "Fully enrolled and authorized" : "Enrolled, but access not yet configured")}>
+                      {removedMemberIds.has(member.id) ? <X className="h-4 w-4" /> : (member.is_authorized ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4 opacity-50" />)}
                     </span>
                   )}
                 </div>
@@ -232,6 +249,12 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
               <span className="text-[var(--text-secondary)]">To be enrolled:</span>
               <span className="font-bold text-[var(--text-primary)]">{selectedMemberIds.size}</span>
             </div>
+            {removedMemberIds.size > 0 && (
+              <div className="flex justify-between text-xs text-[var(--status-danger)]">
+                <span>To be removed:</span>
+                <span className="font-bold">{removedMemberIds.size}</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs" title="Total members currently enrolled in this course (have a Grade record)">
               <span className="text-[var(--text-secondary)]">Already in course:</span>
               <span className="font-bold text-[var(--text-primary)]">{preview?.enrolled_count ?? 0}</span>

@@ -114,29 +114,29 @@ function toEmbedUrl(url: string, kind: "embed" | "image") {
 
     if (host === "youtu.be") {
       const videoId = parsed.pathname.replace(/^\//, "");
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+      return videoId ? `https://www.youtube.com/embed/${videoId}controls=1&modestbranding=1&rel=0&playsinline=1` : url;
     }
 
     if (host === "youtube.com" || host === "m.youtube.com") {
       if (parsed.pathname === "/watch") {
         const videoId = parsed.searchParams.get("v");
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        return videoId ? `https://www.youtube.com/embed/${videoId}controls=1&modestbranding=1&rel=0&playsinline=1` : url;
       }
 
       const embedMatch = parsed.pathname.match(/^\/embed\/([^/?#]+)/);
       if (embedMatch?.[1]) {
-        return `https://www.youtube.com/embed/${embedMatch[1]}`;
+        return `https://www.youtube.com/embed/${embedMatch[1]}controls=1&modestbranding=1&rel=0&playsinline=1`;
       }
 
       const shortsMatch = parsed.pathname.match(/^\/shorts\/([^/?#]+)/);
       if (shortsMatch?.[1]) {
-        return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+        return `https://www.youtube.com/embed/${shortsMatch[1]}controls=1&modestbranding=1&rel=0&playsinline=1`;
       }
     }
 
     if (host === "vimeo.com") {
       const videoId = parsed.pathname.replace(/^\//, "");
-      return videoId ? `https://player.vimeo.com/video/${videoId}` : url;
+      return videoId ? `https://player.vimeo.com/video/${videoId}controls=1&modestbranding=1&rel=0&playsinline=1` : url;
     }
   } catch {
     return url;

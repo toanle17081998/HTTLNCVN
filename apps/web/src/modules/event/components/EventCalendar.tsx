@@ -154,19 +154,19 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-lg"
+              size="lg"
+              className="h-16 w-16 p-0 rounded-lg"
               onClick={goToPrevMonth}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft />
             </Button>
             <Button
               variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-lg"
+              size="lg"
+              className="h-16 w-16 p-0 rounded-lg"
               onClick={goToNextMonth}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight />
             </Button>
           </div>
         </div>

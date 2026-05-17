@@ -14,7 +14,7 @@ import {
   useDeleteArticleMutation,
 } from "@services/article";
 
-const PAGE_SIZE_DEFAULT = 12;
+const PAGE_SIZE_DEFAULT = 4;
 
 export function ArticlePage() {
   const { can } = useAuth();
@@ -114,7 +114,7 @@ export function ArticlePage() {
 
       {articlesQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
-           {[1, 2, 3, 4].map(i => <Card key={i} className="h-48 animate-pulse bg-[var(--bg-surface)]" />)}
+          {[1, 2, 3, 4].map(i => <Card key={i} className="h-48 animate-pulse bg-[var(--bg-surface)]" />)}
         </div>
       ) : null}
 
@@ -143,9 +143,9 @@ export function ArticlePage() {
                 </div>
               ) : (
                 <div className="aspect-[16/9] w-full flex items-center justify-center bg-[var(--bg-base)] border-b border-[var(--border-subtle)]">
-                   <div className="h-12 w-12 rounded-full bg-[var(--brand-muted)] flex items-center justify-center">
-                      <span className="text-xl">📖</span>
-                   </div>
+                  <div className="h-12 w-12 rounded-full bg-[var(--brand-muted)] flex items-center justify-center">
+                    <span className="text-xl">📖</span>
+                  </div>
                 </div>
               )}
               <div className="p-6">
@@ -215,6 +215,7 @@ export function ArticlePage() {
           className="mt-6"
           page={page}
           pageSize={pageSize}
+          pageSizeOptions={[4, 8, 10, 20]}
           total={total}
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}

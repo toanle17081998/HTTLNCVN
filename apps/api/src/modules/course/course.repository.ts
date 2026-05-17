@@ -384,24 +384,41 @@ export class CourseRepository {
       }
     }
 
-    if (allUserIds.length === 0) return;
+    const operations: any[] = [];
 
-    await this.prisma.$transaction([
-      ...allUserIds.map((userId) =>
-        this.prisma.courseGrade.upsert({
-          where: { user_id_course_id: { user_id: userId, course_id: realId } },
-          create: { course_id: realId, status: 'enrolled', user_id: userId },
-          update: { status: 'enrolled' },
+    if (allUserIds.length > 0) {
+      operations.push(
+        ...allUserIds.map((userId) =>
+          this.prisma.courseGrade.upsert({
+            where: { user_id_course_id: { user_id: userId, course_id: realId } },
+            create: { course_id: realId, status: 'enrolled', user_id: userId },
+            update: { status: 'enrolled' },
+          }),
+        ),
+        ...allUserIds.map((userId) =>
+          this.prisma.courseAttendance.upsert({
+            where: { course_id_user_id: { course_id: realId, user_id: userId } },
+            create: { course_id: realId, user_id: userId },
+            update: {},
+          }),
+        ),
+      );
+    }
+
+    if (dto.remove_member_ids && dto.remove_member_ids.length > 0) {
+      operations.push(
+        this.prisma.courseGrade.deleteMany({
+          where: { course_id: realId, user_id: { in: dto.remove_member_ids } },
         }),
-      ),
-      ...allUserIds.map((userId) =>
-        this.prisma.courseAttendance.upsert({
-          where: { course_id_user_id: { course_id: realId, user_id: userId } },
-          create: { course_id: realId, user_id: userId },
-          update: {},
+        this.prisma.courseAttendance.deleteMany({
+          where: { course_id: realId, user_id: { in: dto.remove_member_ids } },
         }),
-      ),
-    ]);
+      );
+    }
+
+    if (operations.length > 0) {
+      await this.prisma.$transaction(operations);
+    }
   }
 
   async previewEnrollment(courseId: string, dto: import('./course.types').EnrollOthersDto): Promise<import('./course.types').EnrollPreviewDto> {
@@ -419,6 +436,20 @@ export class CourseRepository {
       const unitIds = await this.getChurchUnitMemberIds(dto.church_unit_id);
       allTargetIds = [...new Set([...allTargetIds, ...unitIds])];
     }
+
+    // Always include already enrolled members so they can be removed
+    const existingMembers = await this.prisma.user.findMany({
+      where: {
+        OR: [
+          { course_grades: { some: { course_id: realId } } },
+          { course_attendances: { some: { course_id: realId } } },
+        ],
+        deleted_at: null,
+      },
+      select: { id: true },
+    });
+    const existingIds = existingMembers.map((m) => m.id);
+    allTargetIds = [...new Set([...allTargetIds, ...existingIds])];
 
     if (allTargetIds.length === 0) {
       return {
