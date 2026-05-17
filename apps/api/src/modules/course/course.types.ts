@@ -187,6 +187,7 @@ export type EnrollOthersDto = {
   emails?: string[];
   church_unit_id?: string;
   member_ids?: string[];
+  remove_member_ids?: string[];
 };
 
 export type EnrollPreviewMemberDto = {

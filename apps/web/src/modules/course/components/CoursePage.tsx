@@ -10,7 +10,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCoursesQuery } from "@services/course";
 
-const PAGE_SIZE_DEFAULT = 12;
+const PAGE_SIZE_DEFAULT = 4;
 const levels = ["beginner", "intermediate", "advanced"] as const;
 const levelLabelKeys = {
   advanced: "course.form.level.advanced",
@@ -111,7 +111,7 @@ export function CoursePage() {
 
       {coursesQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
-           {[1, 2, 3, 4].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-surface)]" />)}
+          {[1, 2, 3, 4].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-surface)]" />)}
         </div>
       ) : null}
 
@@ -186,6 +186,7 @@ export function CoursePage() {
           page={page}
           pageSize={pageSize}
           total={total}
+          pageSizeOptions={[4, 8, 10, 20]}
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
         />
