@@ -26,6 +26,12 @@ export type EventChurchUnit = {
   type: string;
 };
 
+export type EventSeries = {
+  id: string;
+  repeat: EventRepeat;
+  slug: string;
+};
+
 export type EventItem = {
   audience: EventAudience;
   category: EventCategory | null;
@@ -36,8 +42,10 @@ export type EventItem = {
   description: string | null;
   ends_at: string;
   id: string;
+  is_all_day: boolean;
   location: string | null;
   repeat: EventRepeat;
+  series: EventSeries | null;
   slug: string;
   starts_at: string;
   status: EventStatus;
@@ -79,6 +87,7 @@ export type CreateEventDto = {
   cover_image_url?: string | null;
   description?: string | null;
   ends_at: string;
+  is_all_day?: boolean;
   location?: string | null;
   repeat: EventRepeat;
   slug: string;
@@ -112,7 +121,7 @@ function eventListSearch(params: EventListParams = {}) {
 
 export const eventKeys = {
   all: ["events"] as const,
-  detail: (slug: string) => [...eventKeys.all, "detail", slug] as const,
+  detail: (id: string) => [...eventKeys.all, "detail", id] as const,
   lists: () => [...eventKeys.all, "list"] as const,
   list: (params: EventListParams = {}) => [...eventKeys.lists(), params] as const,
   meta: () => [...eventKeys.all, "meta"] as const,
@@ -124,8 +133,8 @@ export const eventApi = {
       token: getStoredTokens()?.accessToken,
     });
   },
-  detail(slug: string) {
-    return apiRequest<EventItem>(`/events/${encodeURIComponent(slug)}`, {
+  detail(id: string) {
+    return apiRequest<EventItem>(`/events/${encodeURIComponent(id)}`, {
       token: getStoredTokens()?.accessToken,
     });
   },
@@ -141,15 +150,15 @@ export const eventApi = {
       token: getStoredTokens()?.accessToken,
     });
   },
-  update(slug: string, dto: UpdateEventDto) {
-    return apiRequest<EventItem>(`/events/${encodeURIComponent(slug)}`, {
+  update(id: string, dto: UpdateEventDto) {
+    return apiRequest<EventItem>(`/events/${encodeURIComponent(id)}`, {
       body: JSON.stringify(dto),
       method: "PATCH",
       token: getStoredTokens()?.accessToken,
     });
   },
-  delete(slug: string) {
-    return apiRequest<void>(`/events/${encodeURIComponent(slug)}`, {
+  delete(id: string) {
+    return apiRequest<void>(`/events/${encodeURIComponent(id)}`, {
       method: "DELETE",
       token: getStoredTokens()?.accessToken,
     });
@@ -200,7 +209,7 @@ export function useCreateEventMutation() {
     onSuccess(event) {
       queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
       queryClient.invalidateQueries({ queryKey: eventKeys.meta() });
-      queryClient.setQueryData(eventKeys.detail(event.slug), event);
+      queryClient.setQueryData(eventKeys.detail(event.id), event);
     },
   });
 }
@@ -209,11 +218,11 @@ export function useUpdateEventMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ dto, slug }: { dto: UpdateEventDto; slug: string }) => eventApi.update(slug, dto),
+    mutationFn: ({ dto, id }: { dto: UpdateEventDto; id: string }) => eventApi.update(id, dto),
     onSuccess(event) {
       queryClient.invalidateQueries({ queryKey: eventKeys.lists() });
       queryClient.invalidateQueries({ queryKey: eventKeys.meta() });
-      queryClient.setQueryData(eventKeys.detail(event.slug), event);
+      queryClient.setQueryData(eventKeys.detail(event.id), event);
     },
   });
 }

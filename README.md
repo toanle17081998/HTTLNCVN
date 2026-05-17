@@ -292,6 +292,7 @@ pnpm api:db:seed
 pnpm api:build
 ```
 
+
 Sau do chay `pnpm api:dev` va `pnpm --filter web dev` o hai terminal rieng.
 
 ## 5. Current Flow

@@ -87,12 +87,12 @@ export class EventController {
   }
 
   @Public()
-  @Get(':slug')
-  findBySlug(
-    @Param('slug') slug: string,
+  @Get(':id')
+  findById(
+    @Param('id') id: string,
     @Request() req?: { user?: JwtPayload },
   ): Promise<EventDto> {
-    return this.eventService.findBySlug(slug, req?.user?.sub, req?.user?.role);
+    return this.eventService.findById(id, req?.user?.sub, req?.user?.role);
   }
 
   @Can('create', 'event')
@@ -105,15 +105,15 @@ export class EventController {
   }
 
   @Can('update', 'event')
-  @Patch(':slug')
-  update(@Param('slug') slug: string, @Body() dto: UpdateEventDto): Promise<EventDto> {
-    return this.eventService.update(slug, dto);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateEventDto): Promise<EventDto> {
+    return this.eventService.update(id, dto);
   }
 
   @Can('delete', 'event')
-  @Delete(':slug')
+  @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('slug') slug: string): Promise<void> {
-    return this.eventService.delete(slug);
+  delete(@Param('id') id: string): Promise<void> {
+    return this.eventService.delete(id);
   }
 }

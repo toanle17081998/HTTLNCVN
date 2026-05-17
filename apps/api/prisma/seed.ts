@@ -461,9 +461,9 @@ Các nguyên tắc cơ bản:
     create: {
       slug: 'isom-1-aa',
       title_en: 'ISOM 1 – Associate of Arts in Ministry',
-      title_vi: 'ISOM 1 – Chương trình thần học cơ bản (AA)',
-      summary: 'Chương trình đào tạo thần học bậc đại học cơ sở dành cho người muốn phục vụ Chúa.',
-      description: `Chương trình ISOM 1 (International School of Ministry – Associate of Arts) trang bị nền tảng thần học vững chắc và kỹ năng phục vụ thực tiễn cho người học. Phù hợp với tín hữu muốn hiểu sâu hơn về Lời Chúa và bắt đầu hành trình phục vụ trong Hội thánh.`,
+      title_vi: 'Chương trình thần học cơ bản (AA)',
+      summary_vi: 'Chương trình đào tạo thần học bậc đại học cơ sở dành cho người muốn phục vụ Chúa.',
+      description_vi: `Chương trình ISOM 1 (International School of Ministry – Associate of Arts) trang bị nền tảng thần học vững chắc và kỹ năng phục vụ thực tiễn cho người học. Phù hợp với tín hữu muốn hiểu sâu hơn về Lời Chúa và bắt đầu hành trình phục vụ trong Hội thánh.`,
       level: 'beginner',
       status: 'published',
       estimated_duration_minutes: 1800,
@@ -473,7 +473,6 @@ Các nguyên tắc cơ bản:
     },
     update: {},
   });
-
   await prisma.lesson.upsert({
     where: { id: 'aaaaaaaa-0001-0001-0001-000000000001' },
     create: {
@@ -571,8 +570,8 @@ Sự cứu rỗi là hành động ân sủng của Đức Chúa Trời, qua đ�
       slug: 'isom-2-ba',
       title_en: 'ISOM 2 – Bachelor of Arts in Ministry',
       title_vi: 'ISOM 2 – Chương trình thần học nâng cao (BA)',
-      summary: 'Chương trình đào tạo thần học bậc cử nhân dành cho người muốn phục vụ Chúa chuyên sâu.',
-      description: `Chương trình ISOM 2 (International School of Ministry – Bachelor of Arts) đi sâu vào thần học hệ thống, lãnh đạo Hội thánh và thực hành mục vụ. Dành cho những ai đã hoàn thành ISOM 1 hoặc có nền tảng thần học căn bản.`,
+      summary_vi: 'Chương trình đào tạo thần học bậc cử nhân dành cho người muốn phục vụ Chúa chuyên sâu.',
+      description_vi: `Chương trình ISOM 2 (International School of Ministry – Bachelor of Arts) đi sâu vào thần học hệ thống, lãnh đạo Hội thánh và thực hành mục vụ. Dành cho những ai đã hoàn thành ISOM 1 hoặc có nền tảng thần học căn bản.`,
       level: 'intermediate',
       status: 'published',
       estimated_duration_minutes: 2400,
@@ -582,7 +581,6 @@ Sự cứu rỗi là hành động ân sủng của Đức Chúa Trời, qua đ�
     },
     update: {},
   });
-
   await prisma.lesson.upsert({
     where: { id: 'aaaaaaaa-0002-0001-0001-000000000001' },
     create: {
@@ -774,6 +772,7 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
   const nextSundayEnd = new Date(nextSunday);
   nextSundayEnd.setHours(11, 30, 0, 0);
 
+  /*
   await prisma.event.upsert({
     where: { slug: 'tho-phuong-chu-nhat' },
     create: {
@@ -791,6 +790,68 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
     },
     update: {},
   });
+  */
+
+  const sundayServiceSeriesSlug = 'tho-phuong-chu-nhat';
+  const sundayServiceTitle = 'Thá» phÆ°á»£ng ChÃºa nháº­t';
+  const sundayServiceDescription =
+    'Buá»•i thá» phÆ°á»£ng hÃ ng tuáº§n cá»§a Há»™i thÃ¡nh NhÃ¢n Cáº¥p. ChÆ°Æ¡ng trÃ¬nh gá»“m ca ngá»£i thá» phÆ°á»£ng, Lá»i ChÃºa vÃ  thÃ´ng cÃ´ng.';
+  const sundayServiceLocation = 'Táº§ng 3, sá»‘ 20 ngÃµ 165 Cáº§u Giáº¥y, Quan Hoa, HÃ  Ná»™i';
+  const sundayServiceDurationMs = nextSundayEnd.getTime() - nextSunday.getTime();
+  const existingSundaySeries = await prisma.eventSeries.findUnique({
+    where: { slug: sundayServiceSeriesSlug },
+  });
+
+  if (existingSundaySeries) {
+    await prisma.event.deleteMany({
+      where: { series_id: existingSundaySeries.id },
+    });
+    await prisma.eventSeries.delete({
+      where: { id: existingSundaySeries.id },
+    });
+  }
+
+  const sundaySeries = await prisma.eventSeries.create({
+    data: {
+      category_id: worshipCategory.id,
+      created_by: adminUser.id,
+      description: sundayServiceDescription,
+      ends_at: nextSundayEnd,
+      location: sundayServiceLocation,
+      repeat: 'weekly',
+      slug: sundayServiceSeriesSlug,
+      starts_at: nextSunday,
+      title: sundayServiceTitle,
+    },
+  });
+
+  await prisma.event.createMany({
+    data: Array.from({ length: 8 }).map((_, index) => {
+      const startsAt = new Date(nextSunday);
+      startsAt.setDate(startsAt.getDate() + index * 7);
+      const endsAt = new Date(startsAt.getTime() + sundayServiceDurationMs);
+      const year = startsAt.getUTCFullYear();
+      const month = String(startsAt.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(startsAt.getUTCDate()).padStart(2, '0');
+      const hour = String(startsAt.getUTCHours()).padStart(2, '0');
+      const minute = String(startsAt.getUTCMinutes()).padStart(2, '0');
+
+      return {
+        audience: 'public',
+        category_id: worshipCategory.id,
+        created_by: adminUser.id,
+        description: sundayServiceDescription,
+        ends_at: endsAt,
+        location: sundayServiceLocation,
+        repeat: 'weekly',
+        series_id: sundaySeries.id,
+        slug: `${sundayServiceSeriesSlug}-${year}${month}${day}${hour}${minute}`,
+        starts_at: startsAt,
+        status: 'published',
+        title: sundayServiceTitle,
+      };
+    }),
+  });
 
   const isomStartDate = new Date();
   isomStartDate.setDate(isomStartDate.getDate() + 14);
@@ -801,6 +862,7 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
   await prisma.event.upsert({
     where: { slug: 'khai-giang-isom-1-aa' },
     create: {
+      repeat: 'none',
       slug: 'khai-giang-isom-1-aa',
       title: 'Khai giảng ISOM 1 – AA',
       description: 'Lễ khai giảng chương trình đào tạo thần học ISOM 1 (Associate of Arts). Đăng ký tham gia để được trang bị nền tảng thần học vững chắc và kỹ năng phục vụ.',
@@ -813,7 +875,16 @@ Lãnh đạo Hội thánh hiệu quả là lãnh đạo phục vụ, theo gươn
       category_id: trainingCategory.id,
       created_by: adminUser.id,
     },
-    update: {},
+    update: {
+      repeat: 'none',
+      starts_at: isomStartDate,
+      ends_at: isomEndDate,
+      status: 'published',
+      audience: 'public',
+      cover_image_url: 'https://placehold.co/800x400',
+      category_id: trainingCategory.id,
+      created_by: adminUser.id,
+    },
   });
 
   console.log('Seed completed successfully.');
@@ -825,3 +896,6 @@ main()
     process.exit(1);
   })
   .finally(() => void prisma.$disconnect());
+
+
+
