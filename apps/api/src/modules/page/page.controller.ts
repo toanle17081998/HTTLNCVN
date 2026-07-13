@@ -34,6 +34,11 @@ export class PageController {
     return this.pageService.create(dto, req.user?.sub ?? '');
   }
 
+  @Post(':id/restore')
+  restore(@Param('id') id: string): Promise<PageDto> {
+    return this.pageService.restore(id);
+  }
+
   @Patch(':slug')
   update(@Param('slug') slug: string, @Body() dto: UpdatePageDto): Promise<PageDto> {
     return this.pageService.update(slug, dto);

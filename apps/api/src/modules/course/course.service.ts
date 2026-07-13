@@ -25,8 +25,8 @@ import type {
 export class CourseService {
   constructor(private readonly courseRepository: CourseRepository) {}
 
-  findAll(skip: number, take: number, status?: string, level?: string, q?: string): Promise<CourseListResult> {
-    return this.courseRepository.findAll(skip, take, status, level, q);
+  findAll(skip: number, take: number, status?: string, category_id?: string, q?: string): Promise<CourseListResult> {
+    return this.courseRepository.findAll(skip, take, status, category_id, q);
   }
 
   async findBySlug(slug: string, userId?: string, userRole?: string): Promise<CourseDto> {
@@ -184,8 +184,8 @@ export class CourseService {
     return result;
   }
 
-  async finishAttempt(id: string, userId: string): Promise<QuizAttemptDto> {
-    const attempt = await this.courseRepository.finishAttempt(id, userId);
+  async finishAttempt(id: string, userId: string, answers?: Record<string, string>): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.finishAttempt(id, userId, answers);
 
     if (!attempt) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Quiz attempt not found.' });

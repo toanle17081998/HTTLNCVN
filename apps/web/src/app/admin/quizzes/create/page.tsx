@@ -12,7 +12,7 @@ import {
   useCoursesQuery,
   useCreateQuizMutation,
   useLessonQuery,
-} from "@services/course";
+} from "@/services/course";
 
 export default function AdminCreateQuizRoute() {
   const router = useRouter();

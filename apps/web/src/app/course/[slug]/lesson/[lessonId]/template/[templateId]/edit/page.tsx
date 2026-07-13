@@ -2,8 +2,8 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { QuestionTemplateForm } from "@/modules/course/components/QuestionTemplateForm";
-import { useLessonQuery, useUpdateTemplateMutation } from "@services/course";
+import { QuestionTemplateForm } from "@/components/course/QuestionTemplateForm";
+import { useLessonQuery, useUpdateTemplateMutation } from "@/services/course";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useEffect } from "react";

@@ -298,6 +298,18 @@ export class EventRepository {
       }),
     ]);
 
+    const publicUrl = process.env.ICAL_PUBLIC_URL;
+    let google_calendar_embed_url = "https://calendar.google.com/calendar/embed?src=vi.vietnamese%23holiday%40group.v.calendar.google.com&ctz=Asia%2FHo_Chi_Minh";
+    if (publicUrl && publicUrl.includes('/ical/')) {
+      const parts = publicUrl.split('/ical/');
+      if (parts[1]) {
+        const calendarId = parts[1].split('/')[0];
+        if (calendarId) {
+          google_calendar_embed_url = `https://calendar.google.com/calendar/embed?src=${calendarId}&ctz=Asia%2FHo_Chi_Minh`;
+        }
+      }
+    }
+
     return {
       audiences: [...DEFAULT_EVENT_AUDIENCES],
       categories: categories.map(toCategoryDto),
@@ -305,6 +317,7 @@ export class EventRepository {
       members: members.map(toMemberDto),
       repeats: [...DEFAULT_EVENT_REPEATS],
       statuses: [...DEFAULT_EVENT_STATUSES],
+      google_calendar_embed_url,
     };
   }
 
@@ -707,5 +720,40 @@ export class EventRepository {
       data: { deleted_at: new Date() },
       where: { id },
     });
+  }
+
+  async findSystemUser(): Promise<{ id: string } | null> {
+    return this.prisma.user.findFirst({
+      select: { id: true },
+      where: { deleted_at: null },
+      orderBy: { role_id: 'asc' },
+    });
+  }
+
+  async upsertGoogleEvents(events: any[], creatorId: string): Promise<void> {
+    for (const ev of events) {
+      if (!ev.uid || !ev.starts_at) continue;
+      const slug = `gcal-${ev.uid.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase()}`.slice(0, 150);
+
+      const data = {
+        title: ev.title || 'Untitled Google Event',
+        description: ev.description || null,
+        starts_at: ev.starts_at,
+        ends_at: ev.ends_at || new Date(new Date(ev.starts_at).getTime() + 60 * 60 * 1000),
+        location: ev.location || null,
+        status: 'published',
+        audience: 'public',
+      };
+
+      await this.prisma.event.upsert({
+        where: { slug },
+        create: {
+          ...data,
+          slug,
+          created_by: creatorId,
+        },
+        update: data,
+      });
+    }
   }
 }

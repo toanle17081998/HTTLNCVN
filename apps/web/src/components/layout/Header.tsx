@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Menu,
   X,
-  Settings,
   LogOut,
   User,
   Shield,
@@ -141,13 +140,13 @@ export function Header({ pathname }: HeaderProps) {
       <Link
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex items-center gap-2 transition-all duration-200",
+          "relative flex items-center gap-2 transition-colors duration-200",
           mobile
-            ? "min-h-12 rounded-xl px-4 text-sm font-semibold"
-            : "rounded-xl px-4 py-2 text-sm font-semibold",
+            ? "min-h-12 rounded-md px-4 text-sm font-semibold"
+            : "px-3 py-2 text-sm font-medium",
           isActive
-            ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-shadow)]"
-            : "text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]",
+            ? "text-[var(--brand-primary)] after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[var(--accent-gold)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--brand-primary)]",
         )}
         href={item.href}
         key={item.href}
@@ -176,19 +175,19 @@ export function Header({ pathname }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/80 shadow-sm backdrop-blur-md transition-all duration-300 ease-out",
+        "fixed inset-x-0 top-0 z-50 bg-[var(--bg-surface)]/95 backdrop-blur-md transition-all duration-300 ease-out",
         isVisible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none -translate-y-full opacity-0 shadow-none",
       )}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-24">
+      <div className="flex h-16 w-full items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
         <Link
           aria-label={t("app.name")}
-          className="flex shrink-0 items-center rounded-xl transition-transform hover:scale-105 active:scale-95"
+          className="flex shrink-0 items-center rounded-md transition-opacity hover:opacity-80"
           href="/"
         >
-          <ChurchLogo className="h-12 w-12 drop-shadow-md md:h-16 md:w-16" />
+          <ChurchLogo className="h-10 w-10 md:h-14 md:w-14" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -205,10 +204,10 @@ export function Header({ pathname }: HeaderProps) {
                 <button
                   onClick={() => setMoreNavOpen(!moreNavOpen)}
                   className={cn(
-                    "hover:cursor-pointer flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all",
+                    "hover:cursor-pointer flex items-center gap-1 px-3.5 py-2 text-sm font-semibold transition-colors",
                     moreNavOpen
-                      ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--text-primary)]"
+                      ? "text-[var(--brand-primary)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--brand-primary)]"
                   )}
                 >
                   {t("common.more")}
@@ -216,7 +215,7 @@ export function Header({ pathname }: HeaderProps) {
                 </button>
 
                 {moreNavOpen && (
-                  <div className="animate-in fade-in zoom-in-95 absolute left-0 top-full mt-2 w-48 origin-top-left rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5">
+                  <div className="animate-in fade-in zoom-in-95 absolute left-0 top-full mt-2 w-48 origin-top-left bg-[var(--bg-surface)] p-2 shadow-xl">
                     {hiddenNavItems.map((item) => renderNavItem(item))}
                   </div>
                 )}
@@ -231,7 +230,7 @@ export function Header({ pathname }: HeaderProps) {
             aria-controls="mobile-primary-navigation"
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? t("nav.closeNavigation") : t("nav.openNavigation")}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] active:scale-95 md:hidden"
+            className="flex h-10 w-10 items-center justify-center text-[var(--text-primary)] transition-colors hover:text-[var(--brand-primary)] active:scale-95 md:hidden"
             onClick={() => {
               setMobileMenuOpen((open) => !open);
               setSettingsOpen(false);
@@ -247,8 +246,8 @@ export function Header({ pathname }: HeaderProps) {
               aria-expanded={settingsOpen}
               aria-haspopup="menu"
               className={cn(
-                "flex h-10 items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-sm font-semibold transition-all shadow-sm hover:border-[var(--brand-primary)] hover:bg-[var(--brand-soft)] active:scale-95 md:h-11 md:px-4",
-                settingsOpen && "ring-2 ring-[var(--brand-primary)] ring-offset-2"
+                "flex h-10 items-center gap-2 px-2 text-sm font-semibold transition-colors hover:text-[var(--brand-primary)] active:scale-95 md:h-11 md:px-3",
+                settingsOpen && "text-[var(--brand-primary)]"
               )}
               onClick={() => {
                 setSettingsOpen((open) => !open);
@@ -267,7 +266,7 @@ export function Header({ pathname }: HeaderProps) {
 
             {settingsOpen && (
               <div
-                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-64 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-2xl ring-1 ring-black/5"
+                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-64 origin-top-right bg-[var(--bg-surface)] p-2 shadow-2xl"
                 role="menu"
               >
                 {/* Profile Section */}
@@ -310,7 +309,7 @@ export function Header({ pathname }: HeaderProps) {
                 <div className="p-1 space-y-1">
                   {canCreateContent && (
                     <Link
-                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                      className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                       href="/admin"
                       onClick={() => setSettingsOpen(false)}
                       role="menuitem"
@@ -323,7 +322,7 @@ export function Header({ pathname }: HeaderProps) {
                   {isAuthenticated ? (
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)]"
+                      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)]"
                       role="menuitem"
                     >
                       <LogOut className="h-4 w-4" />
@@ -331,7 +330,7 @@ export function Header({ pathname }: HeaderProps) {
                     </button>
                   ) : (
                     <Link
-                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
+                      className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
                       href="/auth"
                       onClick={() => setSettingsOpen(false)}
                       role="menuitem"
@@ -348,13 +347,13 @@ export function Header({ pathname }: HeaderProps) {
                     <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
                     <div className="p-1 grid grid-cols-2 gap-1">
                       {canCreateContent && (
-                        <Button size="sm" variant="secondary" className="h-9 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                        <Button size="sm" variant="secondary" className="h-9 rounded-md text-[10px] font-bold uppercase tracking-wider">
                           <Plus className="h-3 w-3 mr-1" />
                           {t("action.newItem")}
                         </Button>
                       )}
                       {canPublish && (
-                        <Button size="sm" className="h-9 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                        <Button size="sm" className="h-9 rounded-md text-[10px] font-bold uppercase tracking-wider">
                           <Send className="h-3 w-3 mr-1" />
                           {t("action.publish")}
                         </Button>
@@ -369,11 +368,17 @@ export function Header({ pathname }: HeaderProps) {
       </div>
 
       {/* Mobile Navigation Menu */}
-      {mobileMenuOpen && (
-        <nav
+      <nav
+          aria-hidden={!mobileMenuOpen}
           aria-label="Primary"
-          className="animate-in slide-in-from-top-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-6 shadow-xl md:hidden"
+          className={cn(
+            "overflow-y-auto bg-[var(--bg-surface)] px-4 transition-all duration-300 ease-out sm:px-6 md:hidden",
+            mobileMenuOpen
+              ? "max-h-[calc(100dvh-4rem)] py-3 opacity-100 shadow-xl"
+              : "pointer-events-none max-h-0 py-0 opacity-0",
+          )}
           id="mobile-primary-navigation"
+          inert={!mobileMenuOpen}
         >
           <div className="grid gap-2">
             {menuNavItems.map((item) => (
@@ -382,18 +387,13 @@ export function Header({ pathname }: HeaderProps) {
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-4 rounded-2xl px-4 py-4 transition-all active:scale-95",
+                  "flex items-center gap-3 border-l-2 px-3 py-2 transition-all duration-200 active:scale-[0.98]",
                   pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                    ? "bg-[var(--brand-primary)] text-white shadow-lg"
-                    : "bg-[var(--bg-base)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)]"
+                    ? "border-[var(--accent-gold)] text-[var(--brand-primary)]"
+                    : "border-transparent text-[var(--text-primary)] hover:text-[var(--brand-primary)]"
                 )}
               >
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl",
-                  pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                    ? "bg-white/20"
-                    : "bg-[var(--bg-surface)] text-[var(--brand-primary)] shadow-sm"
-                )}>
+                <div className="flex shrink-0 items-center justify-center text-[var(--brand-primary)]">
                   {navIconMap[item.href] || <Menu className="h-5 w-5" />}
                 </div>
                 <div className="flex flex-col">
@@ -401,7 +401,7 @@ export function Header({ pathname }: HeaderProps) {
                   <span className={cn(
                     "text-[10px] font-medium",
                     pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                      ? "text-white/70"
+                      ? "text-[var(--text-secondary)]"
                       : "text-[var(--text-secondary)]"
                   )}>
                     {t(item.descriptionKey)}
@@ -411,7 +411,6 @@ export function Header({ pathname }: HeaderProps) {
             ))}
           </div>
         </nav>
-      )}
     </header>
   );
 }

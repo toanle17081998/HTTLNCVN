@@ -55,7 +55,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-card)] px-4 py-10 sm:px-6 lg:px-8">
+    <footer className="relative overflow-hidden bg-[var(--bg-card)] px-4 py-12 sm:px-6 lg:px-8">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -65,11 +65,11 @@ export function Footer() {
         }}
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-8">
-        <div className="grid gap-6 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-lg)] lg:grid-cols-[1fr_1.4fr] lg:p-8">
+      <div className="relative grid w-full gap-8">
+        <div className="grid gap-8 pb-10 lg:grid-cols-[1fr_1.4fr]">
           <div>
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[1.4rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center">
                 <ChurchLogo className="h-11 w-11" />
               </div>
               <div>
@@ -89,8 +89,8 @@ export function Footer() {
               {t("footer.description")}
             </p>
 
-            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
-              <span className="h-2 w-2 rounded-full bg-[var(--brand-primary)]" />
+            <div className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
+              <span className="h-px w-8 bg-[var(--accent-gold)]" />
               {t("footer.rights")}
             </div>
           </div>
@@ -103,7 +103,7 @@ export function Footer() {
 
               const content = (
                 <>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)] transition group-hover:bg-[var(--brand-primary)] group-hover:text-[var(--text-inverse)]">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--brand-primary)] transition group-hover:text-[var(--accent-gold)]">
                     <Icon aria-hidden="true" className="h-5 w-5" />
                   </span>
                   <span className="min-w-0">
@@ -119,7 +119,7 @@ export function Footer() {
 
               return item.href ? (
                 <a
-                  className="group flex items-center gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--brand-primary)] hover:bg-[var(--brand-soft)]"
+                  className="group flex min-h-20 items-center gap-4 px-1 py-3 transition-colors hover:text-[var(--brand-primary)]"
                   href={item.href}
                   key={item.labelKey}
                 >
@@ -127,7 +127,7 @@ export function Footer() {
                 </a>
               ) : (
                 <div
-                  className="group flex items-center gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4"
+                  className="group flex min-h-20 items-center gap-4 px-1 py-3"
                   key={item.labelKey}
                 >
                   {content}
@@ -137,7 +137,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[1.5rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-4 sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
           <p className="text-sm text-[var(--text-secondary)]">
             {"\u00A9"} HTNC {currentYear}. {t("footer.rights")}
           </p>
@@ -145,7 +145,7 @@ export function Footer() {
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
             {footerLinks.map((item) => (
               <Link
-                className="rounded-full px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+                className="rounded-sm px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
                 href={item.href}
                 key={item.href}
               >

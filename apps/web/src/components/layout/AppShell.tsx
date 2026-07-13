@@ -14,6 +14,7 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const showBreadcrumb = pathname.split("/").filter(Boolean).length > 1;
 
   if (pathname === "/auth" || pathname.startsWith("/admin")) {
     return (
@@ -29,9 +30,9 @@ export function AppShell({ children }: AppShellProps) {
       <ThemeInitializer />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header pathname={pathname} />
-        <main className="min-w-0 flex-1 mt-20 md:mt-24">
-          {pathname && pathname !== "/" && (
-            <div className="mx-auto my-4 w-full max-w-6xl px-4 md:px-0">
+        <main className="min-w-0 flex-1 mt-16 md:mt-20">
+          {showBreadcrumb && (
+            <div className="mx-auto my-6 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
               <Breadcrumb pathname={pathname} />
             </div>
           )}

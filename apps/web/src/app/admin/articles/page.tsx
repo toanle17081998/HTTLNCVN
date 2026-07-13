@@ -1,4 +1,4 @@
-import { AdminArticles } from "@/modules/admin/components/AdminArticles";
+import { AdminArticles } from "@/components/admin/AdminArticles";
 
 export default function AdminArticlesRoute() {
   return <AdminArticles />;

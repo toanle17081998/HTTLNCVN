@@ -1,4 +1,4 @@
-import { AdminPages } from "@/modules/admin/components/AdminPages";
+import { AdminPages } from "@/components/admin/AdminPages";
 
 export default function AdminPagesRoute() {
   return <AdminPages />;

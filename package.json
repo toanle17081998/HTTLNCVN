@@ -8,6 +8,8 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
+    "prepare": "husky",
+    "lint": "pnpm --filter web lint",
     "api:build": "pnpm --filter @htnc/api build",
     "api:db:generate": "pnpm --filter @htnc/api db:generate",
     "api:db:migrate": "pnpm --filter @htnc/api db:migrate",
@@ -22,5 +24,8 @@
     "infra:ps": "docker compose -f infra/docker/docker-compose.local.yml ps",
     "infra:restart": "docker compose -f infra/docker/docker-compose.local.yml restart",
     "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }

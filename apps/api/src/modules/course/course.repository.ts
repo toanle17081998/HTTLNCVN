@@ -24,23 +24,25 @@ import type {
 } from './course.types';
 
 type CourseWithListRelations = Prisma.CourseGetPayload<{
-  include: { _count: { select: { lessons: true } }; creator: true };
+  include: { _count: { select: { lessons: true } }; creator: true; category: true };
 }>;
 
 type CourseWithDetailRelations = Prisma.CourseGetPayload<{
   include: {
     _count: { select: { lessons: true } };
     creator: true;
+    category: true;
     lessons: {
       include: {
         templates: {
-          select: {
+          include: {
+            lesson: true,
             quiz_maps: {
-              select: { quiz_id: true };
-            };
-          };
-        };
-      };
+              include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+            },
+          },
+        },
+      },
     };
   };
 }>;
@@ -49,7 +51,8 @@ type LessonWithRelations = Prisma.LessonGetPayload<{
   include: {
     course: true;
     templates: {
-      select: {
+      include: {
+        lesson: true;
         quiz_maps: {
           include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } };
         };
@@ -102,7 +105,13 @@ export class CourseRepository {
       estimated_duration_minutes: c.estimated_duration_minutes,
       id: c.id,
       lesson_count: c._count.lessons,
-      level: c.level,
+      category_id: c.category_id,
+      category: c.category ? {
+        id: c.category.id,
+        name_en: c.category.name_en,
+        name_vi: c.category.name_vi,
+        created_at: c.category.created_at.toISOString(),
+      } : null,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
       status: c.status,
@@ -133,8 +142,16 @@ export class CourseRepository {
         quiz_count: new Set(l.templates.flatMap((t) => t.quiz_maps.map((m) => m.quiz_id))).size,
         title_en: l.title_en,
         title_vi: l.title_vi,
+        template_count: l.templates.length,
+        templates: l.templates.map((t) => this.mapTemplate(t as any, true)),
       })) : [],
-      level: c.level,
+      category_id: c.category_id,
+      category: c.category ? {
+        id: c.category.id,
+        name_en: c.category.name_en,
+        name_vi: c.category.name_vi,
+        created_at: c.category.created_at.toISOString(),
+      } : null,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
       status: c.status,
@@ -145,15 +162,28 @@ export class CourseRepository {
     };
   }
 
-  private mapTemplate(template: TemplateWithLesson): QuestionTemplateDto {
+  private mapTemplate(template: TemplateWithLesson, showAnswers = true): QuestionTemplateDto {
+    let choices: string[] = [];
+    const type = template.template_type;
+    const falseAnswers = (template.logic_config as any)?.false_answers || [];
+
+    if (type === 'theoretical_question') {
+      choices = [...falseAnswers, template.answer_formula || ''].filter(Boolean).sort();
+    } else if (type === 'multiple_choices') {
+      const correctList = template.answer_formula ? template.answer_formula.split(',').map((s) => s.trim()) : [];
+      choices = [...falseAnswers, ...correctList].filter(Boolean).sort();
+    } else if (type === 'true_false') {
+      choices = ['true', 'false'];
+    }
+
     return {
-      answer_formula: template.answer_formula,
+      answer_formula: showAnswers ? template.answer_formula : null,
       body_template_en: template.body_template_en,
       body_template_vi: template.body_template_vi,
       created_at: template.created_at.toISOString(),
       difficulty: template.difficulty,
-      explanation_template_en: template.explanation_template_en,
-      explanation_template_vi: template.explanation_template_vi,
+      explanation_template_en: showAnswers ? template.explanation_template_en : null,
+      explanation_template_vi: showAnswers ? template.explanation_template_vi : null,
       id: template.id,
       lesson: template.lesson
         ? {
@@ -165,6 +195,8 @@ export class CourseRepository {
         : null,
       lesson_id: template.lesson_id,
       template_type: template.template_type,
+      logic_config: showAnswers ? template.logic_config : null,
+      choices,
     };
   }
 
@@ -183,39 +215,40 @@ export class CourseRepository {
   private mapQuiz(quiz: QuizWithRelations): QuizDto {
     return {
       ...this.mapQuizList(quiz),
-      templates: quiz.quiz_maps.map((map) => this.mapTemplate(map.template)),
+      templates: quiz.quiz_maps.map((map) => this.mapTemplate(map.template, false)),
     };
   }
 
-  private mapSnapshot(snapshot: AttemptWithRelations['snapshots'][number]): QuestionSnapshotDto {
+  private mapSnapshot(snapshot: AttemptWithRelations['snapshots'][number], showAnswers = false): QuestionSnapshotDto {
     return {
       id: snapshot.id,
       is_correct: snapshot.is_correct,
       points_earned: snapshot.points_earned,
       responded_at: snapshot.responded_at?.toISOString() ?? null,
       student_answer: snapshot.student_answer,
-      template: snapshot.template ? this.mapTemplate(snapshot.template) : null,
+      template: snapshot.template ? this.mapTemplate(snapshot.template, showAnswers) : null,
     };
   }
 
   private mapAttempt(attempt: AttemptWithRelations): QuizAttemptDto {
+    const showAnswers = attempt.is_completed ?? false;
     return {
       completed_at: attempt.completed_at?.toISOString() ?? null,
       id: attempt.id,
       is_completed: attempt.is_completed ?? false,
       quiz: attempt.quiz ? this.mapQuizList(attempt.quiz) : null,
       quiz_id: attempt.quiz_id,
-      snapshots: attempt.snapshots.map((snapshot) => this.mapSnapshot(snapshot)),
+      snapshots: attempt.snapshots.map((snapshot) => this.mapSnapshot(snapshot, showAnswers)),
       started_at: attempt.started_at.toISOString(),
       total_score: toNumber(attempt.total_score),
     };
   }
 
-  async findAll(skip: number, take: number, status?: string, level?: string, q?: string): Promise<CourseListResult> {
+  async findAll(skip: number, take: number, status?: string, categoryId?: string, q?: string): Promise<CourseListResult> {
     const where: Prisma.CourseWhereInput = {
       deleted_at: null,
       ...(status !== undefined && { status }),
-      ...(level !== undefined && { level }),
+      ...(categoryId !== undefined && { category_id: categoryId }),
       ...(q && {
         OR: [
           { title_en: { contains: q, mode: 'insensitive' } },
@@ -226,7 +259,7 @@ export class CourseRepository {
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.course.findMany({
-        include: { _count: { select: { lessons: true } }, creator: true },
+        include: { _count: { select: { lessons: true } }, creator: true, category: true },
         orderBy: { published_at: 'desc' },
         skip,
         take,
@@ -244,14 +277,22 @@ export class CourseRepository {
         _count: { select: { lessons: true } },
         attendees: true,
         creator: true,
+        category: true,
         grades: viewerId ? { where: { user_id: viewerId } } : false,
         lessons: {
           include: {
-            templates: { select: { quiz_maps: { select: { quiz_id: true } } } },
+            templates: {
+              include: {
+                lesson: true,
+                quiz_maps: {
+                  include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+                },
+              },
+            },
           },
           orderBy: { order_index: 'asc' },
         },
-      },
+      } as any,
       where: { slug, deleted_at: null },
     });
 
@@ -267,7 +308,7 @@ export class CourseRepository {
       } else {
         isEnrolled = c.grades && c.grades.length > 0;
         if (c.attendees.length > 0) {
-          const isAttendee = c.attendees.some((a) => a.user_id === viewerId);
+          const isAttendee = c.attendees.some((a: any) => a.user_id === viewerId);
           isAllowed = isAttendee && isEnrolled;
         } else {
           isAllowed = isEnrolled;
@@ -289,7 +330,7 @@ export class CourseRepository {
         description_en: dto.description_en,
         description_vi: dto.description_vi,
         estimated_duration_minutes: dto.estimated_duration_minutes ?? 0,
-        level: dto.level ?? 'beginner',
+        category_id: dto.category_id,
         slug: dto.slug,
         summary_en: dto.summary_en,
         summary_vi: dto.summary_vi,
@@ -299,7 +340,19 @@ export class CourseRepository {
       include: {
         _count: { select: { lessons: true } },
         creator: true,
-        lessons: { include: { templates: { select: { quiz_maps: { select: { quiz_id: true } } } } } },
+        category: true,
+        lessons: {
+          include: {
+            templates: {
+              include: {
+                lesson: true,
+                quiz_maps: {
+                  include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -315,11 +368,21 @@ export class CourseRepository {
       include: {
         _count: { select: { lessons: true } },
         creator: true,
+        category: true,
         lessons: {
-          include: { templates: { select: { quiz_maps: { select: { quiz_id: true } } } } },
+          include: {
+            templates: {
+              include: {
+                lesson: true,
+                quiz_maps: {
+                  include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+                },
+              },
+            },
+          },
           orderBy: { order_index: 'asc' },
         },
-      },
+      } as any,
       where: { slug },
     });
 
@@ -539,7 +602,8 @@ export class CourseRepository {
           },
         },
         templates: {
-          select: {
+          include: {
+            lesson: true,
             quiz_maps: {
               include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
             },
@@ -599,7 +663,8 @@ export class CourseRepository {
       include: {
         course: true,
         templates: {
-          select: {
+          include: {
+            lesson: true,
             quiz_maps: {
               include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
             },
@@ -617,7 +682,8 @@ export class CourseRepository {
       include: {
         course: true,
         templates: {
-          select: {
+          include: {
+            lesson: true,
             quiz_maps: {
               include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
             },
@@ -660,6 +726,7 @@ export class CourseRepository {
       title_en: lesson.title_en,
       title_vi: lesson.title_vi,
       updated_at: lesson.updated_at.toISOString(),
+      templates: lesson.templates.map((t) => this.mapTemplate(t as any, true)),
     };
   }
 
@@ -890,15 +957,40 @@ export class CourseRepository {
     };
   }
 
-  async finishAttempt(id: string, userId: string): Promise<QuizAttemptDto | null> {
+  async finishAttempt(id: string, userId: string, answers?: Record<string, string>): Promise<QuizAttemptDto | null> {
     const attempt = await this.prisma.quizAttempt.findFirst({
-      include: { snapshots: true },
+      include: { snapshots: { include: { template: true } } },
       where: { id, user_id: userId },
     });
     if (!attempt) return null;
 
-    const total = attempt.snapshots.length;
-    const correct = attempt.snapshots.filter((snapshot) => snapshot.is_correct).length;
+    if (answers) {
+      for (const snapshot of attempt.snapshots) {
+        const studentAnswer = answers[snapshot.id];
+        if (studentAnswer !== undefined && studentAnswer !== null) {
+          const rightAnswer = snapshot.template?.answer_formula;
+          const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(rightAnswer);
+          
+          await this.prisma.questionSnapshot.update({
+            data: {
+              is_correct: isCorrect,
+              points_earned: isCorrect ? 1 : 0,
+              responded_at: new Date(),
+              student_answer: studentAnswer,
+            },
+            where: { id: snapshot.id },
+          });
+        }
+      }
+    }
+
+    const updatedAttempt = await this.prisma.quizAttempt.findFirst({
+      include: { snapshots: true },
+      where: { id },
+    });
+
+    const total = updatedAttempt?.snapshots.length || 0;
+    const correct = updatedAttempt?.snapshots.filter((snapshot) => snapshot.is_correct).length || 0;
     const totalScore = total > 0 ? (correct / total) * 100 : 0;
 
     const updated = await this.prisma.quizAttempt.update({

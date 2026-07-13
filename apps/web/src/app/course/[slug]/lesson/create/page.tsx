@@ -2,8 +2,8 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { LessonForm } from "@/modules/course/components/LessonForm";
-import { useCreateLessonMutation } from "@services/course";
+import { LessonForm } from "@/components/course/LessonForm";
+import { useCreateLessonMutation } from "@/services/course";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useEffect } from "react";

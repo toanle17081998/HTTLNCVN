@@ -62,8 +62,8 @@ The header Settings menu exposes the current role and quick role switching. Navi
 - React components use `PascalCase`.
 - Hooks use the `useXxx.ts` naming pattern.
 - Keep `src/app` focused on routing, layout, and thin page composition.
-- Put domain UI and client-side business logic in `src/modules/<domain>`.
-- Put typed mock content in `src/mockData` and shape it after API or database contracts.
+- Put domain UI and client-side business logic in `src/components/<domain>`.
+- Put typed mock content in `src/mock-data` and shape it after API or database contracts.
 - Use `useAuth()` for role-aware UI instead of reading storage directly.
 
 ## Development

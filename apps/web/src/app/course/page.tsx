@@ -1,4 +1,4 @@
-import { CoursePage } from "@/modules/course/components/CoursePage";
+import { CoursePage } from "@/components/course/CoursePage";
 
 export default function CourseRoute() {
   return <CoursePage />;

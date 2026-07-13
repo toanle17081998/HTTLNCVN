@@ -3,12 +3,12 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
-import { LessonForm } from "@/modules/course/components/LessonForm";
+import { Card, Button } from "@/components/ui";
+import { LessonForm } from "@/components/course/LessonForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useLessonQuery, useUpdateLessonMutation } from "@services/course";
+import { useLessonQuery, useUpdateLessonMutation } from "@/services/course";
 
 export default function AdminEditLessonRoute() {
   const router = useRouter();
@@ -53,6 +53,11 @@ export default function AdminEditLessonRoute() {
     <PageLayout
       eyebrow={t("admin.common.admin")}
       title={t("admin.common.editNamed", { name: lessonQuery.data.title_vi || lessonQuery.data.title_en })}
+      actions={
+        <Button variant="secondary" onClick={() => router.push("/admin/courses")}>
+          {t("admin.templates.backToCourses")}
+        </Button>
+      }
     >
       <LessonForm
         initialData={lessonQuery.data}

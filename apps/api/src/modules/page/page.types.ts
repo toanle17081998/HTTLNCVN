@@ -2,10 +2,11 @@ export type PageDto = {
   content_en: string;
   content_vi: string;
   created_at: string;
+  deleted_at: string | null;
   id: string;
   route_path: string;
   slug: string;
-  status: "draft" | "published";
+  status: "deleted" | "draft" | "published";
   title_en: string;
   title_vi: string;
   updated_at: string;
@@ -13,7 +14,7 @@ export type PageDto = {
 
 export type PageListDto = Pick<
   PageDto,
-  "id" | "route_path" | "slug" | "status" | "title_en" | "title_vi" | "updated_at"
+  "deleted_at" | "id" | "route_path" | "slug" | "status" | "title_en" | "title_vi" | "updated_at"
 >;
 
 export type PageListResult = {

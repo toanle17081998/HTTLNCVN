@@ -67,6 +67,7 @@ export type EventMetaDto = {
   members: EventMemberDto[];
   repeats: string[];
   statuses: string[];
+  google_calendar_embed_url: string;
 };
 
 export type CreateEventCategoryDto = {

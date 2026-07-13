@@ -1,4 +1,4 @@
-import { MemberPage } from "@/modules/member/components/MemberPage";
+import { MemberPage } from "@/components/member/MemberPage";
 
 export default function AdminMemberRoute() {
   return <MemberPage admin />;

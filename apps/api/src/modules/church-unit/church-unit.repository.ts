@@ -13,8 +13,12 @@ import type {
 import { DEFAULT_CHURCH_UNIT_TYPES } from './church-unit.types';
 
 const CHURCH_UNIT_INCLUDE = {
-  children: {
-    select: { id: true },
+  courses: {
+    select: {
+      id: true,
+      title_en: true,
+      title_vi: true,
+    },
   },
   leader: {
     include: {
@@ -47,22 +51,56 @@ const CHURCH_UNIT_INCLUDE = {
       type: true,
     },
   },
+  children: {
+    include: {
+      leader: {
+        include: {
+          profile: {
+            select: {
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      members: {
+        include: {
+          user: {
+            include: {
+              profile: {
+                select: {
+                  first_name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 } as const;
 
-function toMemberDto(member: {
-  id: string;
-  profile: { first_name: string; last_name: string } | null;
-  username: string;
-}): ChurchUnitMemberDto {
-  const displayName = [member.profile?.first_name, member.profile?.last_name]
+function toMemberDto(
+  user: {
+    id: string;
+    profile: { first_name: string; last_name: string } | null;
+    username: string;
+  },
+  role?: string | null,
+  autoAssignSchedule?: boolean,
+): ChurchUnitMemberDto {
+  const displayName = [user.profile?.first_name, user.profile?.last_name]
     .filter(Boolean)
     .join(' ')
     .trim();
 
   return {
-    display_name: displayName || member.username,
-    id: member.id,
-    username: member.username,
+    display_name: displayName || user.username,
+    id: user.id,
+    username: user.username,
+    role: role ?? null,
+    auto_assign_schedule: autoAssignSchedule ?? false,
   };
 }
 
@@ -78,31 +116,23 @@ function toSummaryDto(unit: {
   };
 }
 
-function toDto(unit: {
-  children: Array<{ id: string }>;
-  created_at: Date;
-  description: string | null;
-  id: string;
-  is_active: boolean;
-  leader: {
-    id: string;
-    profile: { first_name: string; last_name: string } | null;
-    username: string;
-  } | null;
-  members: Array<{
-    user: {
-      id: string;
-      profile: { first_name: string; last_name: string } | null;
-      username: string;
-    };
-  }>;
-  name: string;
-  parent: { id: string; name: string; type: string } | null;
-  sort_order: number | null;
-  type: string;
-  updated_at: Date;
-}): ChurchUnitDto {
-  const members = unit.members.map((membership) => toMemberDto(membership.user));
+function toDto(unit: any): ChurchUnitDto {
+  const members = unit.members.map((membership: any) =>
+    toMemberDto(membership.user, membership.role, membership.auto_assign_schedule),
+  );
+
+  const serviceTeams = unit.children
+    ? unit.children
+        .filter((child: any) => child.type === 'service_team')
+        .map((child: any) => ({
+          id: child.id,
+          name: child.name,
+          leader: child.leader ? toMemberDto(child.leader) : null,
+          members: child.members.map((m: any) =>
+            toMemberDto(m.user, m.role, m.auto_assign_schedule),
+          ),
+        }))
+    : [];
 
   return {
     children_count: unit.children.length,
@@ -111,6 +141,7 @@ function toDto(unit: {
     id: unit.id,
     is_active: unit.is_active,
     leader: unit.leader ? toMemberDto(unit.leader) : null,
+    leader_position: unit.leader_position ?? null,
     member_count: members.length,
     members,
     name: unit.name,
@@ -118,12 +149,38 @@ function toDto(unit: {
     sort_order: unit.sort_order ?? 0,
     type: unit.type,
     updated_at: unit.updated_at.toISOString(),
+    courses: unit.courses ?? [],
+    service_teams: serviceTeams,
   };
 }
 
 @Injectable()
 export class ChurchUnitRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async enrollMembersToCourses(
+    tx: any,
+    userIds: string[],
+    courseIds: string[],
+  ): Promise<void> {
+    if (userIds.length === 0 || courseIds.length === 0) return;
+
+    for (const userId of userIds) {
+      for (const courseId of courseIds) {
+        await tx.courseGrade.upsert({
+          where: { user_id_course_id: { user_id: userId, course_id: courseId } },
+          create: { course_id: courseId, status: 'enrolled', user_id: userId },
+          update: { status: 'enrolled' },
+        });
+
+        await tx.courseAttendance.upsert({
+          where: { course_id_user_id: { course_id: courseId, user_id: userId } },
+          create: { course_id: courseId, user_id: userId },
+          update: {},
+        });
+      }
+    }
+  }
 
   async getMeta(): Promise<ChurchUnitMetaDto> {
     const [members, units] = await this.prisma.$transaction([
@@ -149,12 +206,17 @@ export class ChurchUnitRepository {
           name: true,
           type: true,
         },
+        where: {
+          NOT: {
+            type: 'service_team',
+          },
+        },
       }),
     ]);
 
     return {
-      members: members.map(toMemberDto),
-      types: [...DEFAULT_CHURCH_UNIT_TYPES],
+      members: members.map((m: any) => toMemberDto(m)),
+      types: [...DEFAULT_CHURCH_UNIT_TYPES].filter((t) => t !== 'service_team'),
       units: units.map(toSummaryDto),
     };
   }
@@ -166,8 +228,19 @@ export class ChurchUnitRepository {
         orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],
         skip,
         take,
+        where: {
+          NOT: {
+            type: 'service_team',
+          },
+        },
       }),
-      this.prisma.churchUnit.count(),
+      this.prisma.churchUnit.count({
+        where: {
+          NOT: {
+            type: 'service_team',
+          },
+        },
+      }),
     ]);
 
     return { items: items.map((item) => toDto(item)), total };
@@ -183,35 +256,113 @@ export class ChurchUnitRepository {
   }
 
   async create(dto: CreateChurchUnitDto): Promise<ChurchUnitDto> {
-    const memberIds = [...new Set([...(dto.member_ids ?? []), dto.leader_id].filter(Boolean) as string[])];
+    let memberData: Array<{ user_id: string; role?: string | null; auto_assign_schedule?: boolean }> = [];
+    if (dto.members && dto.members.length > 0) {
+      memberData = dto.members.map((m) => ({
+        user_id: m.user_id,
+        role: m.role ?? null,
+        auto_assign_schedule: m.auto_assign_schedule ?? false,
+      }));
+    } else if (dto.member_ids && dto.member_ids.length > 0) {
+      memberData = dto.member_ids.map((id) => ({
+        user_id: id,
+        role: dto.type === 'class' ? 'member' : 'member',
+        auto_assign_schedule: false,
+      }));
+    }
 
-    const unit = await this.prisma.churchUnit.create({
-      data: {
-        description: dto.description ?? null,
-        is_active: dto.is_active ?? true,
-        leader_id: dto.leader_id ?? null,
-        name: dto.name.trim(),
-        parent_id: dto.parent_id ?? null,
-        sort_order: dto.sort_order ?? 0,
-        type: dto.type,
-        ...(memberIds.length > 0 && {
-          members: {
-            createMany: {
-              data: memberIds.map((memberId) => ({ user_id: memberId })),
+    if (dto.leader_id) {
+      const leaderExists = memberData.some((m) => m.user_id === dto.leader_id);
+      if (!leaderExists) {
+        memberData.push({
+          user_id: dto.leader_id,
+          role: dto.type === 'cell_group' ? 'leader' : 'member',
+          auto_assign_schedule: false,
+        });
+      }
+    }
+
+    const unit = await this.prisma.$transaction(async (tx) => {
+      const createdUnit = await tx.churchUnit.create({
+        data: {
+          description: dto.description ?? null,
+          is_active: dto.is_active ?? true,
+          leader_id: dto.leader_id ?? null,
+          leader_position: dto.leader_position ?? null,
+          name: dto.name.trim(),
+          parent_id: dto.parent_id ?? null,
+          sort_order: dto.sort_order ?? 0,
+          type: dto.type,
+          ...(dto.assigned_course_ids &&
+            dto.assigned_course_ids.length > 0 && {
+              courses: {
+                connect: dto.assigned_course_ids.map((id) => ({ id })),
+              },
+            }),
+          ...(memberData.length > 0 && {
+            members: {
+              createMany: {
+                data: memberData.map((m) => ({
+                  user_id: m.user_id,
+                  role: m.role,
+                  auto_assign_schedule: m.auto_assign_schedule,
+                })),
+              },
             },
-          },
-        }),
-      },
-      include: CHURCH_UNIT_INCLUDE,
+          }),
+        },
+      });
+
+      if (dto.type === 'event_organizer' && dto.service_teams && dto.service_teams.length > 0) {
+        for (const team of dto.service_teams) {
+          const teamMemberIds = [
+            ...new Set([...(team.member_ids ?? []), team.leader_id].filter(Boolean) as string[]),
+          ];
+          await tx.churchUnit.create({
+            data: {
+              name: team.name.trim(),
+              type: 'service_team',
+              parent_id: createdUnit.id,
+              leader_id: team.leader_id ?? null,
+              is_active: true,
+              members: {
+                createMany: {
+                  data: teamMemberIds.map((userId) => ({
+                    user_id: userId,
+                    role: userId === team.leader_id ? 'leader' : 'member',
+                  })),
+                },
+              },
+            },
+          });
+        }
+      }
+
+      if (dto.type === 'class' && dto.assigned_course_ids && dto.assigned_course_ids.length > 0 && memberData.length > 0) {
+        const userIds = memberData.map((m) => m.user_id);
+        await this.enrollMembersToCourses(tx, userIds, dto.assigned_course_ids);
+      }
+
+      return tx.churchUnit.findUnique({
+        include: CHURCH_UNIT_INCLUDE,
+        where: { id: createdUnit.id },
+      });
     });
 
-    return toDto(unit);
+    return toDto(unit!);
   }
 
   async update(id: string, dto: UpdateChurchUnitDto): Promise<ChurchUnitDto | null> {
     const unit = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.churchUnit.findUnique({
-        select: { leader_id: true },
+        include: {
+          children: {
+            where: { type: 'service_team' },
+          },
+          courses: {
+            select: { id: true },
+          },
+        },
         where: { id },
       });
 
@@ -219,16 +370,36 @@ export class ChurchUnitRepository {
         return null;
       }
 
-      const finalLeaderId = dto.leader_id !== undefined ? dto.leader_id : existing.leader_id;
-      const memberIds = dto.member_ids
-        ? [...new Set([...dto.member_ids, finalLeaderId].filter(Boolean) as string[])]
-        : null;
+      if (dto.assigned_course_ids !== undefined) {
+        await tx.churchUnit.update({
+          data: {
+            courses: {
+              disconnect: existing.courses.map((c) => ({ id: c.id })),
+            },
+          },
+          where: { id },
+        });
+
+        if (dto.assigned_course_ids.length > 0) {
+          await tx.churchUnit.update({
+            data: {
+              courses: {
+                connect: dto.assigned_course_ids.map((courseId) => ({ id: courseId })),
+              },
+            },
+            where: { id },
+          });
+        }
+      }
 
       await tx.churchUnit.update({
         data: {
           ...(dto.description !== undefined && { description: dto.description ?? null }),
           ...(dto.is_active !== undefined && { is_active: dto.is_active }),
           ...(dto.leader_id !== undefined && { leader_id: dto.leader_id ?? null }),
+          ...(dto.leader_position !== undefined && {
+            leader_position: dto.leader_position ?? null,
+          }),
           ...(dto.name !== undefined && { name: dto.name.trim() }),
           ...(dto.parent_id !== undefined && { parent_id: dto.parent_id ?? null }),
           ...(dto.sort_order !== undefined && { sort_order: dto.sort_order }),
@@ -237,16 +408,127 @@ export class ChurchUnitRepository {
         where: { id },
       });
 
-      if (memberIds) {
+      const finalLeaderId = dto.leader_id !== undefined ? dto.leader_id : existing.leader_id;
+      let memberData: Array<{ user_id: string; role?: string | null; auto_assign_schedule?: boolean }> | null = null;
+
+      if (dto.members !== undefined) {
+        memberData = dto.members.map((m) => ({
+          user_id: m.user_id,
+          role: m.role ?? null,
+          auto_assign_schedule: m.auto_assign_schedule ?? false,
+        }));
+      } else if (dto.member_ids !== undefined) {
+        memberData = dto.member_ids.map((memberId) => ({
+          user_id: memberId,
+          role: 'member',
+          auto_assign_schedule: false,
+        }));
+      }
+
+      if (memberData) {
+        if (finalLeaderId) {
+          const leaderExists = memberData.some((m) => m.user_id === finalLeaderId);
+          if (!leaderExists) {
+            memberData.push({
+              user_id: finalLeaderId,
+              role: dto.type === 'cell_group' ? 'leader' : 'member',
+              auto_assign_schedule: false,
+            });
+          }
+        }
+
         await tx.churchUnitMember.deleteMany({ where: { church_unit_id: id } });
-        if (memberIds.length > 0) {
+        if (memberData.length > 0) {
           await tx.churchUnitMember.createMany({
-            data: memberIds.map((memberId) => ({
+            data: memberData.map((m) => ({
               church_unit_id: id,
-              user_id: memberId,
+              user_id: m.user_id,
+              role: m.role,
+              auto_assign_schedule: m.auto_assign_schedule,
             })),
           });
         }
+      }
+
+      if (dto.type === 'event_organizer' || (dto.type === undefined && existing.type === 'event_organizer')) {
+        if (dto.service_teams !== undefined) {
+          const existingTeamIds = existing.children.map((c) => c.id);
+          const incomingTeamIds = dto.service_teams.map((t) => t.id).filter(Boolean) as string[];
+
+          const teamsToDelete = existingTeamIds.filter((teamId) => !incomingTeamIds.includes(teamId));
+          if (teamsToDelete.length > 0) {
+            await tx.churchUnit.deleteMany({
+              where: {
+                id: { in: teamsToDelete },
+                parent_id: id,
+              },
+            });
+          }
+
+          for (const team of dto.service_teams) {
+            const teamMemberIds = [
+              ...new Set([...(team.member_ids ?? []), team.leader_id].filter(Boolean) as string[]),
+            ];
+            if (team.id) {
+              await tx.churchUnit.update({
+                data: {
+                  name: team.name.trim(),
+                  leader_id: team.leader_id ?? null,
+                },
+                where: { id: team.id },
+              });
+
+              await tx.churchUnitMember.deleteMany({ where: { church_unit_id: team.id } });
+              if (teamMemberIds.length > 0) {
+                await tx.churchUnitMember.createMany({
+                  data: teamMemberIds.map((userId) => ({
+                    church_unit_id: team.id!,
+                    user_id: userId,
+                    role: userId === team.leader_id ? 'leader' : 'member',
+                  })),
+                });
+              }
+            } else {
+              await tx.churchUnit.create({
+                data: {
+                  name: team.name.trim(),
+                  type: 'service_team',
+                  parent_id: id,
+                  leader_id: team.leader_id ?? null,
+                  is_active: true,
+                  members: {
+                    createMany: {
+                      data: teamMemberIds.map((userId) => ({
+                        user_id: userId,
+                        role: userId === team.leader_id ? 'leader' : 'member',
+                      })),
+                    },
+                  },
+                },
+              });
+            }
+          }
+        }
+      }
+
+      const isClass = dto.type === 'class' || (dto.type === undefined && existing.type === 'class');
+      if (isClass) {
+        const finalCourseIds = dto.assigned_course_ids !== undefined
+          ? dto.assigned_course_ids
+          : existing.courses.map((c) => c.id);
+
+        let finalUserIds: string[] = [];
+        if (memberData !== null) {
+          finalUserIds = memberData.map((m) => m.user_id);
+        } else {
+          const currentMembers = await tx.churchUnitMember.findMany({
+            where: { church_unit_id: id },
+            select: { user_id: true },
+          });
+          finalUserIds = currentMembers.map((m) => m.user_id);
+        }
+
+        await this.enrollMembersToCourses(tx, finalUserIds, finalCourseIds);
       }
 
       return tx.churchUnit.findUnique({
@@ -277,6 +559,115 @@ export class ChurchUnitRepository {
         deleted_at: null,
         id: { in: userIds },
       },
+    });
+  }
+
+  async getClassScores(classId: string): Promise<any> {
+    const classUnit = await this.prisma.churchUnit.findUnique({
+      include: {
+        courses: {
+          select: {
+            id: true,
+            title_en: true,
+            title_vi: true,
+          },
+        },
+        members: {
+          where: { role: { in: ['member', 'admin_member'] } },
+          include: {
+            user: {
+              include: {
+                profile: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      where: { id: classId },
+    });
+
+    if (!classUnit) {
+      return [];
+    }
+
+    const memberIds = classUnit.members.map((m) => m.user_id);
+    const courseIds = classUnit.courses.map((c) => c.id);
+
+    const courseGrades = await this.prisma.courseGrade.findMany({
+      where: {
+        user_id: { in: memberIds },
+        course_id: { in: courseIds },
+      },
+    });
+
+    const quizAttempts = await this.prisma.quizAttempt.findMany({
+      include: {
+        quiz: {
+          select: {
+            id: true,
+            title_en: true,
+            title_vi: true,
+          },
+        },
+      },
+      where: {
+        user_id: { in: memberIds },
+        quiz: {
+          quiz_maps: {
+            some: {
+              template: {
+                lesson: {
+                  course_id: { in: courseIds },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return classUnit.members.map((m) => {
+      const user = m.user;
+      const displayName =
+        [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ').trim() ||
+        user.username;
+
+      return {
+        member_id: user.id,
+        display_name: displayName,
+        username: user.username,
+        course_scores: classUnit.courses.map((course) => {
+          const grade = courseGrades.find(
+            (cg) => cg.user_id === user.id && cg.course_id === course.id,
+          );
+
+          const attemptsForCourse = quizAttempts.filter(
+            (qa) => qa.user_id === user.id,
+          );
+
+          return {
+            course_id: course.id,
+            course_title_en: course.title_en,
+            course_title_vi: course.title_vi,
+            score: grade ? Number(grade.overall_score) : null,
+            status: grade ? grade.status : 'not_started',
+            completed_at: grade?.completed_at ? grade.completed_at.toISOString() : null,
+            quiz_attempts: attemptsForCourse.map((qa) => ({
+              quiz_id: qa.quiz?.id,
+              quiz_title_en: qa.quiz?.title_en,
+              quiz_title_vi: qa.quiz?.title_vi,
+              score: qa.total_score ? Number(qa.total_score) : null,
+              is_completed: qa.is_completed ?? false,
+              completed_at: qa.completed_at ? qa.completed_at.toISOString() : null,
+            })),
+          };
+        }),
+      };
     });
   }
 }

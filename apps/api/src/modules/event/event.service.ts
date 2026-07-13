@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
+import { NotificationService } from '../notification/notification.service';
 import { EventRepository } from './event.repository';
 import type {
   CreateEventCategoryDto,
@@ -19,19 +20,26 @@ import {
 
 @Injectable()
 export class EventService {
-  constructor(private readonly eventRepository: EventRepository) {}
+  constructor(
+    private readonly eventRepository: EventRepository,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   getMeta(): Promise<EventMetaDto> {
     return this.eventRepository.getMeta();
   }
 
-  findAll(
+  async findAll(
     filters: { audience?: string; category_id?: number; q?: string; status?: string; upcoming?: boolean },
     skip: number,
     take: number,
     viewerId?: string,
     viewerRole?: string,
   ): Promise<EventListResult> {
+    this.syncGoogleCalendarEvents().catch((err) =>
+      console.error('Failed to sync Google Calendar events in findAll:', err),
+    );
+
     const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
     const safeTake = Number.isFinite(take) && take > 0 ? Math.min(Math.floor(take), 100) : 20;
 
@@ -79,9 +87,41 @@ export class EventService {
     await this.eventRepository.deleteCategory(id);
   }
 
+  private async sendNotifications(event: EventDto, dto: CreateEventDto | UpdateEventDto, senderId: string, isUpdate = false) {
+    const prefix = isUpdate ? 'Updated Event' : 'New Event';
+    const bodyDate = new Date(event.starts_at).toLocaleDateString('vi-VN');
+    const bodyLocation = event.location ?? 'N/A';
+
+    if (dto.audience === 'church_unit' && dto.church_unit_ids) {
+      for (const unitId of dto.church_unit_ids) {
+        await this.notificationService.create({
+          title: `${prefix}: ${event.title}`,
+          message: `Sự kiện "${event.title}" đã được ${isUpdate ? 'cập nhật' : 'lên lịch'} cho đơn vị của bạn vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
+          target_type: 'church_unit',
+          target_id: unitId,
+          type: 'event',
+          action_url: `/event`,
+        }, senderId).catch(err => console.error('Failed to send event notification to unit', err));
+      }
+    } else if (dto.audience === 'people' && dto.user_ids) {
+      for (const userId of dto.user_ids) {
+        await this.notificationService.create({
+          title: `${prefix}: ${event.title}`,
+          message: `Bạn được phân công tham gia sự kiện "${event.title}" vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
+          target_type: 'user',
+          target_id: userId,
+          type: 'event',
+          action_url: `/event`,
+        }, senderId).catch(err => console.error('Failed to send event notification to user', err));
+      }
+    }
+  }
+
   async create(dto: CreateEventDto, creatorId: string): Promise<EventDto> {
     await this.validateWrite(dto);
-    return this.eventRepository.create(dto, creatorId);
+    const event = await this.eventRepository.create(dto, creatorId);
+    await this.sendNotifications(event, dto, creatorId, false);
+    return event;
   }
 
   async update(id: string, dto: UpdateEventDto): Promise<EventDto> {
@@ -96,6 +136,8 @@ export class EventService {
     if (!event) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
     }
+
+    await this.sendNotifications(event, dto, event.creator.id, true);
 
     return event;
   }
@@ -244,5 +286,182 @@ export class EventService {
         message: 'Select at least one member for people-targeted events.',
       });
     }
+  }
+
+  private lastSyncTime = 0;
+
+  async syncGoogleCalendarEvents(): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastSyncTime < 5 * 60 * 1000) {
+      return;
+    }
+    this.lastSyncTime = now;
+
+    const publicUrl = process.env.ICAL_PUBLIC_URL;
+    const privateUrl = process.env.ICAL_PRIVATE_URL;
+
+    const urls = [publicUrl, privateUrl].filter((url): url is string => !!url && url.trim().startsWith('http'));
+
+    if (urls.length === 0) {
+      return;
+    }
+
+    try {
+      const systemUser = await this.eventRepository.findSystemUser();
+      if (!systemUser) {
+        console.warn('No active user found to assign Google Calendar events to.');
+        return;
+      }
+
+      const allEvents: any[] = [];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            console.error(`Failed to fetch iCal feed from ${url}: ${res.statusText}`);
+            continue;
+          }
+          const text = await res.text();
+          const parsed = this.parseIcal(text);
+          allEvents.push(...parsed);
+        } catch (err: any) {
+          console.error(`Error fetching/parsing iCal feed from ${url}:`, err);
+        }
+      }
+
+      if (allEvents.length === 0) {
+        return;
+      }
+
+      await this.eventRepository.upsertGoogleEvents(allEvents, systemUser.id);
+    } catch (err: any) {
+      console.error('Failed to sync Google Calendar events:', err);
+    }
+  }
+
+  private parseIcal(icalText: string): any[] {
+    const events: any[] = [];
+    const lines = icalText.split(/\r?\n/);
+    let currentEvent: any = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      while (i + 1 < lines.length && (lines[i + 1].startsWith(' ') || lines[i + 1].startsWith('\t'))) {
+        line += lines[i + 1].slice(1);
+        i++;
+      }
+
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+
+      const keyPart = line.slice(0, colonIdx);
+      const value = line.slice(colonIdx + 1);
+
+      const key = keyPart.split(';')[0].trim().toUpperCase();
+
+      if (key === 'BEGIN' && value.trim().toUpperCase() === 'VEVENT') {
+        currentEvent = {};
+      } else if (key === 'END' && value.trim().toUpperCase() === 'VEVENT' && currentEvent) {
+        events.push(currentEvent);
+        currentEvent = null;
+      } else if (currentEvent) {
+        if (key === 'SUMMARY') {
+          currentEvent.title = this.unescapeIcalValue(value);
+        } else if (key === 'DESCRIPTION') {
+          currentEvent.description = this.unescapeIcalValue(value);
+        } else if (key === 'LOCATION') {
+          currentEvent.location = this.unescapeIcalValue(value);
+        } else if (key === 'UID') {
+          currentEvent.uid = value.trim();
+        } else if (key === 'DTSTART') {
+          currentEvent.starts_at = this.parseIcalDate(value);
+        } else if (key === 'DTEND') {
+          currentEvent.ends_at = this.parseIcalDate(value);
+        }
+      }
+    }
+
+    return events;
+  }
+
+  private unescapeIcalValue(val: string): string {
+    return val
+      .replace(/\\,/g, ',')
+      .replace(/\\;/g, ';')
+      .replace(/\\n/gi, '\n')
+      .replace(/\\/g, '')
+      .trim();
+  }
+
+  private parseIcalDate(val: string): Date {
+    const clean = val.trim().replace(/[^0-9TZ]/g, '');
+    if (clean.length === 8) {
+      const y = parseInt(clean.slice(0, 4));
+      const m = parseInt(clean.slice(4, 6)) - 1;
+      const d = parseInt(clean.slice(6, 8));
+      return new Date(y, m, d);
+    }
+    const y = parseInt(clean.slice(0, 4));
+    const m = parseInt(clean.slice(4, 6)) - 1;
+    const d = parseInt(clean.slice(6, 8));
+    const h = parseInt(clean.slice(9, 11)) || 0;
+    const min = parseInt(clean.slice(11, 13)) || 0;
+    const s = parseInt(clean.slice(13, 15)) || 0;
+    if (clean.endsWith('Z')) {
+      return new Date(Date.UTC(y, m, d, h, min, s));
+    }
+    return new Date(y, m, d, h, min, s);
+  }
+
+  async getIcalFeed(): Promise<string> {
+    const result = await this.eventRepository.findAll(
+      { status: 'published' },
+      0,
+      1000,
+    );
+
+    return this.generateIcalFeed(result.items);
+  }
+
+  private generateIcalFeed(events: EventDto[]): string {
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//HTTLNCVN//Events Calendar//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+    ];
+
+    for (const ev of events) {
+      const start = new Date(ev.starts_at).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const end = new Date(ev.ends_at).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const stamp = new Date(ev.created_at || new Date()).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:${ev.id}@httlncvn.org`);
+      lines.push(`DTSTAMP:${stamp}`);
+      lines.push(`DTSTART:${start}`);
+      lines.push(`DTEND:${end}`);
+      lines.push(`SUMMARY:${this.escapeIcalText(ev.title)}`);
+      if (ev.description) {
+        lines.push(`DESCRIPTION:${this.escapeIcalText(ev.description)}`);
+      }
+      if (ev.location) {
+        lines.push(`LOCATION:${this.escapeIcalText(ev.location)}`);
+      }
+      lines.push('END:VEVENT');
+    }
+
+    lines.push('END:VCALENDAR');
+    return lines.join('\r\n');
+  }
+
+  private escapeIcalText(str: string): string {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;')
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '');
   }
 }

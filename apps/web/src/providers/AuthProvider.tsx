@@ -7,7 +7,7 @@ import {
   useAccessToken,
   useMeQuery,
   type AuthUser,
-} from "@services/auth";
+} from "@/services/auth";
 
 export { PERMISSIONS };
 export type { Permission };
@@ -94,7 +94,7 @@ const permissionMap: Partial<Record<Permission, ApiPermissionRequirement[]>> = {
     { action: "delete", resource: "member" },
   ],
   [PERMISSIONS.manageChurchUnits]: [
-    { action: "read", resource: "church_unit" },
+    { action: "update", resource: "church_unit" },
   ],
   [PERMISSIONS.createChurchUnits]: [
     { action: "create", resource: "church_unit" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { CreateArticlePage } from "@/modules/article/components/CreateArticlePage";
+import { CreateArticlePage } from "@/components/article/CreateArticlePage";
 
 export default function AdminCreateArticleRoute() {
   return <CreateArticlePage afterSaveHref="/admin/articles" />;

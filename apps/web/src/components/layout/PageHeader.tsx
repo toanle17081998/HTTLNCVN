@@ -14,10 +14,10 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="flex min-w-0 flex-col gap-5 border-b border-[var(--border-subtle)] pb-6 md:flex-row md:items-end md:justify-between">
+    <div className="flex min-w-0 flex-col gap-6 border-b border-[var(--border-strong)] pb-6 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0 max-w-3xl">
         {eyebrow ? (
-          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-gold)]">
             {eyebrow}
           </p>
         ) : null}

@@ -1,4 +1,4 @@
-import { LessonDetailPage } from "@/modules/course/components/LessonDetailPage";
+import { LessonDetailPage } from "@/components/course/LessonDetailPage";
 
 type LessonDetailRouteProps = {
   params: Promise<{ lessonId: string; slug: string }>;
