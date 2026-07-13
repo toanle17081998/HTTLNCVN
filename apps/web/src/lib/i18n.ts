@@ -1,5 +1,5 @@
-import enMessages from "@/locales/en.json";
-import viMessages from "@/locales/vi.json";
+import enMessages from "@/i18n/en.json";
+import viMessages from "@/i18n/vi.json";
 
 export const locales = ["en", "vi"] as const;
 

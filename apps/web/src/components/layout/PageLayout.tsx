@@ -17,7 +17,7 @@ export function PageLayout({
   children,
 }: PageLayoutProps) {
   return (
-    <div className="mx-auto grid w-full max-w-6xl min-w-0 gap-6 p-4 md:px-0">
+    <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-6 sm:px-6 lg:px-8">
       <PageHeader
         actions={actions}
         description={description}

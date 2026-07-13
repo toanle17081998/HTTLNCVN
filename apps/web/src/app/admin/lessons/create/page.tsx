@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Card, FormField, Select } from "@/components/ui";
-import { LessonForm } from "@/modules/course/components/LessonForm";
+import { LessonForm } from "@/components/course/LessonForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCoursesQuery, useCreateLessonMutation } from "@services/course";
+import { useCoursesQuery, useCreateLessonMutation } from "@/services/course";
 
 export default function AdminCreateLessonRoute() {
   const router = useRouter();

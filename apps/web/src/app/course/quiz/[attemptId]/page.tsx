@@ -1,4 +1,4 @@
-import { QuizAttemptPage } from "@/modules/course/components/QuizAttemptPage";
+import { QuizAttemptPage } from "@/components/course/QuizAttemptPage";
 
 type QuizAttemptRouteProps = {
   params: Promise<{ attemptId: string }>;

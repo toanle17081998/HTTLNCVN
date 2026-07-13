@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCourseQuery, useLessonQuery } from "@services/course";
-import { useArticleQuery } from "@services/article";
+import { useCourseQuery, useLessonQuery } from "@/services/course";
+import { useArticleQuery } from "@/services/article";
 import { navItems } from "./navigation";
 
 type BreadcrumbProps = {
@@ -46,14 +46,6 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" className="text-base">
       <ol className="flex min-w-0 flex-wrap items-center gap-2 text-[var(--text-secondary)]">
-        <li>
-          <Link
-            className="font-normal transition hover:text-[var(--brand-primary)]"
-            href="/"
-          >
-            {t("breadcrumb.dashboard")}
-          </Link>
-        </li>
         {segments.map((segment, index) => {
           // Skip "lesson" segment if it's just a path separator (e.g. /course/slug/lesson/id)
           if (segment === "lesson" && segments[index + 1]) return null;
@@ -86,11 +78,13 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
 
           return (
             <li className="flex items-center gap-2" key={href}>
-              <ChevronRight
-                aria-hidden="true"
-                className="h-4 w-4 shrink-0 text-[var(--text-tertiary)]"
-                strokeWidth={1.75}
-              />
+              {index > 0 ? (
+                <ChevronRight
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 text-[var(--text-tertiary)]"
+                  strokeWidth={1.75}
+                />
+              ) : null}
               {isLast ? (
                 <span className="font-semibold text-[var(--text-primary)] truncate max-w-[200px] sm:max-w-xs">
                   {label}

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { CourseDetailPage } from "@/modules/course/components/CourseDetailPage";
-import { courseApi } from "@services/course";
+import { CourseDetailPage } from "@/components/course/CourseDetailPage";
+import { courseApi } from "@/services/course";
 
 type CourseDetailRouteProps = {
   params: Promise<{ slug: string }>;

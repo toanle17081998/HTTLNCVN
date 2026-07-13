@@ -1,4 +1,4 @@
-import { ArticlePage } from "@/modules/article/components/ArticlePage";
+import { ArticlePage } from "@/components/article/ArticlePage";
 
 export default function ArticleRoute() {
   return <ArticlePage />;

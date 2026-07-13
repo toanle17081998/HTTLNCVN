@@ -10,12 +10,6 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   {
-    href: "/",
-    labelKey: "nav.dashboard.label",
-    descriptionKey: "nav.dashboard.description",
-    permissions: [PERMISSIONS.viewLanding],
-  },
-  {
     href: "/about",
     labelKey: "nav.about.label",
     descriptionKey: "nav.about.description",

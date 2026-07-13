@@ -4,11 +4,11 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Card } from "@/components/ui";
-import { CourseForm } from "@/modules/course/components/CourseForm";
+import { CourseForm } from "@/components/course/CourseForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCourseQuery, useUpdateCourseMutation } from "@services/course";
+import { useCourseQuery, useUpdateCourseMutation } from "@/services/course";
 
 export default function AdminEditCourseRoute() {
   const router = useRouter();

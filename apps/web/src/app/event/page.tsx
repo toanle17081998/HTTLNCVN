@@ -1,4 +1,4 @@
-import { EventPage } from "@/modules/event/components/EventPage";
+import { EventPage } from "@/components/event/EventPage";
 
 export default function EventRoute() {
   return <EventPage />;

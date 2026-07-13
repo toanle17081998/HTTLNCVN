@@ -1,4 +1,4 @@
-import { NotificationPage } from "@/modules/notification/components/NotificationPage";
+import { NotificationPage } from "@/components/notification/NotificationPage";
 
 export default function NotificationRoute() {
   return <NotificationPage />;

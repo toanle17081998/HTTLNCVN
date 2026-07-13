@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { CreateArticlePage } from "@/modules/article/components/CreateArticlePage";
+import { CreateArticlePage } from "@/components/article/CreateArticlePage";
 
 export default function CreateArticleRoute() {
   return (

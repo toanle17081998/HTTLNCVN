@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { ArticleDetailPage } from "@/modules/article/components/ArticleDetailPage";
-import { articleApi } from "@services/article";
+import { ArticleDetailPage } from "@/components/article/ArticleDetailPage";
+import { articleApi } from "@/services/article";
 
 type ArticleDetailRouteProps = {
   params: Promise<{
