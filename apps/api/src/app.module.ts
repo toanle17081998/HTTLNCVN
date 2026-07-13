@@ -13,6 +13,7 @@ import { MemberModule } from './modules/member/member.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PageModule } from './modules/page/page.module';
 import { PrayerJournalModule } from './modules/prayer-journal/prayer-journal.module';
+import { ServingScheduleModule } from './modules/serving-schedule/serving-schedule.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PrayerJournalModule } from './modules/prayer-journal/prayer-journal.mod
     NotificationModule,
     PrayerJournalModule,
     PageModule,
+    ServingScheduleModule,
   ],
   providers: [JwtStrategy],
 })

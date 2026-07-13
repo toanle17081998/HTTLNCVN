@@ -55,6 +55,8 @@ model User {
   church_units_led        ChurchUnit[]            @relation("ChurchUnitLeader")
   church_unit_memberships ChurchUnitMember[]
   event_series_created    EventSeries[]
+  serving_profiles        ServingProfile[]
+  serving_assignments     ServingAssignment[]
   events_created          Event[]
   attendances             EventAttendance[]
   course_attendances      CourseAttendance[]
@@ -140,7 +142,7 @@ model Course {
   description_en          String?   @db.Text
   description_vi          String?   @db.Text
   cover_image_url           String?   @db.Text
-  level                     String    @default("beginner") @db.VarChar(50)
+  category_id               String?   @db.Uuid
   status                    String    @default("draft") @db.VarChar(20)
   estimated_duration_minutes Int      @default(0)
   published_at              DateTime? @db.Timestamptz
@@ -148,12 +150,24 @@ model Course {
   deleted_at                DateTime? @db.Timestamptz
   created_by                String?   @db.Uuid
 
+  category  CourseCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
   creator User?   @relation(fields: [created_by], references: [id], onDelete: SetNull)
   lessons Lesson[]
   grades  CourseGrade[]
   attendees CourseAttendance[]
+  church_units ChurchUnit[] @relation("ChurchUnitCourses")
 
   @@map("courses")
+}
+
+model CourseCategory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name_en    String   @db.VarChar(255)
+  name_vi    String   @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamptz
+  courses    Course[]
+
+  @@map("course_categories")
 }
 
 model Lesson {
@@ -355,22 +369,26 @@ model AuditLog {
 // ---------------------------------------------------------
 
 model ChurchUnit {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String    @db.VarChar(255)
-  type        String    @db.VarChar(50)
-  parent_id   String?   @db.Uuid
-  leader_id   String?   @db.Uuid
-  description String?   @db.Text
-  sort_order  Int?      @default(0)
-  is_active   Boolean   @default(true)
-  created_at  DateTime  @default(now()) @db.Timestamptz
-  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamptz
+  id              String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String                  @db.VarChar(255)
+  type            String                  @db.VarChar(50)
+  parent_id       String?                 @db.Uuid
+  leader_id       String?                 @db.Uuid
+  leader_position String?                 @db.VarChar(100)
+  description     String?                 @db.Text
+  sort_order      Int?                    @default(0)
+  is_active       Boolean                 @default(true)
+  created_at      DateTime                @default(now()) @db.Timestamptz
+  updated_at      DateTime                @default(now()) @updatedAt @db.Timestamptz
 
-  parent   ChurchUnit?        @relation("ChurchUnitTree", fields: [parent_id], references: [id], onDelete: SetNull)
-  children ChurchUnit[]       @relation("ChurchUnitTree")
-  leader   User?              @relation("ChurchUnitLeader", fields: [leader_id], references: [id], onDelete: SetNull)
-  members  ChurchUnitMember[]
-  event_targets EventChurchUnitTarget[]
+  parent            ChurchUnit?             @relation("ChurchUnitTree", fields: [parent_id], references: [id], onDelete: SetNull)
+  children          ChurchUnit[]            @relation("ChurchUnitTree")
+  leader            User?                   @relation("ChurchUnitLeader", fields: [leader_id], references: [id], onDelete: SetNull)
+  members           ChurchUnitMember[]
+  serving_profiles  ServingProfile[]
+  serving_schedules ServingSchedule[]
+  event_targets     EventChurchUnitTarget[]
+  courses           Course[]                @relation("ChurchUnitCourses")
 
   @@index([parent_id])
   @@index([leader_id])
@@ -379,10 +397,11 @@ model ChurchUnit {
 }
 
 model ChurchUnitMember {
-  church_unit_id String   @db.Uuid
-  user_id        String   @db.Uuid
-  role           String?  @db.VarChar(50)
-  joined_at      DateTime @default(now()) @db.Timestamptz
+  church_unit_id       String   @db.Uuid
+  user_id              String   @db.Uuid
+  role                 String?  @db.VarChar(50)
+  auto_assign_schedule Boolean  @default(false)
+  joined_at            DateTime @default(now()) @db.Timestamptz
 
   church_unit ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
   user        User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -390,6 +409,52 @@ model ChurchUnitMember {
   @@id([church_unit_id, user_id])
   @@index([user_id])
   @@map("church_unit_members")
+}
+
+model ServingProfile {
+  church_unit_id String   @db.Uuid
+  user_id        String   @db.Uuid
+  skills         String[] @default([])
+  is_active      Boolean  @default(true)
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  church_unit ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([church_unit_id, user_id])
+  @@index([user_id])
+  @@map("serving_profiles")
+}
+
+model ServingSchedule {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  church_unit_id String            @db.Uuid
+  type           String            @db.VarChar(30)
+  service_date   DateTime          @db.Date
+  created_at     DateTime          @default(now()) @db.Timestamptz
+  updated_at     DateTime          @default(now()) @updatedAt @db.Timestamptz
+
+  church_unit ChurchUnit          @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
+  assignments ServingAssignment[]
+
+  @@unique([church_unit_id, type, service_date])
+  @@index([type, service_date])
+  @@map("serving_schedules")
+}
+
+model ServingAssignment {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schedule_id String  @db.Uuid
+  user_id     String  @db.Uuid
+  role        String  @db.VarChar(30)
+  slot_index  Int     @default(0)
+
+  schedule ServingSchedule @relation(fields: [schedule_id], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([schedule_id, role, slot_index])
+  @@index([user_id])
+  @@map("serving_assignments")
 }
 
 model EventCategory {
@@ -451,10 +516,10 @@ model Event {
   updated_at      DateTime  @default(now()) @updatedAt @db.Timestamptz
   deleted_at      DateTime? @db.Timestamptz
 
-  category  EventCategory?    @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  creator   User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
-  series    EventSeries?      @relation(fields: [series_id], references: [id], onDelete: SetNull)
-  attendees EventAttendance[]
+  category            EventCategory?        @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator             User                  @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  series              EventSeries?          @relation(fields: [series_id], references: [id], onDelete: SetNull)
+  attendees           EventAttendance[]
   church_unit_targets EventChurchUnitTarget[]
 
   @@index([category_id])
@@ -578,8 +643,8 @@ model Article {
 
 model Page {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug          String    @unique @db.VarChar(255)
-  route_path    String    @unique @db.VarChar(255)
+  slug          String    @db.VarChar(255)
+  route_path    String    @db.VarChar(255)
   title_en      String    @db.VarChar(255)
   title_vi      String    @db.VarChar(255)
   content_json_en Json      @default("{}")

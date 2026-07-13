@@ -9,9 +9,11 @@ import {
   Patch,
   Post,
   Query,
+  Request,
 } from '@nestjs/common';
 
 import { Can } from '../../common/decorators/permissions.decorator';
+import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { ChurchUnitService } from './church-unit.service';
 import type {
   ChurchUnitDto,
@@ -63,5 +65,14 @@ export class ChurchUnitController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.churchUnitService.delete(id);
+  }
+
+  @Get(':id/class-scores')
+  @Can('read', 'church_unit')
+  getClassScores(
+    @Param('id') id: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<any> {
+    return this.churchUnitService.getClassScores(id, req.user.sub);
   }
 }

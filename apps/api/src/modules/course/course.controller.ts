@@ -33,6 +33,7 @@ import type {
   UpdateCourseDto,
   UpdateLessonDto,
   UpdateQuestionTemplateDto,
+  FinishAttemptDto,
   UpdateQuizDto,
   EnrollOthersDto,
   EnrollPreviewDto,
@@ -48,10 +49,10 @@ export class CourseController {
     @Query('skip') skip = '0',
     @Query('take') take = '20',
     @Query('status') status?: string,
-    @Query('level') level?: string,
+    @Query('category_id') category_id?: string,
     @Query('q') q?: string,
   ): Promise<CourseListResult> {
-    return this.courseService.findAll(Number(skip), Number(take), status, level, q);
+    return this.courseService.findAll(Number(skip), Number(take), status, category_id, q);
   }
 
   @Public()
@@ -232,8 +233,9 @@ export class CourseController {
   @Post('quiz-attempts/:attemptId/finish')
   finishAttempt(
     @Param('attemptId') attemptId: string,
+    @Body() dto: FinishAttemptDto,
     @Request() req: { user: JwtPayload },
   ): Promise<QuizAttemptDto> {
-    return this.courseService.finishAttempt(attemptId, req.user.sub);
+    return this.courseService.finishAttempt(attemptId, req.user.sub, dto.answers);
   }
 }

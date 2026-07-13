@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Request,
+  Res,
 } from '@nestjs/common';
 
 import { Public } from '../../common/decorators/public.decorator';
@@ -115,5 +116,16 @@ export class EventController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string): Promise<void> {
     return this.eventService.delete(id);
+  }
+
+  @Public()
+  @Get('feed.ics')
+  async getFeed(@Res() res: any): Promise<void> {
+    const feed = await this.eventService.getIcalFeed();
+    res.set({
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="events.ics"',
+    });
+    res.send(feed);
   }
 }

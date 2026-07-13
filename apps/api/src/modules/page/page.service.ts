@@ -53,4 +53,14 @@ export class PageService {
   remove(slug: string): Promise<void> {
     return this.pageRepository.remove(slug);
   }
+
+  async restore(id: string): Promise<PageDto> {
+    const page = await this.pageRepository.restore(id);
+
+    if (!page) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Deleted page not found.' });
+    }
+
+    return page;
+  }
 }

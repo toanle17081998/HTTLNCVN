@@ -4,8 +4,22 @@ export type LessonSummary = {
   id: string;
   order_index: number | null;
   quiz_count?: number;
+  template_count?: number;
+  templates?: QuestionTemplateDto[];
   title_en?: string;
   title_vi: string;
+};
+
+export type CourseCategoryDto = {
+  id: string;
+  name_en: string;
+  name_vi: string;
+  created_at: string;
+};
+
+export type CreateCourseCategoryDto = {
+  name_en: string;
+  name_vi: string;
 };
 
 export type CourseDto = {
@@ -20,7 +34,8 @@ export type CourseDto = {
   is_allowed?: boolean;
   lesson_count: number;
   lessons: LessonSummary[];
-  level: string;
+  category_id: string | null;
+  category: CourseCategoryDto | null;
   published_at: string | null;
   slug: string;
   status: string;
@@ -36,7 +51,8 @@ export type CourseListDto = {
   estimated_duration_minutes: number;
   id: string;
   lesson_count: number;
-  level: string;
+  category_id: string | null;
+  category: CourseCategoryDto | null;
   published_at: string | null;
   slug: string;
   status: string;
@@ -56,7 +72,7 @@ export type CreateCourseDto = {
   description_en?: string;
   description_vi?: string;
   estimated_duration_minutes?: number;
-  level?: string;
+  category_id?: string;
   slug: string;
   summary_en?: string;
   summary_vi?: string;
@@ -86,6 +102,7 @@ export type LessonDto = {
   title_en: string;
   title_vi: string;
   updated_at: string;
+  templates: QuestionTemplateDto[];
 };
 
 export type CreateLessonDto = {
@@ -111,6 +128,8 @@ export type QuestionTemplateDto = {
   lesson: LessonSummary | null;
   lesson_id: string | null;
   template_type: string;
+  logic_config: unknown;
+  choices?: string[];
 };
 
 export type CreateQuestionTemplateDto = {
@@ -205,4 +224,8 @@ export type EnrollPreviewDto = {
   invalid_emails: string[];
   enrolled_count: number;
   authorized_count: number;
+};
+
+export type FinishAttemptDto = {
+  answers?: Record<string, string>;
 };

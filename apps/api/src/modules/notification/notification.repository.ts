@@ -69,6 +69,16 @@ export class NotificationRepository {
       await this.prisma.notificationRecipient.create({
         data: { notification_id: notification.id, user_id: dto.target_id },
       });
+    } else if (dto.target_type === 'church_unit' && dto.target_id) {
+      const members = await this.prisma.churchUnitMember.findMany({
+        select: { user_id: true },
+        where: { church_unit_id: dto.target_id },
+      });
+
+      await this.prisma.notificationRecipient.createMany({
+        data: members.map((m) => ({ notification_id: notification.id, user_id: m.user_id })),
+        skipDuplicates: true,
+      });
     }
   }
 }

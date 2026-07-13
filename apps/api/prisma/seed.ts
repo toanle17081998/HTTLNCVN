@@ -365,6 +365,225 @@ async function main(): Promise<void> {
     });
   }
 
+  const servingTeam = await prisma.churchUnit.upsert({
+    where: { id: 'dddddddd-0001-0001-0001-000000000001' },
+    create: {
+      id: 'dddddddd-0001-0001-0001-000000000001',
+      name: 'Worship & Care Team',
+      type: 'team',
+      leader_id: editorUser.id,
+      description: 'Seeded serving team for worship and cleaning schedules.',
+      sort_order: 1,
+    },
+    update: {
+      description: 'Seeded serving team for worship and cleaning schedules.',
+      leader_id: editorUser.id,
+      name: 'Worship & Care Team',
+      sort_order: 1,
+      type: 'team',
+    },
+  });
+
+  const servingUserEmails = [
+    'editor@htnc.local',
+    'instructor@htnc.local',
+    'member@htnc.local',
+    'member1@htnc.local',
+    'member2@htnc.local',
+    'member3@htnc.local',
+    'member4@htnc.local',
+    'member5@htnc.local',
+  ];
+  const servingUsers = await prisma.user.findMany({
+    select: { email: true, id: true },
+    where: { email: { in: servingUserEmails } },
+  });
+  const servingUserIdByEmail = new Map(servingUsers.map((user) => [user.email, user.id]));
+
+  for (const email of servingUserEmails) {
+    const userId = servingUserIdByEmail.get(email);
+    if (!userId) continue;
+
+    await prisma.churchUnitMember.upsert({
+      where: {
+        church_unit_id_user_id: {
+          church_unit_id: servingTeam.id,
+          user_id: userId,
+        },
+      },
+      create: {
+        church_unit_id: servingTeam.id,
+        user_id: userId,
+        role: email === 'editor@htnc.local' ? 'leader' : 'member',
+      },
+      update: {
+        role: email === 'editor@htnc.local' ? 'leader' : 'member',
+      },
+    });
+  }
+
+  const servingProfiles = [
+    { email: 'editor@htnc.local', skills: ['guitar', 'sing'] },
+    { email: 'instructor@htnc.local', skills: ['drum', 'organ'] },
+    { email: 'member@htnc.local', skills: ['bass'] },
+    { email: 'member1@htnc.local', skills: ['sing'] },
+    { email: 'member2@htnc.local', skills: ['guitar'] },
+    { email: 'member3@htnc.local', skills: ['drum'] },
+    { email: 'member4@htnc.local', skills: ['organ'] },
+    { email: 'member5@htnc.local', skills: ['bass', 'sing'] },
+  ];
+
+  for (const profile of servingProfiles) {
+    const userId = servingUserIdByEmail.get(profile.email);
+    if (!userId) continue;
+
+    await (prisma as any).servingProfile.upsert({
+      where: {
+        church_unit_id_user_id: {
+          church_unit_id: servingTeam.id,
+          user_id: userId,
+        },
+      },
+      create: {
+        church_unit_id: servingTeam.id,
+        user_id: userId,
+        skills: profile.skills,
+        is_active: true,
+      },
+      update: {
+        is_active: true,
+        skills: profile.skills,
+      },
+    });
+  }
+
+  const nextServingSunday = new Date();
+  nextServingSunday.setUTCDate(nextServingSunday.getUTCDate() + ((7 - nextServingSunday.getUTCDay()) % 7 || 7));
+  nextServingSunday.setUTCHours(0, 0, 0, 0);
+  const followingServingSunday = new Date(nextServingSunday);
+  followingServingSunday.setUTCDate(followingServingSunday.getUTCDate() + 7);
+
+  const worshipScheduleA = await (prisma as any).servingSchedule.upsert({
+    where: {
+      church_unit_id_type_service_date: {
+        church_unit_id: servingTeam.id,
+        type: 'worship',
+        service_date: nextServingSunday,
+      },
+    },
+    create: {
+      church_unit_id: servingTeam.id,
+      type: 'worship',
+      service_date: nextServingSunday,
+    },
+    update: {},
+  });
+
+  const worshipScheduleB = await (prisma as any).servingSchedule.upsert({
+    where: {
+      church_unit_id_type_service_date: {
+        church_unit_id: servingTeam.id,
+        type: 'worship',
+        service_date: followingServingSunday,
+      },
+    },
+    create: {
+      church_unit_id: servingTeam.id,
+      type: 'worship',
+      service_date: followingServingSunday,
+    },
+    update: {},
+  });
+
+  const cleaningScheduleA = await (prisma as any).servingSchedule.upsert({
+    where: {
+      church_unit_id_type_service_date: {
+        church_unit_id: servingTeam.id,
+        type: 'cleaning',
+        service_date: nextServingSunday,
+      },
+    },
+    create: {
+      church_unit_id: servingTeam.id,
+      type: 'cleaning',
+      service_date: nextServingSunday,
+    },
+    update: {},
+  });
+
+  const cleaningScheduleB = await (prisma as any).servingSchedule.upsert({
+    where: {
+      church_unit_id_type_service_date: {
+        church_unit_id: servingTeam.id,
+        type: 'cleaning',
+        service_date: followingServingSunday,
+      },
+    },
+    create: {
+      church_unit_id: servingTeam.id,
+      type: 'cleaning',
+      service_date: followingServingSunday,
+    },
+    update: {},
+  });
+
+  const scheduleAssignments = [
+    {
+      assignments: [
+        { role: 'guitar', slot_index: 0, user_id: servingUserIdByEmail.get('editor@htnc.local') },
+        { role: 'drum', slot_index: 0, user_id: servingUserIdByEmail.get('instructor@htnc.local') },
+        { role: 'bass', slot_index: 0, user_id: servingUserIdByEmail.get('member@htnc.local') },
+        { role: 'sing', slot_index: 0, user_id: servingUserIdByEmail.get('member1@htnc.local') },
+        { role: 'organ', slot_index: 0, user_id: servingUserIdByEmail.get('member4@htnc.local') },
+      ],
+      scheduleId: worshipScheduleA.id,
+    },
+    {
+      assignments: [
+        { role: 'guitar', slot_index: 0, user_id: servingUserIdByEmail.get('member2@htnc.local') },
+        { role: 'drum', slot_index: 0, user_id: servingUserIdByEmail.get('member3@htnc.local') },
+        { role: 'bass', slot_index: 0, user_id: servingUserIdByEmail.get('member5@htnc.local') },
+        { role: 'sing', slot_index: 0, user_id: servingUserIdByEmail.get('editor@htnc.local') },
+        { role: 'organ', slot_index: 0, user_id: servingUserIdByEmail.get('instructor@htnc.local') },
+      ],
+      scheduleId: worshipScheduleB.id,
+    },
+    {
+      assignments: [
+        { role: 'member', slot_index: 0, user_id: servingUserIdByEmail.get('editor@htnc.local') },
+        { role: 'member', slot_index: 1, user_id: servingUserIdByEmail.get('instructor@htnc.local') },
+        { role: 'member', slot_index: 2, user_id: servingUserIdByEmail.get('member@htnc.local') },
+        { role: 'member', slot_index: 3, user_id: servingUserIdByEmail.get('member1@htnc.local') },
+        { role: 'member', slot_index: 4, user_id: servingUserIdByEmail.get('member2@htnc.local') },
+      ],
+      scheduleId: cleaningScheduleA.id,
+    },
+    {
+      assignments: [
+        { role: 'member', slot_index: 0, user_id: servingUserIdByEmail.get('member3@htnc.local') },
+        { role: 'member', slot_index: 1, user_id: servingUserIdByEmail.get('member4@htnc.local') },
+        { role: 'member', slot_index: 2, user_id: servingUserIdByEmail.get('member5@htnc.local') },
+        { role: 'member', slot_index: 3, user_id: servingUserIdByEmail.get('editor@htnc.local') },
+        { role: 'member', slot_index: 4, user_id: servingUserIdByEmail.get('member@htnc.local') },
+      ],
+      scheduleId: cleaningScheduleB.id,
+    },
+  ];
+
+  for (const entry of scheduleAssignments) {
+    await (prisma as any).servingAssignment.deleteMany({
+      where: { schedule_id: entry.scheduleId },
+    });
+    await (prisma as any).servingAssignment.createMany({
+      data: entry.assignments
+        .filter((assignment) => Boolean(assignment.user_id))
+        .map((assignment) => ({
+          ...assignment,
+          schedule_id: entry.scheduleId,
+        })),
+    });
+  }
+
   // Articles
   await prisma.article.upsert({
     where: { slug: 'chao-mung-den-voi-hoi-thanh-nhan-cap' },
@@ -461,7 +680,7 @@ Các nguyên tắc cơ bản:
     create: {
       slug: 'isom-1-aa',
       title_en: 'ISOM 1 – Associate of Arts in Ministry',
-      title_vi: 'Chương trình thần học cơ bản (AA)',
+      title_vi: 'ISOM 1 – Chương trình thần học cơ bản (AA)',
       summary_vi: 'Chương trình đào tạo thần học bậc đại học cơ sở dành cho người muốn phục vụ Chúa.',
       description_vi: `Chương trình ISOM 1 (International School of Ministry – Associate of Arts) trang bị nền tảng thần học vững chắc và kỹ năng phục vụ thực tiễn cho người học. Phù hợp với tín hữu muốn hiểu sâu hơn về Lời Chúa và bắt đầu hành trình phục vụ trong Hội thánh.`,
       level: 'beginner',

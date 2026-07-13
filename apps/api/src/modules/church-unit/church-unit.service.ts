@@ -58,6 +58,27 @@ export class ChurchUnitService {
     await this.churchUnitRepository.delete(id);
   }
 
+  async getClassScores(id: string, userId: string): Promise<any> {
+    const unit = await this.findById(id);
+
+    if (unit.type !== 'class') {
+      throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Church unit is not a class.' });
+    }
+
+    // Verify permission: user must be a class admin for this class
+    const isClassAdmin = unit.members.some(
+      (m) => m.id === userId && (m.role === 'admin' || m.role === 'admin_member'),
+    );
+    if (!isClassAdmin) {
+      throw new BadRequestException({
+        code: 'FORBIDDEN',
+        message: 'You are not authorized to view scores for this class.',
+      });
+    }
+
+    return this.churchUnitRepository.getClassScores(id);
+  }
+
   private async validateWrite(
     dto: CreateChurchUnitDto | UpdateChurchUnitDto,
     currentUnitId?: string,
@@ -89,7 +110,13 @@ export class ChurchUnitService {
 
     await this.validateUsers([dto.leader_id].filter(Boolean) as string[]);
 
-    if (dto.member_ids !== undefined) {
+    if (dto.members !== undefined) {
+      if (!Array.isArray(dto.members)) {
+        throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Members must be a list.' });
+      }
+      const userIds = dto.members.map((m) => m.user_id);
+      await this.validateUsers(userIds);
+    } else if (dto.member_ids !== undefined) {
       if (!Array.isArray(dto.member_ids)) {
         throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Members must be a list.' });
       }
@@ -103,6 +130,19 @@ export class ChurchUnitService {
       }
 
       await this.validateUsers(uniqueMemberIds);
+    }
+
+    if (dto.type === 'event_organizer' && dto.service_teams !== undefined) {
+      if (!Array.isArray(dto.service_teams)) {
+        throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Service teams must be a list.' });
+      }
+      for (const team of dto.service_teams) {
+        if (!team.name || !team.name.trim()) {
+          throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Service team name is required.' });
+        }
+        const teamUserIds = [...(team.member_ids ?? []), team.leader_id].filter(Boolean) as string[];
+        await this.validateUsers(teamUserIds);
+      }
     }
   }
 
