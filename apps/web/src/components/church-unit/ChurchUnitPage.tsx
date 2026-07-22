@@ -167,8 +167,6 @@ export function ChurchUnitPage({ admin = false }: ChurchUnitPageProps) {
   const meta = metaQuery.data;
   const courses = coursesQuery.data?.items ?? [];
 
-  const hasPageAccess = can(PERMISSIONS.manageChurchUnits) || units.some((unit) => isClassAdmin(unit));
-
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -187,6 +185,8 @@ export function ChurchUnitPage({ admin = false }: ChurchUnitPageProps) {
       (m) => m.id === currentUser.id && (m.role === "admin" || m.role === "admin_member")
     );
   };
+
+  const hasPageAccess = can(PERMISSIONS.manageChurchUnits) || units.some((unit) => isClassAdmin(unit));
 
   const visibleUnits = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

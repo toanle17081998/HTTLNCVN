@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, Input, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -21,13 +21,42 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   const submitAnswer = useSubmitAnswerMutation(attemptId);
   const finishAttempt = useFinishAttemptMutation(attemptId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const answersRef = useRef(answers);
+  const timeoutSubmittedRef = useRef(false);
   const attempt = attemptQuery.data;
 
-  async function handleSubmitAnswer(snapshotId: string) {
-    await submitAnswer.mutateAsync({
-      snapshot_id: snapshotId,
-      student_answer: answers[snapshotId] ?? "",
-    });
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    if (!attempt?.deadline_at || attempt.is_completed) {
+      setRemainingSeconds(null);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((new Date(attempt.deadline_at!).getTime() - Date.now()) / 1000));
+      setRemainingSeconds(remaining);
+      if (remaining === 0 && !timeoutSubmittedRef.current) {
+        timeoutSubmittedRef.current = true;
+        const batchAnswers = Object.fromEntries(
+          attempt.snapshots.map((snapshot) => [
+            snapshot.id,
+            answersRef.current[snapshot.id] ?? snapshot.student_answer ?? "",
+          ]),
+        );
+        finishAttempt.mutate(batchAnswers);
+      }
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [attempt?.deadline_at, attempt?.id, attempt?.is_completed]);
+
+  function saveAnswer(snapshotId: string, value: string) {
+    setAnswers((current) => ({ ...current, [snapshotId]: value }));
+    submitAnswer.mutate({ snapshot_id: snapshotId, student_answer: value });
   }
 
   async function handleFinish() {
@@ -42,17 +71,12 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   }
 
   function toggleMultipleChoice(snapshotId: string, choice: string, defaultValue: string) {
-    setAnswers((current) => {
-      const currentVal = current[snapshotId] !== undefined ? current[snapshotId] : defaultValue;
-      const currentList = currentVal ? currentVal.split(",").map(s => s.trim()) : [];
-      const nextList = currentList.includes(choice)
-        ? currentList.filter(item => item !== choice)
-        : [...currentList, choice];
-      return {
-        ...current,
-        [snapshotId]: nextList.sort().join(", "),
-      };
-    });
+    const currentVal = answers[snapshotId] !== undefined ? answers[snapshotId] : defaultValue;
+    const currentList = currentVal ? currentVal.split(",").map(s => s.trim()) : [];
+    const nextList = currentList.includes(choice)
+      ? currentList.filter(item => item !== choice)
+      : [...currentList, choice];
+    saveAnswer(snapshotId, nextList.sort().join(", "));
   }
 
   return (
@@ -76,13 +100,13 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
           <div className="grid min-w-0 gap-4">
             {attempt.snapshots.map((snapshot, index) => {
               const template = snapshot.template;
-              const answered = attempt.is_completed;
+              const completed = attempt.is_completed;
+              const showFeedback = completed && !attempt.is_test;
               const type = template?.template_type;
 
               // Get choices pre-calculated by the server
               const choices = template?.choices || [];
-              const correctList = template?.answer_formula ? template.answer_formula.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
-              const isMulti = type === "multiple_choices" && correctList.length > 1;
+              const isMulti = type === "multiple_choices" && template?.allows_multiple;
 
               // Get current selection value
               const currentVal = answers[snapshot.id] !== undefined ? answers[snapshot.id] : (snapshot.student_answer || "");
@@ -93,7 +117,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                     <span className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                       {t("quiz.question")} {index + 1}
                     </span>
-                    {answered ? (
+                    {showFeedback ? (
                       <span
                         className={[
                           "rounded-md px-2.5 py-1 text-xs font-semibold",
@@ -111,17 +135,17 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                     {locale === "vi" ? (template?.body_template_vi || template?.body_template_en || "Câu hỏi") : (template?.body_template_en || template?.body_template_vi || "Question")}
                   </h2>
 
-                  {answered ? (
+                  {completed ? (
                     <div className="mt-4 rounded-md bg-[var(--bg-base)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
                       <p className="font-semibold text-[var(--text-primary)]">
                         Your answer: <span className="font-mono bg-[var(--brand-muted)] px-2 py-0.5 rounded text-[var(--brand-primary)]">{snapshot.student_answer}</span>
                       </p>
-                      {snapshot.student_answer?.toLowerCase() !== template?.answer_formula?.toLowerCase() && (
+                      {!attempt.is_test && snapshot.student_answer?.toLowerCase() !== template?.answer_formula?.toLowerCase() && (
                         <p className="mt-1 font-semibold text-[var(--status-success)]">
                           Correct answer: <span className="font-mono bg-[color-mix(in_srgb,var(--status-success)_10%,transparent)] px-2 py-0.5 rounded">{template?.answer_formula}</span>
                         </p>
                       )}
-                      {template?.explanation_template_vi || template?.explanation_template_en ? (
+                      {!attempt.is_test && (template?.explanation_template_vi || template?.explanation_template_en) ? (
                         <div className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs">
                           <p className="font-bold text-[var(--text-primary)]">Explanation:</p>
                           <p className="mt-1 italic">
@@ -170,10 +194,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                 key={choice}
                                 type="button"
                                 onClick={() => {
-                                  setAnswers((current) => ({
-                                    ...current,
-                                    [snapshot.id]: choice,
-                                  }));
+                                  saveAnswer(snapshot.id, choice);
                                 }}
                                 className={cn(
                                   "w-full text-left p-3 rounded-xl border text-sm transition font-medium",
@@ -189,15 +210,12 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                         )
                       ) : type === "true_false" ? (
                         <div className="grid grid-cols-2 gap-3">
-                          {["true", "false"].map((val) => (
+                          {(choices.length ? choices : ["true", "false"]).map((val) => (
                             <button
                               key={val}
                               type="button"
                               onClick={() => {
-                                setAnswers((current) => ({
-                                  ...current,
-                                  [snapshot.id]: val,
-                                }));
+                                saveAnswer(snapshot.id, val);
                               }}
                               className={cn(
                                 "p-4 rounded-xl border text-center font-bold text-base transition capitalize",
@@ -214,12 +232,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                         <div className="flex flex-col gap-3">
                           <Input
                             aria-label={`Answer question ${index + 1}`}
-                            onChange={(event) =>
-                              setAnswers((current) => ({
-                                ...current,
-                                [snapshot.id]: event.target.value,
-                              }))
-                            }
+                            onChange={(event) => saveAnswer(snapshot.id, event.target.value)}
                             placeholder="Type your answer"
                             value={currentVal}
                           />
@@ -235,6 +248,11 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
           <aside className="lg:sticky lg:top-24">
             <Card className="p-5">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Progress</h2>
+              {remainingSeconds !== null ? (
+                <p className="mt-2 rounded-md bg-[var(--brand-muted)] p-3 text-center text-lg font-bold text-[var(--brand-primary)]">
+                  {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:{String(remainingSeconds % 60).padStart(2, "0")}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
                 {
                   attempt.snapshots.filter((snapshot) => {
@@ -254,7 +272,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
               ) : (
                 <Button
                   className="mt-4 w-full"
-                  disabled={finishAttempt.isPending || submitAnswer.isPending}
+                  disabled={finishAttempt.isPending || submitAnswer.isPending || remainingSeconds === 0}
                   onClick={handleFinish}
                 >
                   {t("quiz.status.completed")}

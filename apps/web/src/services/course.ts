@@ -95,6 +95,7 @@ function courseListSearch(params: CourseListParams = {}) {
 export type QuizListItem = {
   id: string;
   is_active: boolean;
+  is_test: boolean;
   passing_score: number;
   question_count: number;
   time_limit_seconds: number | null;
@@ -134,6 +135,7 @@ export type CreateLessonDto = {
 export type UpdateLessonDto = Partial<CreateLessonDto>;
 
 export type QuestionTemplate = {
+  allows_multiple: boolean;
   answer_formula: string | null;
   body_template_en: string;
   body_template_vi: string;
@@ -188,13 +190,41 @@ export type QuestionSnapshot = {
 
 export type QuizAttempt = {
   completed_at: string | null;
+  deadline_at: string | null;
   id: string;
   is_completed: boolean;
+  is_test: boolean;
   quiz: QuizListItem | null;
   quiz_id: string | null;
   snapshots: QuestionSnapshot[];
   started_at: string;
   total_score: number | null;
+};
+
+export type CourseTestAvailability = {
+  church_unit: { id: string; name: string };
+  course_id: string;
+  created_at: string;
+  duration_seconds: number;
+  id: string;
+  is_active: boolean;
+  quiz: QuizListItem;
+};
+
+export type CourseTestStatus = {
+  attempt: QuizAttempt | null;
+  availability: CourseTestAvailability | null;
+  can_manage: boolean;
+  managed_classes: { id: string; name: string }[];
+  question_bank: QuestionTemplate[];
+};
+
+export type PublishCourseTestDto = {
+  duration_seconds: number;
+  new_questions?: Array<CreateQuestionTemplateDto & { lesson_id: string }>;
+  template_ids?: string[];
+  title_en?: string;
+  title_vi?: string;
 };
 
 export type SubmitAnswerDto = {
@@ -241,6 +271,7 @@ export const courseKeys = {
   list: (params: CourseListParams = {}) => [...courseKeys.lists(), params] as const,
   quiz: (id: string) => [...courseKeys.all, "quiz", id] as const,
   quizzes: (slug?: string) => [...courseKeys.all, "quizzes", slug ?? "all"] as const,
+  test: (slug: string) => [...courseKeys.all, "test", slug] as const,
 };
 
 export const courseApi = {
@@ -383,6 +414,30 @@ export const courseApi = {
       },
     );
   },
+  testStatus(slug: string) {
+    return apiRequest<CourseTestStatus>(`/courses/${encodeURIComponent(slug)}/test`, {
+      token: getStoredTokens()?.accessToken,
+    });
+  },
+  publishTest(slug: string, dto: PublishCourseTestDto) {
+    return apiRequest<CourseTestAvailability>(`/courses/${encodeURIComponent(slug)}/test`, {
+      body: JSON.stringify(dto),
+      method: "POST",
+      token: getStoredTokens()?.accessToken,
+    });
+  },
+  closeTest(availabilityId: string) {
+    return apiRequest<void>(`/courses/test-availabilities/${encodeURIComponent(availabilityId)}/close`, {
+      method: "PATCH",
+      token: getStoredTokens()?.accessToken,
+    });
+  },
+  startTest(availabilityId: string) {
+    return apiRequest<QuizAttempt>(`/courses/test-availabilities/${encodeURIComponent(availabilityId)}/start`, {
+      method: "POST",
+      token: getStoredTokens()?.accessToken,
+    });
+  },
   enrollOthers(courseId: string, dto: EnrollOthersDto) {
     return apiRequest<void>(`/courses/${encodeURIComponent(courseId)}/enroll-others`, {
       body: JSON.stringify(dto),
@@ -427,6 +482,14 @@ export function useCourseQuizzesQuery(courseSlug?: string) {
     enabled: Boolean(courseSlug),
     queryFn: () => courseApi.quizzes(courseSlug),
     queryKey: courseKeys.quizzes(courseSlug),
+  });
+}
+
+export function useCourseTestQuery(courseSlug?: string) {
+  return useQuery({
+    enabled: Boolean(courseSlug && getStoredTokens()?.accessToken),
+    queryFn: () => courseApi.testStatus(courseSlug ?? ""),
+    queryKey: courseKeys.test(courseSlug ?? ""),
   });
 }
 
@@ -594,6 +657,36 @@ export function useStartQuizMutation() {
 
   return useMutation({
     mutationFn: courseApi.startQuiz,
+    onSuccess(attempt) {
+      queryClient.setQueryData(courseKeys.attempt(attempt.id), attempt);
+    },
+  });
+}
+
+export function usePublishCourseTestMutation(courseSlug: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: PublishCourseTestDto) => courseApi.publishTest(courseSlug, dto),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.test(courseSlug) });
+    },
+  });
+}
+
+export function useCloseCourseTestMutation(courseSlug: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: courseApi.closeTest,
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: courseKeys.test(courseSlug) });
+    },
+  });
+}
+
+export function useStartCourseTestMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: courseApi.startTest,
     onSuccess(attempt) {
       queryClient.setQueryData(courseKeys.attempt(attempt.id), attempt);
     },
