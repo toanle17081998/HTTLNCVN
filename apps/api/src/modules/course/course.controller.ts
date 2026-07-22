@@ -19,6 +19,8 @@ import { CourseService } from './course.service';
 import type {
   CourseDto,
   CourseListResult,
+  CourseTestAvailabilityDto,
+  CourseTestStatusDto,
   CreateLessonDto,
   CreateQuestionTemplateDto,
   CreateCourseDto,
@@ -37,6 +39,7 @@ import type {
   UpdateQuizDto,
   EnrollOthersDto,
   EnrollPreviewDto,
+  PublishCourseTestDto,
 } from './course.types';
 
 @Controller('courses')
@@ -169,6 +172,40 @@ export class CourseController {
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteTemplate(@Param('templateId') templateId: string): Promise<void> {
     return this.courseService.deleteTemplate(templateId);
+  }
+
+  @Get(':slug/test')
+  getCourseTestStatus(
+    @Param('slug') slug: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<CourseTestStatusDto> {
+    return this.courseService.getCourseTestStatus(slug, req.user.sub, req.user.role);
+  }
+
+  @Post(':slug/test')
+  publishCourseTest(
+    @Param('slug') slug: string,
+    @Body() dto: PublishCourseTestDto,
+    @Request() req: { user: JwtPayload },
+  ): Promise<CourseTestAvailabilityDto> {
+    return this.courseService.publishCourseTest(slug, dto, req.user.sub, req.user.role);
+  }
+
+  @Patch('test-availabilities/:id/close')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  closeCourseTest(
+    @Param('id') id: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<void> {
+    return this.courseService.closeCourseTest(id, req.user.sub, req.user.role);
+  }
+
+  @Post('test-availabilities/:id/start')
+  startCourseTest(
+    @Param('id') id: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<QuizAttemptDto> {
+    return this.courseService.startCourseTest(id, req.user.sub);
   }
 
   @Public()
