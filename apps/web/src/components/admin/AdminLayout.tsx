@@ -47,10 +47,9 @@ const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/articles", labelKey: "nav.article.label", icon: BookOpen },
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },
   { href: "/admin/tests", labelKey: "nav.test.label", icon: ClipboardCheck },
-  { href: "/admin/church-unit", labelKey: "nav.churchUnit.label", icon: Network },
+  { href: "/admin/church", labelKey: "nav.church.label", icon: Network },
   { href: "/admin/serving-schedules/worship", labelKey: "nav.servingWorship.label", icon: CalendarDays },
   { href: "/admin/serving-schedules/cleaning", labelKey: "nav.servingCleaning.label", icon: CalendarDays },
-  { href: "/admin/member", labelKey: "nav.member.label", icon: Users },
 ];
 
 const AdminLayoutChromeContext = createContext<AdminLayoutChromeContextValue | null>(null);
@@ -94,8 +93,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   function handleLogout() {
     logout();
-    router.push("/");
-    router.refresh();
   }
 
   function isNavItemActive(item: AdminNavItem) {
