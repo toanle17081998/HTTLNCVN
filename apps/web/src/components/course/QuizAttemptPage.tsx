@@ -22,6 +22,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   const finishAttempt = useFinishAttemptMutation(attemptId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
   const answersRef = useRef(answers);
   const timeoutSubmittedRef = useRef(false);
   const attempt = attemptQuery.data;
@@ -46,7 +47,9 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
             answersRef.current[snapshot.id] ?? snapshot.student_answer ?? "",
           ]),
         );
-        finishAttempt.mutate(batchAnswers);
+        finishAttempt.mutate(batchAnswers, {
+          onSuccess: () => setShowResultModal(true),
+        });
       }
     };
     tick();
@@ -68,6 +71,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
       }
     }
     await finishAttempt.mutateAsync(batchAnswers);
+    setShowResultModal(true);
   }
 
   function toggleMultipleChoice(snapshotId: string, choice: string, defaultValue: string) {
@@ -101,54 +105,98 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
             {attempt.snapshots.map((snapshot, index) => {
               const template = snapshot.template;
               const completed = attempt.is_completed;
-              const showFeedback = completed && !attempt.is_test;
               const type = template?.template_type;
 
               // Get choices pre-calculated by the server
               const choices = template?.choices || [];
-              const isMulti = type === "multiple_choices" && template?.allows_multiple;
+              const isMulti = (type === "multiple_choices" || type === "multi_choice") && template?.allows_multiple;
+              const isChoiceQuestion = choices.length > 0 || type === "multiple_choices" || type === "multi_choice" || type === "single_choice" || type === "theoretical_question";
+              const isTrueFalse = !isChoiceQuestion && (type === "true_false" || type === "true_or_false");
 
               // Get current selection value
               const currentVal = answers[snapshot.id] !== undefined ? answers[snapshot.id] : (snapshot.student_answer || "");
+              const showFeedback = completed;
 
               return (
-                <Card className="p-5" key={snapshot.id}>
+                <Card
+                  className={cn(
+                    "p-5 transition-all",
+                    completed && snapshot.is_correct === false && "border-2 border-[var(--status-danger)] bg-[color-mix(in_srgb,var(--status-danger)_3%,transparent)]",
+                    completed && snapshot.is_correct === true && "border-2 border-[var(--status-success)] bg-[color-mix(in_srgb,var(--status-success)_3%,transparent)]"
+                  )}
+                  key={snapshot.id}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                       {t("quiz.question")} {index + 1}
                     </span>
                     {showFeedback ? (
                       <span
-                        className={[
-                          "rounded-md px-2.5 py-1 text-xs font-semibold",
+                        className={cn(
+                          "rounded-lg px-3 py-1 text-xs font-bold flex items-center gap-1.5",
                           snapshot.is_correct
-                            ? "bg-[color-mix(in_srgb,var(--status-success)_14%,transparent)] text-[var(--status-success)]"
-                            : "bg-[color-mix(in_srgb,var(--status-danger)_14%,transparent)] text-[var(--status-danger)]",
-                        ].join(" ")}
+                            ? "bg-[color-mix(in_srgb,var(--status-success)_15%,transparent)] text-[var(--status-success)]"
+                            : "bg-[color-mix(in_srgb,var(--status-danger)_15%,transparent)] text-[var(--status-danger)]"
+                        )}
                       >
-                        {snapshot.is_correct ? t("common.ready") : t("common.cancel")}
+                        {snapshot.is_correct ? `✓ ${t("quiz.correct")}` : `✕ ${t("quiz.incorrect")}`}
                       </span>
                     ) : null}
                   </div>
 
                   <h2 className="mt-3 text-base font-semibold text-[var(--text-primary)]">
-                    {locale === "vi" ? (template?.body_template_vi || template?.body_template_en || "Câu hỏi") : (template?.body_template_en || template?.body_template_vi || "Question")}
+                    {locale === "vi" ? (template?.body_template_vi || template?.body_template_en || t("quiz.question")) : (template?.body_template_en || template?.body_template_vi || t("quiz.question"))}
                   </h2>
 
                   {completed ? (
-                    <div className="mt-4 rounded-md bg-[var(--bg-base)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
-                      <p className="font-semibold text-[var(--text-primary)]">
-                        Your answer: <span className="font-mono bg-[var(--brand-muted)] px-2 py-0.5 rounded text-[var(--brand-primary)]">{snapshot.student_answer}</span>
-                      </p>
-                      {!attempt.is_test && snapshot.student_answer?.toLowerCase() !== template?.answer_formula?.toLowerCase() && (
-                        <p className="mt-1 font-semibold text-[var(--status-success)]">
-                          Correct answer: <span className="font-mono bg-[color-mix(in_srgb,var(--status-success)_10%,transparent)] px-2 py-0.5 rounded">{template?.answer_formula}</span>
-                        </p>
+                    <div className="mt-4 space-y-3 text-sm">
+                      <div
+                        className={cn(
+                          "p-3.5 rounded-xl border text-sm font-medium flex items-start justify-between gap-3",
+                          snapshot.is_correct
+                            ? "border-[var(--status-success)] bg-[color-mix(in_srgb,var(--status-success)_10%,transparent)] text-[var(--status-success)]"
+                            : "border-[var(--status-danger)] bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] text-[var(--status-danger)]"
+                        )}
+                      >
+                        <div>
+                          <span className="text-xs uppercase tracking-wider font-bold block opacity-80">{t("quiz.yourAnswer")}:</span>
+                          <span className="font-semibold text-base mt-0.5 block">
+                            {(() => {
+                              const ans = snapshot.student_answer;
+                              if (!ans || !ans.trim()) return t("quiz.noAnswer");
+                              const config = template?.logic_config as { answers?: Array<{ text?: string; value?: string }> };
+                              if (Array.isArray(config?.answers)) {
+                                const matched = config.answers.find((a) => a.value === ans);
+                                if (matched?.text) return matched.text;
+                              }
+                              return ans;
+                            })()}
+                          </span>
+                        </div>
+                        <span className="text-lg font-extrabold">{snapshot.is_correct ? "✓" : "✕"}</span>
+                      </div>
+
+                      {!snapshot.is_correct && template?.answer_formula && (
+                        <div className="p-3.5 rounded-xl border border-[var(--status-success)] bg-[color-mix(in_srgb,var(--status-success)_10%,transparent)] text-[var(--status-success)] font-medium">
+                          <span className="text-xs uppercase tracking-wider font-bold block opacity-80">{t("quiz.correctAnswer")}:</span>
+                          <span className="font-semibold text-base mt-0.5 block">
+                            {(() => {
+                              const ans = template.answer_formula;
+                              const config = template?.logic_config as { answers?: Array<{ text?: string; value?: string }> };
+                              if (Array.isArray(config?.answers)) {
+                                const matched = config.answers.find((a) => a.value === ans);
+                                if (matched?.text) return matched.text;
+                              }
+                              return ans;
+                            })()}
+                          </span>
+                        </div>
                       )}
-                      {!attempt.is_test && (template?.explanation_template_vi || template?.explanation_template_en) ? (
-                        <div className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs">
-                          <p className="font-bold text-[var(--text-primary)]">Explanation:</p>
-                          <p className="mt-1 italic">
+
+                      {(template?.explanation_template_vi || template?.explanation_template_en) ? (
+                        <div className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-secondary)]">
+                          <span className="font-bold text-[var(--text-primary)] block">{t("quiz.explanation")}:</span>
+                          <p className="mt-1 italic leading-relaxed">
                             {locale === "vi" ? (template.explanation_template_vi || template.explanation_template_en) : (template.explanation_template_en || template.explanation_template_vi)}
                           </p>
                         </div>
@@ -156,7 +204,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                     </div>
                   ) : (
                     <div className="mt-4">
-                      {type === "multiple_choices" || type === "theoretical_question" ? (
+                      {isChoiceQuestion ? (
                         isMulti ? (
                           <div className="grid gap-2">
                             {choices.map((choice) => {
@@ -208,7 +256,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                             ))}
                           </div>
                         )
-                      ) : type === "true_false" ? (
+                      ) : isTrueFalse ? (
                         <div className="grid grid-cols-2 gap-3">
                           {(choices.length ? choices : ["true", "false"]).map((val) => (
                             <button
@@ -260,8 +308,8 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                     const val = answers[snapshot.id];
                     return val !== undefined && val.trim() !== "";
                   }).length
-                } of{" "}
-                {attempt.snapshots.length} answered
+                }{" "}
+                of {attempt.snapshots.length} answered
               </p>
               {attempt.is_completed ? (
                 <div className="mt-4 rounded-md bg-[var(--brand-muted)] p-3">
@@ -286,6 +334,64 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
               </Link>
             </Card>
           </aside>
+        </div>
+      ) : null}
+
+      {showResultModal && attempt ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-[var(--bg-surface)] p-6 shadow-2xl border border-[var(--border-subtle)] text-center space-y-5">
+            {attempt.total_score !== null && attempt.total_score >= (attempt.quiz?.passing_score ?? 70) ? (
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--status-success)_15%,transparent)] text-4xl text-[var(--status-success)]">
+                🎉
+              </div>
+            ) : (
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--status-danger)_15%,transparent)] text-4xl text-[var(--status-danger)]">
+                ❌
+              </div>
+            )}
+
+            <div>
+              <span
+                className={cn(
+                  "inline-block rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-2",
+                  attempt.total_score !== null && attempt.total_score >= (attempt.quiz?.passing_score ?? 70)
+                    ? "bg-[color-mix(in_srgb,var(--status-success)_15%,transparent)] text-[var(--status-success)]"
+                    : "bg-[color-mix(in_srgb,var(--status-danger)_15%,transparent)] text-[var(--status-danger)]"
+                )}
+              >
+                {attempt.total_score !== null && attempt.total_score >= (attempt.quiz?.passing_score ?? 70)
+                  ? t("quiz.modal.passed")
+                  : t("quiz.modal.failed")}
+              </span>
+              <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                {locale === "vi" ? (attempt.quiz?.title_vi || attempt.quiz?.title_en || t("quiz.title")) : (attempt.quiz?.title_en || attempt.quiz?.title_vi || t("quiz.title"))}
+              </h3>
+            </div>
+
+            <div className="rounded-xl bg-[var(--bg-base)] p-4 space-y-1">
+              <p className="text-4xl font-black text-[var(--brand-primary)]">
+                {Math.round(attempt.total_score ?? 0)}%
+              </p>
+              <p className="text-xs font-semibold text-[var(--text-tertiary)]">
+                ({attempt.snapshots.filter((s) => s.is_correct).length}/{attempt.snapshots.length}) {t("quiz.modal.correctCount")}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <Link
+                className="flex items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)]"
+                href="/course"
+              >
+                {t("quiz.modal.backToCourse")}
+              </Link>
+              <Button
+                className="w-full rounded-xl"
+                onClick={() => setShowResultModal(false)}
+              >
+                {t("quiz.modal.seeResult")}
+              </Button>
+            </div>
+          </div>
         </div>
       ) : null}
     </PageLayout>

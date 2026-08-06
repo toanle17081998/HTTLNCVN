@@ -70,6 +70,7 @@ model User {
   prayers_shared_with PrayerShare[]
 
   household_memberships HouseholdMember[]
+  lesson_progress       UserLessonProgress[]
 
   @@index([faith_sharer_id])
   @@map("users")
@@ -84,6 +85,8 @@ model Profile {
   address       String?   @db.Text
   date_of_birth DateTime? @db.Date
   gender        String?   @db.VarChar(10)
+  avatar_url    String?   @db.Text
+  bio           String?   @db.Text
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -186,9 +189,10 @@ model Lesson {
   course   Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
   creator  User?   @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
-  templates QuestionTemplate[]
-  sessions  LearningSession[]
-  grades    LessonGrade[]
+  templates     QuestionTemplate[]
+  sessions      LearningSession[]
+  grades        LessonGrade[]
+  user_progress UserLessonProgress[]
 
   @@map("lessons")
 }
@@ -208,6 +212,7 @@ model QuestionTemplate {
   explanation_template_vi String?
   logic_config            Json      @default("{}")
   answer_formula          String?
+  is_classified           Boolean   @default(false)
   created_at              DateTime  @default(now()) @db.Timestamptz
 
   lesson    Lesson?          @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
@@ -756,4 +761,23 @@ model HouseholdMember {
 
   @@id([household_id, user_id])
   @@map("household_members")
+}
+
+// ---------------------------------------------------------
+// 10. LESSON PROGRESS
+// ---------------------------------------------------------
+
+model UserLessonProgress {
+  user_id      String    @db.Uuid
+  lesson_id    String    @db.Uuid
+  status       String    @default("in_progress") @db.VarChar(20)
+  started_at   DateTime  @default(now()) @db.Timestamptz
+  completed_at DateTime? @db.Timestamptz
+
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, lesson_id])
+  @@index([lesson_id])
+  @@map("user_lesson_progress")
 }

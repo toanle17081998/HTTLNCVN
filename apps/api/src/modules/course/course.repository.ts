@@ -99,8 +99,31 @@ function normalizeAnswer(value: string | null | undefined): string {
   return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-function isAnswerCorrect(studentAnswer: string, rightAnswer: string | null, type: string): boolean {
-  if (type !== 'multiple_choices') return normalizeAnswer(studentAnswer) === normalizeAnswer(rightAnswer);
+function isAnswerCorrect(
+  studentAnswer: string,
+  rightAnswer: string | null,
+  type: string,
+  logicConfig?: Prisma.JsonValue,
+): boolean {
+  if (!studentAnswer || !studentAnswer.trim()) return false;
+
+  const normalizedStudent = normalizeAnswer(studentAnswer);
+
+  const config = logicConfig as {
+    answers?: Array<{ text?: string; value?: string; is_correct?: boolean }>;
+  };
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    const correctChoices = config.answers.filter((a) => a.is_correct);
+    return correctChoices.some(
+      (a) =>
+        (a.value && normalizeAnswer(a.value) === normalizedStudent) ||
+        (a.text && normalizeAnswer(a.text) === normalizedStudent),
+    );
+  }
+
+  if (!rightAnswer || !rightAnswer.trim()) return false;
+
+  if (type !== 'multiple_choices') return normalizedStudent === normalizeAnswer(rightAnswer);
   const normalizeList = (value: string | null) =>
     String(value ?? '').split(',').map(normalizeAnswer).filter(Boolean).sort().join('|');
   return normalizeList(studentAnswer) === normalizeList(rightAnswer);
@@ -115,12 +138,49 @@ function shuffle<T>(values: readonly T[]): T[] {
   return result;
 }
 
+function getCorrectAnswerDisplay(template: {
+  answer_formula: string | null;
+  logic_config: Prisma.JsonValue;
+}): string | null {
+  if (!template.answer_formula && !template.logic_config) return null;
+
+  const config = template.logic_config as {
+    answers?: Array<{ text?: string; value?: string; is_correct?: boolean }>;
+  };
+
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    const correctChoices = config.answers.filter(
+      (a) =>
+        a.is_correct ||
+        (a.value && template.answer_formula?.split(',').map((s) => s.trim()).includes(a.value.trim())),
+    );
+    if (correctChoices.length > 0) {
+      return correctChoices
+        .map((a) => (a.text && a.text.trim() ? a.text.trim() : a.value?.trim() ?? ''))
+        .filter(Boolean)
+        .join(', ');
+    }
+  }
+
+  return template.answer_formula;
+}
+
 function getQuestionChoices(template: {
   answer_formula: string | null;
   logic_config: Prisma.JsonValue;
   template_type: string;
 }): string[] {
-  const config = template.logic_config as { false_answers?: unknown };
+  const config = template.logic_config as {
+    false_answers?: unknown;
+    answers?: Array<{ text?: string; value?: string }>;
+  };
+
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    return config.answers
+      .map((a) => (a.text && a.text.trim() ? a.text.trim() : a.value?.trim() ?? ''))
+      .filter(Boolean);
+  }
+
   const falseAnswers = Array.isArray(config?.false_answers)
     ? config.false_answers.filter((answer): answer is string => typeof answer === 'string' && Boolean(answer.trim()))
     : [];
@@ -223,7 +283,7 @@ export class CourseRepository {
       allows_multiple:
         type === 'multiple_choices' &&
         String(template.answer_formula ?? '').split(',').filter((answer) => answer.trim()).length > 1,
-      answer_formula: showAnswers ? template.answer_formula : null,
+      answer_formula: showAnswers ? getCorrectAnswerDisplay(template) : null,
       body_template_en: template.body_template_en,
       body_template_vi: template.body_template_vi,
       created_at: template.created_at.toISOString(),
@@ -269,7 +329,12 @@ export class CourseRepository {
   private mapSnapshot(snapshot: AttemptWithRelations['snapshots'][number], showAnswers = false): QuestionSnapshotDto {
     const template = snapshot.template ? this.mapTemplate(snapshot.template, showAnswers) : null;
     const variables = snapshot.generated_variables as { choices?: unknown };
-    if (template && Array.isArray(variables?.choices) && variables.choices.every((choice) => typeof choice === 'string')) {
+    if (
+      template &&
+      Array.isArray(variables?.choices) &&
+      variables.choices.length > 0 &&
+      variables.choices.every((choice) => typeof choice === 'string')
+    ) {
       template.choices = variables.choices as string[];
     }
     return {
@@ -283,7 +348,7 @@ export class CourseRepository {
   }
 
   private mapAttempt(attempt: AttemptWithRelations): QuizAttemptDto {
-    const showAnswers = (attempt.is_completed ?? false) && !attempt.test_availability_id;
+    const showAnswers = attempt.is_completed ?? false;
     return {
       completed_at: attempt.completed_at?.toISOString() ?? null,
       deadline_at: attempt.deadline_at?.toISOString() ?? null,
@@ -1286,7 +1351,7 @@ export class CourseRepository {
     }
 
     const rightAnswer = snapshot.template.answer_formula;
-    const isCorrect = isAnswerCorrect(studentAnswer, rightAnswer, snapshot.template.template_type);
+    const isCorrect = isAnswerCorrect(studentAnswer, rightAnswer, snapshot.template.template_type, snapshot.template.logic_config);
 
     await this.prisma.questionSnapshot.update({
       data: {
@@ -1328,8 +1393,9 @@ export class CourseRepository {
             studentAnswer,
             rightAnswer ?? null,
             snapshot.template?.template_type ?? 'short_answer',
+            snapshot.template?.logic_config,
           );
-          
+
           await this.prisma.questionSnapshot.update({
             data: {
               is_correct: isCorrect,
@@ -1347,7 +1413,6 @@ export class CourseRepository {
       include: { snapshots: true },
       where: { id },
     });
-
     const total = updatedAttempt?.snapshots.length || 0;
     const correct = updatedAttempt?.snapshots.filter((snapshot) => snapshot.is_correct).length || 0;
     const totalScore = total > 0 ? (correct / total) * 100 : 0;

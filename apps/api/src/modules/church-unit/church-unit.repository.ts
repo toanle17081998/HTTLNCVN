@@ -165,20 +165,38 @@ export class ChurchUnitRepository {
   ): Promise<void> {
     if (userIds.length === 0 || courseIds.length === 0) return;
 
+    const gradeData: Array<{ user_id: string; course_id: string; status: string; overall_score: number }> = [];
+    const attendanceData: Array<{ user_id: string; course_id: string }> = [];
+
     for (const userId of userIds) {
       for (const courseId of courseIds) {
-        await tx.courseGrade.upsert({
-          where: { user_id_course_id: { user_id: userId, course_id: courseId } },
-          create: { course_id: courseId, status: 'enrolled', user_id: userId },
-          update: { status: 'enrolled' },
+        gradeData.push({
+          user_id: userId,
+          course_id: courseId,
+          status: 'enrolled',
+          overall_score: 0,
         });
-
-        await tx.courseAttendance.upsert({
-          where: { course_id_user_id: { course_id: courseId, user_id: userId } },
-          create: { course_id: courseId, user_id: userId },
-          update: {},
+        attendanceData.push({
+          user_id: userId,
+          course_id: courseId,
         });
       }
+    }
+
+    const batchSize = 1000;
+    for (let i = 0; i < gradeData.length; i += batchSize) {
+      const batchGrade = gradeData.slice(i, i + batchSize);
+      const batchAttendance = attendanceData.slice(i, i + batchSize);
+
+      await tx.courseGrade.createMany({
+        data: batchGrade,
+        skipDuplicates: true,
+      });
+
+      await tx.courseAttendance.createMany({
+        data: batchAttendance,
+        skipDuplicates: true,
+      });
     }
   }
 
@@ -347,7 +365,7 @@ export class ChurchUnitRepository {
         include: CHURCH_UNIT_INCLUDE,
         where: { id: createdUnit.id },
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
 
     return toDto(unit!);
   }
@@ -535,7 +553,7 @@ export class ChurchUnitRepository {
         include: CHURCH_UNIT_INCLUDE,
         where: { id },
       });
-    });
+    }, { maxWait: 10000, timeout: 30000 });
 
     return unit ? toDto(unit) : null;
   }
@@ -612,62 +630,125 @@ export class ChurchUnitRepository {
             id: true,
             title_en: true,
             title_vi: true,
+            _count: {
+              select: {
+                quiz_maps: true,
+              },
+            },
+          },
+        },
+        test_availability: {
+          select: {
+            course_id: true,
           },
         },
       },
       where: {
         user_id: { in: memberIds },
-        quiz: {
-          quiz_maps: {
-            some: {
-              template: {
-                lesson: {
-                  course_id: { in: courseIds },
+        OR: [
+          { test_availability: { course_id: { in: courseIds } } },
+          {
+            quiz: {
+              quiz_maps: {
+                some: {
+                  template: {
+                    lesson: {
+                      course_id: { in: courseIds },
+                    },
+                  },
                 },
               },
             },
           },
-        },
+        ],
       },
     });
 
-    return classUnit.members.map((m) => {
+    const results = classUnit.members.map((m) => {
       const user = m.user;
       const displayName =
         [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ').trim() ||
         user.username;
 
-      return {
-        member_id: user.id,
-        display_name: displayName,
-        username: user.username,
-        course_scores: classUnit.courses.map((course) => {
-          const grade = courseGrades.find(
-            (cg) => cg.user_id === user.id && cg.course_id === course.id,
-          );
+      let totalCompletedAttempts = 0;
 
-          const attemptsForCourse = quizAttempts.filter(
-            (qa) => qa.user_id === user.id,
-          );
+      const course_scores = classUnit.courses.map((course) => {
+        const grade = courseGrades.find(
+          (cg) => cg.user_id === user.id && cg.course_id === course.id,
+        );
 
-          return {
-            course_id: course.id,
-            course_title_en: course.title_en,
-            course_title_vi: course.title_vi,
-            score: grade ? Number(grade.overall_score) : null,
-            status: grade ? grade.status : 'not_started',
-            completed_at: grade?.completed_at ? grade.completed_at.toISOString() : null,
-            quiz_attempts: attemptsForCourse.map((qa) => ({
+        const attemptsForCourse = quizAttempts.filter(
+          (qa) =>
+            qa.user_id === user.id &&
+            (qa.test_availability?.course_id === course.id || !qa.test_availability_id),
+        );
+
+        if (attemptsForCourse.length > 0) {
+          totalCompletedAttempts += attemptsForCourse.filter((a) => a.is_completed).length;
+        }
+
+        let computedStatus = grade ? grade.status : 'not_started';
+        let computedScore = grade ? Number(grade.overall_score) : null;
+        let totalQuestions = 0;
+
+        if (attemptsForCourse.length > 0) {
+          const maxAttempt = attemptsForCourse.reduce((max, curr) =>
+            Number(curr.total_score || 0) >= Number(max.total_score || 0) ? curr : max,
+          );
+          totalQuestions = maxAttempt.quiz?._count?.quiz_maps || 0;
+
+          if (computedStatus === 'not_started') {
+            const completed = attemptsForCourse.filter((a) => a.is_completed);
+            computedStatus = completed.length > 0 ? 'completed' : 'in_progress';
+            computedScore = Number(maxAttempt.total_score || 0);
+          }
+        }
+
+        const latestCompleted = attemptsForCourse.find((a) => a.completed_at)?.completed_at;
+
+        const scoreDisplay =
+          computedScore !== null
+            ? totalQuestions > 0
+              ? `${computedScore}/${totalQuestions}`
+              : `${computedScore}`
+            : null;
+
+        return {
+          course_id: course.id,
+          course_title_en: course.title_en,
+          course_title_vi: course.title_vi,
+          score: computedScore,
+          total_questions: totalQuestions,
+          score_display: scoreDisplay,
+          status: computedStatus,
+          completed_at: grade?.completed_at ? grade.completed_at.toISOString() : latestCompleted ? latestCompleted.toISOString() : null,
+          quiz_attempts: attemptsForCourse.map((qa) => {
+            const qTotal = qa.quiz?._count?.quiz_maps || 0;
+            const qScore = qa.total_score ? Number(qa.total_score) : 0;
+            return {
               quiz_id: qa.quiz?.id,
               quiz_title_en: qa.quiz?.title_en,
               quiz_title_vi: qa.quiz?.title_vi,
               score: qa.total_score ? Number(qa.total_score) : null,
+              total_questions: qTotal,
+              score_display: qa.total_score !== null ? (qTotal > 0 ? `${qScore}/${qTotal}` : `${qScore}`) : null,
               is_completed: qa.is_completed ?? false,
               completed_at: qa.completed_at ? qa.completed_at.toISOString() : null,
-            })),
-          };
-        }),
+            };
+          }),
+        };
+      });
+
+      return {
+        member_id: user.id,
+        display_name: displayName,
+        username: user.username,
+        total_attempts: totalCompletedAttempts,
+        course_scores,
       };
     });
+
+    // Sort students so users with active quiz attempts or completions appear first
+    return results.sort((a, b) => b.total_attempts - a.total_attempts);
   }
 }
