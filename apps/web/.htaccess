@@ -1,0 +1,6 @@
+PassengerAppType node
+PassengerStartupFile server.js
+PassengerMinInstances 1
+PassengerMaxInstancesPerApp 1
+PassengerPoolIdleTime 300
+PassengerMaxPoolSize 1

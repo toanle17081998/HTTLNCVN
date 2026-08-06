@@ -49,10 +49,16 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
   const { toast } = useFeedback();
   const canManage = can(PERMISSIONS.manageChurchUnits);
   const unitsQuery = useChurchUnitsQuery({ skip: 0, take: 200 }, isAuthenticated && canManage);
-  const teamUnits = useMemo(
-    () => (unitsQuery.data?.items ?? []).filter((unit) => unit.type === "team"),
-    [unitsQuery.data?.items],
-  );
+  const teamUnits = useMemo(() => {
+    const items = unitsQuery.data?.items ?? [];
+    if (type === "worship") {
+      return items.filter((unit) => unit.type === "praise_worship" || unit.type === "team");
+    }
+    if (type === "cleaning") {
+      return items.filter((unit) => unit.type === "care_team" || unit.type === "team");
+    }
+    return [];
+  }, [unitsQuery.data?.items, type]);
   const [churchUnitId, setChurchUnitId] = useState("");
   const [startDate, setStartDate] = useState(nextSundayInput());
   const [weeks, setWeeks] = useState("8");

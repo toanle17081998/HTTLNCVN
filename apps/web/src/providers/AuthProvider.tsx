@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { PERMISSIONS, type Permission } from "@/lib/rbac";
 import {
   clearStoredTokens,
@@ -125,6 +126,7 @@ function hasApiPermission(user: AuthUser | null, requirement: ApiPermissionRequi
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const accessToken = useAccessToken();
   const meQuery = useMeQuery(Boolean(accessToken));
   const user = accessToken ? (meQuery.data ?? null) : null;
@@ -147,9 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout() {
         clearStoredTokens();
+        window.location.href = "/";
       },
     };
-  }, [meQuery.isLoading, user]);
+  }, [meQuery.isLoading, router, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

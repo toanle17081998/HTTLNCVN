@@ -34,27 +34,12 @@ export const navItems: NavItem[] = [
     permissions: [PERMISSIONS.viewEvents],
   },
   {
-    href: "/church-unit",
-    labelKey: "nav.churchUnit.label",
-    descriptionKey: "nav.churchUnit.description",
-    permissions: [PERMISSIONS.manageChurchUnits],
+    href: "/church",
+    labelKey: "nav.church.label",
+    descriptionKey: "nav.church.description",
+    permissions: [PERMISSIONS.manageChurchUnits, PERMISSIONS.manageChurchMembers],
   },
-  {
-    href: "/member",
-    labelKey: "nav.member.label",
-    descriptionKey: "nav.member.description",
-    permissions: [PERMISSIONS.manageChurchMembers],
-  },
-  {
-    href: "/notification",
-    labelKey: "nav.notification.label",
-    descriptionKey: "nav.notification.description",
-    permissions: [
-      PERMISSIONS.personalizedSearch,
-      PERMISSIONS.manageTelegramNotifications,
-      PERMISSIONS.manageIntegrations,
-    ],
-  },
+
   {
     href: "/prayer-journal",
     labelKey: "nav.prayerJournal.label",

@@ -73,7 +73,7 @@ export function Footer() {
                 <ChurchLogo className="h-11 w-11" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-gold)] hover:text-[var(--brand-primary)]">
                   {t("footer.contact.community")}
                 </p>
                 <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
@@ -103,7 +103,7 @@ export function Footer() {
 
               const content = (
                 <>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--brand-primary)] transition group-hover:text-[var(--accent-gold)]">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--accent-gold)] transition">
                     <Icon aria-hidden="true" className="h-5 w-5" />
                   </span>
                   <span className="min-w-0">

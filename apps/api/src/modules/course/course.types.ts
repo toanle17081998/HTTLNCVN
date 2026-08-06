@@ -117,6 +117,7 @@ export type CreateLessonDto = {
 export type UpdateLessonDto = Partial<CreateLessonDto>;
 
 export type QuestionTemplateDto = {
+  allows_multiple: boolean;
   answer_formula: string | null;
   body_template_en: string;
   body_template_vi: string;
@@ -149,6 +150,7 @@ export type UpdateQuestionTemplateDto = Partial<CreateQuestionTemplateDto>;
 export type QuizListDto = {
   id: string;
   is_active: boolean;
+  is_test: boolean;
   passing_score: number;
   question_count: number;
   time_limit_seconds: number | null;
@@ -182,13 +184,41 @@ export type QuestionSnapshotDto = {
 
 export type QuizAttemptDto = {
   completed_at: string | null;
+  deadline_at: string | null;
   id: string;
   is_completed: boolean;
+  is_test: boolean;
   quiz: QuizListDto | null;
   quiz_id: string | null;
   snapshots: QuestionSnapshotDto[];
   started_at: string;
   total_score: number | null;
+};
+
+export type CourseTestAvailabilityDto = {
+  id: string;
+  church_unit: { id: string; name: string };
+  course_id: string;
+  duration_seconds: number;
+  is_active: boolean;
+  quiz: QuizListDto;
+  created_at: string;
+};
+
+export type CourseTestStatusDto = {
+  attempt: QuizAttemptDto | null;
+  availability: CourseTestAvailabilityDto | null;
+  can_manage: boolean;
+  managed_classes: { id: string; name: string }[];
+  question_bank: QuestionTemplateDto[];
+};
+
+export type PublishCourseTestDto = {
+  duration_seconds: number;
+  template_ids?: string[];
+  new_questions?: Array<CreateQuestionTemplateDto & { lesson_id: string }>;
+  title_en?: string;
+  title_vi?: string;
 };
 
 export type SubmitAnswerDto = {

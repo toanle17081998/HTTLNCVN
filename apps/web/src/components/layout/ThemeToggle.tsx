@@ -95,7 +95,7 @@ export function ThemeToggle() {
         className={cn(
           "flex h-5 w-5 transform items-center justify-center rounded-full shadow-md transition-all duration-300",
           isDark
-            ? "translate-x-5 bg-[var(--brand-primary)] text-white"
+            ? "translate-x-5 bg-[var(--brand-primary)] text-[var(--bg-app)]"
             : "translate-x-0 bg-white text-[var(--brand-primary)]"
         )}
       >

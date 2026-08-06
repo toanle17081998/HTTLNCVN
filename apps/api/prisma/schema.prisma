@@ -45,6 +45,7 @@ model User {
   courses_created   Course[]
   lessons_created   Lesson[]
   quiz_attempts     QuizAttempt[]
+  test_availabilities_created CourseTestAvailability[] @relation("CourseTestAvailabilityCreator")
   learning_sessions LearningSession[]
   lesson_grades     LessonGrade[]
   course_grades     CourseGrade[]
@@ -69,6 +70,7 @@ model User {
   prayers_shared_with PrayerShare[]
 
   household_memberships HouseholdMember[]
+  lesson_progress       UserLessonProgress[]
 
   @@index([faith_sharer_id])
   @@map("users")
@@ -83,6 +85,8 @@ model Profile {
   address       String?   @db.Text
   date_of_birth DateTime? @db.Date
   gender        String?   @db.VarChar(10)
+  avatar_url    String?   @db.Text
+  bio           String?   @db.Text
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -156,6 +160,7 @@ model Course {
   grades  CourseGrade[]
   attendees CourseAttendance[]
   church_units ChurchUnit[] @relation("ChurchUnitCourses")
+  test_availabilities CourseTestAvailability[]
 
   @@map("courses")
 }
@@ -184,9 +189,10 @@ model Lesson {
   course   Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
   creator  User?   @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
-  templates QuestionTemplate[]
-  sessions  LearningSession[]
-  grades    LessonGrade[]
+  templates     QuestionTemplate[]
+  sessions      LearningSession[]
+  grades        LessonGrade[]
+  user_progress UserLessonProgress[]
 
   @@map("lessons")
 }
@@ -206,6 +212,7 @@ model QuestionTemplate {
   explanation_template_vi String?
   logic_config            Json      @default("{}")
   answer_formula          String?
+  is_classified           Boolean   @default(false)
   created_at              DateTime  @default(now()) @db.Timestamptz
 
   lesson    Lesson?          @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
@@ -222,9 +229,11 @@ model Quiz {
   time_limit_seconds Int?
   passing_score      Decimal?  @default(50.0) @db.Decimal(5, 2)
   is_active          Boolean?  @default(true)
+  is_test            Boolean   @default(false)
 
   quiz_maps QuizTemplateMap[]
   attempts  QuizAttempt[]
+  test_availabilities CourseTestAvailability[]
 
   @@map("quizzes")
 }
@@ -250,13 +259,39 @@ model QuizAttempt {
   is_completed Boolean?  @default(false)
   started_at   DateTime  @default(now()) @db.Timestamptz
   completed_at DateTime? @db.Timestamptz
+  deadline_at  DateTime? @db.Timestamptz
+  test_availability_id String? @db.Uuid
 
   user      User?              @relation(fields: [user_id], references: [id], onDelete: Cascade)
   quiz      Quiz?              @relation(fields: [quiz_id], references: [id])
   snapshots QuestionSnapshot[]
   evidence  ActivityEvidence[]
+  test_availability CourseTestAvailability? @relation(fields: [test_availability_id], references: [id], onDelete: SetNull)
 
+  @@unique([user_id, test_availability_id])
+  @@index([test_availability_id])
   @@map("quiz_attempts")
+}
+
+model CourseTestAvailability {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id         String    @db.Uuid
+  church_unit_id    String    @db.Uuid
+  quiz_id           String    @db.Uuid
+  duration_seconds  Int
+  is_active         Boolean   @default(true)
+  created_by        String    @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  closed_at         DateTime? @db.Timestamptz
+
+  course      Course     @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  church_unit ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
+  quiz        Quiz       @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  creator     User       @relation("CourseTestAvailabilityCreator", fields: [created_by], references: [id], onDelete: Cascade)
+  attempts    QuizAttempt[]
+
+  @@index([course_id, church_unit_id, is_active])
+  @@map("course_test_availabilities")
 }
 
 model QuestionSnapshot {
@@ -389,6 +424,7 @@ model ChurchUnit {
   serving_schedules ServingSchedule[]
   event_targets     EventChurchUnitTarget[]
   courses           Course[]                @relation("ChurchUnitCourses")
+  test_availabilities CourseTestAvailability[]
 
   @@index([parent_id])
   @@index([leader_id])
@@ -725,4 +761,23 @@ model HouseholdMember {
 
   @@id([household_id, user_id])
   @@map("household_members")
+}
+
+// ---------------------------------------------------------
+// 10. LESSON PROGRESS
+// ---------------------------------------------------------
+
+model UserLessonProgress {
+  user_id      String    @db.Uuid
+  lesson_id    String    @db.Uuid
+  status       String    @default("in_progress") @db.VarChar(20)
+  started_at   DateTime  @default(now()) @db.Timestamptz
+  completed_at DateTime? @db.Timestamptz
+
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, lesson_id])
+  @@index([lesson_id])
+  @@map("user_lesson_progress")
 }

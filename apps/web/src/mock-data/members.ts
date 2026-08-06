@@ -56,7 +56,7 @@ export const memberMockData: ChurchMember[] = [
     role: "member",
     status: "active",
     avatar_url: null,
-    bio: "Care team volunteer and prayer journal contributor.",
+    bio: "Care team volunteer and Prayer contributor.",
     email_verified_at: "2026-03-15T12:00:00.000Z",
     last_login_at: "2026-04-18T16:45:00.000Z",
     created_at: "2026-03-10T09:00:00.000Z",

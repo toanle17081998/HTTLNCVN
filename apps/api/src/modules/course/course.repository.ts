@@ -1,15 +1,19 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { randomInt } from 'node:crypto';
 
 import { PrismaService } from '../../database/prisma.service';
 import type {
   CourseDto,
   CourseListDto,
   CourseListResult,
+  CourseTestAvailabilityDto,
+  CourseTestStatusDto,
   CreateCourseDto,
   CreateLessonDto,
   CreateQuestionTemplateDto,
   CreateQuizDto,
+  PublishCourseTestDto,
   LessonDto,
   QuestionSnapshotDto,
   QuestionTemplateDto,
@@ -78,6 +82,7 @@ type QuizWithRelations = Prisma.QuizGetPayload<{
 type AttemptWithRelations = Prisma.QuizAttemptGetPayload<{
   include: {
     quiz: { include: { _count: { select: { quiz_maps: true } } } };
+    test_availability: true;
     snapshots: {
       include: { template: { include: { lesson: true } } };
       orderBy: { id: 'asc' };
@@ -92,6 +97,109 @@ function toNumber(value: Prisma.Decimal | number | null | undefined): number | n
 
 function normalizeAnswer(value: string | null | undefined): string {
   return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function isAnswerCorrect(
+  studentAnswer: string,
+  rightAnswer: string | null,
+  type: string,
+  logicConfig?: Prisma.JsonValue,
+): boolean {
+  if (!studentAnswer || !studentAnswer.trim()) return false;
+
+  const normalizedStudent = normalizeAnswer(studentAnswer);
+
+  const config = logicConfig as {
+    answers?: Array<{ text?: string; value?: string; is_correct?: boolean }>;
+  };
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    const correctChoices = config.answers.filter((a) => a.is_correct);
+    return correctChoices.some(
+      (a) =>
+        (a.value && normalizeAnswer(a.value) === normalizedStudent) ||
+        (a.text && normalizeAnswer(a.text) === normalizedStudent),
+    );
+  }
+
+  if (!rightAnswer || !rightAnswer.trim()) return false;
+
+  if (type !== 'multiple_choices') return normalizedStudent === normalizeAnswer(rightAnswer);
+  const normalizeList = (value: string | null) =>
+    String(value ?? '').split(',').map(normalizeAnswer).filter(Boolean).sort().join('|');
+  return normalizeList(studentAnswer) === normalizeList(rightAnswer);
+}
+
+function shuffle<T>(values: readonly T[]): T[] {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+}
+
+function getCorrectAnswerDisplay(template: {
+  answer_formula: string | null;
+  logic_config: Prisma.JsonValue;
+}): string | null {
+  if (!template.answer_formula && !template.logic_config) return null;
+
+  const config = template.logic_config as {
+    answers?: Array<{ text?: string; value?: string; is_correct?: boolean }>;
+  };
+
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    const correctChoices = config.answers.filter(
+      (a) =>
+        a.is_correct ||
+        (a.value && template.answer_formula?.split(',').map((s) => s.trim()).includes(a.value.trim())),
+    );
+    if (correctChoices.length > 0) {
+      return correctChoices
+        .map((a) => (a.text && a.text.trim() ? a.text.trim() : a.value?.trim() ?? ''))
+        .filter(Boolean)
+        .join(', ');
+    }
+  }
+
+  return template.answer_formula;
+}
+
+function getQuestionChoices(template: {
+  answer_formula: string | null;
+  logic_config: Prisma.JsonValue;
+  template_type: string;
+}): string[] {
+  const config = template.logic_config as {
+    false_answers?: unknown;
+    answers?: Array<{ text?: string; value?: string }>;
+  };
+
+  if (Array.isArray(config?.answers) && config.answers.length > 0) {
+    return config.answers
+      .map((a) => (a.text && a.text.trim() ? a.text.trim() : a.value?.trim() ?? ''))
+      .filter(Boolean);
+  }
+
+  const falseAnswers = Array.isArray(config?.false_answers)
+    ? config.false_answers.filter((answer): answer is string => typeof answer === 'string' && Boolean(answer.trim()))
+    : [];
+  let correctAnswers: string[] = [];
+
+  if (template.template_type === 'theoretical_question') {
+    correctAnswers = template.answer_formula ? [template.answer_formula] : [];
+  } else if (template.template_type === 'multiple_choices') {
+    correctAnswers = template.answer_formula?.split(',').map((answer) => answer.trim()).filter(Boolean) ?? [];
+  } else if (template.template_type === 'true_false') {
+    return ['true', 'false'];
+  }
+
+  return [...new Set([...falseAnswers, ...correctAnswers])];
+}
+
+function getSnapshotPosition(snapshot: AttemptWithRelations['snapshots'][number]): number {
+  const variables = snapshot.generated_variables as { position?: unknown };
+  return typeof variables?.position === 'number' ? variables.position : Number.MAX_SAFE_INTEGER;
 }
 
 @Injectable()
@@ -122,7 +230,12 @@ export class CourseRepository {
     };
   }
 
-  private mapCourseDetail(c: CourseWithDetailRelations, isEnrolled = false, isAllowed = true): CourseDto {
+  private mapCourseDetail(
+    c: CourseWithDetailRelations,
+    isEnrolled = false,
+    isAllowed = true,
+    showAnswers = false,
+  ): CourseDto {
     return {
       cover_image_url: c.cover_image_url,
       created_at: c.created_at.toISOString(),
@@ -143,7 +256,7 @@ export class CourseRepository {
         title_en: l.title_en,
         title_vi: l.title_vi,
         template_count: l.templates.length,
-        templates: l.templates.map((t) => this.mapTemplate(t as any, true)),
+        templates: showAnswers ? l.templates.map((t) => this.mapTemplate(t as any, true)) : [],
       })) : [],
       category_id: c.category_id,
       category: c.category ? {
@@ -163,21 +276,14 @@ export class CourseRepository {
   }
 
   private mapTemplate(template: TemplateWithLesson, showAnswers = true): QuestionTemplateDto {
-    let choices: string[] = [];
     const type = template.template_type;
-    const falseAnswers = (template.logic_config as any)?.false_answers || [];
-
-    if (type === 'theoretical_question') {
-      choices = [...falseAnswers, template.answer_formula || ''].filter(Boolean).sort();
-    } else if (type === 'multiple_choices') {
-      const correctList = template.answer_formula ? template.answer_formula.split(',').map((s) => s.trim()) : [];
-      choices = [...falseAnswers, ...correctList].filter(Boolean).sort();
-    } else if (type === 'true_false') {
-      choices = ['true', 'false'];
-    }
+    const choices = getQuestionChoices(template).sort();
 
     return {
-      answer_formula: showAnswers ? template.answer_formula : null,
+      allows_multiple:
+        type === 'multiple_choices' &&
+        String(template.answer_formula ?? '').split(',').filter((answer) => answer.trim()).length > 1,
+      answer_formula: showAnswers ? getCorrectAnswerDisplay(template) : null,
       body_template_en: template.body_template_en,
       body_template_vi: template.body_template_vi,
       created_at: template.created_at.toISOString(),
@@ -204,6 +310,7 @@ export class CourseRepository {
     return {
       id: quiz.id,
       is_active: quiz.is_active ?? true,
+      is_test: quiz.is_test,
       passing_score: toNumber(quiz.passing_score) ?? 50,
       question_count: quiz._count.quiz_maps,
       time_limit_seconds: quiz.time_limit_seconds,
@@ -220,13 +327,23 @@ export class CourseRepository {
   }
 
   private mapSnapshot(snapshot: AttemptWithRelations['snapshots'][number], showAnswers = false): QuestionSnapshotDto {
+    const template = snapshot.template ? this.mapTemplate(snapshot.template, showAnswers) : null;
+    const variables = snapshot.generated_variables as { choices?: unknown };
+    if (
+      template &&
+      Array.isArray(variables?.choices) &&
+      variables.choices.length > 0 &&
+      variables.choices.every((choice) => typeof choice === 'string')
+    ) {
+      template.choices = variables.choices as string[];
+    }
     return {
       id: snapshot.id,
-      is_correct: snapshot.is_correct,
-      points_earned: snapshot.points_earned,
+      is_correct: showAnswers ? snapshot.is_correct : null,
+      points_earned: showAnswers ? snapshot.points_earned : null,
       responded_at: snapshot.responded_at?.toISOString() ?? null,
       student_answer: snapshot.student_answer,
-      template: snapshot.template ? this.mapTemplate(snapshot.template, showAnswers) : null,
+      template,
     };
   }
 
@@ -234,13 +351,34 @@ export class CourseRepository {
     const showAnswers = attempt.is_completed ?? false;
     return {
       completed_at: attempt.completed_at?.toISOString() ?? null,
+      deadline_at: attempt.deadline_at?.toISOString() ?? null,
       id: attempt.id,
       is_completed: attempt.is_completed ?? false,
+      is_test: Boolean(attempt.test_availability_id),
       quiz: attempt.quiz ? this.mapQuizList(attempt.quiz) : null,
       quiz_id: attempt.quiz_id,
-      snapshots: attempt.snapshots.map((snapshot) => this.mapSnapshot(snapshot, showAnswers)),
+      snapshots: [...attempt.snapshots]
+        .sort((left, right) => getSnapshotPosition(left) - getSnapshotPosition(right) || left.id.localeCompare(right.id))
+        .map((snapshot) => this.mapSnapshot(snapshot, showAnswers)),
       started_at: attempt.started_at.toISOString(),
       total_score: toNumber(attempt.total_score),
+    };
+  }
+
+  private mapTestAvailability(availability: Prisma.CourseTestAvailabilityGetPayload<{
+    include: {
+      church_unit: true;
+      quiz: { include: { _count: { select: { quiz_maps: true } } } };
+    };
+  }>): CourseTestAvailabilityDto {
+    return {
+      church_unit: { id: availability.church_unit.id, name: availability.church_unit.name },
+      course_id: availability.course_id,
+      created_at: availability.created_at.toISOString(),
+      duration_seconds: availability.duration_seconds,
+      id: availability.id,
+      is_active: availability.is_active,
+      quiz: this.mapQuizList(availability.quiz),
     };
   }
 
@@ -319,7 +457,12 @@ export class CourseRepository {
     }
 
     // Cast needed because attendees and grades are dynamically added to the payload
-    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, isEnrolled, isAllowed);
+    return this.mapCourseDetail(
+      c as unknown as CourseWithDetailRelations,
+      isEnrolled,
+      isAllowed,
+      viewerRole === 'church_admin' || viewerRole === 'system_admin',
+    );
   }
 
   async create(dto: CreateCourseDto, creatorId: string): Promise<CourseDto> {
@@ -356,7 +499,7 @@ export class CourseRepository {
       },
     });
 
-    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true, true);
   }
 
   async update(slug: string, dto: UpdateCourseDto): Promise<CourseDto | null> {
@@ -386,7 +529,7 @@ export class CourseRepository {
       where: { slug },
     });
 
-    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true);
+    return this.mapCourseDetail(c as unknown as CourseWithDetailRelations, true, true, true);
   }
 
   async delete(slug: string): Promise<void> {
@@ -618,7 +761,7 @@ export class CourseRepository {
     if (viewerId) {
       // Admins can see all lessons
       if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
-        return this.mapLesson(lesson);
+        return this.mapLesson(lesson, true);
       }
 
       // Check access
@@ -700,7 +843,7 @@ export class CourseRepository {
     await this.prisma.lesson.delete({ where: { id } });
   }
 
-  private mapLesson(lesson: LessonWithRelations): LessonDto {
+  private mapLesson(lesson: LessonWithRelations, showAnswers = false): LessonDto {
     const quizMap = new Map<string, QuizListDto>();
     lesson.templates.forEach((template) => {
       template.quiz_maps.forEach((map) => {
@@ -726,7 +869,7 @@ export class CourseRepository {
       title_en: lesson.title_en,
       title_vi: lesson.title_vi,
       updated_at: lesson.updated_at.toISOString(),
-      templates: lesson.templates.map((t) => this.mapTemplate(t as any, true)),
+      templates: showAnswers ? lesson.templates.map((t) => this.mapTemplate(t as any, true)) : [],
     };
   }
 
@@ -778,8 +921,10 @@ export class CourseRepository {
     const quizzes = await this.prisma.quiz.findMany({
       include: { _count: { select: { quiz_maps: true } } },
       orderBy: { title_vi: 'asc' },
-      where: courseSlug
-        ? {
+      where: {
+        is_test: false,
+        ...(courseSlug
+          ? {
             quiz_maps: {
               some: {
                 template: {
@@ -789,8 +934,9 @@ export class CourseRepository {
                 },
               },
             },
-          }
-        : undefined,
+            }
+          : {}),
+      },
     });
 
     return quizzes.map((quiz) => this.mapQuizList(quiz));
@@ -881,9 +1027,258 @@ export class CourseRepository {
     await this.prisma.quiz.delete({ where: { id } });
   }
 
+  async getCourseTestStatus(slug: string, userId: string, userRole?: string): Promise<CourseTestStatusDto | null> {
+    if (slug === 'isom-b-5') return null;
+    const course = await this.prisma.course.findFirst({ where: { deleted_at: null, slug } });
+    if (!course) return null;
+
+    const privileged = userRole === 'system_admin' || userRole === 'church_admin';
+    const managedClasses = await this.prisma.churchUnit.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+      where: {
+        courses: { some: { id: course.id } },
+        type: 'class',
+        ...(privileged
+          ? {}
+          : {
+              members: {
+                some: { role: { in: ['admin', 'admin_member'] }, user_id: userId },
+              },
+            }),
+      },
+    });
+    const canManage = privileged || managedClasses.length > 0;
+
+    const availability = await this.prisma.courseTestAvailability.findFirst({
+      include: {
+        church_unit: true,
+        quiz: { include: { _count: { select: { quiz_maps: true } } } },
+      },
+      orderBy: { created_at: 'desc' },
+      where: {
+        course_id: course.id,
+        is_active: true,
+        church_unit: privileged
+          ? { id: { in: managedClasses.map(({ id }) => id) } }
+          : { members: { some: { user_id: userId } } },
+      },
+    });
+
+    let attempt: QuizAttemptDto | null = null;
+    if (availability) {
+      const existing = await this.prisma.quizAttempt.findFirst({
+        select: { id: true },
+        where: { test_availability_id: availability.id, user_id: userId },
+      });
+      if (existing) attempt = await this.findAttempt(existing.id, userId);
+    }
+
+    const questionBank = canManage
+      ? await this.prisma.questionTemplate.findMany({
+          include: { lesson: true },
+          orderBy: { created_at: 'asc' },
+          where: { lesson: { course_id: course.id } },
+        })
+      : [];
+
+    return {
+      attempt,
+      availability: availability ? this.mapTestAvailability(availability) : null,
+      can_manage: canManage,
+      managed_classes: managedClasses,
+      question_bank: questionBank.map((template) => this.mapTemplate(template, true)),
+    };
+  }
+
+  async publishCourseTest(
+    slug: string,
+    dto: PublishCourseTestDto,
+    userId: string,
+    userRole?: string,
+  ): Promise<CourseTestAvailabilityDto> {
+    if (slug === 'isom-b-5') {
+      throw new ForbiddenException('Tests are not allowed for this course.');
+    }
+    const course = await this.prisma.course.findFirst({ where: { deleted_at: null, slug } });
+    if (!course) throw new NotFoundException('Course not found.');
+    if (!Number.isInteger(dto.duration_seconds) || dto.duration_seconds < 60) {
+      throw new ConflictException('Test duration must be at least 60 seconds.');
+    }
+
+    const privileged = userRole === 'system_admin' || userRole === 'church_admin';
+    const churchUnits = await this.prisma.churchUnit.findMany({
+      select: { id: true },
+      where: {
+        courses: { some: { id: course.id } },
+        type: 'class',
+        ...(privileged
+          ? {}
+          : { members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } } }),
+      },
+    });
+    if (!churchUnits.length) {
+      throw new ForbiddenException('No classes assigned to this course can be managed by this administrator.');
+    }
+    const churchUnitIds = churchUnits.map(({ id }) => id);
+
+    const requestedIds = [...new Set(dto.template_ids ?? [])];
+    if (requestedIds.length) {
+      const validCount = await this.prisma.questionTemplate.count({
+        where: { id: { in: requestedIds }, lesson: { course_id: course.id } },
+      });
+      if (validCount !== requestedIds.length) throw new ForbiddenException('Invalid test question selection.');
+    }
+
+    const availabilityId = await this.prisma.$transaction(async (tx) => {
+      const newTemplateIds: string[] = [];
+      for (const question of dto.new_questions ?? []) {
+        const lesson = await tx.lesson.findFirst({
+          select: { id: true },
+          where: { course_id: course.id, id: question.lesson_id },
+        });
+        if (!lesson) throw new ForbiddenException('New test questions must belong to this course.');
+        const template = await tx.questionTemplate.create({
+          data: {
+            answer_formula: question.answer_formula,
+            body_template_en: question.body_template_en,
+            body_template_vi: question.body_template_vi,
+            difficulty: question.difficulty ?? 'medium',
+            explanation_template_en: question.explanation_template_en,
+            explanation_template_vi: question.explanation_template_vi,
+            lesson_id: lesson.id,
+            logic_config: (question.logic_config ?? {}) as Prisma.InputJsonValue,
+            template_type: question.template_type ?? 'short_answer',
+          },
+        });
+        newTemplateIds.push(template.id);
+      }
+
+      const templateIds = [...requestedIds, ...newTemplateIds];
+      if (!templateIds.length) throw new ConflictException('Select or create at least one test question.');
+
+      await tx.courseTestAvailability.updateMany({
+        data: { closed_at: new Date(), is_active: false },
+        where: { church_unit_id: { in: churchUnitIds }, course_id: course.id, is_active: true },
+      });
+      const quiz = await tx.quiz.create({
+        data: {
+          is_active: true,
+          is_test: true,
+          passing_score: 70,
+          quiz_maps: {
+            create: templateIds.map((templateId, index) => ({ position: index + 1, template_id: templateId })),
+          },
+          time_limit_seconds: dto.duration_seconds,
+          title_en: dto.title_en?.trim() || `${course.title_en} Final Test`,
+          title_vi: dto.title_vi?.trim() || `${course.title_vi} - Bài kiểm tra cuối khóa`,
+        },
+      });
+      let firstAvailabilityId = '';
+      for (const churchUnitId of churchUnitIds) {
+        const created = await tx.courseTestAvailability.create({
+          data: {
+            church_unit_id: churchUnitId,
+            course_id: course.id,
+            created_by: userId,
+            duration_seconds: dto.duration_seconds,
+            quiz_id: quiz.id,
+          },
+        });
+        firstAvailabilityId ||= created.id;
+      }
+      return firstAvailabilityId;
+    });
+
+    const availability = await this.prisma.courseTestAvailability.findUniqueOrThrow({
+      include: { church_unit: true, quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+      where: { id: availabilityId },
+    });
+    return this.mapTestAvailability(availability);
+  }
+
+  async closeCourseTest(id: string, userId: string, userRole?: string): Promise<void> {
+    const availability = await this.prisma.courseTestAvailability.findFirst({
+      where: {
+        id,
+        ...(userRole === 'system_admin' || userRole === 'church_admin'
+          ? {}
+          : {
+              church_unit: {
+                members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } },
+              },
+            }),
+      },
+    });
+    if (!availability) throw new ForbiddenException('You cannot close this test.');
+    await this.prisma.courseTestAvailability.updateMany({
+      data: { closed_at: new Date(), is_active: false },
+      where: {
+        quiz_id: availability.quiz_id,
+        ...(userRole === 'system_admin' || userRole === 'church_admin'
+          ? {}
+          : {
+              church_unit: {
+                members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } },
+              },
+            }),
+      },
+    });
+  }
+
+  async startCourseTest(availabilityId: string, userId: string): Promise<QuizAttemptDto | null> {
+    const availability = await this.prisma.courseTestAvailability.findFirst({
+      include: {
+        church_unit: { include: { members: { where: { user_id: userId } } } },
+        quiz: {
+          include: {
+            _count: { select: { quiz_maps: true } },
+            quiz_maps: { include: { template: { include: { lesson: true } } }, orderBy: { position: 'asc' } },
+          },
+        },
+      },
+      where: { id: availabilityId, is_active: true },
+    });
+    if (!availability || !availability.church_unit.members.length || !availability.quiz.quiz_maps.length) return null;
+
+    const existing = await this.prisma.quizAttempt.findFirst({
+      select: { id: true },
+      where: { test_availability_id: availability.id, user_id: userId },
+    });
+    if (existing) return this.findAttempt(existing.id, userId);
+
+    const deadline = new Date(Date.now() + availability.duration_seconds * 1000);
+    const attempt = await this.prisma.quizAttempt.create({
+      data: {
+        deadline_at: deadline,
+        quiz_id: availability.quiz_id,
+        test_availability_id: availability.id,
+        user_id: userId,
+        snapshots: {
+          create: shuffle(availability.quiz.quiz_maps).map(({ template, template_id }, position) => ({
+            generated_variables: {
+              choices: shuffle(getQuestionChoices(template)),
+              position,
+            },
+            template_id,
+          })),
+        },
+      },
+      include: {
+        quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        snapshots: {
+          include: { template: { include: { lesson: true } } },
+          orderBy: { id: 'asc' },
+        },
+        test_availability: true,
+      },
+    });
+    return this.mapAttempt(attempt);
+  }
+
   async startQuiz(quizId: string, userId: string): Promise<QuizAttemptDto | null> {
     const quiz = await this.findQuiz(quizId);
-    if (!quiz || !quiz.is_active || quiz.templates.length === 0) return null;
+    if (!quiz || quiz.is_test || !quiz.is_active || quiz.templates.length === 0) return null;
 
     const attempt = await this.prisma.quizAttempt.create({
       data: {
@@ -898,6 +1293,7 @@ export class CourseRepository {
       },
       include: {
         quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        test_availability: true,
         snapshots: {
           include: { template: { include: { lesson: true } } },
           orderBy: { id: 'asc' },
@@ -912,6 +1308,7 @@ export class CourseRepository {
     const attempt = await this.prisma.quizAttempt.findFirst({
       include: {
         quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        test_availability: true,
         snapshots: {
           include: { template: { include: { lesson: true } } },
           orderBy: { id: 'asc' },
@@ -920,13 +1317,22 @@ export class CourseRepository {
       where: { id, user_id: userId },
     });
 
+    if (
+      attempt?.test_availability_id &&
+      !attempt.is_completed &&
+      (!attempt.test_availability?.is_active ||
+        (attempt.deadline_at && attempt.deadline_at.getTime() <= Date.now()))
+    ) {
+      return this.finishAttempt(attempt.id, userId);
+    }
+
     return attempt ? this.mapAttempt(attempt) : null;
   }
 
   async submitAnswer(snapshotId: string, userId: string, studentAnswer: string): Promise<SubmitAnswerResultDto | null> {
     const snapshot = await this.prisma.questionSnapshot.findFirst({
       include: {
-        attempt: true,
+        attempt: { include: { test_availability: true } },
         template: true,
       },
       where: {
@@ -935,10 +1341,17 @@ export class CourseRepository {
       },
     });
 
-    if (!snapshot || !snapshot.template) return null;
+    if (!snapshot || !snapshot.template || !snapshot.attempt) return null;
+    if (
+      snapshot.attempt.is_completed ||
+      (snapshot.attempt.test_availability_id && !snapshot.attempt.test_availability?.is_active) ||
+      (snapshot.attempt.deadline_at && snapshot.attempt.deadline_at.getTime() <= Date.now())
+    ) {
+      return null;
+    }
 
     const rightAnswer = snapshot.template.answer_formula;
-    const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(rightAnswer);
+    const isCorrect = isAnswerCorrect(studentAnswer, rightAnswer, snapshot.template.template_type, snapshot.template.logic_config);
 
     await this.prisma.questionSnapshot.update({
       data: {
@@ -950,27 +1363,39 @@ export class CourseRepository {
       where: { id: snapshotId },
     });
 
-    return {
-      explanation: snapshot.template.explanation_template_vi ?? snapshot.template.explanation_template_en,
-      is_correct: isCorrect,
-      right_answer: rightAnswer,
-    };
+    const isTest = Boolean(snapshot.attempt.test_availability_id);
+    return isTest
+      ? { explanation: null, is_correct: false, right_answer: null }
+      : {
+          explanation: snapshot.template.explanation_template_vi ?? snapshot.template.explanation_template_en,
+          is_correct: isCorrect,
+          right_answer: rightAnswer,
+        };
   }
 
   async finishAttempt(id: string, userId: string, answers?: Record<string, string>): Promise<QuizAttemptDto | null> {
     const attempt = await this.prisma.quizAttempt.findFirst({
-      include: { snapshots: { include: { template: true } } },
+      include: { snapshots: { include: { template: true } }, test_availability: true },
       where: { id, user_id: userId },
     });
     if (!attempt) return null;
+    if (attempt.is_completed) return this.findAttempt(id, userId);
 
-    if (answers) {
+    const hasTime =
+      (!attempt.deadline_at || attempt.deadline_at.getTime() > Date.now()) &&
+      (!attempt.test_availability_id || Boolean(attempt.test_availability?.is_active));
+    if (answers && hasTime) {
       for (const snapshot of attempt.snapshots) {
         const studentAnswer = answers[snapshot.id];
         if (studentAnswer !== undefined && studentAnswer !== null) {
           const rightAnswer = snapshot.template?.answer_formula;
-          const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(rightAnswer);
-          
+          const isCorrect = isAnswerCorrect(
+            studentAnswer,
+            rightAnswer ?? null,
+            snapshot.template?.template_type ?? 'short_answer',
+            snapshot.template?.logic_config,
+          );
+
           await this.prisma.questionSnapshot.update({
             data: {
               is_correct: isCorrect,
@@ -988,7 +1413,6 @@ export class CourseRepository {
       include: { snapshots: true },
       where: { id },
     });
-
     const total = updatedAttempt?.snapshots.length || 0;
     const correct = updatedAttempt?.snapshots.filter((snapshot) => snapshot.is_correct).length || 0;
     const totalScore = total > 0 ? (correct / total) * 100 : 0;
@@ -1001,6 +1425,7 @@ export class CourseRepository {
       },
       include: {
         quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        test_availability: true,
         snapshots: {
           include: { template: { include: { lesson: true } } },
           orderBy: { id: 'asc' },
@@ -1008,6 +1433,25 @@ export class CourseRepository {
       },
       where: { id },
     });
+
+    if (attempt.test_availability) {
+      const passed = totalScore >= 70;
+      await this.prisma.courseGrade.upsert({
+        create: {
+          completed_at: passed ? new Date() : null,
+          course_id: attempt.test_availability.course_id,
+          overall_score: totalScore,
+          status: passed ? 'passed' : 'failed',
+          user_id: userId,
+        },
+        update: {
+          completed_at: passed ? new Date() : null,
+          overall_score: totalScore,
+          status: passed ? 'passed' : 'failed',
+        },
+        where: { user_id_course_id: { course_id: attempt.test_availability.course_id, user_id: userId } },
+      });
+    }
 
     return this.mapAttempt(updated);
   }

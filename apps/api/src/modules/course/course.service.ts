@@ -4,10 +4,13 @@ import { CourseRepository } from './course.repository';
 import type {
   CourseDto,
   CourseListResult,
+  CourseTestAvailabilityDto,
+  CourseTestStatusDto,
   CreateCourseDto,
   CreateLessonDto,
   CreateQuestionTemplateDto,
   CreateQuizDto,
+  PublishCourseTestDto,
   LessonDto,
   QuestionTemplateDto,
   QuizAttemptDto,
@@ -118,6 +121,33 @@ export class CourseService {
 
   deleteTemplate(templateId: string): Promise<void> {
     return this.courseRepository.deleteTemplate(templateId);
+  }
+
+  async getCourseTestStatus(slug: string, userId: string, userRole?: string): Promise<CourseTestStatusDto> {
+    const status = await this.courseRepository.getCourseTestStatus(slug, userId, userRole);
+    if (!status) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Course not found.' });
+    return status;
+  }
+
+  publishCourseTest(
+    slug: string,
+    dto: PublishCourseTestDto,
+    userId: string,
+    userRole?: string,
+  ): Promise<CourseTestAvailabilityDto> {
+    return this.courseRepository.publishCourseTest(slug, dto, userId, userRole);
+  }
+
+  closeCourseTest(id: string, userId: string, userRole?: string): Promise<void> {
+    return this.courseRepository.closeCourseTest(id, userId, userRole);
+  }
+
+  async startCourseTest(id: string, userId: string): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.startCourseTest(id, userId);
+    if (!attempt) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Test is unavailable.' });
+    }
+    return attempt;
   }
 
   listQuizzes(courseSlug?: string): Promise<QuizListDto[]> {
