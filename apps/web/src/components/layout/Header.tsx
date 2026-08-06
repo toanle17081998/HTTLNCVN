@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useNotificationsQuery, useMarkNotificationReadMutation } from "@/services/notification";
 import {
   Menu,
   X,
@@ -41,10 +42,9 @@ const navIconMap: Record<string, React.ReactNode> = {
   "/article": <BookOpen className="h-4 w-4" />,
   "/course": <GraduationCap className="h-4 w-4" />,
   "/event": <Calendar className="h-4 w-4" />,
-  "/member": <Users className="h-4 w-4" />,
+  "/church": <ChurchLogo className="h-4 w-4" />,
   "/notification": <Bell className="h-4 w-4" />,
   "/prayer-journal": <Heart className="h-4 w-4" />,
-  "/church-unit": <ChurchLogo className="h-4 w-4" />,
   "/auth": <LogIn className="h-4 w-4" />,
 };
 
@@ -62,12 +62,13 @@ export function Header({ pathname }: HeaderProps) {
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
   const [isVisible, setIsVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [moreNavOpen, setMoreNavOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const canCreateContent = canAny([
     PERMISSIONS.manageArticle,
@@ -76,6 +77,30 @@ export function Header({ pathname }: HeaderProps) {
     PERMISSIONS.manageEvents,
   ]);
   const canPublish = can(PERMISSIONS.manageArticle);
+  const showNotification = canAny([
+    PERMISSIONS.personalizedSearch,
+    PERMISSIONS.manageTelegramNotifications,
+    PERMISSIONS.manageIntegrations,
+  ]);
+
+  const notificationsQuery = useNotificationsQuery(
+    { take: 5, skip: 0 },
+    isAuthenticated && showNotification
+  );
+  const markReadMutation = useMarkNotificationReadMutation();
+
+  const notifications = notificationsQuery.data?.items ?? [];
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const handleNotificationClick = (notification: any) => {
+    setNotificationOpen(false);
+    if (!notification.is_read) {
+      markReadMutation.mutate(notification.id);
+    }
+    if (notification.action_url) {
+      router.push(notification.action_url);
+    }
+  };
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
@@ -117,22 +142,22 @@ export function Header({ pathname }: HeaderProps) {
         setSettingsOpen(false);
       }
       if (
-        navRef.current &&
+        notificationRef.current &&
         event.target instanceof Node &&
-        !navRef.current.contains(event.target)
+        !notificationRef.current.contains(event.target)
       ) {
-        setMoreNavOpen(false);
+        setNotificationOpen(false);
       }
     }
 
-    if (settingsOpen || moreNavOpen) {
+    if (settingsOpen || notificationOpen) {
       document.addEventListener("pointerdown", handlePointerDown);
     }
 
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [settingsOpen, moreNavOpen]);
+  }, [settingsOpen, notificationOpen]);
 
   function renderNavItem(item: NavItem, mobile = false) {
     const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -145,14 +170,13 @@ export function Header({ pathname }: HeaderProps) {
             ? "min-h-12 rounded-md px-4 text-sm font-semibold"
             : "px-3 py-2 text-sm font-medium",
           isActive
-            ? "text-[var(--brand-primary)] after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[var(--accent-gold)]"
-            : "text-[var(--text-secondary)] hover:text-[var(--brand-primary)]",
+            ? "text-[var(--header-nav-active)] after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[var(--accent-gold)]"
+            : "text-[var(--text-secondary)] hover:text-[var(--header-nav-hover)]",
         )}
         href={item.href}
         key={item.href}
         onClick={() => {
           setMobileMenuOpen(false);
-          setMoreNavOpen(false);
         }}
       >
         {!mobile && navIconMap[item.href]}
@@ -161,15 +185,12 @@ export function Header({ pathname }: HeaderProps) {
     );
   }
 
-  const visibleNavItems = menuNavItems.slice(0, 5);
-  const hiddenNavItems = menuNavItems.slice(5);
+
 
   function handleLogout() {
-    logout();
     setSettingsOpen(false);
     setMobileMenuOpen(false);
-    router.push("/");
-    router.refresh();
+    logout();
   }
 
   return (
@@ -197,48 +218,103 @@ export function Header({ pathname }: HeaderProps) {
           ref={navRef}
         >
           <div className="flex items-center gap-2">
-            {visibleNavItems.map((item) => renderNavItem(item))}
-
-            {hiddenNavItems.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => setMoreNavOpen(!moreNavOpen)}
-                  className={cn(
-                    "hover:cursor-pointer flex items-center gap-1 px-3.5 py-2 text-sm font-semibold transition-colors",
-                    moreNavOpen
-                      ? "text-[var(--brand-primary)]"
-                      : "text-[var(--text-secondary)] hover:text-[var(--brand-primary)]"
-                  )}
-                >
-                  {t("common.more")}
-                  <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", moreNavOpen && "rotate-180")} />
-                </button>
-
-                {moreNavOpen && (
-                  <div className="animate-in fade-in zoom-in-95 absolute left-0 top-full mt-2 w-48 origin-top-left bg-[var(--bg-surface)] p-2 shadow-xl">
-                    {hiddenNavItems.map((item) => renderNavItem(item))}
-                  </div>
-                )}
-              </div>
-            )}
+            {menuNavItems.map((item) => renderNavItem(item))}
           </div>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* Mobile Menu Toggle */}
-          <button
-            aria-controls="mobile-primary-navigation"
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? t("nav.closeNavigation") : t("nav.openNavigation")}
-            className="flex h-10 w-10 items-center justify-center text-[var(--text-primary)] transition-colors hover:text-[var(--brand-primary)] active:scale-95 md:hidden"
-            onClick={() => {
-              setMobileMenuOpen((open) => !open);
-              setSettingsOpen(false);
-            }}
-            type="button"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Notification Bell Button & Dropdown */}
+          {showNotification && (
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => {
+                  setNotificationOpen((open) => !open);
+                  setSettingsOpen(false);
+                  setMobileMenuOpen(false);
+                }}
+                className={cn(
+                  "relative flex h-10 w-10 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] active:scale-95",
+                  (notificationOpen || pathname === "/notification") && "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
+                )}
+                aria-label={t("nav.notification.label")}
+                aria-expanded={notificationOpen}
+                aria-haspopup="menu"
+                type="button"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--status-danger)] opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--status-danger)]" />
+                  </span>
+                )}
+              </button>
+
+              {notificationOpen && (
+                <div
+                  className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-80 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-2xl"
+                  role="menu"
+                >
+                  <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-3 py-2.5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
+                      {t("nav.notification.label")}
+                    </p>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-[var(--status-danger-bg)] px-2 py-0.5 text-[10px] font-extrabold text-[var(--status-danger)]">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto py-1 divide-y divide-[var(--border-subtle)]">
+                    {notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => handleNotificationClick(n)}
+                        className={cn(
+                          "flex w-full flex-col gap-1 px-3 py-2.5 text-left transition hover:bg-[var(--bg-base)]/50",
+                          !n.is_read && "bg-[var(--brand-soft)]"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className={cn("text-xs font-bold truncate", !n.is_read ? "text-[var(--text-primary)] font-extrabold" : "text-[var(--text-secondary)]")}>
+                            {n.title}
+                          </span>
+                          {!n.is_read && (
+                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" />
+                          )}
+                        </div>
+                        <p className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">
+                          {n.message}
+                        </p>
+                        <span className="text-[9px] text-[var(--text-tertiary)] opacity-60">
+                          {new Date(n.created_at).toLocaleDateString()}
+                        </span>
+                      </button>
+                    ))}
+
+                    {notifications.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <p className="text-xs font-medium text-[var(--text-tertiary)]">
+                          No notifications
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-[var(--border-subtle)] pt-1">
+                    <Link
+                      href="/notification"
+                      onClick={() => setNotificationOpen(false)}
+                      className="flex w-full items-center justify-center rounded-xl py-2 text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-muted)] transition"
+                    >
+                      See All
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* User Settings Dropdown */}
           <div className="relative" ref={settingsRef}>
@@ -364,6 +440,22 @@ export function Header({ pathname }: HeaderProps) {
               </div>
             )}
           </div>
+
+
+          {/* Mobile Menu Toggle */}
+          <button
+            aria-controls="mobile-primary-navigation"
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? t("nav.closeNavigation") : t("nav.openNavigation")}
+            className="flex h-10 w-10 items-center justify-center text-[var(--text-primary)] transition-colors hover:text-[var(--brand-primary)] active:scale-95 md:hidden"
+            onClick={() => {
+              setMobileMenuOpen((open) => !open);
+              setSettingsOpen(false);
+            }}
+            type="button"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
@@ -389,8 +481,8 @@ export function Header({ pathname }: HeaderProps) {
                 className={cn(
                   "flex items-center gap-3 border-l-2 px-3 py-2 transition-all duration-200 active:scale-[0.98]",
                   pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                    ? "border-[var(--accent-gold)] text-[var(--brand-primary)]"
-                    : "border-transparent text-[var(--text-primary)] hover:text-[var(--brand-primary)]"
+                    ? "border-[var(--accent-gold)] text-[var(--header-nav-active)]"
+                    : "border-transparent text-[var(--text-primary)] hover:text-[var(--header-nav-hover)]"
                 )}
               >
                 <div className="flex shrink-0 items-center justify-center text-[var(--brand-primary)]">

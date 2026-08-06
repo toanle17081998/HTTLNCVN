@@ -1,11 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BackToTopButton } from "./BackToTopButton";
 import { Breadcrumb } from "./Breadcrumb";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
+import { NavigationProgressBar } from "./NavigationProgressBar";
 import { ThemeInitializer } from "./ThemeToggle";
 
 type AppShellProps = {
@@ -19,6 +20,9 @@ export function AppShell({ children }: AppShellProps) {
   if (pathname === "/auth" || pathname.startsWith("/admin")) {
     return (
       <div className="min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <ThemeInitializer />
         {children}
       </div>
@@ -27,6 +31,9 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
+      <Suspense fallback={null}>
+        <NavigationProgressBar />
+      </Suspense>
       <ThemeInitializer />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header pathname={pathname} />

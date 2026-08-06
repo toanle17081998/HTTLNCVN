@@ -152,7 +152,7 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
           section([
             stack([image(churchImage, "Baptism", { height: "240px" }), text("Baptism", "h3"), text("A public declaration of faith and new life in Christ."), button("Learn more", "/about")]),
             stack([image(churchImage, "Children learning together", { height: "240px" }), text("Children and families", "h3"), text("A joyful, safe place for children to learn about Jesus."), button("Explore ministry", "/course")]),
-            stack([image(churchImage, "Small group community", { height: "240px" }), text("Join a group", "h3"), text("Connect, grow, and find meaningful community."), button("Find community", "/church-unit")]),
+            stack([image(churchImage, "Small group community", { height: "240px" }), text("Join a group", "h3"), text("Connect, grow, and find meaningful community."), button("Find community", "/church")]),
           ], { columns: 3, gap: "28px", padding: "24px 0 0" }),
         ], { padding: "88px 7vw" }),
         section([stack([
@@ -180,7 +180,7 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
         section([stack([text("You are welcome here", "h2", { align: "center" }), text("Join us as we seek God and walk together in faith.", "p", { align: "center" }), button("Visit this Sunday", "/contact")], { alignItems: "center" })], { background: "var(--bg-card)" }),
         section([text("What we believe", "h2"), section([iconBox("01", "Jesus at the center", "We follow Jesus as Savior and Lord."), iconBox("02", "Rooted in Scripture", "The Bible shapes our faith and life."), iconBox("03", "Led by the Spirit", "We depend on God in worship and mission.")], { columns: 3, padding: "24px 0 0" })]),
         section([stack([text("Our values", "h2"), text("Grace, truth, prayer, community, generosity, and service guide how we live together.")]), image(churchImage, "Church members sharing life together", { height: "360px" })], { background: "var(--bg-surface)", columns: 2 }),
-        section([stack([text("Meet our community", "h2", { align: "center" }), text("Discover the people and ministries that make up our church family.", "p", { align: "center" }), button("Find your place", "/church-unit")], { alignItems: "center" })]),
+        section([stack([text("Meet our community", "h2", { align: "center" }), text("Discover the people and ministries that make up our church family.", "p", { align: "center" }), button("Find your place", "/church")], { alignItems: "center" })]),
       ];
     case "ministries":
       return [
@@ -217,7 +217,7 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
         section([text("Everyone is welcome", "h2", { align: "center" }), text("Come as you are. We look forward to meeting you.", "p", { align: "center" })], { background: "var(--bg-card)" }),
         section([image(churchImage, "Church entrance and welcome team", { height: "380px" }), stack([text("Plan your first visit", "h2"), text("Arrive a few minutes early and our welcome team will help with parking, seating, and children’s check-in."), button("View upcoming events", "/event")], { justifyContent: "center" })], { columns: 2 }),
         section([text("How we can help", "h2"), section([iconBox("01", "General questions", "Ask about services, programs, or facilities."), iconBox("02", "Prayer request", "Let our pastoral team pray with you."), iconBox("03", "Pastoral care", "Find support for difficult seasons.")], { columns: 3, padding: "24px 0 0" })], { background: "var(--bg-surface)" }),
-        section([stack([text("Connect beyond Sunday", "h2", { align: "center" }), text("Find a group, ministry, or serving team where you can belong.", "p", { align: "center" }), button("Explore church life", "/church-unit")], { alignItems: "center" })]),
+        section([stack([text("Connect beyond Sunday", "h2", { align: "center" }), text("Find a group, ministry, or serving team where you can belong.", "p", { align: "center" }), button("Explore church life", "/church")], { alignItems: "center" })]),
       ];
     default:
       return [

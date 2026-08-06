@@ -1,3 +1,3 @@
-# Prayer Journal Module
+# Prayer Module
 
-UI and client-side business logic for prayer journal flows.
+UI and client-side business logic for Prayer flows.

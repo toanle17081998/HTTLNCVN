@@ -149,8 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout() {
         clearStoredTokens();
-        router.replace("/");
-        router.refresh();
+        window.location.href = "/";
       },
     };
   }, [meQuery.isLoading, router, user]);

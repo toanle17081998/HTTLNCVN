@@ -29,8 +29,7 @@ export function AuthPage() {
 
   async function handleLogout() {
     await logoutMutation.mutateAsync();
-    router.push("/");
-    router.refresh();
+    window.location.href = "/";
   }
 
   return (

@@ -533,25 +533,25 @@ export function EventPage() {
                     value={query}
                   />
                 </div>
-                <Button
+                <button
                   aria-label={t("admin.members.refresh")}
-                  className="h-11 w-11 shrink-0 rounded-xl"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200 active:scale-95"
                   onClick={() => {
                     void eventsQuery.refetch();
                     if (canReadMeta) {
                       void metaQuery.refetch();
                     }
                   }}
-                  variant="secondary"
+                  type="button"
                 >
                   <RefreshCw
                     aria-hidden="true"
                     className={cn(
-                      "h-4 w-4",
+                      "h-5 w-5",
                       eventsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
                     )}
                   />
-                </Button>
+                </button>
               </div>
             </div>
 

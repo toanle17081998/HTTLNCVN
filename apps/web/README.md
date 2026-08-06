@@ -47,8 +47,8 @@ src/
 
 The web app supports four access roles. Role and permission constants live in `src/lib/rbac.ts`; UI should use `useAuth().can()` or `useAuth().canAny()` instead of hard-coded role checks.
 
-- `guest`: public landing, About Us article, footer contact information, public articles, and public event calendar. No comments, enrollment, or prayer journal access.
-- `church-member`: personal prayer journal CRUD, church-wide prayer sharing, course enrollment, lessons, quizzes/exams, certificates, internal articles/events, and personalized search.
+- `guest`: public landing, About Us article, footer contact information, public articles, and public event calendar. No comments, enrollment, or Prayer access.
+- `church-member`: personal Prayer CRUD, church-wide prayer sharing, course enrollment, lessons, quizzes/exams, certificates, internal articles/events, and personalized search.
 - `church-admin`: local church content management, LMS management, member enrollment, events, Telegram notifications, prayer moderation, and local member permissions.
 - `system-admin`: global role/permission schemas, system settings, integrations, database configuration, full data oversight, maintenance, backups, and security audits.
 

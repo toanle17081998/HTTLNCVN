@@ -1122,6 +1122,8 @@ function TextBlockSettings() {
           <option value="var(--text-secondary)">Secondary Text</option>
           <option value="var(--text-tertiary)">Tertiary Text</option>
           <option value="var(--text-inverse)">Inverse Text</option>
+          <option value="var(--text-white)">White Text</option>
+          <option value="var(--text-black)">Black Text</option>
           <option value="var(--brand-primary)">Brand Primary</option>
           <option value="var(--accent-gold)">Accent Gold</option>
         </NativeSelect>
@@ -1279,8 +1281,12 @@ function ButtonBlockSettings() {
           value={String(color ?? "var(--text-inverse)")}
         >
           <option value="var(--text-inverse)">Inverse Text</option>
+          <option value="var(--text-white)">White Text</option>
+          <option value="var(--text-black)">Black Text</option>
           <option value="var(--text-primary)">Primary Text</option>
           <option value="var(--text-secondary)">Secondary Text</option>
+          <option value="var(--brand-primary)">Brand Primary</option>
+          <option value="var(--accent-gold)">Accent Gold</option>
         </NativeSelect>
       </Field>
       <DimensionFields
