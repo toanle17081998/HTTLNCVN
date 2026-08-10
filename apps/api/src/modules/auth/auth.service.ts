@@ -1,11 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 
 import { getEnv } from '../../config/env';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { AuthRepository } from './auth.repository';
-import type { AuthTokens, AuthUser, LoginDto, RefreshDto } from './auth.types';
+import type { AuthTokens, AuthUser, ChangePasswordDto, LoginDto, RefreshDto } from './auth.types';
 import type { UserWithRole } from './auth.repository';
 
 @Injectable()
@@ -56,6 +56,37 @@ export class AuthService {
     }
   }
 
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.authRepository.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'USER_NOT_FOUND',
+        message: 'Tài khoản không tồn tại.',
+      });
+    }
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new BadRequestException({
+        code: 'INVALID_CURRENT_PASSWORD',
+        message: 'Mật khẩu hiện tại không đúng.',
+      });
+    }
+
+    if (!dto.newPassword || dto.newPassword.length < 8) {
+      throw new BadRequestException({
+        code: 'PASSWORD_TOO_SHORT',
+        message: 'Mật khẩu mới phải có ít nhất 8 ký tự.',
+      });
+    }
+
+    const newHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.authRepository.updatePassword(userId, newHash);
+
+    return { message: 'Đổi mật khẩu thành công.' };
+  }
+
   private signTokens(payload: JwtPayload): AuthTokens {
     const env = getEnv().jwt;
 
@@ -99,3 +130,4 @@ export class AuthService {
     };
   }
 }
+

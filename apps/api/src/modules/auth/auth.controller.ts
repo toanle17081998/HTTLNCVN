@@ -3,7 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request } from '@nes
 import { Public } from '../../common/decorators/public.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { AuthService } from './auth.service';
-import type { AuthTokens, AuthUser, LoginDto, RefreshDto } from './auth.types';
+import type { AuthTokens, AuthUser, ChangePasswordDto, LoginDto, RefreshDto } from './auth.types';
 
 @Controller('auth')
 export class AuthController {
@@ -27,6 +27,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   logout(): { message: string } {
     return { message: 'Logged out successfully.' };
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  changePassword(
+    @Request() req: { user: JwtPayload },
+    @Body() dto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    return this.authService.changePassword(req.user.sub, dto);
   }
 
   @Get('me')

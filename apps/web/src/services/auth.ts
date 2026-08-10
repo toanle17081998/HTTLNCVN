@@ -82,6 +82,11 @@ export function useAccessToken() {
   );
 }
 
+export type ChangePasswordDto = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 export const authApi = {
   login(dto: LoginDto) {
     return apiRequest<AuthTokens>("/auth/login", {
@@ -99,6 +104,13 @@ export const authApi = {
     return apiRequest<{ message: string }>("/auth/logout", {
       method: "POST",
     }).catch(() => ({ message: "Logged out locally." }));
+  },
+  changePassword(dto: ChangePasswordDto) {
+    return apiRequest<{ message: string }>("/auth/change-password", {
+      body: JSON.stringify(dto),
+      method: "POST",
+      token: getStoredTokens()?.accessToken,
+    });
   },
 };
 
@@ -136,3 +148,10 @@ export function useLogoutMutation() {
     },
   });
 }
+
+export function useChangePasswordMutation() {
+  return useMutation({
+    mutationFn: authApi.changePassword,
+  });
+}
+

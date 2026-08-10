@@ -39,4 +39,12 @@ export class AuthRepository {
       where: { id },
     });
   }
+
+  updatePassword(id: string, passwordHash: string): Promise<UserWithRole> {
+    return this.prisma.user.update({
+      data: { password_hash: passwordHash },
+      include: USER_INCLUDE,
+      where: { id },
+    });
+  }
 }

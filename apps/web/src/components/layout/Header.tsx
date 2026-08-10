@@ -20,6 +20,7 @@ import {
   Bell,
   Heart,
   LogIn,
+  Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -27,6 +28,7 @@ import { Button, cn } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
+import { ChangePasswordModal } from "../auth/ChangePasswordModal";
 import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
@@ -69,6 +71,7 @@ export function Header({ pathname }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const canCreateContent = canAny([
     PERMISSIONS.manageArticle,
@@ -350,18 +353,33 @@ export function Header({ pathname }: HeaderProps) {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
                     {t("nav.access")}
                   </p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[var(--brand-muted)] flex items-center justify-center text-[var(--brand-primary)] font-bold">
-                      {(user?.username?.[0] ?? "P").toUpperCase()}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-[var(--brand-muted)] flex items-center justify-center text-[var(--brand-primary)] font-bold">
+                        {(user?.username?.[0] ?? "P").toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-[var(--text-primary)] truncate">
+                          {user?.username ?? t("nav.publicBrowsing")}
+                        </p>
+                        <p className="text-[10px] font-medium text-[var(--text-secondary)]">
+                          {role}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-[var(--text-primary)] truncate">
-                        {user?.username ?? t("nav.publicBrowsing")}
-                      </p>
-                      <p className="text-[10px] font-medium text-[var(--text-secondary)]">
-                        {role}
-                      </p>
-                    </div>
+                    {isAuthenticated && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          setIsPasswordModalOpen(true);
+                        }}
+                        className="flex items-center justify-center p-1.5 text-[var(--text-secondary)] hover:text-[var(--brand-primary)] hover:bg-[var(--bg-surface-hover)] rounded-md transition"
+                        title={t("settings.changePassword")}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -503,6 +521,10 @@ export function Header({ pathname }: HeaderProps) {
             ))}
           </div>
         </nav>
+        <ChangePasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+        />
     </header>
   );
 }

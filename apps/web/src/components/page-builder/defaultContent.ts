@@ -116,7 +116,10 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
           text("Growing together to become more like Jesus.", "p", { color: "var(--text-inverse-muted)", size: "20px" }),
           row([button("Plan a visit", "/contact"), button("Watch online", "/article")]),
         ], { justifyContent: "center", maxWidth: "820px" })], {
-          background: `linear-gradient(90deg, rgba(12,16,38,.9), rgba(12,16,38,.34)), url(${churchImage}) center/cover`,
+          background: "linear-gradient(90deg, rgba(12,16,38,.9), rgba(12,16,38,.34))",
+          backgroundImage: churchImage,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
           height: "calc(100dvh - var(--site-header-height))",
           minHeight: "calc(100dvh - var(--site-header-height))",
           padding: "120px 7vw",

@@ -46,6 +46,10 @@ type FeedItem = {
 
 type BoxProps = {
   background?: string;
+  backgroundImage?: string;
+  backgroundPosition?: string;
+  backgroundRepeat?: string;
+  backgroundSize?: string;
   bottom?: SizeValue;
   borderColor?: string;
   borderRadius?: SizeValue;
@@ -180,8 +184,27 @@ function buildBoxStyle(props: BoxProps): CSSProperties {
   const parsedZIndex = props.zIndex === "" || props.zIndex === undefined ? undefined : Number(props.zIndex);
   const positioned = Boolean(props.position && props.position !== "static");
 
+  const bgImage = (props.backgroundImage || (typeof props.background === "string" ? props.background.match(/url\(['"]?(.*?)['"]?\)/)?.[1] : undefined))?.trim();
+  const rawBg = resolveStyleToken(props.background);
+
+  let combinedBackground = rawBg;
+  if (bgImage) {
+    const formattedUrl = bgImage.startsWith("url(") || bgImage.startsWith("gradient") || bgImage.startsWith("linear-gradient")
+      ? bgImage
+      : `url("${bgImage}")`;
+
+    if (rawBg && rawBg !== "transparent" && !rawBg.includes("url(")) {
+      combinedBackground = `${rawBg}, ${formattedUrl}`;
+    } else if (!rawBg || rawBg === "transparent") {
+      combinedBackground = formattedUrl;
+    }
+  }
+
   return {
-    background: resolveStyleToken(props.background),
+    background: combinedBackground,
+    backgroundPosition: bgImage ? (props.backgroundPosition || "center") : undefined,
+    backgroundRepeat: bgImage ? (props.backgroundRepeat || "no-repeat") : undefined,
+    backgroundSize: bgImage ? (props.backgroundSize || "cover") : undefined,
     bottom: positioned ? withUnitFallback(props.bottom) : undefined,
     borderColor: resolveStyleToken(props.borderColor) ?? "transparent",
     borderRadius: withUnitFallback(props.borderRadius, 0),
@@ -412,6 +435,26 @@ function BoxSettings({
     });
   }
 
+  function getBgImageValue() {
+    const directImage = String(props.allProps[propertyKey("backgroundImage")] ?? "").trim();
+    if (directImage) return directImage;
+    const bgString = String(props.allProps[propertyKey("background")] ?? "");
+    const match = bgString.match(/url\(['"]?(.*?)['"]?\)/);
+    if (match?.[1]) return match[1];
+    return "";
+  }
+
+  function setBgImageValue(value: string) {
+    setProp((draft: any) => {
+      draft[propertyKey("backgroundImage")] = value;
+      const currentBg = String(draft[propertyKey("background")] ?? "");
+      if (currentBg.includes("url(")) {
+        const cleaned = currentBg.replace(/,\s*url\([^)]+\).*/, "").replace(/url\([^)]+\).*/, "").trim();
+        draft[propertyKey("background")] = cleaned || "transparent";
+      }
+    });
+  }
+
   const visibilityKey = currentBreakpoint === "desktop"
     ? "hideOnDesktop"
     : currentBreakpoint === "tablet"
@@ -425,6 +468,22 @@ function BoxSettings({
     });
   }
 
+  const rawBgValue = getValue("background");
+  const bgImageValue = getBgImageValue();
+  const knownBgOptions = [
+    "transparent",
+    "var(--bg-base)",
+    "var(--bg-surface)",
+    "var(--bg-card)",
+    "var(--bg-card-strong)",
+    "var(--bg-elevated)",
+    "var(--brand-primary)",
+    "var(--brand-muted)",
+    "var(--brand-soft)",
+    "var(--accent-gold)",
+  ];
+  const isCustomBg = Boolean(rawBgValue && !knownBgOptions.includes(rawBgValue) && !rawBgValue.includes("url("));
+
   return (
     <div className="grid gap-3">
       {includeBreakpoints ? (
@@ -437,21 +496,55 @@ function BoxSettings({
       ) : null}
 
       {includeBackground ? (
-        <Field label="Background">
-          <NativeSelect onChange={(value) => setValue("background", value)} value={getValue("background") || (currentBreakpoint === "desktop" ? "transparent" : "")}>
-            {currentBreakpoint !== "desktop" ? <option value="">Inherit desktop</option> : null}
-            <option value="transparent">Transparent</option>
-            <option value="var(--bg-base)">Base Background</option>
-            <option value="var(--bg-surface)">Surface Background</option>
-            <option value="var(--bg-card)">Card Background</option>
-            <option value="var(--bg-card-strong)">Card Strong Background</option>
-            <option value="var(--bg-elevated)">Elevated Background</option>
-            <option value="var(--brand-primary)">Brand Primary</option>
-            <option value="var(--brand-muted)">Brand Muted</option>
-            <option value="var(--brand-soft)">Brand Soft</option>
-            <option value="var(--accent-gold)">Accent Gold</option>
-          </NativeSelect>
-        </Field>
+        <div className="grid gap-2">
+          <Field label="Background color">
+            <NativeSelect onChange={(value) => setValue("background", value)} value={getValue("background") || (currentBreakpoint === "desktop" ? "transparent" : "")}>
+              {currentBreakpoint !== "desktop" ? <option value="">Inherit desktop</option> : null}
+              {isCustomBg ? (
+                <option value={rawBgValue}>
+                  Custom ({rawBgValue.length > 24 ? `${rawBgValue.slice(0, 24)}...` : rawBgValue})
+                </option>
+              ) : null}
+              <option value="transparent">Transparent</option>
+              <option value="var(--bg-base)">Base Background</option>
+              <option value="var(--bg-surface)">Surface Background</option>
+              <option value="var(--bg-card)">Card Background</option>
+              <option value="var(--bg-card-strong)">Card Strong Background</option>
+              <option value="var(--bg-elevated)">Elevated Background</option>
+              <option value="var(--brand-primary)">Brand Primary</option>
+              <option value="var(--brand-muted)">Brand Muted</option>
+              <option value="var(--brand-soft)">Brand Soft</option>
+              <option value="var(--accent-gold)">Accent Gold</option>
+            </NativeSelect>
+          </Field>
+          <Field label="Background image URL">
+            <Input
+              onChange={(event) => setBgImageValue(event.target.value)}
+              placeholder="https://example.com/image.jpg"
+              value={bgImageValue}
+            />
+          </Field>
+          {bgImageValue ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Size">
+                <NativeSelect onChange={(value) => setValue("backgroundSize", value)} value={getValue("backgroundSize") || "cover"}>
+                  <option value="cover">Cover</option>
+                  <option value="contain">Contain</option>
+                  <option value="auto">Auto</option>
+                </NativeSelect>
+              </Field>
+              <Field label="Position">
+                <NativeSelect onChange={(value) => setValue("backgroundPosition", value)} value={getValue("backgroundPosition") || "center"}>
+                  <option value="center">Center</option>
+                  <option value="top">Top</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </NativeSelect>
+              </Field>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {includePosition ? <div className="grid gap-2">
@@ -566,6 +659,10 @@ function NodeFrame({ children, className }: { children: ReactNode; className?: s
   const responsiveStyle = {} as CSSProperties & Record<string, string | number | undefined>;
   const responsiveProperties = [
     "background",
+    "backgroundImage",
+    "backgroundPosition",
+    "backgroundRepeat",
+    "backgroundSize",
     "bottom",
     "borderColor",
     "borderRadius",
@@ -1159,24 +1256,74 @@ TextBlock.craft = {
   related: { settings: TextBlockSettings },
 };
 
+const buttonVariantPresets = {
+  primary: {
+    backgroundColor: "var(--brand-primary)",
+    borderColor: "var(--brand-primary)",
+    color: "var(--text-inverse)",
+    hoverClass: "hover:brightness-110 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+    label: "Primary (Brand)",
+  },
+  secondary: {
+    backgroundColor: "var(--bg-surface)",
+    borderColor: "var(--border-strong)",
+    color: "var(--text-primary)",
+    hoverClass: "hover:bg-[var(--brand-muted)] hover:border-[var(--brand-primary)] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+    label: "Secondary (Surface)",
+  },
+  accent: {
+    backgroundColor: "var(--accent-gold)",
+    borderColor: "var(--accent-gold)",
+    color: "#000000",
+    hoverClass: "hover:brightness-110 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+    label: "Accent (Gold)",
+  },
+  outline: {
+    backgroundColor: "transparent",
+    borderColor: "var(--brand-primary)",
+    color: "var(--brand-primary)",
+    hoverClass: "hover:bg-[var(--brand-primary)] hover:text-[var(--text-inverse)] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+    label: "Outline",
+  },
+  ghost: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    color: "var(--text-secondary)",
+    hoverClass: "hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] hover:-translate-y-0.5 active:translate-y-0",
+    label: "Ghost",
+  },
+  danger: {
+    backgroundColor: "var(--status-danger)",
+    borderColor: "var(--status-danger)",
+    color: "var(--text-inverse)",
+    hoverClass: "hover:brightness-110 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+    label: "Danger",
+  },
+} as const;
+
+type ButtonVariantKey = keyof typeof buttonVariantPresets;
+
 type ButtonProps = BoxProps & {
   align?: Align;
   backgroundColor?: string;
+  borderColor?: string;
   borderStyle?: string;
   color?: string;
   href?: string;
   label?: string;
   size?: SizeValue;
+  variant?: ButtonVariantKey;
 };
 
 export function ButtonBlock({
   align = "left",
-  backgroundColor = "var(--brand-primary)",
-  borderColor = "var(--brand-primary)",
+  variant = "primary",
+  backgroundColor,
+  borderColor,
   borderRadius = "12px",
   borderStyle = "solid",
   borderWidth = "1px",
-  color = "var(--text-inverse)",
+  color,
   href = "/",
   label = "Button",
   paddingBottom = "12px",
@@ -1189,10 +1336,16 @@ export function ButtonBlock({
 }: ButtonProps) {
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
   const isMobile = useIsMobile();
+
+  const preset = buttonVariantPresets[variant as ButtonVariantKey] ?? buttonVariantPresets.primary;
+  const activeBg = backgroundColor ?? preset.backgroundColor;
+  const activeBorderColor = borderColor ?? preset.borderColor;
+  const activeColor = color ?? preset.color;
+
   const sharedStyle: CSSProperties = {
     ...buildBoxStyle({
       ...props,
-      borderColor,
+      borderColor: activeBorderColor,
       borderRadius,
       borderWidth,
       paddingBottom,
@@ -1201,9 +1354,9 @@ export function ButtonBlock({
       paddingTop,
       width,
     }),
-    background: resolveStyleToken(backgroundColor),
+    background: resolveStyleToken(activeBg),
     borderStyle,
-    color: resolveStyleToken(color),
+    color: resolveStyleToken(activeColor),
     display: "inline-flex",
     fontSize: withUnitFallback(size),
     fontWeight: 600,
@@ -1220,9 +1373,18 @@ export function ButtonBlock({
     <NodeFrame>
       <div style={{ textAlign: align }}>
         {enabled ? (
-          <span style={sharedStyle}>{label}</span>
+          <span
+            className={cn("transition-all duration-200 cursor-pointer select-none", preset.hoverClass)}
+            style={sharedStyle}
+          >
+            {label}
+          </span>
         ) : (
-          <Link href={href || "#"} style={sharedStyle}>
+          <Link
+            className={cn("transition-all duration-200 cursor-pointer select-none", preset.hoverClass)}
+            href={href || "#"}
+            style={sharedStyle}
+          >
             {label}
           </Link>
         )}
@@ -1235,18 +1397,16 @@ function ButtonBlockSettings() {
   const {
     actions: { setProp },
     align,
-    backgroundColor,
-    color,
     href,
     label,
     size,
+    variant,
   } = useNode((node) => ({
     align: node.data.props.align,
-    backgroundColor: node.data.props.backgroundColor,
-    color: node.data.props.color,
     href: node.data.props.href,
     label: node.data.props.label,
     size: node.data.props.size,
+    variant: node.data.props.variant,
   }));
 
   return (
@@ -1264,29 +1424,26 @@ function ButtonBlockSettings() {
           <option value="right">Right</option>
         </NativeSelect>
       </Field>
-      <Field label="Background color">
+      <Field label="Variant">
         <NativeSelect
-          onChange={(value) => setProp((props: any) => (props.backgroundColor = value))}
-          value={String(backgroundColor ?? "var(--brand-primary)")}
+          onChange={(value) =>
+            setProp((props: any) => {
+              props.variant = value;
+              const preset = buttonVariantPresets[value as ButtonVariantKey];
+              if (preset) {
+                props.backgroundColor = preset.backgroundColor;
+                props.borderColor = preset.borderColor;
+                props.color = preset.color;
+              }
+            })
+          }
+          value={String(variant ?? "primary")}
         >
-          <option value="var(--brand-primary)">Brand Primary</option>
-          <option value="var(--brand-primary-strong)">Brand Primary Strong</option>
-          <option value="var(--accent-gold)">Accent Gold</option>
-          <option value="transparent">Transparent</option>
-        </NativeSelect>
-      </Field>
-      <Field label="Text color">
-        <NativeSelect
-          onChange={(value) => setProp((props: any) => (props.color = value))}
-          value={String(color ?? "var(--text-inverse)")}
-        >
-          <option value="var(--text-inverse)">Inverse Text</option>
-          <option value="var(--text-white)">White Text</option>
-          <option value="var(--text-black)">Black Text</option>
-          <option value="var(--text-primary)">Primary Text</option>
-          <option value="var(--text-secondary)">Secondary Text</option>
-          <option value="var(--brand-primary)">Brand Primary</option>
-          <option value="var(--accent-gold)">Accent Gold</option>
+          {Object.entries(buttonVariantPresets).map(([key, item]) => (
+            <option key={key} value={key}>
+              {item.label}
+            </option>
+          ))}
         </NativeSelect>
       </Field>
       <DimensionFields
@@ -1308,6 +1465,7 @@ ButtonBlock.craft = {
       width: "fit-content",
     }),
     align: "left",
+    variant: "primary",
     backgroundColor: "var(--brand-primary)",
     borderColor: "var(--brand-primary)",
     borderRadius: "12px",

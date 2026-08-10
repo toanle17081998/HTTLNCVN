@@ -24,3 +24,9 @@ export type AuthUser = {
   role: string;
   username: string;
 };
+
+export type ChangePasswordDto = {
+  currentPassword: string;
+  newPassword: string;
+};
+
