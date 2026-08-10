@@ -49,7 +49,7 @@ export class ArticleService {
     await this.articleRepository.delete(slug);
   }
 
-  findCategories(): Promise<{ id: number; name: string }[]> {
+  findCategories(): Promise<{ id: number; name_vi: string; name_en: string; description_vi: string | null; description_en: string | null }[]> {
     return this.articleRepository.findCategories();
   }
 }

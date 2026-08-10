@@ -2075,7 +2075,7 @@ export function FeedCarouselBlock({
         : articleItems.map((article) => ({
           accent: "var(--brand-primary)",
           coverImage: article.cover_image_url,
-          description: article.category?.name ?? "Published article",
+          description: (article.category?.name_vi || article.category?.name_en) ?? "Published article",
           href: `/article/${article.slug}`,
           id: article.id,
           kicker: article.status,

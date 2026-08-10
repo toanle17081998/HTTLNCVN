@@ -35,6 +35,7 @@ export type CourseListItem = {
   category: CourseCategory | null;
   published_at: string | null;
   slug: string;
+  sort_order: number;
   status: string;
   summary_en: string | null;
   summary_vi: string | null;
@@ -71,6 +72,7 @@ export type CreateCourseDto = {
   estimated_duration_minutes?: number;
   category_id?: string | null;
   slug: string;
+  sort_order?: number;
   summary_en?: string;
   summary_vi?: string;
   title_en: string;

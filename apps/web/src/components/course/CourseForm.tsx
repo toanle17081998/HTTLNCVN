@@ -33,6 +33,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
     cover_image_url: initialData?.cover_image_url || "",
     category_id: initialData?.category_id || "",
     estimated_duration_minutes: (initialData?.estimated_duration_minutes as number | string) ?? 0,
+    sort_order: (initialData?.sort_order as number | string) ?? 0,
     status: initialData?.status || "draft",
   });
 
@@ -55,6 +56,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
       description_en: descriptionEnRef.current?.getCleanedValue() ?? formData.description_en,
       description_vi: descriptionViRef.current?.getCleanedValue() ?? formData.description_vi,
       estimated_duration_minutes: formData.estimated_duration_minutes === "" ? 0 : Number(formData.estimated_duration_minutes),
+      sort_order: formData.sort_order === "" ? 0 : Number(formData.sort_order),
     };
     await onSubmit(submissionData);
   };
@@ -173,6 +175,17 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 name="estimated_duration_minutes"
                 type="number"
                 value={formData.estimated_duration_minutes}
+                onChange={handleChange}
+                className="bg-[var(--bg-base)]"
+              />
+            </FormField>
+
+            <FormField label={t("admin.churchUnits.sortOrder")} htmlFor="sort_order">
+              <Input
+                id="sort_order"
+                name="sort_order"
+                type="number"
+                value={formData.sort_order}
                 onChange={handleChange}
                 className="bg-[var(--bg-base)]"
               />

@@ -2,7 +2,9 @@
 
 import { Button, Card, FormField, Input, Select } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useArticleCategoriesQuery } from "@/services/article";
 import type { SubmitState } from "./articleEditorTypes";
+import { CategorySelect } from "./CategorySelect";
 
 type ArticleMetadataPanelProps = {
   title: string;
@@ -29,7 +31,8 @@ export function ArticleMetadataPanel({
   onCategoryIdChange,
   onStatusChange,
 }: ArticleMetadataPanelProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const categoriesQuery = useArticleCategoriesQuery();
 
   return (
     <Card className="grid gap-4 p-5">
@@ -58,16 +61,12 @@ export function ArticleMetadataPanel({
       </FormField>
 
       <FormField htmlFor="article-category" label={t("article.form.category")}>
-        <Select
-          id="article-category"
-          onChange={(e) => onCategoryIdChange(e.target.value)}
+        <CategorySelect
+          categories={categoriesQuery.data ?? []}
+          onChange={(val) => onCategoryIdChange(val)}
+          placeholder={t("common.none")}
           value={categoryId}
-        >
-          <option value="">{t("common.none")}</option>
-          <option value="1">{t("article.category.news")}</option>
-          <option value="2">{t("article.category.teaching")}</option>
-          <option value="3">{t("article.category.devotional")}</option>
-        </Select>
+        />
       </FormField>
 
       <FormField htmlFor="article-status" label={t("article.form.status")}>

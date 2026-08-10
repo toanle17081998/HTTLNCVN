@@ -8,6 +8,7 @@ import { useTranslation } from "@/providers/I18nProvider";
 import {
   articleApi,
   useArticleQuery,
+  useArticleCategoriesQuery,
   useCreateArticleMutation,
   useUpdateArticleMutation,
   type Article,
@@ -17,6 +18,7 @@ import {
 import { type SubmitState } from "./articleEditorTypes";
 import { ModularEditor, type ModularEditorHandle } from "./ModularEditor";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { CategorySelect } from "./CategorySelect";
 
 function slugify(value: string) {
   return (
@@ -84,6 +86,7 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
   const createArticle = useCreateArticleMutation();
   const updateArticle = useUpdateArticleMutation(editSlug ?? "");
 
+  const categoriesQuery = useArticleCategoriesQuery();
   const { locale } = useTranslation();
   const [activeLang, setActiveLang] = useState<"en" | "vi">((locale as any) === "vi" ? "vi" : "en");
 
@@ -211,16 +214,12 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
             </FormField>
 
             <FormField htmlFor="article-category" label={t("prayer.form.category")}>
-              <Select
-                id="article-category"
-                onChange={(event) => setCategoryId(event.target.value)}
+              <CategorySelect
+                categories={categoriesQuery.data ?? []}
+                onChange={(val) => setCategoryId(val)}
+                placeholder={t("prayer.form.categoryNone")}
                 value={categoryId}
-              >
-                <option value="">{t("prayer.form.categoryNone")}</option>
-                <option value="1">{t("article.category.news")}</option>
-                <option value="2">{t("article.category.teaching")}</option>
-                <option value="3">{t("article.category.devotional")}</option>
-              </Select>
+              />
             </FormField>
 
             <FormField htmlFor="article-status" label={t("course.form.status")}>

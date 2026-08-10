@@ -66,7 +66,9 @@ export function AdminArticles() {
                   {article.category ? (
                     <>
                       <span>•</span>
-                      <span className="text-[var(--brand-primary)]">{article.category.name}</span>
+                      <span className="text-[var(--brand-primary)]">
+                        {locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)}
+                      </span>
                     </>
                   ) : null}
                   <span>•</span>

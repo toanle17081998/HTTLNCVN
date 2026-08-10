@@ -89,7 +89,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
       <div className="grid gap-4 p-5 flex-1">
         <div className="flex items-center justify-between gap-3">
           <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-            {article.category?.name || t("nav.article.label")}
+            {(article.category ? (locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)) : null) || t("nav.article.label")}
           </span>
           {article.published_at ? (
             <span className="text-sm font-medium text-[var(--text-secondary)]">

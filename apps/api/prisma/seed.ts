@@ -236,21 +236,57 @@ async function main(): Promise<void> {
   }
 
   // Article categories
-  const newsCategory = await prisma.articleCategory.upsert({
-    where: { name: 'Tin tức' },
-    create: { name: 'Tin tức', description: 'Tin tức và thông báo của Hội thánh' },
-    update: {},
-  });
-  const sermonCategory = await prisma.articleCategory.upsert({
-    where: { name: 'Bài giảng' },
-    create: { name: 'Bài giảng', description: 'Bài giảng Lời Chúa hàng tuần' },
-    update: {},
-  });
-  await prisma.articleCategory.upsert({
-    where: { name: 'Tĩnh nguyện' },
-    create: { name: 'Tĩnh nguyện', description: 'Bài tĩnh nguyện và suy gẫm Lời Chúa' },
-    update: {},
-  });
+  const articleCategories = [
+    {
+      name_vi: 'Đức tin',
+      name_en: 'Faith',
+      description_vi: 'Khám phá đức tin Cơ Đốc, sự tin cậy vào Đức Chúa Trời và ý nghĩa của mối quan hệ cá nhân với Ngài.',
+      description_en: 'Explore Christian beliefs, trust in God, and what it means to grow in a personal relationship with Him.',
+    },
+    {
+      name_vi: 'Kinh Thánh',
+      name_en: 'Bible',
+      description_vi: 'Hiểu Kinh Thánh qua các nghiên cứu, suy ngẫm, bối cảnh Kinh Thánh và bài học thực tế từ Lời Chúa.',
+      description_en: 'Understand Scripture through studies, reflections, biblical context, and practical lessons from God\'s Word.',
+    },
+    {
+      name_vi: 'Cuộc sống',
+      name_en: 'Life',
+      description_vi: 'Khám phá cách các giá trị Cơ Đốc có thể định hình các lựa chọn hàng ngày, tính cách, công việc, thói quen và sự phát triển cá nhân.',
+      description_en: 'Discover how Christian values can shape everyday choices, character, work, habits, and personal growth.',
+    },
+    {
+      name_vi: 'Tình yêu',
+      name_en: 'Love',
+      description_vi: 'Tìm hiểu về tình yêu Kinh Thánh trong các mối quan hệ, gia đình, tình bạn, hôn nhân, sự tha thứ và quan tâm đến người khác.',
+      description_en: 'Learn about biblical love in relationships, family, friendship, marriage, forgiveness, and caring for others.',
+    },
+    {
+      name_vi: 'Hy vọng',
+      name_en: 'Hope',
+      description_vi: 'Tìm thấy sự khích lệ, sức mạnh và quan điểm Kinh Thánh cho những mùa khó khăn, bất định và đau khổ.',
+      description_en: 'Find encouragement, strength, and biblical perspectives for difficult seasons, uncertainty, and suffering.',
+    },
+    {
+      name_vi: 'Mục đích',
+      name_en: 'Purpose',
+      description_vi: 'Khám phá sự kêu gọi, ân tứ thuộc linh, sự phục vụ, lãnh đạo và cách sống một cuộc đời có ý nghĩa tập trung vào Đức Chúa Trời.',
+      description_en: 'Explore calling, spiritual gifts, service, leadership, and how to live a meaningful life centered on God.',
+    },
+  ];
+
+  const articleCategoryMap = new Map<string, { id: number }>();
+  for (const cat of articleCategories) {
+    const record = await prisma.articleCategory.upsert({
+      where: { name_en: cat.name_en },
+      create: cat,
+      update: { name_vi: cat.name_vi, description_vi: cat.description_vi, description_en: cat.description_en },
+    });
+    articleCategoryMap.set(cat.name_en, record);
+  }
+
+  const faithCategory = articleCategoryMap.get('Faith')!;
+  const loveCategory = articleCategoryMap.get('Love')!;
 
   // Event categories
   const worshipCategory = await prisma.eventCategory.upsert({
@@ -612,7 +648,7 @@ Chúng tôi chào đón tất cả mọi người muốn tìm hiểu về Đức
       status: 'published',
       published_at: new Date('2024-01-01'),
       cover_image_url: 'https://placehold.co/800x400',
-      category_id: newsCategory.id,
+      category_id: faithCategory.id,
       created_by: editorUser.id,
     },
     update: {},
@@ -637,7 +673,7 @@ This is the greatest commandment. True love for God is not merely an emotion —
       status: 'published',
       published_at: new Date('2024-03-10'),
       cover_image_url: 'https://placehold.co/800x400',
-      category_id: sermonCategory.id,
+      category_id: faithCategory.id,
       created_by: editorUser.id,
     },
     update: {},
@@ -668,7 +704,7 @@ Các nguyên tắc cơ bản:
       status: 'published',
       published_at: new Date('2024-04-01'),
       cover_image_url: 'https://placehold.co/800x400',
-      category_id: newsCategory.id,
+      category_id: loveCategory.id,
       created_by: editorUser.id,
     },
     update: {},

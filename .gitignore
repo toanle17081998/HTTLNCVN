@@ -28,3 +28,7 @@ Thumbs.db
 
 # local app env
 apps/*/.env
+
+# sql dumps
+*.sql
+

@@ -16,6 +16,20 @@ function toTitle(segment: string) {
     .join(" ");
 }
 
+const adminPathMap: Record<string, string> = {
+  "/admin": "admin.common.admin",
+  "/admin/pages": "admin.nav.pages",
+  "/admin/articles": "admin.articles.title",
+  "/admin/articles/create": "admin.articles.create",
+  "/admin/courses": "admin.courses.title",
+  "/admin/courses/create": "admin.courses.create",
+  "/admin/tests": "admin.tests.title",
+  "/admin/church": "nav.church.label",
+  "/admin/serving-schedules": "admin.nav.servingSchedules",
+  "/admin/serving-schedules/worship": "nav.servingWorship.label",
+  "/admin/serving-schedules/cleaning": "nav.servingCleaning.label",
+};
+
 export function Breadcrumb({ pathname }: BreadcrumbProps) {
   const { t, locale } = useTranslation();
   const segments = pathname.split("/").filter(Boolean);
@@ -44,8 +58,8 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="text-base">
-      <ol className="flex min-w-0 flex-wrap items-center gap-2 text-[var(--text-secondary)]">
+    <nav aria-label="Breadcrumb" className="text-sm">
+      <ol className="flex min-w-0 flex-wrap items-center gap-1.5 text-[var(--text-secondary)]">
         {segments.map((segment, index) => {
           // Skip "lesson" segment if it's just a path separator (e.g. /course/slug/lesson/id)
           if (segment === "lesson" && segments[index + 1]) return null;
@@ -53,8 +67,13 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
           const href = `/${segments.slice(0, index + 1).join("/")}`;
           const navItem = navItems.find((item) => item.href === href);
           const navLabelKey = navItem?.labelKey;
+          const adminLabelKey = adminPathMap[href];
           
-          let label = navLabelKey ? t(navLabelKey) : toTitle(segment);
+          let label = adminLabelKey
+            ? t(adminLabelKey as any)
+            : navLabelKey
+              ? t(navLabelKey)
+              : toTitle(segment);
 
           // Dynamic label resolution
           if (segment === courseSlug) {

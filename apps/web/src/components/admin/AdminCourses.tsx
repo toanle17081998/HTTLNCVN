@@ -224,7 +224,8 @@ function CoursePanel({
   onDeleteCourse: (slug: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }) {
-  const courseQuery = useCourseQuery(course.slug);
+  const [isOpen, setIsOpen] = useState(false);
+  const courseQuery = useCourseQuery(isOpen ? course.slug : undefined);
   const deleteLesson = useDeleteLessonMutation(course.slug);
   const lessons = courseQuery.data?.lessons ?? [];
   const title =
@@ -243,7 +244,11 @@ function CoursePanel({
 
   return (
     <Card className="overflow-hidden rounded-xl shadow-sm transition-all duration-200 hover:shadow-md">
-      <details className="group">
+      <details
+        className="group"
+        open={isOpen}
+        onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}
+      >
         <summary className="flex min-w-0 cursor-pointer list-none flex-col gap-4 p-4 transition-colors hover:bg-[var(--bg-surface)] sm:flex-row sm:items-center [&::-webkit-details-marker]:hidden">
           <div className="flex flex-1 items-center gap-4 min-w-0">
             <ChevronRight
@@ -259,6 +264,8 @@ function CoursePanel({
                 <span className="rounded bg-[var(--brand-muted)] px-1.5 py-0.5 text-[var(--brand-primary)]">
                   {course.status}
                 </span>
+                <span>•</span>
+                <span>Order: {course.sort_order ?? 0}</span>
                 <span>•</span>
                 <span>{course.lesson_count} {t("course.form.lessons")}</span>
                 {course.category ? (

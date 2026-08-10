@@ -222,6 +222,7 @@ export class CourseRepository {
       } : null,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
+      sort_order: c.sort_order ?? 0,
       status: c.status,
       summary_en: c.summary_en,
       summary_vi: c.summary_vi,
@@ -267,6 +268,7 @@ export class CourseRepository {
       } : null,
       published_at: c.published_at?.toISOString() ?? null,
       slug: c.slug,
+      sort_order: c.sort_order ?? 0,
       status: c.status,
       summary_en: c.summary_en,
       summary_vi: c.summary_vi,
@@ -398,7 +400,7 @@ export class CourseRepository {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.course.findMany({
         include: { _count: { select: { lessons: true } }, creator: true, category: true },
-        orderBy: { published_at: 'desc' },
+        orderBy: [{ sort_order: 'asc' }, { published_at: 'desc' }],
         skip,
         take,
         where,
@@ -475,6 +477,7 @@ export class CourseRepository {
         estimated_duration_minutes: dto.estimated_duration_minutes ?? 0,
         category_id: dto.category_id,
         slug: dto.slug,
+        sort_order: dto.sort_order ?? 0,
         summary_en: dto.summary_en,
         summary_vi: dto.summary_vi,
         title_en: dto.title_en,
@@ -1154,8 +1157,38 @@ export class CourseRepository {
         newTemplateIds.push(template.id);
       }
 
-      const templateIds = [...requestedIds, ...newTemplateIds];
-      if (!templateIds.length) throw new ConflictException('Select or create at least one test question.');
+      let templateIds = [...requestedIds, ...newTemplateIds];
+
+      if (!templateIds.length) {
+        // 1. Try finding questions from the most recent test availability for this course
+        const lastAvailability = await tx.courseTestAvailability.findFirst({
+          where: { course_id: course.id },
+          orderBy: { created_at: 'desc' },
+          include: {
+            quiz: {
+              include: {
+                quiz_maps: { select: { template_id: true }, orderBy: { position: 'asc' } },
+              },
+            },
+          },
+        });
+
+        if (lastAvailability?.quiz?.quiz_maps?.length) {
+          templateIds = lastAvailability.quiz.quiz_maps.map((m) => m.template_id);
+        } else {
+          // 2. Fallback to all question templates belonging to lessons of this course
+          const allCourseTemplates = await tx.questionTemplate.findMany({
+            where: { lesson: { course_id: course.id } },
+            select: { id: true },
+            orderBy: { created_at: 'asc' },
+          });
+          templateIds = allCourseTemplates.map((t) => t.id);
+        }
+      }
+
+      if (!templateIds.length) {
+        throw new ConflictException('No questions found for this course. Select or create at least one test question.');
+      }
 
       await tx.courseTestAvailability.updateMany({
         data: { closed_at: new Date(), is_active: false },

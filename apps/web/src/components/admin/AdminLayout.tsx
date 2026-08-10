@@ -25,7 +25,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LanguageToggle } from "@/components/layout";
+import { LanguageToggle, Breadcrumb } from "@/components/layout";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -216,8 +216,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       <Menu className="h-5 w-5" />
                     </button>
                   )}
-                  <div className="hidden min-w-0 sm:block">
-                    <p className="truncate text-sm font-bold">{t("admin.layout.dashboard")}</p>
+                  <div className="min-w-0 flex-1">
+                    <Breadcrumb pathname={pathname} />
                   </div>
                 </div>
 

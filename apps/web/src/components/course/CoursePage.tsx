@@ -10,7 +10,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCoursesQuery, useCourseCategoriesQuery } from "@/services/course";
 
-const PAGE_SIZE_DEFAULT = 4;
+const PAGE_SIZE_DEFAULT = 10;
 const statusLabelKeys = {
   draft: "course.form.status.draft",
   published: "course.form.status.published",
@@ -182,7 +182,6 @@ export function CoursePage() {
           page={page}
           pageSize={pageSize}
           total={total}
-          pageSizeOptions={[4, 8, 10, 20]}
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
         />

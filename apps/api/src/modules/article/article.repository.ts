@@ -35,7 +35,7 @@ export class ArticleRepository {
     const [items, total] = await this.prisma.$transaction([
       this.prisma.article.findMany({
         include: { category: true, creator: true },
-        orderBy: { published_at: 'desc' },
+        orderBy: [{ published_at: 'desc' }, { created_at: 'desc' }],
         skip,
         take,
         where,
@@ -46,7 +46,7 @@ export class ArticleRepository {
     return {
       items: items.map(
         (a): ArticleListDto => ({
-          category: a.category ? { id: a.category.id, name: a.category.name } : null,
+          category: a.category ? { id: a.category.id, name_vi: a.category.name_vi, name_en: a.category.name_en } : null,
           cover_image_url: a.cover_image_url,
           creator: { id: a.creator.id, username: a.creator.username },
           id: a.id,
@@ -70,7 +70,7 @@ export class ArticleRepository {
     if (!a) return null;
 
     return {
-      category: a.category ? { id: a.category.id, name: a.category.name } : null,
+      category: a.category ? { id: a.category.id, name_vi: a.category.name_vi, name_en: a.category.name_en } : null,
       content_markdown_en: a.content_markdown_en,
       content_markdown_vi: a.content_markdown_vi,
       cover_image_url: a.cover_image_url,
@@ -102,7 +102,7 @@ export class ArticleRepository {
     });
 
     return {
-      category: a.category ? { id: a.category.id, name: a.category.name } : null,
+      category: a.category ? { id: a.category.id, name_vi: a.category.name_vi, name_en: a.category.name_en } : null,
       content_markdown_en: a.content_markdown_en,
       content_markdown_vi: a.content_markdown_vi,
       cover_image_url: a.cover_image_url,
@@ -129,7 +129,7 @@ export class ArticleRepository {
     });
 
     return {
-      category: a.category ? { id: a.category.id, name: a.category.name } : null,
+      category: a.category ? { id: a.category.id, name_vi: a.category.name_vi, name_en: a.category.name_en } : null,
       content_markdown_en: a.content_markdown_en,
       content_markdown_vi: a.content_markdown_vi,
       cover_image_url: a.cover_image_url,
@@ -152,9 +152,9 @@ export class ArticleRepository {
     });
   }
 
-  async findCategories(): Promise<{ id: number; name: string }[]> {
+  async findCategories(): Promise<{ id: number; name_vi: string; name_en: string; description_vi: string | null; description_en: string | null }[]> {
     return this.prisma.articleCategory.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name_en: 'asc' },
     });
   }
 }

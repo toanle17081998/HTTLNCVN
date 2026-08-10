@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, Input, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import {
   useFinishAttemptMutation,
   useQuizAttemptQuery,
@@ -17,6 +18,7 @@ type QuizAttemptPageProps = {
 
 export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   const { t, locale } = useTranslation();
+  const { confirm } = useFeedback();
   const attemptQuery = useQuizAttemptQuery(attemptId);
   const submitAnswer = useSubmitAnswerMutation(attemptId);
   const finishAttempt = useFinishAttemptMutation(attemptId);
@@ -63,13 +65,39 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   }
 
   async function handleFinish() {
+    if (!attempt) return;
+
+    let unansweredCount = 0;
     const batchAnswers: Record<string, string> = {};
-    if (attempt) {
-      for (const snapshot of attempt.snapshots) {
-        const answer = answers[snapshot.id] !== undefined ? answers[snapshot.id] : (snapshot.student_answer || "");
-        batchAnswers[snapshot.id] = answer;
+
+    for (const snapshot of attempt.snapshots) {
+      const answer = answers[snapshot.id] !== undefined ? answers[snapshot.id] : (snapshot.student_answer || "");
+      batchAnswers[snapshot.id] = answer;
+      if (!answer || !answer.trim()) {
+        unansweredCount++;
       }
     }
+
+    if (unansweredCount > 0) {
+      const ok = await confirm({
+        variant: "warning",
+        title: t("quiz.confirmSubmitTitle"),
+        description: t("quiz.confirmSubmitUnansweredDesc", { count: String(unansweredCount) }),
+        confirmLabel: t("quiz.status.completed"),
+        cancelLabel: t("common.cancel"),
+      });
+      if (!ok) return;
+    } else {
+      const ok = await confirm({
+        variant: "info",
+        title: t("quiz.confirmSubmitTitle"),
+        description: t("quiz.confirmSubmitDesc"),
+        confirmLabel: t("quiz.status.completed"),
+        cancelLabel: t("common.cancel"),
+      });
+      if (!ok) return;
+    }
+
     await finishAttempt.mutateAsync(batchAnswers);
     setShowResultModal(true);
   }

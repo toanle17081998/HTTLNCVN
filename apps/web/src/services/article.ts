@@ -8,7 +8,10 @@ export type ArticleStatus = "draft" | "published";
 
 export type ArticleCategory = {
   id: number;
-  name: string;
+  name_vi: string;
+  name_en: string;
+  description_vi: string | null;
+  description_en: string | null;
 };
 
 export type ArticleListItem = {

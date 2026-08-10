@@ -223,8 +223,16 @@ export function CourseTestPanel({ course }: { course: Course }) {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button disabled={publishTest.isPending || !status.managed_classes.length || (!selectedIds.length && !draftQuestions.length) || !draftQuestions.every(isDraftComplete)} onClick={handlePublish}>
-              {locale === "vi" ? "Tạo bài kiểm tra mới" : "Create new test"}
+            <Button
+              disabled={
+                publishTest.isPending ||
+                Boolean(status.availability) ||
+                !status.managed_classes.length ||
+                (draftQuestions.length > 0 && !draftQuestions.every(isDraftComplete))
+              }
+              onClick={handlePublish}
+            >
+              {locale === "vi" ? "Mở đợt kiểm tra" : "Open test round"}
             </Button>
             {status.availability ? (
               <Button disabled={closeTest.isPending} onClick={() => closeTest.mutate(status.availability!.id)} variant="secondary">

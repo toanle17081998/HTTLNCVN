@@ -113,7 +113,11 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
   return (
     <PageLayout
       description={readerLang === "vi" ? (article?.title_vi || "Xem chi tiết bài viết.") : (article?.title_en || "Read article details.")}
-      eyebrow={article?.category?.name ?? t("nav.article.label")}
+      eyebrow={
+        article?.category
+          ? (locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi))
+          : t("nav.article.label")
+      }
       title={activeTitle || t("nav.article.label")}
     >
       {articleQuery.isLoading ? (

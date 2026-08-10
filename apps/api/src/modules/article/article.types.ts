@@ -1,5 +1,5 @@
 export type ArticleDto = {
-  category: { id: number; name: string } | null;
+  category: { id: number; name_vi: string; name_en: string } | null;
   content_markdown_en: string;
   content_markdown_vi: string;
   cover_image_url: string | null;
@@ -15,7 +15,7 @@ export type ArticleDto = {
 };
 
 export type ArticleListDto = {
-  category: { id: number; name: string } | null;
+  category: { id: number; name_vi: string; name_en: string } | null;
   cover_image_url: string | null;
   creator: { id: string; username: string };
   id: string;

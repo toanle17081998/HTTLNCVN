@@ -107,7 +107,7 @@ export function ArticlePage() {
             variant={selectedCategoryId === cat.id ? "primary" : "secondary"}
             onClick={() => handleCategoryChange(cat.id)}
           >
-            {cat.name}
+            {locale === "vi" ? (cat.name_vi || cat.name_en) : (cat.name_en || cat.name_vi)}
           </Button>
         ))}
       </div>
@@ -158,7 +158,7 @@ export function ArticlePage() {
                   </span>
                   {article.category ? (
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      {article.category.name}
+                      {locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)}
                     </span>
                   ) : null}
                 </div>
