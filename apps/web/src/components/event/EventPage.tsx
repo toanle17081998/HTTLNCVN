@@ -458,33 +458,34 @@ export function EventPage() {
       eyebrow={t("page.event.eyebrow")}
       title={t("page.event.title")}
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-5">
-          <p className="text-sm font-semibold text-[var(--text-secondary)]">
-            {t("event.stats.total")}
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{events.length}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm font-semibold text-[var(--text-secondary)]">
-            {t("event.stats.upcoming")}
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{upcomingCount}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm font-semibold text-[var(--text-secondary)]">
-            {t("event.stats.targeted")}
-          </p>
-          <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{targetedCount}</p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {t("event.stats.published", { count: String(publishedCount) })}
-          </p>
-        </Card>
-      </div>
+      <div className="grid gap-8">
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              {t("event.stats.total")}
+            </p>
+            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{events.length}</p>
+          </Card>
+          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              {t("event.stats.upcoming")}
+            </p>
+            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{upcomingCount}</p>
+          </Card>
+          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              {t("event.stats.targeted")}
+            </p>
+            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{targetedCount}</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              {t("event.stats.published", { count: String(publishedCount) })}
+            </p>
+          </Card>
+        </div>
 
-      <div className="grid gap-5">
-        <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
-          <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-5">
+        <div className="grid gap-6">
+          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
+            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
               <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto">
@@ -703,9 +704,8 @@ export function EventPage() {
             </div>
           )}
         </Card>
-
-
       </div>
+    </div>
 
       {modalOpen ? (
         <div

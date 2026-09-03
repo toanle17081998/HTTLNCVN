@@ -248,29 +248,29 @@ export function PrayerJournalPage() {
           </p>
         </Card>
       ) : (
-        <>
+        <div className="grid gap-8">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.mine")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{ownPrayerCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{ownPrayerCount}</p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.shared")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{sharedPrayerCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{sharedPrayerCount}</p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.answered")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{answeredPrayerCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{answeredPrayerCount}</p>
             </Card>
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="grid gap-4">
               <Card className="overflow-hidden rounded-[1.75rem]">
                 <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
@@ -389,7 +389,7 @@ export function PrayerJournalPage() {
               prayers={prayers}
             />
           </div>
-        </>
+        </div>
       )}
 
       {modalOpen ? (

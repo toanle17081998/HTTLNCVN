@@ -33,6 +33,8 @@ import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { navItems, type NavItem } from "./navigation";
+import { useSiteNavigationQuery, defaultSiteNavigationConfig } from "@/services/siteNavigation";
+import { resolveIcon } from "@/components/page-builder/shared/iconList";
 
 type HeaderProps = {
   pathname: string;
@@ -52,14 +54,14 @@ const navIconMap: Record<string, React.ReactNode> = {
 
 export function Header({ pathname }: HeaderProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { can, canAny, isAuthenticated, logout, role, user } = useAuth();
 
-  const menuNavItems = navItems.filter(
-    (item) =>
-      item.href !== "/auth" &&
-      (!item.permissions || canAny(item.permissions)),
-  );
+  const siteNavQuery = useSiteNavigationQuery();
+  const siteNav = siteNavQuery.data ?? defaultSiteNavigationConfig;
+  const headerConfig = siteNav.header;
+
+  const dynamicItems = headerConfig.items.filter((item) => item.visible !== false);
 
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
@@ -68,6 +70,7 @@ export function Header({ pathname }: HeaderProps) {
   const navRef = useRef<HTMLDivElement>(null);
 
   const [isVisible, setIsVisible] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -107,6 +110,7 @@ export function Header({ pathname }: HeaderProps) {
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
+    setIsAtTop(window.scrollY < 24);
 
     function updateHeaderVisibility() {
       const currentScrollY = window.scrollY;
@@ -114,6 +118,7 @@ export function Header({ pathname }: HeaderProps) {
       const isScrollingDown = scrollDelta > 6;
       const isScrollingUp = scrollDelta < -1;
       const isNearTop = currentScrollY < 24;
+      setIsAtTop(isNearTop);
 
       if (isNearTop || isScrollingUp) {
         setIsVisible(true);
@@ -125,14 +130,17 @@ export function Header({ pathname }: HeaderProps) {
       tickingRef.current = false;
     }
 
-    function handleScroll() {
-      if (tickingRef.current) return;
-      tickingRef.current = true;
-      window.requestAnimationFrame(updateHeaderVisibility);
+    function onScroll() {
+      if (!tickingRef.current) {
+        window.requestAnimationFrame(updateHeaderVisibility);
+        tickingRef.current = true;
+      }
     }
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -162,34 +170,6 @@ export function Header({ pathname }: HeaderProps) {
     };
   }, [settingsOpen, notificationOpen]);
 
-  function renderNavItem(item: NavItem, mobile = false) {
-    const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-    return (
-      <Link
-        aria-current={isActive ? "page" : undefined}
-        className={cn(
-          "relative flex items-center gap-2 transition-colors duration-200",
-          mobile
-            ? "min-h-12 rounded-md px-4 text-sm font-semibold"
-            : "px-3 py-2 text-sm font-medium",
-          isActive
-            ? "text-[var(--header-nav-active)] after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[var(--accent-gold)]"
-            : "text-[var(--text-secondary)] hover:text-[var(--header-nav-hover)]",
-        )}
-        href={item.href}
-        key={item.href}
-        onClick={() => {
-          setMobileMenuOpen(false);
-        }}
-      >
-        {!mobile && navIconMap[item.href]}
-        <span className="truncate">{t(item.labelKey)}</span>
-      </Link>
-    );
-  }
-
-
-
   function handleLogout() {
     setSettingsOpen(false);
     setMobileMenuOpen(false);
@@ -199,13 +179,14 @@ export function Header({ pathname }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 bg-[var(--bg-surface)]/95 backdrop-blur-md transition-all duration-300 ease-out",
+        "fixed inset-x-0 top-0 z-50 backdrop-blur-md transition-all duration-300 ease-out",
+        isAtTop ? "bg-[var(--header-hero-overlay)]" : "bg-[var(--header-scrolled-bg)] shadow-sm",
         isVisible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none -translate-y-full opacity-0 shadow-none",
       )}
     >
-      <div className="flex h-16 w-full items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
         <Link
           aria-label={t("app.name")}
           className="flex shrink-0 items-center rounded-md transition-opacity hover:opacity-80"
@@ -220,12 +201,47 @@ export function Header({ pathname }: HeaderProps) {
           className="hidden flex-1 items-center justify-center md:flex"
           ref={navRef}
         >
-          <div className="flex items-center gap-2">
-            {menuNavItems.map((item) => renderNavItem(item))}
+          <div className="flex items-center gap-1 lg:gap-2">
+            {dynamicItems.map((item) => {
+              const IconComp = resolveIcon(item.icon);
+              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+              const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "relative flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-200",
+                    isActive
+                      ? "text-[var(--header-nav-active)] after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[var(--accent-gold)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--header-nav-hover)]",
+                  )}
+                  href={item.href}
+                  key={item.id || item.href}
+                >
+                  <IconComp className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{label}</span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          {/* Header CTA Button */}
+          {headerConfig.cta?.enabled && headerConfig.cta.href ? (
+            <Link
+              className="hidden lg:inline-flex"
+              href={headerConfig.cta.href}
+            >
+              <Button size="sm" className="rounded-lg font-semibold">
+                {locale === "vi"
+                  ? headerConfig.cta.labelVi || headerConfig.cta.labelEn
+                  : headerConfig.cta.labelEn || headerConfig.cta.labelVi}
+              </Button>
+            </Link>
+          ) : null}
+
           {/* Notification Bell Button & Dropdown */}
           {showNotification && (
             <div className="relative" ref={notificationRef}>
@@ -275,43 +291,33 @@ export function Header({ pathname }: HeaderProps) {
                         key={n.id}
                         onClick={() => handleNotificationClick(n)}
                         className={cn(
-                          "flex w-full flex-col gap-1 px-3 py-2.5 text-left transition hover:bg-[var(--bg-base)]/50",
-                          !n.is_read && "bg-[var(--brand-soft)]"
+                          "w-full text-left p-3 transition-colors hover:bg-[var(--brand-muted)]/50 flex flex-col gap-1 rounded-xl",
+                          !n.is_read && "bg-[var(--brand-muted)]/20 font-semibold"
                         )}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className={cn("text-xs font-bold truncate", !n.is_read ? "text-[var(--text-primary)] font-extrabold" : "text-[var(--text-secondary)]")}>
-                            {n.title}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-[var(--text-primary)] truncate">{n.title}</span>
+                          <span className="text-[10px] text-[var(--text-tertiary)] shrink-0">
+                            {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          {!n.is_read && (
-                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" />
-                          )}
                         </div>
-                        <p className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">
-                          {n.message}
-                        </p>
-                        <span className="text-[9px] text-[var(--text-tertiary)] opacity-60">
-                          {new Date(n.created_at).toLocaleDateString()}
-                        </span>
+                        <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{n.body}</p>
                       </button>
                     ))}
-
                     {notifications.length === 0 && (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <p className="text-xs font-medium text-[var(--text-tertiary)]">
-                          No notifications
-                        </p>
+                      <div className="p-6 text-center text-xs text-[var(--text-secondary)]">
+                        {t("notification.empty.title")}
                       </div>
                     )}
                   </div>
 
-                  <div className="border-t border-[var(--border-subtle)] pt-1">
+                  <div className="border-t border-[var(--border-subtle)] p-1">
                     <Link
                       href="/notification"
                       onClick={() => setNotificationOpen(false)}
-                      className="flex w-full items-center justify-center rounded-xl py-2 text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-muted)] transition"
+                      className="block w-full rounded-xl py-2 text-center text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-muted)] transition-colors"
                     >
-                      See All
+                      {t("notification.title")}
                     </Link>
                   </div>
                 </div>
@@ -319,109 +325,81 @@ export function Header({ pathname }: HeaderProps) {
             </div>
           )}
 
+          <LanguageToggle />
+          <ThemeToggle />
+
           {/* User Settings Dropdown */}
           <div className="relative" ref={settingsRef}>
             <button
               aria-expanded={settingsOpen}
               aria-haspopup="menu"
+              aria-label={t("nav.userMenu")}
               className={cn(
-                "flex h-10 items-center gap-2 px-2 text-sm font-semibold transition-colors hover:text-[var(--brand-primary)] active:scale-95 md:h-11 md:px-3",
-                settingsOpen && "text-[var(--brand-primary)]"
+                "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] text-[var(--text-primary)] transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)] active:scale-95",
+                isAuthenticated && "border-[var(--brand-primary)] bg-[var(--brand-muted)]",
               )}
               onClick={() => {
                 setSettingsOpen((open) => !open);
+                setNotificationOpen(false);
                 setMobileMenuOpen(false);
               }}
               type="button"
             >
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[10px] text-white md:h-7 md:w-7">
-                {isAuthenticated ? (user?.username?.[0] ?? "U").toUpperCase() : <User className="h-3.5 w-3.5" />}
-              </div>
-              <span className="hidden max-w-[100px] truncate md:block">
-                {isAuthenticated ? user?.username : t("nav.settings")}
-              </span>
-              <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform duration-200", settingsOpen && "rotate-180")} />
+              <Settings className="h-5 w-5" />
             </button>
 
             {settingsOpen && (
               <div
-                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-64 origin-top-right bg-[var(--bg-surface)] p-2 shadow-2xl"
+                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-2xl"
                 role="menu"
               >
-                {/* Profile Section */}
-                <div className="px-3 py-3 mb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
-                    {t("nav.access")}
+                {/* User Info / Role */}
+                <div className="border-b border-[var(--border-subtle)] px-3 py-2">
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">
+                    {isAuthenticated ? user?.email : t("nav.guest")}
                   </p>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 shrink-0 rounded-full bg-[var(--brand-muted)] flex items-center justify-center text-[var(--brand-primary)] font-bold">
-                        {(user?.username?.[0] ?? "P").toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-[var(--text-primary)] truncate">
-                          {user?.username ?? t("nav.publicBrowsing")}
-                        </p>
-                        <p className="text-[10px] font-medium text-[var(--text-secondary)]">
-                          {role}
-                        </p>
-                      </div>
-                    </div>
-                    {isAuthenticated && (
+                  {role && (
+                    <span className="mt-1 inline-flex items-center rounded-full bg-[var(--brand-muted)] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
+                      {role}
+                    </span>
+                  )}
+                </div>
+
+                {/* Navigation / Links */}
+                <div className="py-1">
+                  {isAuthenticated ? (
+                    <>
+                      <Link
+                        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                        href="/prayer-journal"
+                        onClick={() => setSettingsOpen(false)}
+                        role="menuitem"
+                      >
+                        <Heart className="h-4 w-4" />
+                        {t("nav.prayerJournal.label")}
+                      </Link>
                       <button
-                        type="button"
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                         onClick={() => {
                           setSettingsOpen(false);
                           setIsPasswordModalOpen(true);
                         }}
-                        className="flex items-center justify-center p-1.5 text-[var(--text-secondary)] hover:text-[var(--brand-primary)] hover:bg-[var(--bg-surface-hover)] rounded-md transition"
-                        title={t("settings.changePassword")}
+                        role="menuitem"
+                        type="button"
                       >
-                        <Settings className="h-4 w-4" />
+                        <Shield className="h-4 w-4" />
+                        {t("nav.changePassword")}
                       </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
-
-                {/* Preferences Section */}
-                <div className="p-2 space-y-2">
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.language")}</span>
-                    <LanguageToggle />
-                  </div>
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{t("common.theme")}</span>
-                    <ThemeToggle />
-                  </div>
-                </div>
-
-                <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
-
-                {/* Actions Section */}
-                <div className="p-1 space-y-1">
-                  {canCreateContent && (
-                    <Link
-                      className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
-                      href="/admin"
-                      onClick={() => setSettingsOpen(false)}
-                      role="menuitem"
-                    >
-                      <Shield className="h-4 w-4" />
-                      Admin Dashboard
-                    </Link>
-                  )}
-
-                  {isAuthenticated ? (
-                    <button
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)]"
-                      role="menuitem"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t("nav.logout")}
-                    </button>
+                      <button
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--brand-muted)]"
+                        onClick={handleLogout}
+                        role="menuitem"
+                        type="button"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t("nav.logout")}
+                      </button>
+                    </>
                   ) : (
                     <Link
                       className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
@@ -434,31 +412,9 @@ export function Header({ pathname }: HeaderProps) {
                     </Link>
                   )}
                 </div>
-
-                {/* Admin Quick Actions */}
-                {(canCreateContent || canPublish) && (
-                  <>
-                    <div className="h-px bg-[var(--border-subtle)] mx-2 my-1" />
-                    <div className="p-1 grid grid-cols-2 gap-1">
-                      {canCreateContent && (
-                        <Button size="sm" variant="secondary" className="h-9 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                          <Plus className="h-3 w-3 mr-1" />
-                          {t("action.newItem")}
-                        </Button>
-                      )}
-                      {canPublish && (
-                        <Button size="sm" className="h-9 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                          <Send className="h-3 w-3 mr-1" />
-                          {t("action.publish")}
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                )}
               </div>
             )}
           </div>
-
 
           {/* Mobile Menu Toggle */}
           <button
@@ -479,52 +435,74 @@ export function Header({ pathname }: HeaderProps) {
 
       {/* Mobile Navigation Menu */}
       <nav
-          aria-hidden={!mobileMenuOpen}
-          aria-label="Primary"
-          className={cn(
-            "overflow-y-auto bg-[var(--bg-surface)] px-4 transition-all duration-300 ease-out sm:px-6 md:hidden",
-            mobileMenuOpen
-              ? "max-h-[calc(100dvh-4rem)] py-3 opacity-100 shadow-xl"
-              : "pointer-events-none max-h-0 py-0 opacity-0",
-          )}
-          id="mobile-primary-navigation"
-          inert={!mobileMenuOpen}
-        >
-          <div className="grid gap-2">
-            {menuNavItems.map((item) => (
+        aria-hidden={!mobileMenuOpen}
+        aria-label="Primary"
+        className={cn(
+          "overflow-y-auto bg-[var(--bg-surface)] px-4 transition-all duration-300 ease-out sm:px-6 md:hidden",
+          mobileMenuOpen
+            ? "max-h-[calc(100dvh-4rem)] py-3 opacity-100 shadow-xl"
+            : "pointer-events-none max-h-0 py-0 opacity-0",
+        )}
+        id="mobile-primary-navigation"
+        inert={!mobileMenuOpen}
+      >
+        <div className="grid gap-2">
+          {dynamicItems.map((item) => {
+            const IconComp = resolveIcon(item.icon);
+            const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+            const description = locale === "vi" ? item.descriptionVi : item.descriptionEn;
+            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+
+            return (
               <Link
-                key={item.href}
+                key={item.id || item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
                   "flex items-center gap-3 border-l-2 px-3 py-2 transition-all duration-200 active:scale-[0.98]",
-                  pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+                  isActive
                     ? "border-[var(--accent-gold)] text-[var(--header-nav-active)]"
                     : "border-transparent text-[var(--text-primary)] hover:text-[var(--header-nav-hover)]"
                 )}
               >
                 <div className="flex shrink-0 items-center justify-center text-[var(--brand-primary)]">
-                  {navIconMap[item.href] || <Menu className="h-5 w-5" />}
+                  <IconComp className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">{t(item.labelKey)}</span>
-                  <span className={cn(
-                    "text-[10px] font-medium",
-                    pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
-                      ? "text-[var(--text-secondary)]"
-                      : "text-[var(--text-secondary)]"
-                  )}>
-                    {t(item.descriptionKey)}
-                  </span>
+                  <span className="text-sm font-bold">{label}</span>
+                  {description ? (
+                    <span className="text-[10px] font-medium text-[var(--text-secondary)]">
+                      {description}
+                    </span>
+                  ) : null}
                 </div>
               </Link>
-            ))}
-          </div>
-        </nav>
-        <ChangePasswordModal
-          isOpen={isPasswordModalOpen}
-          onClose={() => setIsPasswordModalOpen(false)}
-        />
+            );
+          })}
+
+          {headerConfig.cta?.enabled && headerConfig.cta.href ? (
+            <div className="pt-2">
+              <Link
+                href={headerConfig.cta.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block"
+              >
+                <Button className="w-full rounded-xl">
+                  {locale === "vi"
+                    ? headerConfig.cta.labelVi || headerConfig.cta.labelEn
+                    : headerConfig.cta.labelEn || headerConfig.cta.labelVi}
+                </Button>
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      </nav>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </header>
   );
 }

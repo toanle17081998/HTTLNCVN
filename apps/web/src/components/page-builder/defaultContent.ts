@@ -32,11 +32,11 @@ type TemplateBlock = {
 const text = (value: string, tag: "h1" | "h2" | "h3" | "p" = "p", props: Record<string, unknown> = {}): TemplateBlock => ({
   props: {
     color: tag === "p" ? "var(--text-secondary)" : "var(--text-primary)",
-    lineHeight: tag === "p" ? "1.7" : "1.15",
-    size: tag === "h1" ? "52px" : tag === "h2" ? "36px" : tag === "h3" ? "24px" : "16px",
+    lineHeight: tag === "p" ? "var(--section-body-leading)" : "var(--section-heading-leading)",
+    size: tag === "h1" ? "var(--section-title-size)" : tag === "h2" ? "var(--section-heading-size)" : tag === "h3" ? "var(--section-card-title-size)" : "var(--section-body-size)",
     tag,
     text: value,
-    weight: tag === "p" ? "400" : "700",
+    weight: tag === "p" ? "400" : "var(--section-weight-bold)",
     ...props,
   },
   type: "TextBlock",
@@ -44,13 +44,13 @@ const text = (value: string, tag: "h1" | "h2" | "h3" | "p" = "p", props: Record<
 
 const stack = (children: TemplateBlock[], props: Record<string, unknown> = {}): TemplateBlock => ({
   children,
-  props: { alignItems: "stretch", direction: "column", gap: "18px", ...props },
+  props: { alignItems: "stretch", direction: "column", gap: "var(--section-space-sm)", ...props },
   type: "VerticalStackBlock",
 });
 
 const row = (children: TemplateBlock[], props: Record<string, unknown> = {}): TemplateBlock => ({
   children,
-  props: { alignItems: "center", gap: "12px", justifyContent: "flex-start", wrap: "wrap", ...props },
+  props: { alignItems: "center", gap: "var(--section-space-xs)", justifyContent: "flex-start", wrap: "wrap", ...props },
   type: "RowBlock",
 });
 
@@ -62,12 +62,12 @@ const section = (children: TemplateBlock[], props: Record<string, unknown> = {})
     borderRadius: "0",
     borderWidth: "0",
     columns: 1,
-    gap: "32px",
+    gap: "var(--section-space-lg)",
     marginBottom: "0",
     marginLeft: "0",
     marginRight: "0",
     marginTop: "0",
-    padding: "64px 32px",
+    padding: "var(--section-space-xl) var(--section-gutter)",
     width: "100%",
     ...props,
   },
@@ -80,7 +80,7 @@ const button = (label: string, href: string): TemplateBlock => ({
 });
 
 const image = (url: string, alt: string, props: Record<string, unknown> = {}): TemplateBlock => ({
-  props: { alt, borderRadius: "6px", fit: "cover", height: "420px", kind: "image", url, width: "100%", ...props },
+  props: { alt, borderRadius: "var(--section-radius)", fit: "cover", height: "var(--section-media-height)", kind: "image", url, width: "100%", ...props },
   type: "ImageBlock",
 });
 
@@ -93,11 +93,11 @@ const iconBox = (icon: string, title: string, description: string): TemplateBloc
     description,
     icon,
     iconColor: "var(--accent-gold)",
-    iconSize: "28px",
-    paddingBottom: "16px",
-    paddingLeft: "8px",
-    paddingRight: "8px",
-    paddingTop: "16px",
+    iconSize: "var(--section-icon-size)",
+    paddingBottom: "var(--section-space-sm)",
+    paddingLeft: "var(--section-space-2xs)",
+    paddingRight: "var(--section-space-2xs)",
+    paddingTop: "var(--section-space-sm)",
     title,
     width: "100%",
   },
@@ -135,18 +135,8 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
           ], { justifyContent: "center" }),
         ], { columns: 2, gap: "56px", padding: "88px 7vw" }),
         section([
-          stack([
-            text("Join us this Sunday", "h2", { align: "center" }),
-            text("Add your church address and arrival details here.", "p", { align: "center", size: "18px" }),
-            row([button("Get directions", "/contact"), button("Watch online", "/article")], { justifyContent: "center" }),
-          ], { alignItems: "center" }),
-          section([
-            iconBox("01", "Bible class", "9:00 AM"),
-            iconBox("02", "Fellowship", "10:00 AM"),
-            iconBox("03", "Live stream", "10:20 AM"),
-            iconBox("04", "Worship service", "10:30 AM"),
-          ], { columns: 4, padding: "32px 0 0" }),
-        ], { background: "var(--bg-card)", padding: "72px 7vw" }),
+          { type: "CtaInvitationBlock" },
+        ], { background: "var(--brand-primary)", padding: "72px 7vw" }),
         section([
           stack([
             text("Get involved", "p", { align: "center", color: "var(--accent-gold)", letterSpacing: "2px", weight: "600" }),
@@ -171,7 +161,7 @@ function templateBlocks(templateId: PageLayoutTemplateId, title: string, routePa
         ], { columns: 2, gap: "0", padding: "0" }),
         section([stack([text("Grow in faith", "h2", { align: "center" }), text("Explore Bible teaching and practical resources for every season of life.", "p", { align: "center" }), button("Browse courses", "/course")], { alignItems: "center" })]),
         section([image(churchImage, "Church community serving together", { height: "380px" }), stack([text("Love our city", "h2"), text("We serve our neighbors with compassion and share the hope of Jesus through practical action."), button("Serve with us", "/contact")], { justifyContent: "center" })], { background: "var(--bg-card)", columns: 2 }),
-        section([stack([text("Stay connected", "h2", { align: "center" }), text("Receive church news, stories, and upcoming gathering details.", "p", { align: "center" }), button("Read the latest", "/article")], { alignItems: "center" })]),
+        section([{ type: "CtaSimpleBlock" }], { background: "var(--brand-primary)" }),
       ];
     case "about":
       return [
@@ -267,7 +257,7 @@ export function createDefaultPageContent(
     linkedNodes: {},
     nodes: rootNodes,
     parent: null,
-    props: { background: "var(--bg-base)", maxWidth: "100%", padding: "0" },
+    props: { background: "var(--bg-base)", maxWidth: "var(--section-width)", padding: "0" },
     type: { resolvedName: "PageCanvas" },
   };
 
@@ -309,6 +299,17 @@ function isCraftContentRecord(value: unknown): value is Record<string, unknown> 
     "AccordionBlock",
     "TabsBlock",
     "FeedCarouselBlock",
+    "HeroImageSliderBlock",
+    "FeatureZigzagCardBlock",
+    "FeatureGridListBlock",
+    "FeatureIconListBlock",
+    "FeatureOrbitListBlock",
+    "FeatureTabbedListBlock",
+    "FeatureTestimonialListBlock",
+    "FeatureZigzagListBlock",
+    "CtaInvitationBlock",
+    "CtaSimpleBlock",
+    "GalleryMarqueeBlock",
   ]);
 
   const record = value as Record<string, unknown>;

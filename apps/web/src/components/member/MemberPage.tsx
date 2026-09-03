@@ -249,35 +249,35 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           </p>
         </Card>
       ) : (
-        <>
+        <div className="grid gap-8">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.active")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {String(membersQuery.data?.total ?? 0)}
               </p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.adminRoles")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {adminCount}
               </p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.pendingReview")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {pendingCount}
               </p>
             </Card>
           </div>
 
-          <Card className="mt-6 overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
+          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
             <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
@@ -448,7 +448,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
               />
             ) : null}
           </Card>
-        </>
+        </div>
       )}
 
       {modalOpen ? (

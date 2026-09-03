@@ -1,58 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import {
-  CalendarDays,
-  Mail,
-  MapPin,
-  MessageCircle,
-  type LucideIcon,
-} from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ChurchLogo } from "./ChurchLogo";
-
-type ContactItem = {
-  icon: LucideIcon;
-  labelKey: string;
-  valueKey: string;
-  href?: string;
-};
-
-const contactItems: ContactItem[] = [
-  {
-    icon: Mail,
-    labelKey: "footer.contact.general",
-    valueKey: "hello@httlncvn.local",
-    href: "mailto:hello@httlncvn.local",
-  },
-  {
-    icon: CalendarDays,
-    labelKey: "footer.contact.events",
-    valueKey: "events@httlncvn.local",
-    href: "mailto:events@httlncvn.local",
-  },
-  {
-    icon: MapPin,
-    labelKey: "footer.contact.visit",
-    valueKey: "footer.contact.visitValue",
-  },
-  {
-    icon: MessageCircle,
-    labelKey: "footer.contact.community",
-    valueKey: "footer.contact.communityValue",
-  },
-];
-
-const footerLinks = [
-  { href: "/about", labelKey: "nav.about.label" },
-  { href: "/article", labelKey: "nav.article.label" },
-  { href: "/event", labelKey: "nav.event.label" },
-  { href: "/auth", labelKey: "nav.auth.label" },
-] as const;
+import { useSiteNavigationQuery, defaultSiteNavigationConfig } from "@/services/siteNavigation";
+import { resolveIcon } from "@/components/page-builder/shared/iconList";
 
 export function Footer() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const currentYear = new Date().getFullYear();
+
+  const siteNavQuery = useSiteNavigationQuery();
+  const siteNav = siteNavQuery.data ?? defaultSiteNavigationConfig;
+  const footerData = siteNav.footer;
+
+  const communityTitle = footerData.communityTitle || t("footer.contact.community");
+  const appName = footerData.appName || t("app.name");
+  const tagline = footerData.tagline || t("app.tagline");
+  const description =
+    locale === "vi"
+      ? footerData.descriptionVi || footerData.descriptionEn || t("footer.description")
+      : footerData.descriptionEn || footerData.descriptionVi || t("footer.description");
+  const copyrightText =
+    locale === "vi"
+      ? footerData.copyrightTextVi || footerData.copyrightTextEn || t("footer.rights")
+      : footerData.copyrightTextEn || footerData.copyrightTextVi || t("footer.rights");
+
+  const contacts = footerData.contacts ?? defaultSiteNavigationConfig.footer.contacts;
+  const links = footerData.links ?? defaultSiteNavigationConfig.footer.links;
 
   return (
     <footer className="relative overflow-hidden bg-[var(--bg-card)] px-4 py-12 sm:px-6 lg:px-8">
@@ -65,7 +40,7 @@ export function Footer() {
         }}
       />
 
-      <div className="relative grid w-full gap-8">
+      <div className="relative mx-auto grid w-full max-w-7xl gap-8">
         <div className="grid gap-8 pb-10 lg:grid-cols-[1fr_1.4fr]">
           <div>
             <div className="flex items-center gap-4">
@@ -74,37 +49,37 @@ export function Footer() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-gold)] hover:text-[var(--brand-primary)]">
-                  {t("footer.contact.community")}
+                  {communityTitle}
                 </p>
                 <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
-                  {t("app.name")}
+                  {appName}
                 </p>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {t("app.tagline")}
+                  {tagline}
                 </p>
               </div>
             </div>
 
             <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-              {t("footer.description")}
+              {description}
             </p>
 
             <div className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
               <span className="h-px w-8 bg-[var(--accent-gold)]" />
-              {t("footer.rights")}
+              {copyrightText}
             </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            {contactItems.map((item) => {
-              const Icon = item.icon;
-              const label = t(item.labelKey as any);
-              const value = item.valueKey.includes(".") ? t(item.valueKey as any) : item.valueKey;
+            {contacts.map((item) => {
+              const IconComp = resolveIcon(item.icon);
+              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+              const value = locale === "vi" ? item.valueVi || item.valueEn : item.valueEn || item.valueVi;
 
               const content = (
                 <>
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--accent-gold)] transition">
-                    <Icon aria-hidden="true" className="h-5 w-5" />
+                    <IconComp aria-hidden="true" className="h-5 w-5" />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-[var(--text-primary)]">
@@ -121,14 +96,14 @@ export function Footer() {
                 <a
                   className="group flex min-h-20 items-center gap-4 px-1 py-3 transition-colors hover:text-[var(--brand-primary)]"
                   href={item.href}
-                  key={item.labelKey}
+                  key={item.id || item.labelEn}
                 >
                   {content}
                 </a>
               ) : (
                 <div
                   className="group flex min-h-20 items-center gap-4 px-1 py-3"
-                  key={item.labelKey}
+                  key={item.id || item.labelEn}
                 >
                   {content}
                 </div>
@@ -139,19 +114,22 @@ export function Footer() {
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
           <p className="text-sm text-[var(--text-secondary)]">
-            {"\u00A9"} HTNC {currentYear}. {t("footer.rights")}
+            {"\u00A9"} {appName} {currentYear}. {copyrightText}
           </p>
 
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
-            {footerLinks.map((item) => (
-              <Link
-                className="rounded-sm px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
-                href={item.href}
-                key={item.href}
-              >
-                {t(item.labelKey as any)}
-              </Link>
-            ))}
+            {links.map((item) => {
+              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+              return (
+                <Link
+                  className="rounded-sm px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+                  href={item.href}
+                  key={item.id || item.href}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       </div>

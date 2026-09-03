@@ -14,8 +14,8 @@ export function AboutPage() {
   const { locale, t } = useTranslation();
 
   const htmlContent = locale === "vi"
-    ? (pageData?.content_markdown_vi || "")
-    : (pageData?.content_markdown_en || "");
+    ? (pageData?.content_vi || "")
+    : (pageData?.content_en || "");
 
   const content = {
     title:
@@ -24,7 +24,7 @@ export function AboutPage() {
         : (pageData?.title_en || t("nav.about.label")),
     htmlBody: htmlContent,
     plainText: stripHtml(htmlContent) || t("about.fallback.body"),
-    cover: pageData?.cover_image_url,
+    cover: (pageData as any)?.cover_image_url,
   };
 
   return (

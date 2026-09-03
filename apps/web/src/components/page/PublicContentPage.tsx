@@ -20,8 +20,8 @@ export function PublicContentPage({ fallback, slug }: PublicContentPageProps) {
   const title = page ? (locale === "vi" ? page.title_vi : page.title_en) : fallback.title;
   const body = page
     ? locale === "vi"
-      ? page.content_markdown_vi
-      : page.content_markdown_en
+      ? page.content_vi
+      : page.content_en
     : fallback.body;
 
   return (
@@ -32,10 +32,10 @@ export function PublicContentPage({ fallback, slug }: PublicContentPageProps) {
         </h1>
       </section>
 
-      {page?.cover_image_url ? (
+      {(page as any)?.cover_image_url ? (
         <div
           className="min-h-72 rounded-lg border border-[var(--border-subtle)] bg-cover bg-center shadow-sm"
-          style={{ backgroundImage: `url(${page.cover_image_url})` }}
+          style={{ backgroundImage: `url(${(page as any).cover_image_url})` }}
         />
       ) : null}
 

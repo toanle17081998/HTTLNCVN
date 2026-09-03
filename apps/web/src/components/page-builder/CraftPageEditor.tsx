@@ -31,7 +31,7 @@ import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { craftResolver, PageBuilderToolbox, PageCanvas, PageComponentList, RenderNodeSettings } from "./craftNodes";
+import { craftResolver, PageCanvas, SectionBuilderProvider } from "./craftNodes";
 import {
   createDefaultPageContent,
   createHomepageTemplateContent,
@@ -90,25 +90,7 @@ function BuilderShell({
           isFullscreen ? "fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]" : "",
         )}
       >
-        <div
-          className={cn(
-            "grid gap-6",
-            isFullscreen
-              ? "min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-0 md:grid-cols-[14rem_minmax(0,1fr)] md:grid-rows-1"
-              : "xl:grid-cols-[14rem_minmax(0,1fr)]",
-          )}
-        >
-          <aside className={cn(isFullscreen ? "max-h-40 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 md:h-full md:max-h-none md:border-b-0 md:border-r" : "xl:sticky xl:top-24 xl:self-start")}>
-            <Card className={cn("flex w-[14rem] flex-col rounded-md p-2", isFullscreen ? "h-full w-full rounded-none border-0 shadow-none" : "max-h-[calc(100vh-7rem)] overflow-hidden")}>
-              <div className="flex-1 overflow-y-auto">
-                <PageBuilderToolbox horizontal={isFullscreen} />
-                <div className="mt-3">
-                  <PageComponentList />
-                </div>
-              </div>
-            </Card>
-          </aside>
-
+        <div className={cn("grid gap-6", isFullscreen && "min-h-0 flex-1 gap-0")}>
           <div className={cn("min-w-0", isFullscreen && "min-h-0 overflow-hidden")}>
             <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
@@ -133,15 +115,16 @@ function BuilderShell({
               </div>
               <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
                 <div className="w-full">
-                  <Frame data={content}>
-                    <Element canvas is={PageCanvas} />
-                  </Frame>
+                  <SectionBuilderProvider>
+                    <Frame data={content}>
+                      <Element canvas is={PageCanvas} />
+                    </Frame>
+                  </SectionBuilderProvider>
                 </div>
               </div>
             </Card>
           </div>
         </div>
-        <RenderNodeSettings />
       </div>
     </Editor>
   );

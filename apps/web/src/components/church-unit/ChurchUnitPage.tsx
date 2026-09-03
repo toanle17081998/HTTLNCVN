@@ -384,29 +384,29 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
           </p>
         </Card>
       ) : (
-        <>
+        <div className="grid gap-8">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.active")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{activeCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{activeCount}</p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 Cell Groups
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{cellGroupCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{cellGroupCount}</p>
             </Card>
-            <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">
+            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.membersAssigned")}
               </p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">{memberCount}</p>
+              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{memberCount}</p>
             </Card>
           </div>
 
-          <Card className="mt-6 overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm transition-all duration-300">
+          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm transition-all duration-300">
             <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -609,7 +609,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               />
             ) : null}
           </Card>
-        </>
+        </div>
       )}
 
       {/* Creation and Edit Modal */}

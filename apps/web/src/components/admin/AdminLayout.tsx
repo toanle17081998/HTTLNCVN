@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   X,
   LogOut,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import { Button, cn } from "@/components/ui";
@@ -44,6 +45,7 @@ type AdminNavItem = {
 
 const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/pages", labelKey: "admin.nav.pages", icon: FileStack },
+  { href: "/admin/navigation", labelKey: "admin.nav.navigation", icon: LayoutGrid },
   { href: "/admin/articles", labelKey: "nav.article.label", icon: BookOpen },
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },
   { href: "/admin/tests", labelKey: "nav.test.label", icon: ClipboardCheck },
@@ -206,7 +208,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="flex min-w-0 flex-1 flex-col">
             {!isFullscreen ? (
-              <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
+              <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
                 <div className="flex items-center gap-4">
                   {canAccessAdmin && (
                     <button

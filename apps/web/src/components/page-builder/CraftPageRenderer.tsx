@@ -70,7 +70,7 @@ export function CraftPageRenderer({
   const safeContent = path === "/" ? createHomepageTemplateContent(validContent) : validContent;
 
   return (
-    <div className={path === "/" ? "homepage-builder relative w-full" : "relative w-full"}>
+    <div className={path === "/" ? "homepage-builder published-page-builder relative w-full" : "published-page-builder relative w-full"}>
       {canEdit ? (
         <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3 items-end">
           <Link href={`/admin/pages?route=${encodeURIComponent(path)}`}>

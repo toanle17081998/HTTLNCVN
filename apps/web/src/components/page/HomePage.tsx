@@ -195,7 +195,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
                 {locale === "vi" ? (course.title_vi || course.title_en) : (course.title_en || course.title_vi)}
               </h3>
               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
-                {course.summary}
+                {locale === "vi" ? (course.summary_vi || course.summary_en) : (course.summary_en || course.summary_vi)}
               </p>
             </div>
             <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
@@ -337,7 +337,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
             ? (pageData?.title_vi || t("home.hero.headline"))
             : (pageData?.title_en || t("home.hero.headline")),
             subheadline: t("home.hero.subheadline"),
-            image: pageData?.cover_image_url || "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1400&q=80"
+            image: (pageData as any)?.cover_image_url || "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1400&q=80"
   };
 
             return (
