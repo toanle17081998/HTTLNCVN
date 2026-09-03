@@ -43,18 +43,21 @@ export class PageRepository {
   async findBySlug(slug: string): Promise<PageDto | null> {
     const page = await this.prisma.page.findFirst({
       where: { deleted_at: null, slug },
+      orderBy: { updated_at: 'desc' },
     });
 
     return page ? this.toDto(page) : null;
   }
 
   async findByPath(path: string): Promise<PageDto | null> {
+    const normalized = this.normalizeRoutePath(path);
     const page = await this.prisma.page.findFirst({
       where: {
         deleted_at: null,
-        route_path: this.normalizeRoutePath(path),
+        route_path: normalized,
         status: 'published',
       },
+      orderBy: { updated_at: 'desc' },
     });
 
     return page ? this.toDto(page) : null;
@@ -83,6 +86,7 @@ export class PageRepository {
   async update(slug: string, dto: UpdatePageDto): Promise<PageDto | null> {
     const existing = await this.prisma.page.findFirst({
       where: { deleted_at: null, slug },
+      orderBy: { updated_at: 'desc' },
     });
 
     if (!existing) return null;

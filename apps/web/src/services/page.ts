@@ -104,6 +104,8 @@ export function useResolvedPageQuery(path: string) {
   return useQuery({
     queryFn: () => pageApi.resolve(path),
     queryKey: pageKeys.resolve(path),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
 
@@ -113,7 +115,7 @@ export function useCreatePageMutation() {
   return useMutation({
     mutationFn: pageApi.create,
     onSuccess(page) {
-      queryClient.invalidateQueries({ queryKey: pageKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: pageKeys.all });
       queryClient.setQueryData(pageKeys.detail(page.slug), page);
       queryClient.setQueryData(pageKeys.resolve(page.route_path), page);
     },
@@ -126,7 +128,7 @@ export function useUpdatePageMutation(slug: string) {
   return useMutation({
     mutationFn: (dto: UpdatePageDto) => pageApi.update(slug, dto),
     onSuccess(page) {
-      queryClient.invalidateQueries({ queryKey: pageKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: pageKeys.all });
       queryClient.setQueryData(pageKeys.detail(page.slug), page);
       queryClient.setQueryData(pageKeys.resolve(page.route_path), page);
     },
