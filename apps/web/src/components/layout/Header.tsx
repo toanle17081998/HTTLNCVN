@@ -325,61 +325,130 @@ export function Header({ pathname }: HeaderProps) {
             </div>
           )}
 
-          <LanguageToggle />
-          <ThemeToggle />
-
           {/* User Settings Dropdown */}
           <div className="relative" ref={settingsRef}>
-            <button
-              aria-expanded={settingsOpen}
-              aria-haspopup="menu"
-              aria-label={t("nav.userMenu")}
-              className={cn(
-                "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] text-[var(--text-primary)] transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)] active:scale-95",
-                isAuthenticated && "border-[var(--brand-primary)] bg-[var(--brand-muted)]",
-              )}
-              onClick={() => {
-                setSettingsOpen((open) => !open);
-                setNotificationOpen(false);
-                setMobileMenuOpen(false);
-              }}
-              type="button"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
+            {isAuthenticated ? (
+              <button
+                aria-expanded={settingsOpen}
+                aria-haspopup="menu"
+                aria-label={t("nav.userMenu" as any)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 px-3 py-1.5 text-left transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)] active:scale-95 cursor-pointer shadow-xs",
+                  settingsOpen && "border-[var(--brand-primary)] bg-[var(--brand-muted)]",
+                )}
+                onClick={() => {
+                  setSettingsOpen((open) => !open);
+                  setNotificationOpen(false);
+                  setMobileMenuOpen(false);
+                }}
+                type="button"
+              >
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="text-xs font-bold leading-tight text-[var(--text-primary)] max-w-[11rem] truncate">
+                    {user?.username || user?.email || "User"}
+                  </span>
+                  {role ? (
+                    <span className="mt-0.5 inline-flex items-center rounded-md bg-[var(--brand-muted)] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
+                      {locale === "vi"
+                        ? role === "SUPER_ADMIN"
+                          ? "Tổng quản trị"
+                          : role === "CHURCH_ADMIN"
+                            ? "Quản trị hội thánh"
+                            : role === "MINISTRY_LEADER"
+                              ? "Trưởng ban ngành"
+                              : role === "PASTOR"
+                                ? "Mục sư"
+                                : role === "EDITOR"
+                                  ? "Biên tập viên"
+                                  : "Thành viên"
+                        : role.replaceAll("_", " ")}
+                    </span>
+                  ) : null}
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 text-[var(--text-secondary)] transition-transform duration-200 shrink-0",
+                    settingsOpen && "rotate-180",
+                  )}
+                />
+              </button>
+            ) : (
+              <Link
+                className="flex items-center gap-2 rounded-xl border border-[var(--brand-primary)] bg-[var(--brand-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-inverse)] shadow-xs transition-all hover:bg-[var(--brand-primary-strong)] active:scale-95"
+                href="/auth"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>{t("nav.login")}</span>
+              </Link>
+            )}
 
             {settingsOpen && (
               <div
-                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 shadow-2xl"
+                className="animate-in fade-in zoom-in-95 absolute right-0 top-full z-50 mt-3 w-64 origin-top-right rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 shadow-2xl"
                 role="menu"
               >
                 {/* User Info / Role */}
-                <div className="border-b border-[var(--border-subtle)] px-3 py-2">
-                  <p className="text-xs font-semibold text-[var(--text-secondary)]">
-                    {isAuthenticated ? user?.email : t("nav.guest")}
+                <div className="border-b border-[var(--border-subtle)] pb-3">
+                  <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                    {isAuthenticated ? user?.email : t("nav.guest" as any)}
                   </p>
                   {role && (
-                    <span className="mt-1 inline-flex items-center rounded-full bg-[var(--brand-muted)] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
-                      {role}
+                    <span className="mt-1.5 inline-flex items-center rounded-full bg-[var(--brand-muted)] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
+                      {locale === "vi"
+                        ? role === "SUPER_ADMIN"
+                          ? "Tổng quản trị"
+                          : role === "CHURCH_ADMIN"
+                            ? "Quản trị hội thánh"
+                            : role === "MINISTRY_LEADER"
+                              ? "Trưởng ban ngành"
+                              : role === "PASTOR"
+                                ? "Mục sư"
+                                : role === "EDITOR"
+                                  ? "Biên tập viên"
+                                  : "Thành viên"
+                        : role.replaceAll("_", " ")}
                     </span>
                   )}
                 </div>
 
-                {/* Navigation / Links */}
-                <div className="py-1">
+                {/* Preferences: Language & Theme */}
+                <div className="border-b border-[var(--border-subtle)] py-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                      {t("nav.language" as any) || "Ngôn ngữ"}
+                    </span>
+                    <LanguageToggle />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                      {t("nav.theme" as any) || "Giao diện"}
+                    </span>
+                    <ThemeToggle />
+                  </div>
+                </div>
+
+                {/* Navigation / Actions */}
+                <div className="pt-2 space-y-1">
                   {isAuthenticated ? (
                     <>
-                      <Link
-                        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
-                        href="/prayer-journal"
-                        onClick={() => setSettingsOpen(false)}
-                        role="menuitem"
-                      >
-                        <Heart className="h-4 w-4" />
-                        {t("nav.prayerJournal.label")}
-                      </Link>
+                      {canAny([
+                        PERMISSIONS.manageArticle,
+                        PERMISSIONS.manageEvents,
+                        PERMISSIONS.manageCourses,
+                        PERMISSIONS.manageChurchMembers,
+                      ]) ? (
+                        <Link
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                          href="/admin"
+                          onClick={() => setSettingsOpen(false)}
+                          role="menuitem"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          {t("nav.adminPortal" as any) || "Trang quản trị"}
+                        </Link>
+                      ) : null}
                       <button
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] cursor-pointer"
                         onClick={() => {
                           setSettingsOpen(false);
                           setIsPasswordModalOpen(true);
@@ -388,10 +457,10 @@ export function Header({ pathname }: HeaderProps) {
                         type="button"
                       >
                         <Shield className="h-4 w-4" />
-                        {t("nav.changePassword")}
+                        {t("nav.changePassword" as any) || t("settings.changePassword" as any)}
                       </button>
                       <button
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--brand-muted)]"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)] cursor-pointer"
                         onClick={handleLogout}
                         role="menuitem"
                         type="button"
@@ -402,7 +471,7 @@ export function Header({ pathname }: HeaderProps) {
                     </>
                   ) : (
                     <Link
-                      className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-muted)]"
                       href="/auth"
                       onClick={() => setSettingsOpen(false)}
                       role="menuitem"

@@ -284,64 +284,7 @@ function isCraftContentRecord(value: unknown): value is Record<string, unknown> 
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
-
-  const supportedResolvedNames = new Set([
-    "PageCanvas",
-    "SectionBlock",
-    "ColumnsBlock",
-    "RowBlock",
-    "VerticalStackBlock",
-    "TextBlock",
-    "ButtonBlock",
-    "ImageBlock",
-    "SeparatorBlock",
-    "IconBoxBlock",
-    "AccordionBlock",
-    "TabsBlock",
-    "FeedCarouselBlock",
-    "HeroImageSliderBlock",
-    "FeatureZigzagCardBlock",
-    "FeatureGridListBlock",
-    "FeatureIconListBlock",
-    "FeatureOrbitListBlock",
-    "FeatureTabbedListBlock",
-    "FeatureTestimonialListBlock",
-    "FeatureZigzagListBlock",
-    "CtaInvitationBlock",
-    "CtaSimpleBlock",
-    "GalleryMarqueeBlock",
-  ]);
-
-  const record = value as Record<string, unknown>;
-
-  if (!("ROOT" in record)) {
-    return false;
-  }
-
-  return Object.values(record).every((nodeValue) => {
-    if (!nodeValue || typeof nodeValue !== "object" || Array.isArray(nodeValue)) {
-      return false;
-    }
-
-    const node = nodeValue as Record<string, unknown>;
-    const type = node.type;
-    const props = node.props;
-    const nodes = node.nodes;
-
-    if (!type || typeof type !== "object" || Array.isArray(type)) {
-      return false;
-    }
-
-    const resolvedName = (type as Record<string, unknown>).resolvedName;
-
-    return (
-      typeof resolvedName === "string" &&
-      supportedResolvedNames.has(resolvedName) &&
-      Array.isArray(nodes) &&
-      typeof props === "object" &&
-      props !== null
-    );
-  });
+  return "ROOT" in value;
 }
 
 export function ensureValidPageContent(
@@ -351,9 +294,9 @@ export function ensureValidPageContent(
 ) {
   if (typeof content === "string" && content.trim()) {
     try {
-      const parsed = JSON.parse(content) as unknown;
+      const parsed = JSON.parse(content) as Record<string, unknown>;
       if (isCraftContentRecord(parsed)) {
-        return JSON.stringify(parsed);
+        return content;
       }
     } catch {
       // Fall back to safe default content.

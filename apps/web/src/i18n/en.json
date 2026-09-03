@@ -690,5 +690,9 @@
   "admin.navigation.saveError": "Failed to save settings.",
   "admin.navigation.resetConfirmTitle": "Reset to default settings?",
   "admin.navigation.resetConfirmDesc": "All custom navigation, page heroes, and footer settings will be reset to defaults.",
-  "admin.navigation.resetConfirmLabel": "Reset to defaults"
+  "admin.navigation.resetConfirmLabel": "Reset to defaults",
+  "nav.changePassword": "Change Password",
+  "nav.adminPortal": "Admin Workspace",
+  "nav.theme": "Theme",
+  "nav.language": "Language"
 }

@@ -8,7 +8,7 @@ import { useResolvedPageQuery } from "@/services/page";
 import { Button, Card } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";
-import { createHomepageTemplateContent, ensureValidPageContent } from "./defaultContent";
+import { ensureValidPageContent } from "./defaultContent";
 import { useTranslation } from "@/providers/I18nProvider";
 
 export function CraftPageRenderer({
@@ -61,16 +61,17 @@ export function CraftPageRenderer({
   const page = pageQuery.data;
   if (!page) return null;
 
-  const activeContent = readerLang === "vi" ? page.content_vi : page.content_en;
+  const rawActive = readerLang === "vi" ? page.content_vi : page.content_en;
+  // If the active language content is empty or default template, use the non-empty content
+  const activeContent = rawActive && rawActive.trim() && rawActive !== "{}" ? rawActive : (page.content_en || page.content_vi);
   const validContent = ensureValidPageContent(
-    activeContent || page.content_en || page.content_vi,
+    activeContent,
     readerLang === "vi" ? page.title_vi || page.title_en : page.title_en || page.title_vi,
     page.route_path
   );
-  const safeContent = path === "/" ? createHomepageTemplateContent(validContent) : validContent;
 
   return (
-    <div className={path === "/" ? "homepage-builder published-page-builder relative w-full" : "published-page-builder relative w-full"}>
+    <div className="published-page-builder relative w-full">
       {canEdit ? (
         <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3 items-end">
           <Link href={`/admin/pages?route=${encodeURIComponent(path)}`}>
@@ -83,8 +84,8 @@ export function CraftPageRenderer({
       ) : null}
 
       <Editor key={readerLang} enabled={false} resolver={craftResolver}>
-        <Frame data={safeContent}>
-          <Element canvas is={PageCanvas} snapType={path === "/" ? "mandatory" : "none"} />
+        <Frame data={validContent}>
+          <Element canvas is={PageCanvas} snapType="none" />
         </Frame>
       </Editor>
     </div>

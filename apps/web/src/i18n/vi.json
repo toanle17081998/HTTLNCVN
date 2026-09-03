@@ -690,5 +690,9 @@
   "admin.navigation.saveError": "Không thể lưu cài đặt.",
   "admin.navigation.resetConfirmTitle": "Khôi phục mặc định?",
   "admin.navigation.resetConfirmDesc": "Tất cả menu, hero banner và liên kết chân trang sẽ được khôi phục về mặc định.",
-  "admin.navigation.resetConfirmLabel": "Khôi phục mặc định"
+  "admin.navigation.resetConfirmLabel": "Khôi phục mặc định",
+  "nav.changePassword": "Đổi mật khẩu",
+  "nav.adminPortal": "Trang quản trị",
+  "nav.theme": "Giao diện",
+  "nav.language": "Ngôn ngữ"
 }

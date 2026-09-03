@@ -30,16 +30,54 @@ import { Button, Card, Input, Select, cn } from "@/components/ui";
 import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { craftResolver, PageCanvas, SectionBuilderProvider } from "./craftNodes";
+import {
+  craftResolver,
+  PageCanvas,
+  PageComponentList,
+  RenderNodeSettings,
+} from "./craftNodes";
 import {
   createDefaultPageContent,
-  createHomepageTemplateContent,
   ensureValidPageContent,
   pageLayoutTemplates,
   slugifyPageTitle,
   type PageLayoutTemplateId,
 } from "./defaultContent";
+
+function LanguageSelector({
+  activeLanguage,
+  onLanguageChange,
+}: {
+  activeLanguage: "en" | "vi";
+  onLanguageChange: (lang: "en" | "vi") => void;
+}) {
+  return (
+    <div className="flex items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-1 text-xs font-semibold">
+      <button
+        className={`rounded-lg px-2.5 py-1 transition-all ${
+          activeLanguage === "vi"
+            ? "bg-[var(--brand-primary)] text-[var(--text-inverse)] shadow-sm"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        onClick={() => onLanguageChange("vi")}
+        type="button"
+      >
+        VI
+      </button>
+      <button
+        className={`rounded-lg px-2.5 py-1 transition-all ${
+          activeLanguage === "en"
+            ? "bg-[var(--brand-primary)] text-[var(--text-inverse)] shadow-sm"
+            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        }`}
+        onClick={() => onLanguageChange("en")}
+        type="button"
+      >
+        EN
+      </button>
+    </div>
+  );
+}
 
 function BuilderSaveButton({
   onSave,
@@ -90,7 +128,22 @@ function BuilderShell({
           isFullscreen ? "fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]" : "",
         )}
       >
-        <div className={cn("grid gap-6", isFullscreen && "min-h-0 flex-1 gap-0")}>
+        <div
+          className={cn(
+            "grid gap-6",
+            isFullscreen
+              ? "min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-0 md:grid-cols-[14rem_minmax(0,1fr)] md:grid-rows-1"
+              : "xl:grid-cols-[14rem_minmax(0,1fr)]",
+          )}
+        >
+          <aside className={cn(isFullscreen ? "max-h-40 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 md:h-full md:max-h-none md:border-b-0 md:border-r" : "xl:sticky xl:top-24 xl:self-start")}>
+            <Card className={cn("flex w-[14rem] flex-col rounded-md p-2", isFullscreen ? "h-full w-full rounded-none border-0 shadow-none" : "max-h-[calc(100vh-7rem)] overflow-hidden")}>
+              <div className="flex-1 overflow-y-auto">
+                <PageComponentList />
+              </div>
+            </Card>
+          </aside>
+
           <div className={cn("min-w-0", isFullscreen && "min-h-0 overflow-hidden")}>
             <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
@@ -104,7 +157,7 @@ function BuilderShell({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] cursor-pointer"
                     onClick={() => setIsFullscreen((current) => !current)}
                     type="button"
                   >
@@ -115,59 +168,62 @@ function BuilderShell({
               </div>
               <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
                 <div className="w-full">
-                  <SectionBuilderProvider>
-                    <Frame data={content}>
-                      <Element canvas is={PageCanvas} />
-                    </Frame>
-                  </SectionBuilderProvider>
+                  <Frame data={content}>
+                    <Element canvas is={PageCanvas} />
+                  </Frame>
                 </div>
               </div>
             </Card>
           </div>
         </div>
+        <RenderNodeSettings />
       </div>
     </Editor>
   );
 }
 
-function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
-  const createPage = useCreatePageMutation();
+function CreatePageCard({
+  onCreated,
+}: {
+  onCreated: (slug: string) => void;
+}) {
+  const [title, setTitle] = useState("");
   const [routePath, setRoutePath] = useState("/");
   const [templateId, setTemplateId] = useState<PageLayoutTemplateId>("welcome");
+  const createPage = useCreatePageMutation();
   const homePageQuery = usePageQuery(templateId === "welcome" ? "home" : undefined);
   const { toast } = useFeedback();
   const { t } = useTranslation();
-  const [title, setTitle] = useState(() => t("pageBuilder.defaultPageTitle"));
 
   async function handleCreate() {
     const slug = slugifyPageTitle(routePath === "/" ? "home" : routePath);
+    const normalizedRoute = routePath.trim().startsWith("/") ? routePath.trim() : `/${routePath.trim()}`;
 
     try {
-      const defaultContent = createDefaultPageContent(title, routePath, templateId);
-      const contentEn = templateId === "welcome" && homePageQuery.data?.content_en
-        ? createHomepageTemplateContent(homePageQuery.data.content_en)
-        : defaultContent;
-      const contentVi = templateId === "welcome" && homePageQuery.data?.content_vi
-        ? createHomepageTemplateContent(homePageQuery.data.content_vi)
-        : defaultContent;
-      const page = await createPage.mutateAsync({
-        content_en: contentEn,
-        content_vi: contentVi,
-        route_path: routePath,
+      const defaultContent =
+        templateId === "welcome" && homePageQuery.data?.content_en
+          ? homePageQuery.data.content_en
+          : createDefaultPageContent(title || "New page", normalizedRoute, templateId);
+
+      const defaultContentVi =
+        templateId === "welcome" && homePageQuery.data?.content_vi
+          ? homePageQuery.data.content_vi
+          : defaultContent;
+
+      await createPage.mutateAsync({
+        content_en: defaultContent,
+        content_vi: defaultContentVi,
+        route_path: normalizedRoute,
         slug,
-        title_en: title,
-        title_vi: title,
+        title_en: title || "New page",
+        title_vi: title || "Trang mới",
       });
+
       toast({ title: t("toast.page.created"), variant: "success" });
-      onCreated(page.slug);
+      onCreated(slug);
     } catch (error) {
       toast({
-        description:
-          error instanceof ApiError
-            ? error.code === "PAGE_ALREADY_EXISTS"
-              ? t("toast.page.alreadyExists")
-              : error.message
-            : undefined,
+        description: error instanceof ApiError ? error.message : undefined,
         title: t("toast.page.createFailed"),
         variant: "error",
       });
@@ -175,8 +231,8 @@ function CreatePageCard({ onCreated }: { onCreated: (slug: string) => void }) {
   }
 
   return (
-    <Card className="rounded-2xl p-6">
-      <div className="space-y-4">
+    <Card className="rounded-2xl border-[var(--border-subtle)] p-6">
+      <div className="max-w-2xl space-y-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
             {t("pageBuilder.createPage")}
@@ -252,13 +308,24 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
     if (!selectedPage) return;
 
     try {
+      const isOtherEmptyOrDefault =
+        editLang === "en"
+          ? !selectedPage.content_vi || selectedPage.content_vi.includes("Encounter grace") || selectedPage.content_vi === "{}"
+          : !selectedPage.content_en || selectedPage.content_en.includes("Encounter grace") || selectedPage.content_en === "{}";
+
       if (editLang === "en") {
-        await updatePage.mutateAsync({ content_en: content });
+        await updatePage.mutateAsync({
+          content_en: content,
+          ...(isOtherEmptyOrDefault ? { content_vi: content } : {}),
+        });
       } else {
-        await updatePage.mutateAsync({ content_vi: content });
+        await updatePage.mutateAsync({
+          content_vi: content,
+          ...(isOtherEmptyOrDefault ? { content_en: content } : {}),
+        });
       }
       toast({ title: t("toast.page.saved"), variant: "success" });
-      queryClient.invalidateQueries({ queryKey: pageKeys.resolve(selectedPage.route_path) });
+      queryClient.invalidateQueries({ queryKey: pageKeys.all });
     } catch (error) {
       toast({
         description: error instanceof ApiError ? error.message : undefined,
@@ -277,6 +344,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
         title: status === "published" ? t("toast.page.published") : t("toast.page.draftSaved"),
         variant: "success",
       });
+      queryClient.invalidateQueries({ queryKey: pageKeys.all });
     } catch (error) {
       toast({
         description: error instanceof ApiError ? error.message : undefined,
