@@ -24,6 +24,12 @@ export class PageController {
     return this.pageService.findByPath(path);
   }
 
+  @Public()
+  @Get('navigation')
+  findPublicNavigation(): Promise<PageDto> {
+    return this.pageService.findPublicNavigation();
+  }
+
   @Get(':slug')
   findBySlug(@Param('slug') slug: string): Promise<PageDto> {
     return this.pageService.findBySlug(slug);

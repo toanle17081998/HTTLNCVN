@@ -114,7 +114,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   return (
     <PageLayout
       description={t("quiz.timeLimit")}
-      eyebrow={t("quiz.title")}
+      eyebrow={attempt?.is_test ? t("quiz.title") : t("quiz.practiceTitle")}
       title={locale === "vi" ? (attempt?.quiz?.title_vi || attempt?.quiz?.title_en || "Làm bài trắc nghiệm") : (attempt?.quiz?.title_en || attempt?.quiz?.title_vi || "Quiz attempt")}
     >
       {attemptQuery.isLoading ? (

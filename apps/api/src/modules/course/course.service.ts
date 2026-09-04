@@ -142,8 +142,8 @@ export class CourseService {
     return this.courseRepository.closeCourseTest(id, userId, userRole);
   }
 
-  async startCourseTest(id: string, userId: string): Promise<QuizAttemptDto> {
-    const attempt = await this.courseRepository.startCourseTest(id, userId);
+  async startCourseTest(id: string, userId: string, userRole?: string): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.startCourseTest(id, userId, userRole);
     if (!attempt) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Test is unavailable.' });
     }
@@ -177,8 +177,8 @@ export class CourseService {
     await this.courseRepository.deleteQuiz(id);
   }
 
-  async startQuiz(quizId: string, userId: string): Promise<QuizAttemptDto> {
-    const attempt = await this.courseRepository.startQuiz(quizId, userId);
+  async startQuiz(quizId: string, userId: string, userRole?: string): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.startQuiz(quizId, userId, userRole);
 
     if (!attempt) {
       throw new NotFoundException({
@@ -190,8 +190,8 @@ export class CourseService {
     return attempt;
   }
 
-  async findAttempt(id: string, userId: string): Promise<QuizAttemptDto> {
-    const attempt = await this.courseRepository.findAttempt(id, userId);
+  async findAttempt(id: string, userId: string, userRole?: string): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.findAttempt(id, userId, userRole);
 
     if (!attempt) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Quiz attempt not found.' });
@@ -200,11 +200,12 @@ export class CourseService {
     return attempt;
   }
 
-  async submitAnswer(dto: SubmitAnswerDto, userId: string): Promise<SubmitAnswerResultDto> {
+  async submitAnswer(dto: SubmitAnswerDto, userId: string, userRole?: string): Promise<SubmitAnswerResultDto> {
     const result = await this.courseRepository.submitAnswer(
       dto.snapshot_id,
       userId,
       dto.student_answer,
+      userRole,
     );
 
     if (!result) {
@@ -214,8 +215,8 @@ export class CourseService {
     return result;
   }
 
-  async finishAttempt(id: string, userId: string, answers?: Record<string, string>): Promise<QuizAttemptDto> {
-    const attempt = await this.courseRepository.finishAttempt(id, userId, answers);
+  async finishAttempt(id: string, userId: string, answers?: Record<string, string>, userRole?: string): Promise<QuizAttemptDto> {
+    const attempt = await this.courseRepository.finishAttempt(id, userId, answers, userRole);
 
     if (!attempt) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Quiz attempt not found.' });

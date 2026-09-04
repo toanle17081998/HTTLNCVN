@@ -206,6 +206,22 @@ function getSnapshotPosition(snapshot: AttemptWithRelations['snapshots'][number]
 export class CourseRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async canAccessCourse(courseId: string, userId: string, userRole?: string): Promise<boolean> {
+    if (userRole === 'church_admin' || userRole === 'system_admin') return true;
+    const course = await this.prisma.course.findUnique({
+      select: {
+        _count: { select: { attendees: true } },
+        attendees: { select: { user_id: true }, where: { user_id: userId } },
+        grades: { select: { id: true }, where: { user_id: userId } },
+      },
+      where: { id: courseId },
+    });
+    return Boolean(
+      course?.grades.length &&
+      (course._count.attendees === 0 || course.attendees.length > 0),
+    );
+  }
+
   private mapCourseList(c: CourseWithListRelations): CourseListDto {
     return {
       cover_image_url: c.cover_image_url,
@@ -253,7 +269,9 @@ export class CourseRepository {
         content_markdown_vi: l.content_markdown_vi,
         id: l.id,
         order_index: l.order_index,
-        quiz_count: new Set(l.templates.flatMap((t) => t.quiz_maps.map((m) => m.quiz_id))).size,
+        quiz_count: new Set(
+          l.templates.flatMap((t) => t.quiz_maps.filter((m) => !m.quiz.is_test).map((m) => m.quiz_id)),
+        ).size,
         title_en: l.title_en,
         title_vi: l.title_vi,
         template_count: l.templates.length,
@@ -371,6 +389,7 @@ export class CourseRepository {
     include: {
       church_unit: true;
       quiz: { include: { _count: { select: { quiz_maps: true } } } };
+      target_user: { include: { profile: true } };
     };
   }>): CourseTestAvailabilityDto {
     return {
@@ -381,6 +400,14 @@ export class CourseRepository {
       id: availability.id,
       is_active: availability.is_active,
       quiz: this.mapQuizList(availability.quiz),
+      target_user: availability.target_user
+        ? {
+            id: availability.target_user.id,
+            name: availability.target_user.profile
+              ? `${availability.target_user.profile.first_name} ${availability.target_user.profile.last_name}`.trim()
+              : availability.target_user.username,
+          }
+        : null,
     };
   }
 
@@ -850,6 +877,7 @@ export class CourseRepository {
     const quizMap = new Map<string, QuizListDto>();
     lesson.templates.forEach((template) => {
       template.quiz_maps.forEach((map) => {
+        if (map.quiz.is_test) return;
         quizMap.set(map.quiz.id, this.mapQuizList(map.quiz));
       });
     });
@@ -1038,7 +1066,17 @@ export class CourseRepository {
     const privileged = userRole === 'system_admin' || userRole === 'church_admin';
     const managedClasses = await this.prisma.churchUnit.findMany({
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        members: {
+          orderBy: { user: { username: 'asc' } },
+          select: {
+            user: { select: { email: true, id: true, profile: true, username: true } },
+          },
+          where: { user: { deleted_at: null, status: 'active' } },
+        },
+      },
       where: {
         courses: { some: { id: course.id } },
         type: 'class',
@@ -1052,21 +1090,37 @@ export class CourseRepository {
       },
     });
     const canManage = privileged || managedClasses.length > 0;
+    if (!canManage && !(await this.canAccessCourse(course.id, userId, userRole))) {
+      throw new ForbiddenException('You are not authorized to access this course test.');
+    }
 
     const availability = await this.prisma.courseTestAvailability.findFirst({
       include: {
         church_unit: true,
         quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        target_user: { include: { profile: true } },
       },
       orderBy: { created_at: 'desc' },
       where: {
         course_id: course.id,
-        is_active: true,
-        church_unit: privileged
-          ? { id: { in: managedClasses.map(({ id }) => id) } }
-          : { members: { some: { user_id: userId } } },
+        ...(canManage
+          ? { church_unit_id: { in: managedClasses.map(({ id }) => id) } }
+          : {
+              is_active: true,
+              church_unit: { members: { some: { user_id: userId } } },
+              OR: [{ target_user_id: null }, { target_user_id: userId }],
+            }),
       },
     });
+
+    const canAttempt = availability
+      ? availability.is_active &&
+        (!availability.target_user_id || availability.target_user_id === userId) &&
+        Boolean(await this.prisma.churchUnitMember.findUnique({
+          select: { user_id: true },
+          where: { church_unit_id_user_id: { church_unit_id: availability.church_unit_id, user_id: userId } },
+        }))
+      : false;
 
     let attempt: QuizAttemptDto | null = null;
     if (availability) {
@@ -1074,8 +1128,37 @@ export class CourseRepository {
         select: { id: true },
         where: { test_availability_id: availability.id, user_id: userId },
       });
-      if (existing) attempt = await this.findAttempt(existing.id, userId);
+      if (existing) attempt = await this.findAttempt(existing.id, userId, userRole);
     }
+
+    const assignedUsers = availability && canManage
+      ? await this.prisma.churchUnitMember.findMany({
+          select: {
+            user: {
+              select: {
+                email: true,
+                id: true,
+                profile: true,
+                username: true,
+                quiz_attempts: {
+                  select: {
+                    completed_at: true,
+                    is_completed: true,
+                    started_at: true,
+                    total_score: true,
+                  },
+                  where: { test_availability_id: availability.id },
+                },
+              },
+            },
+          },
+          where: {
+            church_unit_id: availability.church_unit_id,
+            ...(availability.target_user_id ? { user_id: availability.target_user_id } : {}),
+            user: { deleted_at: null, status: 'active' },
+          },
+        })
+      : [];
 
     const questionBank = canManage
       ? await this.prisma.questionTemplate.findMany({
@@ -1086,10 +1169,41 @@ export class CourseRepository {
       : [];
 
     return {
+      assigned_users: assignedUsers
+        .map(({ user }) => {
+          const assignedAttempt = user.quiz_attempts[0];
+          return {
+            completed_at: assignedAttempt?.completed_at?.toISOString() ?? null,
+            email: user.email,
+            id: user.id,
+            name: user.profile ? `${user.profile.first_name} ${user.profile.last_name}`.trim() : user.username,
+            score: assignedAttempt?.is_completed ? toNumber(assignedAttempt.total_score) : null,
+            started_at: assignedAttempt?.started_at.toISOString() ?? null,
+            status: assignedAttempt?.is_completed
+              ? 'done' as const
+              : assignedAttempt
+                ? 'in_progress' as const
+                : 'not_started' as const,
+          };
+        })
+        .sort((left, right) => {
+          const leftTime = left.completed_at ?? left.started_at ?? availability?.created_at.toISOString() ?? '';
+          const rightTime = right.completed_at ?? right.started_at ?? availability?.created_at.toISOString() ?? '';
+          return rightTime.localeCompare(leftTime) || left.name.localeCompare(right.name);
+        }),
       attempt,
       availability: availability ? this.mapTestAvailability(availability) : null,
+      can_attempt: canAttempt,
       can_manage: canManage,
-      managed_classes: managedClasses,
+      managed_classes: managedClasses.map(({ id, members, name }) => ({
+        id,
+        name,
+        members: members.map(({ user }) => ({
+          email: user.email,
+          id: user.id,
+          name: user.profile ? `${user.profile.first_name} ${user.profile.last_name}`.trim() : user.username,
+        })),
+      })),
       question_bank: questionBank.map((template) => this.mapTemplate(template, true)),
     };
   }
@@ -1123,7 +1237,20 @@ export class CourseRepository {
     if (!churchUnits.length) {
       throw new ForbiddenException('No classes assigned to this course can be managed by this administrator.');
     }
-    const churchUnitIds = churchUnits.map(({ id }) => id);
+    const churchUnitIds = dto.church_unit_id
+      ? churchUnits.filter(({ id }) => id === dto.church_unit_id).map(({ id }) => id)
+      : churchUnits.map(({ id }) => id);
+    if (!churchUnitIds.length) throw new ForbiddenException('The selected class cannot be managed by this administrator.');
+    if (dto.target_user_id) {
+      if (!dto.church_unit_id) throw new ConflictException('Select a class before selecting an individual.');
+      const targetMember = await this.prisma.churchUnitMember.findUnique({
+        select: { user_id: true },
+        where: {
+          church_unit_id_user_id: { church_unit_id: dto.church_unit_id, user_id: dto.target_user_id },
+        },
+      });
+      if (!targetMember) throw new ForbiddenException('The selected individual is not a member of this class.');
+    }
 
     const requestedIds = [...new Set(dto.template_ids ?? [])];
     if (requestedIds.length) {
@@ -1216,6 +1343,7 @@ export class CourseRepository {
             created_by: userId,
             duration_seconds: dto.duration_seconds,
             quiz_id: quiz.id,
+            target_user_id: dto.target_user_id || null,
           },
         });
         firstAvailabilityId ||= created.id;
@@ -1224,7 +1352,11 @@ export class CourseRepository {
     });
 
     const availability = await this.prisma.courseTestAvailability.findUniqueOrThrow({
-      include: { church_unit: true, quiz: { include: { _count: { select: { quiz_maps: true } } } } },
+      include: {
+        church_unit: true,
+        quiz: { include: { _count: { select: { quiz_maps: true } } } },
+        target_user: { include: { profile: true } },
+      },
       where: { id: availabilityId },
     });
     return this.mapTestAvailability(availability);
@@ -1244,22 +1376,36 @@ export class CourseRepository {
       },
     });
     if (!availability) throw new ForbiddenException('You cannot close this test.');
+    const closingWhere: Prisma.CourseTestAvailabilityWhereInput = {
+      quiz_id: availability.quiz_id,
+      ...(userRole === 'system_admin' || userRole === 'church_admin'
+        ? {}
+        : {
+            church_unit: {
+              members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } },
+            },
+          }),
+    };
+    const closingAvailabilities = await this.prisma.courseTestAvailability.findMany({
+      select: { attempts: { select: { id: true, user_id: true }, where: { is_completed: false } } },
+      where: closingWhere,
+    });
     await this.prisma.courseTestAvailability.updateMany({
       data: { closed_at: new Date(), is_active: false },
-      where: {
-        quiz_id: availability.quiz_id,
-        ...(userRole === 'system_admin' || userRole === 'church_admin'
-          ? {}
-          : {
-              church_unit: {
-                members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } },
-              },
-            }),
-      },
+      where: closingWhere,
     });
+    await Promise.all(
+      closingAvailabilities.flatMap(({ attempts }) =>
+        attempts.map(({ id: attemptId, user_id: attemptUserId }) =>
+          attemptUserId
+            ? this.finishAttempt(attemptId, attemptUserId, undefined, undefined, true)
+            : Promise.resolve(null),
+        ),
+      ),
+    );
   }
 
-  async startCourseTest(availabilityId: string, userId: string): Promise<QuizAttemptDto | null> {
+  async startCourseTest(availabilityId: string, userId: string, userRole?: string): Promise<QuizAttemptDto | null> {
     const availability = await this.prisma.courseTestAvailability.findFirst({
       include: {
         church_unit: { include: { members: { where: { user_id: userId } } } },
@@ -1272,13 +1418,19 @@ export class CourseRepository {
       },
       where: { id: availabilityId, is_active: true },
     });
-    if (!availability || !availability.church_unit.members.length || !availability.quiz.quiz_maps.length) return null;
+    if (
+      !availability ||
+      !availability.church_unit.members.length ||
+      (availability.target_user_id && availability.target_user_id !== userId) ||
+      !availability.quiz.quiz_maps.length ||
+      !(await this.canAccessCourse(availability.course_id, userId, userRole))
+    ) return null;
 
     const existing = await this.prisma.quizAttempt.findFirst({
       select: { id: true },
       where: { test_availability_id: availability.id, user_id: userId },
     });
-    if (existing) return this.findAttempt(existing.id, userId);
+    if (existing) return this.findAttempt(existing.id, userId, userRole);
 
     const deadline = new Date(Date.now() + availability.duration_seconds * 1000);
     const attempt = await this.prisma.quizAttempt.create({
@@ -1309,9 +1461,14 @@ export class CourseRepository {
     return this.mapAttempt(attempt);
   }
 
-  async startQuiz(quizId: string, userId: string): Promise<QuizAttemptDto | null> {
+  async startQuiz(quizId: string, userId: string, userRole?: string): Promise<QuizAttemptDto | null> {
     const quiz = await this.findQuiz(quizId);
     if (!quiz || quiz.is_test || !quiz.is_active || quiz.templates.length === 0) return null;
+    const lesson = await this.prisma.lesson.findFirst({
+      select: { course_id: true },
+      where: { templates: { some: { quiz_maps: { some: { quiz_id: quizId } } } } },
+    });
+    if (!lesson || !(await this.canAccessCourse(lesson.course_id, userId, userRole))) return null;
 
     const attempt = await this.prisma.quizAttempt.create({
       data: {
@@ -1337,7 +1494,7 @@ export class CourseRepository {
     return this.mapAttempt(attempt);
   }
 
-  async findAttempt(id: string, userId: string): Promise<QuizAttemptDto | null> {
+  async findAttempt(id: string, userId: string, userRole?: string): Promise<QuizAttemptDto | null> {
     const attempt = await this.prisma.quizAttempt.findFirst({
       include: {
         quiz: { include: { _count: { select: { quiz_maps: true } } } },
@@ -1350,23 +1507,32 @@ export class CourseRepository {
       where: { id, user_id: userId },
     });
 
+    const courseId = attempt?.test_availability?.course_id ??
+      attempt?.snapshots.find((snapshot) => snapshot.template?.lesson)?.template?.lesson?.course_id;
+    if (!courseId || !(await this.canAccessCourse(courseId, userId, userRole))) return null;
+
     if (
       attempt?.test_availability_id &&
       !attempt.is_completed &&
       (!attempt.test_availability?.is_active ||
         (attempt.deadline_at && attempt.deadline_at.getTime() <= Date.now()))
     ) {
-      return this.finishAttempt(attempt.id, userId);
+      return this.finishAttempt(attempt.id, userId, undefined, userRole);
     }
 
     return attempt ? this.mapAttempt(attempt) : null;
   }
 
-  async submitAnswer(snapshotId: string, userId: string, studentAnswer: string): Promise<SubmitAnswerResultDto | null> {
+  async submitAnswer(
+    snapshotId: string,
+    userId: string,
+    studentAnswer: string,
+    userRole?: string,
+  ): Promise<SubmitAnswerResultDto | null> {
     const snapshot = await this.prisma.questionSnapshot.findFirst({
       include: {
         attempt: { include: { test_availability: true } },
-        template: true,
+        template: { include: { lesson: true } },
       },
       where: {
         id: snapshotId,
@@ -1375,6 +1541,8 @@ export class CourseRepository {
     });
 
     if (!snapshot || !snapshot.template || !snapshot.attempt) return null;
+    const courseId = snapshot.attempt.test_availability?.course_id ?? snapshot.template.lesson?.course_id;
+    if (!courseId || !(await this.canAccessCourse(courseId, userId, userRole))) return null;
     if (
       snapshot.attempt.is_completed ||
       (snapshot.attempt.test_availability_id && !snapshot.attempt.test_availability?.is_active) ||
@@ -1406,13 +1574,22 @@ export class CourseRepository {
         };
   }
 
-  async finishAttempt(id: string, userId: string, answers?: Record<string, string>): Promise<QuizAttemptDto | null> {
+  async finishAttempt(
+    id: string,
+    userId: string,
+    answers?: Record<string, string>,
+    userRole?: string,
+    bypassCourseAccess = false,
+  ): Promise<QuizAttemptDto | null> {
     const attempt = await this.prisma.quizAttempt.findFirst({
-      include: { snapshots: { include: { template: true } }, test_availability: true },
+      include: { snapshots: { include: { template: { include: { lesson: true } } } }, test_availability: true },
       where: { id, user_id: userId },
     });
     if (!attempt) return null;
-    if (attempt.is_completed) return this.findAttempt(id, userId);
+    const courseId = attempt.test_availability?.course_id ??
+      attempt.snapshots.find((snapshot) => snapshot.template?.lesson)?.template?.lesson?.course_id;
+    if (!courseId || (!bypassCourseAccess && !(await this.canAccessCourse(courseId, userId, userRole)))) return null;
+    if (attempt.is_completed) return this.findAttempt(id, userId, userRole);
 
     const hasTime =
       (!attempt.deadline_at || attempt.deadline_at.getTime() > Date.now()) &&

@@ -98,20 +98,24 @@ export function CtaInvitationBlock({
             </span>
           ) : null}
           <h2 className="text-3xl font-bold leading-tight md:text-5xl">{activeTitle}</h2>
-          <p className="text-sm leading-7 text-[var(--text-inverse-muted)] md:text-base">{activeDescription}</p>
+          <p className="text-sm leading-7 text-[var(--text-black)] md:text-base">{activeDescription}</p>
         </div>
 
         <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
           {scheduleList.map((item, index) => (
             <div
-              className="flex flex-col justify-between gap-2 rounded-xl border border-white/10 bg-white/5 p-4 text-left backdrop-blur-sm"
+              className="flex flex-col justify-between gap-2 rounded-xl border p-4 text-left backdrop-blur-sm"
               key={index}
+              style={{
+                backgroundColor: "#122744",
+                borderColor: "rgba(255 255 255 / 0.2)",
+              }}
             >
               <div className="grid gap-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.time}</span>
-                <span className="font-semibold text-[var(--text-inverse)]">{item.title}</span>
+                <span className="font-semibold text-[var(--text-white)]">{item.title}</span>
               </div>
-              <p className="text-xs text-[var(--text-inverse-muted)]">{item.description}</p>
+              <p className="text-xs text-[var(--text-white)] opacity-75">{item.description}</p>
             </div>
           ))}
         </div>

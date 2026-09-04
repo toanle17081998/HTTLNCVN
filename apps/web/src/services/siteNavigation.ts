@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getStoredTokens } from "./auth";
 import { pageApi, pageKeys } from "./page";
 
 export type HeaderNavItem = {
@@ -9,6 +10,7 @@ export type HeaderNavItem = {
   href: string;
   icon?: string;
   id: string;
+  guestVisible?: boolean;
   labelEn: string;
   labelVi: string;
   visible: boolean;
@@ -145,6 +147,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/about",
         icon: "info",
         id: "nav-about",
+        guestVisible: true,
         labelEn: "About",
         labelVi: "Giới thiệu",
         visible: true,
@@ -155,6 +158,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/article",
         icon: "bible",
         id: "nav-article",
+        guestVisible: true,
         labelEn: "Articles",
         labelVi: "Bài viết",
         visible: true,
@@ -165,6 +169,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/course",
         icon: "education",
         id: "nav-course",
+        guestVisible: true,
         labelEn: "Courses",
         labelVi: "Khóa học",
         visible: true,
@@ -175,6 +180,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/event",
         icon: "calendar",
         id: "nav-event",
+        guestVisible: true,
         labelEn: "Events",
         labelVi: "Sự kiện",
         visible: true,
@@ -185,6 +191,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/church",
         icon: "church",
         id: "nav-church",
+        guestVisible: true,
         labelEn: "Church",
         labelVi: "Hội thánh",
         visible: true,
@@ -195,6 +202,7 @@ export const defaultSiteNavigationConfig: SiteNavigationConfig = {
         href: "/prayer-journal",
         icon: "prayer",
         id: "nav-prayer",
+        guestVisible: true,
         labelEn: "Prayer Journal",
         labelVi: "Cầu nguyện",
         visible: true,
@@ -272,7 +280,7 @@ export function parseSiteNavigationConfig(rawString?: string): SiteNavigationCon
           ...defaultSiteNavigationConfig.header.cta,
           ...parsed.header?.cta,
         },
-        items: Array.isArray(parsed.header?.items) && parsed.header.items.length
+        items: Array.isArray(parsed.header?.items)
           ? parsed.header.items
           : defaultSiteNavigationConfig.header.items,
       },
@@ -297,10 +305,13 @@ export function parseSiteNavigationConfig(rawString?: string): SiteNavigationCon
 }
 
 export function useSiteNavigationQuery() {
+  const isAuthenticated = Boolean(getStoredTokens()?.accessToken);
   return useQuery({
     queryFn: async () => {
       try {
-        const page = await pageApi.detail(SITE_NAVIGATION_SLUG);
+        const page = isAuthenticated
+          ? await pageApi.detail(SITE_NAVIGATION_SLUG)
+          : await pageApi.publicNavigation();
         if (page?.content_en || page?.content_vi) {
           return parseSiteNavigationConfig(page.content_en || page.content_vi);
         }
@@ -309,8 +320,7 @@ export function useSiteNavigationQuery() {
         return defaultSiteNavigationConfig;
       }
     },
-    queryKey: [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config"],
-    staleTime: 1000 * 60 * 5, // 5 mins cache
+    queryKey: [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config", isAuthenticated ? "member" : "guest"],
   });
 }
 
@@ -344,7 +354,7 @@ export function useUpdateSiteNavigationMutation() {
     },
     onSuccess: (savedConfig) => {
       queryClient.setQueryData(
-        [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config"],
+        [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config", "member"],
         savedConfig
       );
       queryClient.invalidateQueries({ queryKey: pageKeys.detail(SITE_NAVIGATION_SLUG) });

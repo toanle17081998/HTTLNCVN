@@ -1,3 +1,5 @@
+import { clearSessionQueryCache } from "@/lib/sessionQueryCache";
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const tokenStorageKey = "httlncvn.authTokens";
 
@@ -60,6 +62,7 @@ function writeStoredTokens(tokens: StoredTokens) {
 
 function clearStoredTokens() {
   window.localStorage.removeItem(tokenStorageKey);
+  clearSessionQueryCache();
   window.dispatchEvent(new Event("httlncvn:auth-token-change"));
 }
 

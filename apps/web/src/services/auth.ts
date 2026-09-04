@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { apiRequest } from "./client";
+import { clearSessionQueryCache } from "@/lib/sessionQueryCache";
 
 export type LoginDto = {
   email: string;
@@ -143,8 +144,8 @@ export function useLogoutMutation() {
     mutationFn: authApi.logout,
     onSuccess() {
       clearStoredTokens();
-      queryClient.setQueryData(authKeys.session(), null);
-      queryClient.invalidateQueries();
+      queryClient.clear();
+      clearSessionQueryCache();
     },
   });
 }

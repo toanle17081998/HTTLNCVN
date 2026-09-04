@@ -206,22 +206,39 @@ export type CourseTestAvailabilityDto = {
   is_active: boolean;
   quiz: QuizListDto;
   created_at: string;
+  target_user: { id: string; name: string } | null;
 };
 
 export type CourseTestStatusDto = {
+  assigned_users: Array<{
+    completed_at: string | null;
+    email: string;
+    id: string;
+    name: string;
+    score: number | null;
+    started_at: string | null;
+    status: 'not_started' | 'in_progress' | 'done';
+  }>;
   attempt: QuizAttemptDto | null;
   availability: CourseTestAvailabilityDto | null;
+  can_attempt: boolean;
   can_manage: boolean;
-  managed_classes: { id: string; name: string }[];
+  managed_classes: Array<{
+    id: string;
+    name: string;
+    members: Array<{ email: string; id: string; name: string }>;
+  }>;
   question_bank: QuestionTemplateDto[];
 };
 
 export type PublishCourseTestDto = {
+  church_unit_id?: string;
   duration_seconds: number;
   template_ids?: string[];
   new_questions?: Array<CreateQuestionTemplateDto & { lesson_id: string }>;
   title_en?: string;
   title_vi?: string;
+  target_user_id?: string;
 };
 
 export type SubmitAnswerDto = {

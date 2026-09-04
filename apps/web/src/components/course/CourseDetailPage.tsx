@@ -149,7 +149,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                           <div className="flex items-center gap-3">
                             {lesson.quiz_count ? (
                               <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                                {lesson.quiz_count} {t("quiz.title").toLowerCase()}s
+                                {lesson.quiz_count} {t("quiz.practiceTitle").toLowerCase()}
                               </span>
                             ) : null}
                             {can(PERMISSIONS.manageCourses) && (
@@ -191,7 +191,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                 ))
               )}
             </section>
-            {course.slug !== "isom-b-5" && <CourseTestPanel course={course} />}
+            {course.slug !== "isom-b-5" && course.is_allowed !== false && <CourseTestPanel course={course} />}
           </div>
 
         </div>

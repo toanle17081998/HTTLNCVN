@@ -36,6 +36,16 @@ export class PageService {
     return page;
   }
 
+  async findPublicNavigation(): Promise<PageDto> {
+    const page = await this.pageRepository.findPublicNavigation();
+
+    if (!page) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Navigation configuration not found.' });
+    }
+
+    return page;
+  }
+
   create(dto: CreatePageDto, creatorId: string): Promise<PageDto> {
     return this.pageRepository.create(dto, creatorId);
   }

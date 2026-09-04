@@ -592,6 +592,7 @@
   "lesson.form.order": "Order",
   "lesson.label": "Lesson",
   "quiz.action.start": "Start Quiz",
+  "quiz.action.startPractice": "Start practice",
   "quiz.status.notStarted": "Not started",
   "quiz.status.completed": "Completed",
   "quiz.score": "Score",
@@ -601,6 +602,7 @@
   "quiz.seconds": "seconds",
   "quiz.noLimit": "No limit",
   "quiz.title": "Quiz",
+  "quiz.practiceTitle": "Practice Quiz",
   "quiz.question": "Question",
   "quiz.yourAnswer": "Your Answer",
   "quiz.correctAnswer": "Correct Answer",
@@ -755,6 +757,8 @@
   "admin.navigation.resetConfirmLabel": "Reset to defaults",
   "nav.changePassword": "Change Password",
   "nav.adminPortal": "Admin Workspace",
+  "nav.guest": "Guest",
+  "nav.userMenu": "User menu",
   "nav.theme": "Theme",
   "nav.language": "Language"
 }

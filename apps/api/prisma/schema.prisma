@@ -46,6 +46,7 @@ model User {
   lessons_created   Lesson[]
   quiz_attempts     QuizAttempt[]
   test_availabilities_created CourseTestAvailability[] @relation("CourseTestAvailabilityCreator")
+  test_availabilities_targeted CourseTestAvailability[] @relation("CourseTestAvailabilityTarget")
   learning_sessions LearningSession[]
   lesson_grades     LessonGrade[]
   course_grades     CourseGrade[]
@@ -282,6 +283,7 @@ model CourseTestAvailability {
   duration_seconds  Int
   is_active         Boolean   @default(true)
   created_by        String    @db.Uuid
+  target_user_id    String?   @db.Uuid
   created_at        DateTime  @default(now()) @db.Timestamptz
   closed_at         DateTime? @db.Timestamptz
 
@@ -289,9 +291,11 @@ model CourseTestAvailability {
   church_unit ChurchUnit @relation(fields: [church_unit_id], references: [id], onDelete: Cascade)
   quiz        Quiz       @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
   creator     User       @relation("CourseTestAvailabilityCreator", fields: [created_by], references: [id], onDelete: Cascade)
+  target_user User?      @relation("CourseTestAvailabilityTarget", fields: [target_user_id], references: [id], onDelete: Cascade)
   attempts    QuizAttempt[]
 
   @@index([course_id, church_unit_id, is_active])
+  @@index([target_user_id])
   @@map("course_test_availabilities")
 }
 

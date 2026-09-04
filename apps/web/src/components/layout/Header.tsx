@@ -61,7 +61,11 @@ export function Header({ pathname }: HeaderProps) {
   const siteNav = siteNavQuery.data ?? defaultSiteNavigationConfig;
   const headerConfig = siteNav.header;
 
-  const dynamicItems = headerConfig.items.filter((item) => item.visible !== false);
+  const dynamicItems = !isAuthenticated && !siteNavQuery.data
+    ? []
+    : headerConfig.items.filter(
+        (item) => item.visible !== false && (isAuthenticated || item.guestVisible !== false),
+      );
 
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
@@ -327,41 +331,31 @@ export function Header({ pathname }: HeaderProps) {
 
           {/* User Settings Dropdown */}
           <div className="relative" ref={settingsRef}>
-            {isAuthenticated ? (
-              <button
-                aria-expanded={settingsOpen}
-                aria-haspopup="menu"
-                aria-label={t("nav.userMenu" as any)}
+            <button
+              aria-expanded={settingsOpen}
+              aria-haspopup="menu"
+              aria-label={t("nav.userMenu" as any)}
+              className={cn(
+                "flex items-center gap-2.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 px-3 py-1.5 text-left transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)] active:scale-95 cursor-pointer shadow-xs",
+                settingsOpen && "border-[var(--brand-primary)] bg-[var(--brand-muted)]",
+              )}
+              onClick={() => {
+                setSettingsOpen((open) => !open);
+                setNotificationOpen(false);
+                setMobileMenuOpen(false);
+              }}
+              type="button"
+            >
+              <span className="text-xs font-bold leading-tight text-[var(--text-primary)] max-w-[11rem] truncate">
+                {isAuthenticated ? user?.username || user?.email || "User" : t("nav.guest" as any)}
+              </span>
+              <ChevronDown
                 className={cn(
-                  "flex items-center gap-2.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]/90 px-3 py-1.5 text-left transition-all hover:border-[var(--brand-primary)] hover:bg-[var(--brand-muted)] active:scale-95 cursor-pointer shadow-xs",
-                  settingsOpen && "border-[var(--brand-primary)] bg-[var(--brand-muted)]",
+                  "h-3.5 w-3.5 text-[var(--text-secondary)] transition-transform duration-200 shrink-0",
+                  settingsOpen && "rotate-180",
                 )}
-                onClick={() => {
-                  setSettingsOpen((open) => !open);
-                  setNotificationOpen(false);
-                  setMobileMenuOpen(false);
-                }}
-                type="button"
-              >
-                <span className="text-xs font-bold leading-tight text-[var(--text-primary)] max-w-[11rem] truncate">
-                  {user?.username || user?.email || "User"}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 text-[var(--text-secondary)] transition-transform duration-200 shrink-0",
-                    settingsOpen && "rotate-180",
-                  )}
-                />
-              </button>
-            ) : (
-              <Link
-                className="flex items-center gap-2 rounded-xl border border-[var(--brand-primary)] bg-[var(--brand-primary)] px-3.5 py-2 text-xs font-bold text-[var(--text-inverse)] shadow-xs transition-all hover:bg-[var(--brand-primary-strong)] active:scale-95"
-                href="/auth"
-              >
-                <LogIn className="h-4 w-4" />
-                <span>{t("nav.login")}</span>
-              </Link>
-            )}
+              />
+            </button>
 
             {settingsOpen && (
               <div
@@ -376,7 +370,9 @@ export function Header({ pathname }: HeaderProps) {
                   {role && (
                     <span className="mt-1.5 inline-flex items-center rounded-full bg-[var(--brand-muted)] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
                       {locale === "vi"
-                        ? role === "SUPER_ADMIN"
+                        ? !isAuthenticated
+                          ? t("nav.guest" as any)
+                          : role === "SUPER_ADMIN"
                           ? "Tổng quản trị"
                           : role === "CHURCH_ADMIN"
                             ? "Quản trị hội thánh"
@@ -549,10 +545,12 @@ export function Header({ pathname }: HeaderProps) {
       </nav>
 
       {/* Change Password Modal */}
-      <ChangePasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-      />
+      {isAuthenticated ? (
+        <ChangePasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+        />
+      ) : null}
     </header>
   );
 }

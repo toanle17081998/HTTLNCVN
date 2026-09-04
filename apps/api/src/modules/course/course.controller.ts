@@ -205,7 +205,7 @@ export class CourseController {
     @Param('id') id: string,
     @Request() req: { user: JwtPayload },
   ): Promise<QuizAttemptDto> {
-    return this.courseService.startCourseTest(id, req.user.sub);
+    return this.courseService.startCourseTest(id, req.user.sub, req.user.role);
   }
 
   @Public()
@@ -245,7 +245,7 @@ export class CourseController {
     @Param('quizId') quizId: string,
     @Request() req: { user: JwtPayload },
   ): Promise<QuizAttemptDto> {
-    return this.courseService.startQuiz(quizId, req.user.sub);
+    return this.courseService.startQuiz(quizId, req.user.sub, req.user.role);
   }
 
   @Can('take', 'quiz')
@@ -254,7 +254,7 @@ export class CourseController {
     @Param('attemptId') attemptId: string,
     @Request() req: { user: JwtPayload },
   ): Promise<QuizAttemptDto> {
-    return this.courseService.findAttempt(attemptId, req.user.sub);
+    return this.courseService.findAttempt(attemptId, req.user.sub, req.user.role);
   }
 
   @Can('take', 'quiz')
@@ -263,7 +263,7 @@ export class CourseController {
     @Body() dto: SubmitAnswerDto,
     @Request() req: { user: JwtPayload },
   ): Promise<SubmitAnswerResultDto> {
-    return this.courseService.submitAnswer(dto, req.user.sub);
+    return this.courseService.submitAnswer(dto, req.user.sub, req.user.role);
   }
 
   @Can('take', 'quiz')
@@ -273,6 +273,6 @@ export class CourseController {
     @Body() dto: FinishAttemptDto,
     @Request() req: { user: JwtPayload },
   ): Promise<QuizAttemptDto> {
-    return this.courseService.finishAttempt(attemptId, req.user.sub, dto.answers);
+    return this.courseService.finishAttempt(attemptId, req.user.sub, dto.answers, req.user.role);
   }
 }

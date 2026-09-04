@@ -501,7 +501,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
             )
           ) : selectedPage ? (
             <BuilderShell
-              key={editLang}
+              key={`${selectedPage.id}-${editLang}-${selectedPage.updated_at}`}
               content={ensureValidPageContent(
                 editLang === "en" ? selectedPage.content_en : selectedPage.content_vi,
                 editLang === "en" ? selectedPage.title_en : selectedPage.title_vi,

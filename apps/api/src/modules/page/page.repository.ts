@@ -51,6 +51,7 @@ export class PageRepository {
 
   async findByPath(path: string): Promise<PageDto | null> {
     const normalized = this.normalizeRoutePath(path);
+    if (normalized === '/site-navigation') return null;
     const page = await this.prisma.page.findFirst({
       where: {
         deleted_at: null,
@@ -61,6 +62,21 @@ export class PageRepository {
     });
 
     return page ? this.toDto(page) : null;
+  }
+
+  async findPublicNavigation(): Promise<PageDto | null> {
+    const page = await this.prisma.page.findFirst({
+      where: { deleted_at: null, slug: 'site-navigation' },
+      orderBy: { updated_at: 'desc' },
+    });
+    if (!page) return null;
+
+    const publicConfig = this.sanitizePublicNavigation(page.content_json_en);
+    return {
+      ...this.toDto(page),
+      content_en: JSON.stringify(publicConfig),
+      content_vi: JSON.stringify(publicConfig),
+    };
   }
 
   async create(dto: CreatePageDto, creatorId: string): Promise<PageDto> {
@@ -168,6 +184,23 @@ export class PageRepository {
     } catch {
       return {};
     }
+  }
+
+  private sanitizePublicNavigation(content: unknown): Record<string, unknown> {
+    if (!content || typeof content !== 'object' || Array.isArray(content)) return {};
+    const config = content as Record<string, unknown>;
+    const header = config.header && typeof config.header === 'object' && !Array.isArray(config.header)
+      ? config.header as Record<string, unknown>
+      : {};
+    const items = Array.isArray(header.items)
+      ? header.items.filter((item) => {
+          if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+          const navItem = item as Record<string, unknown>;
+          return navItem.visible !== false && navItem.guestVisible !== false;
+        })
+      : [];
+
+    return { ...config, header: { ...header, items } };
   }
 
   private handleWriteError(error: unknown): never {

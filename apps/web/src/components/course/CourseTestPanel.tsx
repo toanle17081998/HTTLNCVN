@@ -52,6 +52,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
   const closeTest = useCloseCourseTestMutation(course.slug);
   const startTest = useStartCourseTestMutation();
   const [durationMinutes, setDurationMinutes] = useState(60);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [targetUserId, setTargetUserId] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
@@ -59,6 +61,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
 
   const status = testQuery.data;
   const firstLessonId = course.lessons[0]?.id;
+  const activeClassId = selectedClassId || status?.managed_classes[0]?.id || "";
+  const activeClass = status?.managed_classes.find(({ id }) => id === activeClassId);
 
   const filteredQuestions = (status?.question_bank || []).filter((question) => {
     const term = searchQuery.toLowerCase().trim();
@@ -103,9 +107,11 @@ export function CourseTestPanel({ course }: { course: Course }) {
         template_type: question.type,
       }));
     await publishTest.mutateAsync({
+      church_unit_id: activeClassId,
       duration_seconds: Math.max(1, durationMinutes) * 60,
       new_questions: newQuestions,
       template_ids: selectedIds,
+      target_user_id: targetUserId || undefined,
     });
     setSelectedIds([]);
     setDraftQuestions([]);
@@ -119,7 +125,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
   const title = locale === "vi" ? "Bài kiểm tra cuối khóa" : "Final course test";
 
   return (
-    <Card className="p-6">
+    <Card className="flex flex-col p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
@@ -130,13 +136,13 @@ export function CourseTestPanel({ course }: { course: Course }) {
         {status.availability ? (
           <span className="rounded-md bg-[var(--brand-muted)] px-3 py-1 text-xs font-semibold text-[var(--brand-primary)]">
             {status.can_manage
-              ? `${status.managed_classes.length} ${locale === "vi" ? "lớp" : "classes"}`
+              ? status.availability.target_user?.name || status.availability.church_unit.name
               : status.availability.church_unit.name}
           </span>
         ) : null}
       </div>
 
-      {status.availability ? (
+      {status.availability && status.can_attempt ? (
         <div className="mt-5 rounded-lg border border-[var(--border-subtle)] p-4">
           {attempt?.is_completed ? (
             <div>
@@ -162,15 +168,97 @@ export function CourseTestPanel({ course }: { course: Course }) {
         </div>
       ) : null}
 
+      {status.can_manage && status.availability ? (
+        <div className="order-last mt-5 overflow-hidden rounded-lg border border-[var(--border-subtle)]">
+          <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
+            <h3 className="font-semibold text-[var(--text-primary)]">
+              {status.availability.is_active
+                ? (locale === "vi" ? "Trạng thái người làm bài" : "Assigned test takers")
+                : (locale === "vi" ? "Kết quả đợt gần nhất" : "Latest test results")}
+            </h3>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              {status.assigned_users.length} {locale === "vi" ? "người được giao" : "assigned"}
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-[var(--bg-base)] text-xs uppercase text-[var(--text-tertiary)]">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Người làm bài" : "Test taker"}</th>
+                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Trạng thái" : "Status"}</th>
+                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Điểm" : "Score"}</th>
+                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Cập nhật" : "Updated"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-subtle)]">
+                {status.assigned_users.map((assignedUser) => {
+                  const timestamp = assignedUser.completed_at ?? assignedUser.started_at ?? status.availability!.created_at;
+                  const statusLabel = assignedUser.status === "done"
+                    ? (locale === "vi" ? "Hoàn thành" : "Done")
+                    : assignedUser.status === "in_progress"
+                      ? (locale === "vi" ? "Đang làm" : "In progress")
+                      : (locale === "vi" ? "Chưa bắt đầu" : "Not started");
+                  return (
+                    <tr key={assignedUser.id}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-[var(--text-primary)]">{assignedUser.name}</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">{assignedUser.email}</p>
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text-secondary)]">{statusLabel}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">
+                        {assignedUser.status === "done" && assignedUser.score !== null
+                          ? `${Math.round(assignedUser.score)}%`
+                          : "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-[var(--text-tertiary)]">
+                        {new Date(timestamp).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
       {status.can_manage ? (
         <div className="mt-6 border-t border-[var(--border-subtle)] pt-5">
           <h3 className="font-semibold text-[var(--text-primary)]">{locale === "vi" ? "Mở đợt kiểm tra" : "Publish test availability"}</h3>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
             {locale === "vi"
-              ? `Bài kiểm tra này sẽ được mở cho tất cả ${status.managed_classes.length} lớp đang học khóa này.`
-              : `This test will be published to all ${status.managed_classes.length} classes assigned to this course.`}
+              ? "Mở bài kiểm tra cho cả lớp hoặc một cá nhân cụ thể. Mỗi đợt mở chỉ có một lượt làm bài."
+              : "Open the test for a whole class or one individual. Each opening allows one attempt."}
           </p>
           <div className="mt-4 grid gap-4 sm:max-w-sm">
+            <label className="grid gap-1 text-sm font-medium">
+              {locale === "vi" ? "Lớp" : "Class"}
+              <select
+                className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
+                value={activeClassId}
+                onChange={(event) => {
+                  setSelectedClassId(event.target.value);
+                  setTargetUserId("");
+                }}
+              >
+                {status.managed_classes.map((managedClass) => (
+                  <option key={managedClass.id} value={managedClass.id}>{managedClass.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm font-medium">
+              {locale === "vi" ? "Người làm bài" : "Test taker"}
+              <select
+                className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
+                value={targetUserId}
+                onChange={(event) => setTargetUserId(event.target.value)}
+              >
+                <option value="">{locale === "vi" ? "Tất cả thành viên trong lớp" : "Everyone in the class"}</option>
+                {activeClass?.members.map((member) => (
+                  <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
+                ))}
+              </select>
+            </label>
             <label className="grid gap-1 text-sm font-medium">
               {locale === "vi" ? "Thời gian (phút)" : "Duration (minutes)"}
               <Input min={1} type="number" value={durationMinutes} onChange={(event) => setDurationMinutes(Number(event.target.value))} />
@@ -226,15 +314,15 @@ export function CourseTestPanel({ course }: { course: Course }) {
             <Button
               disabled={
                 publishTest.isPending ||
-                Boolean(status.availability) ||
-                !status.managed_classes.length ||
+                Boolean(status.availability?.is_active) ||
+                !activeClassId ||
                 (draftQuestions.length > 0 && !draftQuestions.every(isDraftComplete))
               }
               onClick={handlePublish}
             >
               {locale === "vi" ? "Mở đợt kiểm tra" : "Open test round"}
             </Button>
-            {status.availability ? (
+            {status.availability?.is_active ? (
               <Button disabled={closeTest.isPending} onClick={() => closeTest.mutate(status.availability!.id)} variant="secondary">
                 {locale === "vi" ? "Đóng bài kiểm tra" : "Close test"}
               </Button>

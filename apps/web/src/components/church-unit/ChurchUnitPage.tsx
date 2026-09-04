@@ -1151,6 +1151,21 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
     return unit.courses.find((c) => c.id === selectedCourseId) || unit.courses[0];
   }, [unit.courses, selectedCourseId]);
 
+  const orderedScores = useMemo(() => {
+    if (!activeCourse) return scores ?? [];
+    const latestActivity = (scoreItem: any) => {
+      const courseScore = scoreItem.course_scores.find((item: any) => item.course_id === activeCourse.id);
+      if (!courseScore) return 0;
+      const dates = [
+        courseScore.completed_at,
+        ...(courseScore.quiz_attempts ?? []).map((attempt: any) => attempt.completed_at ?? attempt.started_at),
+      ].filter(Boolean);
+      return dates.reduce((latest: number, date: string) => Math.max(latest, new Date(date).getTime()), 0);
+    };
+
+    return [...(scores ?? [])].sort((a: any, b: any) => latestActivity(b) - latestActivity(a));
+  }, [activeCourse, scores]);
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
       <div className="flex flex-col max-h-[calc(100vh-3rem)] w-full max-w-5xl rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1240,7 +1255,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]">
-                {(scores ?? []).map((scoreItem: any) => {
+                {orderedScores.map((scoreItem: any) => {
                   const courseScore = scoreItem.course_scores.find((cs: any) => cs.course_id === activeCourse.id) || {
                     status: "not_started",
                     score: null,
@@ -1308,7 +1323,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                     </tr>
                   );
                 })}
-                {(scores ?? []).length === 0 && (
+                {orderedScores.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-6 py-10 text-center text-sm font-medium text-[var(--text-tertiary)]">
                       {t("admin.churchUnits.scores.noMembers")}

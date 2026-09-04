@@ -585,6 +585,7 @@
   "lesson.form.order": "Thứ tự",
   "lesson.label": "Bài học",
   "quiz.action.start": "Bắt đầu kiểm tra",
+  "quiz.action.startPractice": "Bắt đầu luyện tập",
   "quiz.status.notStarted": "Chưa bắt đầu",
   "quiz.status.completed": "Nộp",
   "quiz.score": "Điểm số",
@@ -594,6 +595,7 @@
   "quiz.seconds": "giây",
   "quiz.noLimit": "Không giới hạn",
   "quiz.title": "Bài kiểm tra",
+  "quiz.practiceTitle": "Bài luyện tập",
   "quiz.question": "Câu hỏi",
   "quiz.yourAnswer": "Câu trả lời của bạn",
   "quiz.correctAnswer": "Đáp án đúng",
@@ -755,6 +757,8 @@
   "admin.navigation.resetConfirmLabel": "Khôi phục mặc định",
   "nav.changePassword": "Đổi mật khẩu",
   "nav.adminPortal": "Trang quản trị",
+  "nav.guest": "Khách",
+  "nav.userMenu": "Menu người dùng",
   "nav.theme": "Giao diện",
   "nav.language": "Ngôn ngữ"
 }

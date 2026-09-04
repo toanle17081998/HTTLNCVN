@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PERMISSIONS, type Permission } from "@/lib/rbac";
+import { clearSessionQueryCache } from "@/lib/sessionQueryCache";
 import {
   clearStoredTokens,
   useAccessToken,
@@ -126,7 +127,7 @@ function hasApiPermission(user: AuthUser | null, requirement: ApiPermissionRequi
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const accessToken = useAccessToken();
   const meQuery = useMeQuery(Boolean(accessToken));
   const user = accessToken ? (meQuery.data ?? null) : null;
@@ -149,10 +150,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout() {
         clearStoredTokens();
+        queryClient.clear();
+        clearSessionQueryCache();
         window.location.href = "/";
       },
     };
-  }, [meQuery.isLoading, router, user]);
+  }, [meQuery.isLoading, queryClient, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

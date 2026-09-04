@@ -31,12 +31,6 @@ type I18nProviderProps = {
   children: ReactNode;
 };
 
-function getBrowserLocale() {
-  const browserLocale = window.navigator.language.split("-")[0];
-
-  return isLocale(browserLocale) ? browserLocale : defaultLocale;
-}
-
 function getPreferredLocale() {
   try {
     const savedLocale = window.localStorage.getItem(storageKey);
@@ -45,10 +39,10 @@ function getPreferredLocale() {
       return savedLocale;
     }
   } catch {
-    return getBrowserLocale();
+    return defaultLocale;
   }
 
-  return getBrowserLocale();
+  return defaultLocale;
 }
 
 function getLocaleSnapshot() {

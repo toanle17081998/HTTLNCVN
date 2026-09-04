@@ -200,6 +200,46 @@ export class ChurchUnitRepository {
     }
   }
 
+  private async revokeMembersFromCourses(
+    tx: any,
+    userIds: string[],
+    courseIds: string[],
+    excludedUnitId: string,
+  ): Promise<void> {
+    if (userIds.length === 0 || courseIds.length === 0) return;
+
+    const otherClasses = await tx.churchUnit.findMany({
+      select: {
+        courses: { select: { id: true }, where: { id: { in: courseIds } } },
+        members: { select: { user_id: true }, where: { user_id: { in: userIds } } },
+      },
+      where: {
+        courses: { some: { id: { in: courseIds } } },
+        id: { not: excludedUnitId },
+        is_active: true,
+        members: { some: { user_id: { in: userIds } } },
+        type: 'class',
+      },
+    });
+    const retainedAccess = new Set<string>();
+    for (const unit of otherClasses) {
+      for (const member of unit.members) {
+        for (const course of unit.courses) retainedAccess.add(`${member.user_id}:${course.id}`);
+      }
+    }
+
+    for (const courseId of courseIds) {
+      const revokedUserIds = userIds.filter((userId) => !retainedAccess.has(`${userId}:${courseId}`));
+      if (revokedUserIds.length === 0) continue;
+      await tx.courseAttendance.deleteMany({
+        where: { course_id: courseId, user_id: { in: revokedUserIds } },
+      });
+      await tx.courseGrade.deleteMany({
+        where: { course_id: courseId, user_id: { in: revokedUserIds } },
+      });
+    }
+  }
+
   async getMeta(): Promise<ChurchUnitMetaDto> {
     const [members, units] = await this.prisma.$transaction([
       this.prisma.user.findMany({
@@ -380,6 +420,9 @@ export class ChurchUnitRepository {
           courses: {
             select: { id: true },
           },
+          members: {
+            select: { user_id: true },
+          },
         },
         where: { id },
       });
@@ -546,6 +589,13 @@ export class ChurchUnitRepository {
           finalUserIds = currentMembers.map((m) => m.user_id);
         }
 
+        const previousCourseIds = existing.courses.map((course) => course.id);
+        const previousUserIds = existing.members.map((member) => member.user_id);
+        const removedCourseIds = previousCourseIds.filter((courseId) => !finalCourseIds.includes(courseId));
+        const removedUserIds = previousUserIds.filter((userId) => !finalUserIds.includes(userId));
+        await this.revokeMembersFromCourses(tx, previousUserIds, removedCourseIds, id);
+        await this.revokeMembersFromCourses(tx, removedUserIds, finalCourseIds, id);
+
         await this.enrollMembersToCourses(tx, finalUserIds, finalCourseIds);
       }
 
@@ -677,11 +727,17 @@ export class ChurchUnitRepository {
           (cg) => cg.user_id === user.id && cg.course_id === course.id,
         );
 
-        const attemptsForCourse = quizAttempts.filter(
-          (qa) =>
-            qa.user_id === user.id &&
-            (qa.test_availability?.course_id === course.id || !qa.test_availability_id),
-        );
+        const attemptsForCourse = quizAttempts
+          .filter(
+            (qa) =>
+              qa.user_id === user.id &&
+              (qa.test_availability?.course_id === course.id || !qa.test_availability_id),
+          )
+          .sort(
+            (a, b) =>
+              (b.completed_at ?? b.started_at).getTime() -
+              (a.completed_at ?? a.started_at).getTime(),
+          );
 
         if (attemptsForCourse.length > 0) {
           totalCompletedAttempts += attemptsForCourse.filter((a) => a.is_completed).length;
@@ -733,6 +789,7 @@ export class ChurchUnitRepository {
               total_questions: qTotal,
               score_display: qa.total_score !== null ? (qTotal > 0 ? `${qScore}/${qTotal}` : `${qScore}`) : null,
               is_completed: qa.is_completed ?? false,
+              started_at: qa.started_at.toISOString(),
               completed_at: qa.completed_at ? qa.completed_at.toISOString() : null,
             };
           }),

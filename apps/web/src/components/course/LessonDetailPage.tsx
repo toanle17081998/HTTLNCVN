@@ -121,7 +121,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
 
           <aside className="lg:sticky lg:top-24 grid gap-5">
             <Card className="p-5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("quiz.title")}</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("quiz.practiceTitle")}</h2>
               <div className="mt-4 grid gap-3">
                 {lesson.quizzes.map((quiz) => (
                   <div
@@ -140,7 +140,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                       onClick={() => handleStartQuiz(quiz)}
                       size="sm"
                     >
-                      {t("quiz.action.start")}
+                      {t("quiz.action.startPractice")}
                     </Button>
                   </div>
                 ))}

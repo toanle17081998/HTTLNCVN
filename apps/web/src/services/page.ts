@@ -53,6 +53,9 @@ export const pageApi = {
       token: getStoredTokens()?.accessToken,
     });
   },
+  publicNavigation() {
+    return apiRequest<Page>("/pages/navigation");
+  },
   resolve(path: string) {
     const search = new URLSearchParams({ path });
     return apiRequest<Page>(`/pages/resolve?${search.toString()}`);
@@ -104,8 +107,6 @@ export function useResolvedPageQuery(path: string) {
   return useQuery({
     queryFn: () => pageApi.resolve(path),
     queryKey: pageKeys.resolve(path),
-    staleTime: 0,
-    refetchOnMount: "always",
   });
 }
 

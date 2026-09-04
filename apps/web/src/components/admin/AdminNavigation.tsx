@@ -6,8 +6,10 @@ import {
   ArrowUp,
   Eye,
   EyeOff,
+  Globe2,
   ImageIcon,
   LayoutTemplate,
+  Lock,
   Menu as MenuIcon,
   Plus,
   RefreshCcw,
@@ -90,6 +92,7 @@ export function AdminNavigation() {
       href: "/about",
       icon: "users",
       id: nextId,
+      guestVisible: true,
       labelEn: "New Link",
       labelVi: "Liên kết mới",
       visible: true,
@@ -435,6 +438,20 @@ export function AdminNavigation() {
                             type="button"
                           >
                             {item.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            aria-label="Toggle Guest Access"
+                            className={cn(
+                              "flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] transition-colors",
+                              item.guestVisible !== false
+                                ? "text-[var(--status-success)] hover:bg-[var(--brand-soft)]"
+                                : "text-[var(--text-tertiary)] hover:bg-[var(--brand-soft)]"
+                            )}
+                            onClick={() => handleUpdateNavItem(index, { guestVisible: item.guestVisible === false })}
+                            title={item.guestVisible !== false ? "Visible to guests" : "Members only"}
+                            type="button"
+                          >
+                            {item.guestVisible !== false ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                           </button>
                           <button
                             aria-label="Delete Menu Item"

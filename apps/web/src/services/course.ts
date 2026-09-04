@@ -211,22 +211,39 @@ export type CourseTestAvailability = {
   id: string;
   is_active: boolean;
   quiz: QuizListItem;
+  target_user: { id: string; name: string } | null;
 };
 
 export type CourseTestStatus = {
+  assigned_users: Array<{
+    completed_at: string | null;
+    email: string;
+    id: string;
+    name: string;
+    score: number | null;
+    started_at: string | null;
+    status: "not_started" | "in_progress" | "done";
+  }>;
   attempt: QuizAttempt | null;
   availability: CourseTestAvailability | null;
+  can_attempt: boolean;
   can_manage: boolean;
-  managed_classes: { id: string; name: string }[];
+  managed_classes: Array<{
+    id: string;
+    name: string;
+    members: Array<{ email: string; id: string; name: string }>;
+  }>;
   question_bank: QuestionTemplate[];
 };
 
 export type PublishCourseTestDto = {
+  church_unit_id?: string;
   duration_seconds: number;
   new_questions?: Array<CreateQuestionTemplateDto & { lesson_id: string }>;
   template_ids?: string[];
   title_en?: string;
   title_vi?: string;
+  target_user_id?: string;
 };
 
 export type SubmitAnswerDto = {
@@ -468,6 +485,8 @@ export function useCourseQuery(slug?: string) {
     enabled: Boolean(slug),
     queryFn: () => courseApi.detail(slug ?? ""),
     queryKey: courseKeys.detail(slug ?? ""),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 }
 
@@ -476,6 +495,8 @@ export function useLessonQuery(courseSlug?: string, lessonId?: string) {
     enabled: Boolean(courseSlug && lessonId),
     queryFn: () => courseApi.lesson(courseSlug ?? "", lessonId ?? ""),
     queryKey: courseKeys.lesson(lessonId ?? ""),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 }
 
@@ -492,6 +513,7 @@ export function useCourseTestQuery(courseSlug?: string) {
     enabled: Boolean(courseSlug && getStoredTokens()?.accessToken),
     queryFn: () => courseApi.testStatus(courseSlug ?? ""),
     queryKey: courseKeys.test(courseSlug ?? ""),
+    refetchInterval: 5_000,
   });
 }
 

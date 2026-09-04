@@ -6,7 +6,7 @@ export const locales = ["en", "vi"] as const;
 export type Locale = (typeof locales)[number];
 export type TranslationKey = keyof typeof enMessages;
 
-export const defaultLocale: Locale = "en";
+export const defaultLocale: Locale = "vi";
 
 export const localeLabels: Record<Locale, string> = {
   en: "English",
