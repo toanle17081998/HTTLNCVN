@@ -8,7 +8,7 @@ import { buildBoxStyle, resolveStyleToken, withUnitFallback } from "../../shared
 import { NodeFrame } from "../../shared/NodeFrame";
 import { IconPicker, featureIconMap, resolveIcon } from "../../shared/iconList";
 import type { BoxProps, SizeValue } from "../../shared/types";
-import type { CSSProperties } from "react";
+import { createElement, type CSSProperties } from "react";
 
 export { featureIconMap, resolveIcon };
 
@@ -23,28 +23,62 @@ type IconBoxProps = BoxProps & {
   title?: string;
 };
 
-export function IconBoxBlock({
-  alignItems = "flex-start",
-  background = "var(--bg-surface)",
-  borderColor = "var(--border-subtle)",
-  borderRadius = "20px",
-  borderWidth = "1px",
-  description = "A warm, welcoming description explaining this feature in meaningful detail.",
-  icon = "users",
-  iconColor = "var(--brand-primary)",
-  iconSize = "32px",
-  justifyContent = "flex-start",
-  paddingBottom = "24px",
-  paddingLeft = "24px",
-  paddingRight = "24px",
-  paddingTop = "24px",
-  removable = false,
-  title = "Feature Highlight",
-  ...props
-}: IconBoxProps) {
-  const { id } = useNode();
+export function IconBoxBlock(props: IconBoxProps) {
+  const {
+    id,
+    nodeAlignItems,
+    nodeBackground,
+    nodeBorderColor,
+    nodeBorderRadius,
+    nodeBorderWidth,
+    nodeDescription,
+    nodeIcon,
+    nodeIconColor,
+    nodeIconSize,
+    nodeJustifyContent,
+    nodePaddingBottom,
+    nodePaddingLeft,
+    nodePaddingRight,
+    nodePaddingTop,
+    nodeRemovable,
+    nodeTitle,
+  } = useNode((node) => ({
+    nodeAlignItems: node.data.props.alignItems,
+    nodeBackground: node.data.props.background,
+    nodeBorderColor: node.data.props.borderColor,
+    nodeBorderRadius: node.data.props.borderRadius,
+    nodeBorderWidth: node.data.props.borderWidth,
+    nodeDescription: node.data.props.description,
+    nodeIcon: node.data.props.icon,
+    nodeIconColor: node.data.props.iconColor,
+    nodeIconSize: node.data.props.iconSize,
+    nodeJustifyContent: node.data.props.justifyContent,
+    nodePaddingBottom: node.data.props.paddingBottom,
+    nodePaddingLeft: node.data.props.paddingLeft,
+    nodePaddingRight: node.data.props.paddingRight,
+    nodePaddingTop: node.data.props.paddingTop,
+    nodeRemovable: node.data.props.removable,
+    nodeTitle: node.data.props.title,
+  }));
   const { actions, enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
-  const FeatureIcon = resolveIcon(icon);
+
+  const alignItems = nodeAlignItems ?? props.alignItems ?? "flex-start";
+  const background = nodeBackground ?? props.background ?? "var(--bg-surface)";
+  const borderColor = nodeBorderColor ?? props.borderColor ?? "var(--border-subtle)";
+  const borderRadius = nodeBorderRadius ?? props.borderRadius ?? "20px";
+  const borderWidth = nodeBorderWidth ?? props.borderWidth ?? "1px";
+  const description = nodeDescription ?? props.description ?? "A warm, welcoming description explaining this feature in meaningful detail.";
+  const icon = nodeIcon ?? props.icon ?? "users";
+  const iconColor = nodeIconColor ?? props.iconColor ?? "var(--brand-primary)";
+  const iconSize = nodeIconSize ?? props.iconSize ?? "32px";
+  const justifyContent = nodeJustifyContent ?? props.justifyContent ?? "flex-start";
+  const paddingBottom = nodePaddingBottom ?? props.paddingBottom ?? "24px";
+  const paddingLeft = nodePaddingLeft ?? props.paddingLeft ?? "24px";
+  const paddingRight = nodePaddingRight ?? props.paddingRight ?? "24px";
+  const paddingTop = nodePaddingTop ?? props.paddingTop ?? "24px";
+  const removable = nodeRemovable ?? props.removable ?? false;
+  const title = nodeTitle ?? props.title ?? "Feature Highlight";
+  const ResolvedIcon = resolveIcon(icon);
 
   return (
     <NodeFrame>
@@ -59,11 +93,41 @@ export function IconBoxBlock({
         }}
       >
         <div style={{ color: resolveStyleToken(iconColor), fontSize: withUnitFallback(iconSize), lineHeight: 1 }}>
-          <FeatureIcon style={{ height: withUnitFallback(iconSize), width: withUnitFallback(iconSize) }} />
+          {createElement(ResolvedIcon, { style: { height: withUnitFallback(iconSize), width: withUnitFallback(iconSize) } })}
         </div>
         <h3 style={{ color: "var(--text-primary)", fontSize: "var(--section-card-title-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>{title}</h3>
-        <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>{description}</p>
-        {enabled && removable ? <button aria-label="Remove feature" className="absolute right-0 top-0 grid h-9 w-9 place-items-center rounded-full bg-[var(--bg-elevated)] text-[var(--status-danger)] shadow-md" onClick={(event) => { event.stopPropagation(); actions.delete(id); }} type="button"><Trash2 className="h-4 w-4" /></button> : null}
+        {description ? (
+          <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>{description}</p>
+        ) : null}
+        {enabled ? (
+          <button
+            aria-label="Remove feature"
+            className="absolute right-0 top-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-[var(--status-danger)] text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer"
+            onClick={(event) => {
+              event.stopPropagation();
+              event.preventDefault();
+              actions.delete(id);
+            }}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+            }}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onTouchStart={(event) => {
+              event.stopPropagation();
+            }}
+            ref={(buttonRef) => {
+              if (buttonRef) {
+                buttonRef.onpointerdown = (event) => event.stopPropagation();
+                buttonRef.onmousedown = (event) => event.stopPropagation();
+              }
+            }}
+            type="button"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
     </NodeFrame>
   );

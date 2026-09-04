@@ -248,138 +248,127 @@ export function PrayerJournalPage() {
           </p>
         </Card>
       ) : (
-        <div className="grid gap-8">
+        <div className="grid gap-6">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.mine")}
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{ownPrayerCount}</p>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{ownPrayerCount}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.shared")}
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{sharedPrayerCount}</p>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{sharedPrayerCount}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.answered")}
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{answeredPrayerCount}</p>
-            </Card>
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{answeredPrayerCount}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-search-input">
+                {t("common.search")}
+              </label>
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
+                />
+                <Input
+                  id="prayer-search-input"
+                  className="h-9 pl-10 text-sm"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t("prayer.search.placeholder")}
+                  value={query}
+                />
+              </div>
+            </div>
+            <div className="flex items-end gap-2">
+              <PrayerFilterBar
+                onStatusChange={setStatusFilter}
+                onVisibilityChange={setVisibilityFilter}
+                statusFilter={statusFilter}
+                visibilityFilter={visibilityFilter}
+              />
+              <button
+                aria-label={t("admin.members.refresh")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
+                onClick={() => {
+                  void prayersQuery.refetch();
+                  void metaQuery.refetch();
+                }}
+                type="button"
+              >
+                <RefreshCw
+                  aria-hidden="true"
+                  className={cn(
+                    "h-4 w-4",
+                    prayersQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
+                  )}
+                />
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="grid gap-4">
-              <Card className="overflow-hidden rounded-[1.75rem]">
-                <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold uppercase text-[var(--brand-primary)]">
-                      <ListTodo aria-hidden="true" className="h-4 w-4" />
-                      {t("prayer.todo.label")}
-                    </div>
-                    <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-                      {t("prayer.todo.title")}
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      {t("prayer.todo.description")}
-                    </p>
-                  </div>
-
-                  <div className="flex w-full items-center gap-3 lg:w-auto">
-                    <div className="relative min-w-0 flex-1 lg:w-80">
-                      <Search
-                        aria-hidden="true"
-                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
-                      />
-                      <Input
-                        className="pl-10"
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder={t("prayer.search.placeholder")}
-                        value={query}
-                      />
-                    </div>
-                    <Button
-                      aria-label={t("admin.members.refresh")}
-                      onClick={() => {
-                        void prayersQuery.refetch();
-                        void metaQuery.refetch();
-                      }}
-                      variant="secondary"
-                    >
-                      <RefreshCw
-                        aria-hidden="true"
-                        className={cn(
-                          "h-4 w-4",
-                          prayersQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                        )}
-                      />
-                    </Button>
-                  </div>
+              {prayersQuery.error || metaQuery.error || mutationError ? (
+                <div className="rounded-xl border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]">
+                  {mutationErrorMessage(prayersQuery.error ?? metaQuery.error ?? mutationError)}
                 </div>
+              ) : null}
 
-                <div className="grid gap-4 px-5 py-5">
-                  <PrayerFilterBar
-                    onStatusChange={setStatusFilter}
-                    onVisibilityChange={setVisibilityFilter}
-                    statusFilter={statusFilter}
-                    visibilityFilter={visibilityFilter}
-                  />
-
-                  {prayersQuery.error || metaQuery.error || mutationError ? (
-                    <div className="rounded-2xl border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]">
-                      {mutationErrorMessage(prayersQuery.error ?? metaQuery.error ?? mutationError)}
-                    </div>
-                  ) : null}
-
-                  {prayersQuery.isLoading ? (
-                    <div className="grid gap-3">
-                      {Array.from({ length: 4 }).map((_, index) => (
-                        <div
-                          className="h-28 animate-pulse rounded-2xl bg-[var(--bg-base)]"
-                          key={index}
-                        />
-                      ))}
-                    </div>
-                  ) : visiblePrayers.length === 0 ? (
-                    <Card className="grid place-items-center gap-2 rounded-2xl py-16 text-center">
-                      <BookOpen aria-hidden="true" className="h-10 w-10 text-[var(--text-tertiary)]" />
-                      <p className="text-sm font-semibold text-[var(--text-secondary)]">
-                        {t("prayer.list.empty")}
-                      </p>
-                      <p className="text-xs text-[var(--text-tertiary)]">
-                        {t("prayer.list.emptyHint")}
-                      </p>
-                    </Card>
-                  ) : (
-                    <div className="grid gap-3">
-                      {visiblePrayers.map((prayer) => (
-                        <PrayerCard
-                          canEdit={prayer.created_by === user?.id || canModerate}
-                          key={prayer.id}
-                          onEdit={openEditModal}
-                          onToggleStatus={togglePrayerStatus}
-                          onView={openViewModal}
-                          prayer={prayer}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Pagination */}
-                  {(prayersQuery.data?.total ?? 0) > 0 ? (
-                    <Pagination
-                      className="rounded-2xl"
-                      page={page}
-                      pageSize={pageSize}
-                      total={prayersQuery.data?.total ?? 0}
-                      onPageChange={(p) => setPage(p)}
-                      onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              {prayersQuery.isLoading ? (
+                <div className="grid gap-3">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      className="h-28 animate-pulse rounded-xl bg-[var(--bg-base)]"
+                      key={index}
                     />
-                  ) : null}
+                  ))}
                 </div>
-              </Card>
+              ) : visiblePrayers.length === 0 ? (
+                <div className="grid place-items-center gap-2 py-16 text-center text-[var(--text-secondary)]">
+                  <BookOpen aria-hidden="true" className="h-10 w-10 text-[var(--text-tertiary)]" />
+                  <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                    {t("prayer.list.empty")}
+                  </p>
+                  <p className="text-xs text-[var(--text-tertiary)]">
+                    {t("prayer.list.emptyHint")}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {visiblePrayers.map((prayer) => (
+                    <PrayerCard
+                      canEdit={prayer.created_by === user?.id || canModerate}
+                      key={prayer.id}
+                      onEdit={openEditModal}
+                      onToggleStatus={togglePrayerStatus}
+                      onView={openViewModal}
+                      prayer={prayer}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {(prayersQuery.data?.total ?? 0) > 0 ? (
+                <Pagination
+                  className="rounded-xl"
+                  page={page}
+                  pageSize={pageSize}
+                  total={prayersQuery.data?.total ?? 0}
+                  onPageChange={(p) => setPage(p)}
+                  onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                />
+              ) : null}
             </div>
 
             <CategorySidebar

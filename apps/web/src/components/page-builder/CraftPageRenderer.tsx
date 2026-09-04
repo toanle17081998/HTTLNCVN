@@ -83,7 +83,7 @@ export function CraftPageRenderer({
         </div>
       ) : null}
 
-      <Editor key={readerLang} enabled={false} resolver={craftResolver}>
+      <Editor key={`${readerLang}-${page.updated_at}`} enabled={false} resolver={craftResolver}>
         <Frame data={validContent}>
           <Element canvas is={PageCanvas} snapType="none" />
         </Frame>

@@ -35,10 +35,10 @@ export function PageHeader({
   const isAdmin = pathname?.startsWith("/admin");
   const isCentered = align === "center";
 
-  // Find matching hero override (exact match or path prefix)
+  // Find matching hero override (exact route match)
   const matchedRoute = pathname
     ? Object.keys(siteNavQuery.data?.pageHeroes ?? {}).find(
-        (route) => pathname === route || (route !== "/" && pathname.startsWith(route))
+        (route) => pathname === route
       )
     : undefined;
   const heroOverride = matchedRoute ? siteNavQuery.data?.pageHeroes?.[matchedRoute] : undefined;

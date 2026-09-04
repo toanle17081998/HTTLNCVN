@@ -23,17 +23,17 @@ export function CategorySidebar({
   const uncategorisedCount = prayers.filter((p) => p.category === null).length;
 
   return (
-    <div className="h-max rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+    <div className="h-max rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-[var(--brand-primary)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-gold)]">
             {t("prayer.form.category")}
           </p>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Filter by topic
+          <h2 className="mt-1 text-base font-bold text-[var(--text-primary)]">
+            {t("prayer.form.category")}
           </h2>
         </div>
-        <Tag aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />
+        <Tag aria-hidden="true" className="h-4 w-4 text-[var(--text-tertiary)]" />
       </div>
 
       <div className="mt-5 grid gap-2">

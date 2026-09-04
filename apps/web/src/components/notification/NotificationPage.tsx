@@ -23,26 +23,6 @@ export function NotificationPage() {
 
   const isAdmin = user?.role === "church_admin" || user?.role === "system_admin";
 
-  if (!isAuthenticated) {
-    return (
-      <PageLayout
-        description={t("nav.notification.description")}
-        eyebrow={t("page.notification.eyebrow")}
-        title={t("nav.notification.label")}
-      >
-        <Card className="p-6 text-center max-w-md mx-auto mt-8">
-          <Bell className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20 mx-auto" />
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">
-            Restricted access
-          </h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)] animate-pulse">
-            {t("admin.layout.protectedContent")}
-          </p>
-        </Card>
-      </PageLayout>
-    );
-  }
-
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
@@ -66,6 +46,26 @@ export function NotificationPage() {
   const total = notificationsQuery.data?.total ?? 0;
 
   const isSaving = createMutation.isPending;
+
+  if (!isAuthenticated) {
+    return (
+      <PageLayout
+        description={t("nav.notification.description")}
+        eyebrow={t("page.notification.eyebrow")}
+        title={t("nav.notification.label")}
+      >
+        <Card className="p-6 text-center max-w-md mx-auto mt-8">
+          <Bell className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20 mx-auto" />
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            Restricted access
+          </h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)] animate-pulse">
+            {t("admin.layout.protectedContent")}
+          </p>
+        </Card>
+      </PageLayout>
+    );
+  }
 
   function openCreateModal() {
     setTitle("");

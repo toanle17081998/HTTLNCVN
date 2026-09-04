@@ -25,6 +25,7 @@ import {
   usePagesQuery,
   useRestorePageMutation,
   useUpdatePageMutation,
+  type Page,
 } from "@/services/page";
 import { Button, Card, Input, Select, cn } from "@/components/ui";
 import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
@@ -34,7 +35,7 @@ import {
   craftResolver,
   PageCanvas,
   PageComponentList,
-  RenderNodeSettings,
+  SectionBuilderProvider,
 } from "./craftNodes";
 import {
   createDefaultPageContent,
@@ -98,16 +99,80 @@ function BuilderSaveButton({
   );
 }
 
+function BuilderHeaderActions({
+  onSave,
+  saving,
+  page,
+  editLang,
+  onLanguageChange,
+  onDelete,
+}: {
+  onSave: (content: string, status?: "draft" | "published") => Promise<void>;
+  saving: boolean;
+  page: Page;
+  editLang: "en" | "vi";
+  onLanguageChange: (lang: "en" | "vi") => void;
+  onDelete: () => void;
+}) {
+  const { query } = useEditor();
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <LanguageSelector activeLanguage={editLang} onLanguageChange={onLanguageChange} />
+      <Link href={`${page.route_path}?previewLanguage=${editLang}`} target="_blank">
+        <Button size="sm" variant="secondary">
+          <Eye className="mr-2 h-4 w-4" />
+          {t("pageBuilder.preview")}
+        </Button>
+      </Link>
+      <Button
+        disabled={saving}
+        onClick={() => onSave(query.serialize(), "draft")}
+        size="sm"
+        variant="secondary"
+      >
+        {t("action.saveDraft")}
+      </Button>
+      <Button
+        isLoading={saving}
+        onClick={() => onSave(query.serialize(), "published")}
+        size="sm"
+      >
+        <Globe className="mr-2 h-4 w-4" />
+        {t("action.publish")}
+      </Button>
+      <Button
+        disabled={saving}
+        onClick={onDelete}
+        size="sm"
+        variant="danger"
+      >
+        <Trash2 className="mr-2 h-4 w-4" />
+        {t("action.delete")}
+      </Button>
+    </div>
+  );
+}
+
 function BuilderShell({
   content,
   onSave,
   saving,
   saveLabel,
+  page,
+  editLang,
+  onLanguageChange,
+  onDelete,
 }: {
   content: string;
-  onSave: (content: string) => Promise<void>;
+  onSave: (content: string, status?: "draft" | "published") => Promise<void>;
   saving: boolean;
   saveLabel: string;
+  page: Page;
+  editLang: "en" | "vi";
+  onLanguageChange: (lang: "en" | "vi") => void;
+  onDelete: () => void;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const adminChrome = useAdminLayoutChrome();
@@ -122,62 +187,70 @@ function BuilderShell({
 
   return (
     <Editor enabled resolver={craftResolver}>
-      <div
-        className={cn(
-          "grid gap-6",
-          isFullscreen ? "fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]" : "",
-        )}
-      >
+      <SectionBuilderProvider>
         <div
           className={cn(
             "grid gap-6",
-            isFullscreen
-              ? "min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-0 md:grid-cols-[14rem_minmax(0,1fr)] md:grid-rows-1"
-              : "xl:grid-cols-[14rem_minmax(0,1fr)]",
+            isFullscreen ? "fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]" : "",
           )}
         >
-          <aside className={cn(isFullscreen ? "max-h-40 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2 md:h-full md:max-h-none md:border-b-0 md:border-r" : "xl:sticky xl:top-24 xl:self-start")}>
-            <Card className={cn("flex w-[14rem] flex-col rounded-md p-2", isFullscreen ? "h-full w-full rounded-none border-0 shadow-none" : "max-h-[calc(100vh-7rem)] overflow-hidden")}>
-              <div className="flex-1 overflow-y-auto">
-                <PageComponentList />
-              </div>
-            </Card>
-          </aside>
-
-          <div className={cn("min-w-0", isFullscreen && "min-h-0 overflow-hidden")}>
-            <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
+          {!isFullscreen ? (
+            <Card className="rounded-2xl border-[var(--border-subtle)] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-                    {t("pageBuilder.canvas")}
+                    {t("pageBuilder.editing")}
                   </p>
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                    {t("pageBuilder.title")}
-                  </h3>
+                  <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{page.title_en}</h2>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                    {t("pageBuilder.routeLabel", { route: page.route_path })}
+                  </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] cursor-pointer"
-                    onClick={() => setIsFullscreen((current) => !current)}
-                    type="button"
-                  >
-                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                  </button>
-                  <BuilderSaveButton label={saveLabel} onSave={onSave} saving={saving} />
-                </div>
-              </div>
-              <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
-                <div className="w-full">
-                  <Frame data={content}>
-                    <Element canvas is={PageCanvas} />
-                  </Frame>
-                </div>
+                <BuilderHeaderActions
+                  editLang={editLang}
+                  onDelete={onDelete}
+                  onLanguageChange={onLanguageChange}
+                  onSave={onSave}
+                  page={page}
+                  saving={saving}
+                />
               </div>
             </Card>
-          </div>
+          ) : null}
+
+          <div className={cn("min-w-0 flex-1", isFullscreen && "min-h-0 overflow-hidden")}>
+            <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+                      {t("pageBuilder.canvas")}
+                    </p>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                      {t("pageBuilder.title")}
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] cursor-pointer"
+                      onClick={() => setIsFullscreen((current) => !current)}
+                      type="button"
+                    >
+                      {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </button>
+                    <BuilderSaveButton label={saveLabel} onSave={onSave} saving={saving} />
+                  </div>
+                </div>
+                <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
+                  <div className="w-full">
+                    <Frame data={content}>
+                      <Element canvas is={PageCanvas} />
+                    </Frame>
+                  </div>
+                </div>
+              </Card>
+            </div>
         </div>
-        <RenderNodeSettings />
-      </div>
+      </SectionBuilderProvider>
     </Editor>
   );
 }
@@ -253,7 +326,7 @@ function CreatePageCard({
           <Input onChange={(event) => setTitle(event.target.value)} value={title} />
         </label>
         <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
-          Starter layout
+          {t("pageBuilder.starterLayout")}
           <Select onChange={(event) => setTemplateId(event.target.value as PageLayoutTemplateId)} value={templateId}>
             {pageLayoutTemplates.map((template) => (
               <option key={template.id} value={template.id}>
@@ -304,7 +377,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const selectedPage = selectedPageQuery.data ?? null;
   const updatePage = useUpdatePageMutation(selectedPageSummary?.slug ?? "");
 
-  async function handleSave(content: string) {
+  async function handleSave(content: string, newStatus?: "draft" | "published") {
     if (!selectedPage) return;
 
     try {
@@ -317,14 +390,23 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
         await updatePage.mutateAsync({
           content_en: content,
           ...(isOtherEmptyOrDefault ? { content_vi: content } : {}),
+          ...(newStatus ? { status: newStatus } : {}),
         });
       } else {
         await updatePage.mutateAsync({
           content_vi: content,
           ...(isOtherEmptyOrDefault ? { content_en: content } : {}),
+          ...(newStatus ? { status: newStatus } : {}),
         });
       }
-      toast({ title: t("toast.page.saved"), variant: "success" });
+      toast({
+        title: newStatus === "published"
+          ? t("toast.page.published")
+          : newStatus === "draft"
+            ? t("toast.page.draftSaved")
+            : t("toast.page.saved"),
+        variant: "success",
+      });
       queryClient.invalidateQueries({ queryKey: pageKeys.all });
     } catch (error) {
       toast({
@@ -390,9 +472,12 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
     if (!selectedDeletedPage) return;
 
     const shouldRestore = await confirm({
-      confirmLabel: "Restore and override",
-      description: `Restore "${selectedDeletedPage.title_en}" as the published page for ${selectedDeletedPage.route_path}? Any active page using the same route or slug will be moved to Deleted.`,
-      title: "Restore deleted page",
+      confirmLabel: t("pageBuilder.restoreConfirmLabel"),
+      description: t("pageBuilder.restoreConfirmDesc", {
+        route: selectedDeletedPage.route_path,
+        title: selectedDeletedPage.title_en,
+      }),
+      title: t("pageBuilder.restoreConfirmTitle"),
       variant: "warning",
     });
 
@@ -403,11 +488,11 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
       setShowDeleted(false);
       setSelectedDeletedId(null);
       setSelectedSlug(restoredPage.slug);
-      toast({ title: "Page restored and published.", variant: "success" });
+      toast({ title: t("toast.page.restored"), variant: "success" });
     } catch (error) {
       toast({
         description: error instanceof ApiError ? error.message : undefined,
-        title: "Page could not be restored.",
+        title: t("toast.page.restoreFailed"),
         variant: "error",
       });
     }
@@ -455,7 +540,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               variant="secondary"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              {showDeleted ? "Show active" : "Show deleted"}
+              {showDeleted ? t("pageBuilder.showActive") : t("pageBuilder.showDeleted")}
             </Button>
             <Button onClick={() => setIsCreating((current) => !current)} size="sm" variant="secondary">
               <Plus className="mr-2 h-4 w-4" />
@@ -482,7 +567,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
                 <div className="flex flex-wrap items-center justify-between gap-5">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--status-danger)]">
-                      Deleted page
+                      {t("pageBuilder.deletedPage")}
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
                       {selectedDeletedPage.title_en}
@@ -492,67 +577,39 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
                     </p>
                     {selectedDeletedPage.deleted_at ? (
                       <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                        Deleted {new Date(selectedDeletedPage.deleted_at).toLocaleString()}
+                        {t("pageBuilder.deletedAt", {
+                          date: new Date(selectedDeletedPage.deleted_at).toLocaleString(),
+                        })}
                       </p>
                     ) : null}
                   </div>
                   <Button isLoading={restorePage.isPending} onClick={handleRestore}>
                     <RotateCcw className="mr-2 h-4 w-4" />
-                    Restore
+                    {t("pageBuilder.restore")}
                   </Button>
                 </div>
               </Card>
             ) : (
-              <Card className="p-8 text-sm text-[var(--text-secondary)]">No deleted pages.</Card>
+              <Card className="p-8 text-sm text-[var(--text-secondary)]">
+                {t("pageBuilder.noDeletedPages")}
+              </Card>
             )
           ) : selectedPage ? (
-            <>
-              <Card className="rounded-2xl border-[var(--border-subtle)] p-4">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-                      {t("pageBuilder.editing")}
-                    </p>
-                    <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{selectedPage.title_en}</h2>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                      {t("pageBuilder.routeLabel", { route: selectedPage.route_path })}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <LanguageSelector activeLanguage={editLang} onLanguageChange={setEditLang} />
-                    <Link href={`${selectedPage.route_path}?previewLanguage=${editLang}`} target="_blank">
-                      <Button size="sm" variant="secondary">
-                        <Eye className="mr-2 h-4 w-4" />
-                        {t("pageBuilder.preview")}
-                      </Button>
-                    </Link>
-                    <Button onClick={() => toggleStatus("draft")} size="sm" variant="secondary">
-                      {t("action.saveDraft")}
-                    </Button>
-                    <Button onClick={() => toggleStatus("published")} size="sm">
-                      <Globe className="mr-2 h-4 w-4" />
-                      {t("action.publish")}
-                    </Button>
-                    <Button onClick={handleDelete} size="sm" variant="danger">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {t("action.delete")}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-
-              <BuilderShell
-                key={editLang}
-                content={ensureValidPageContent(
-                  editLang === "en" ? selectedPage.content_en : selectedPage.content_vi,
-                  editLang === "en" ? selectedPage.title_en : selectedPage.title_vi,
-                  selectedPage.route_path
-                )}
-                onSave={handleSave}
-                saveLabel={t("pageBuilder.saveLayout")}
-                saving={updatePage.isPending}
-              />
-            </>
+            <BuilderShell
+              key={editLang}
+              content={ensureValidPageContent(
+                editLang === "en" ? selectedPage.content_en : selectedPage.content_vi,
+                editLang === "en" ? selectedPage.title_en : selectedPage.title_vi,
+                selectedPage.route_path
+              )}
+              editLang={editLang}
+              onDelete={handleDelete}
+              onLanguageChange={setEditLang}
+              onSave={handleSave}
+              page={selectedPage}
+              saveLabel={t("pageBuilder.saveLayout")}
+              saving={updatePage.isPending}
+            />
           ) : selectedPageSummary && selectedPageQuery.isLoading ? (
             <Card className="rounded-2xl p-8">
               <div className="h-6 w-48 animate-pulse rounded bg-[var(--bg-base)]" />

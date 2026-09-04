@@ -112,12 +112,32 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
 
   return (
     <PageLayout
-      description={readerLang === "vi" ? (article?.title_vi || "Xem chi tiết bài viết.") : (article?.title_en || "Read article details.")}
+      actions={
+        article ? (
+          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-[var(--text-secondary)]">
+            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 font-bold uppercase tracking-wider text-[var(--brand-primary)]">
+              {article.status}
+            </span>
+            <span>By {article.creator.username}</span>
+            {article.published_at ? (
+              <span>
+                {new Date(article.published_at).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            ) : null}
+          </div>
+        ) : undefined
+      }
+      coverImage={article?.cover_image_url || undefined}
       eyebrow={
         article?.category
           ? (locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi))
           : t("nav.article.label")
       }
+      showHeroImage={Boolean(article?.cover_image_url)}
       title={activeTitle || t("nav.article.label")}
     >
       {articleQuery.isLoading ? (
@@ -154,27 +174,9 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
             }}
           />
           <article className="grid min-w-0 gap-5">
-            {article.cover_image_url ? (
-              <img
-                alt=""
-                className="aspect-[16/9] w-full rounded-lg border border-[var(--border-subtle)] object-cover"
-                src={article.cover_image_url}
-              />
-            ) : null}
-
             <Card className="p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                  <span>{article.status}</span>
-                  <span>By {article.creator.username}</span>
-                  {article.published_at ? (
-                    <span>{new Date(article.published_at).toLocaleDateString()}</span>
-                  ) : null}
-                </div>
-              </div>
-
               <div
-                className="mt-5 scroll-smooth text-base leading-7 text-[var(--text-primary)] [&_.article-column]:min-w-0 [&_.article-columns-resize-handle]:hidden [&_.article-columns]:my-4 [&_.article-columns]:grid [&_.article-columns]:gap-4 [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-5 [&_h2]:scroll-mt-24 [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:scroll-mt-24 [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_h4]:scroll-mt-24 [&_h4]:mt-4 [&_h4]:text-lg [&_h4]:font-semibold [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-[var(--brand-muted)] [&_pre]:p-4 [&_strong]:font-semibold [&_table]:my-4 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
+                className="scroll-smooth text-base leading-7 text-[var(--text-primary)] [&_.article-column]:min-w-0 [&_.article-columns-resize-handle]:hidden [&_.article-columns]:my-4 [&_.article-columns]:grid [&_.article-columns]:gap-4 [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_figcaption]:mt-2 [&_figcaption]:text-sm [&_figcaption]:text-[var(--text-secondary)] [&_figure]:my-5 [&_h2]:scroll-mt-24 [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:scroll-mt-24 [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_h4]:scroll-mt-24 [&_h4]:mt-4 [&_h4]:text-lg [&_h4]:font-semibold [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded-md [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-md [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-[var(--brand-muted)] [&_pre]:p-4 [&_strong]:font-semibold [&_table]:my-4 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:bg-[var(--brand-muted)] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_video]:h-auto [&_video]:max-w-full [&_video]:rounded-md"
                 dangerouslySetInnerHTML={{ __html: renderedBody.html }}
               />
             </Card>

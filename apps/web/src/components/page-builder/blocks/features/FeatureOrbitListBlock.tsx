@@ -1,5 +1,6 @@
 "use client";
 
+import { useNode } from "@craftjs/core";
 import { HandHeart } from "lucide-react";
 import { featureIconMap } from "../basic/IconBoxBlock";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -46,7 +47,30 @@ export function FeatureOrbitListBlock({
   sectionTitle?: string;
   showDescription?: boolean;
 }) {
-  const columns = [items.slice(0, 2), items.slice(2, 4)];
+  const {
+    centerImageAlt: nodeCenterImageAlt,
+    centerImageUrl: nodeCenterImageUrl,
+    items: nodeItems,
+    sectionDescription: nodeSectionDescription,
+    sectionTitle: nodeSectionTitle,
+    showDescription: nodeShowDescription,
+  } = useNode((node) => ({
+    centerImageAlt: node.data.props.centerImageAlt,
+    centerImageUrl: node.data.props.centerImageUrl,
+    items: node.data.props.items,
+    sectionDescription: node.data.props.sectionDescription,
+    sectionTitle: node.data.props.sectionTitle,
+    showDescription: node.data.props.showDescription,
+  }));
+
+  const activeTitle = nodeSectionTitle ?? sectionTitle;
+  const activeDescription = nodeSectionDescription ?? sectionDescription;
+  const activeShowDescription = nodeShowDescription !== undefined ? nodeShowDescription : showDescription;
+  const activeItems = (Array.isArray(nodeItems) && nodeItems.length ? nodeItems : items) || defaultCoreValues;
+  const activeCenterImageUrl = nodeCenterImageUrl !== undefined ? nodeCenterImageUrl : centerImageUrl;
+  const activeCenterImageAlt = nodeCenterImageAlt ?? centerImageAlt;
+
+  const columns = [activeItems.slice(0, 2), activeItems.slice(2, 4)];
 
   function renderItem(item: CoreValueItem, index: number) {
     const ValueIcon = featureIconMap[item.icon] ?? HandHeart;
@@ -70,20 +94,20 @@ export function FeatureOrbitListBlock({
       <div className="grid" style={{ gap: "var(--section-space-xl)" }}>
         <div className="grid justify-items-center text-center" style={{ gap: "var(--section-space-xs)" }}>
           <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
-            {sectionTitle}
+            {activeTitle}
           </h2>
-          {showDescription && sectionDescription ? (
+          {activeShowDescription && activeDescription ? (
             <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0, maxWidth: "var(--section-text-width)" }}>
-              {sectionDescription}
+              {activeDescription}
             </p>
           ) : null}
         </div>
         <div className="feature-orbit-layout grid items-center" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr)" }}>
           <div className="grid" style={{ gap: "var(--section-space-xl)" }}>{columns[0].map(renderItem)}</div>
           <div className="feature-orbit-image mx-auto w-full" style={{ maxWidth: "var(--section-orbit-image-width)" }}>
-            {centerImageUrl ? (
+            {activeCenterImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img alt={centerImageAlt} className="h-full w-full object-contain" src={centerImageUrl} />
+              <img alt={activeCenterImageAlt} className="h-full w-full object-contain" src={activeCenterImageUrl} />
             ) : (
               <CoreValuesArtwork />
             )}

@@ -12,22 +12,34 @@ export function FeatureIconListBlock({
   sectionTitle = "Serve in a fellowship ministry",
   showDescription = true,
 }: FeatureZigzagListProps) {
-  const { id } = useNode();
+  const { id, nodeSectionDescription, nodeSectionTitle, nodeShowDescription } = useNode((node) => ({
+    nodeSectionDescription: node.data.props.sectionDescription,
+    nodeSectionTitle: node.data.props.sectionTitle,
+    nodeShowDescription: node.data.props.showDescription,
+  }));
+  const activeTitle = nodeSectionTitle ?? sectionTitle;
+  const activeDescription = nodeSectionDescription ?? sectionDescription;
+  const activeShowDescription = nodeShowDescription ?? showDescription;
   const { actions, enabled, query } = useEditor((state: any) => ({ enabled: state.options.enabled }));
 
   function addItem() {
-    const tree = query.parseReactElement(
-      <IconBoxBlock
-        alignItems="center"
-        background="transparent"
-        borderWidth="var(--section-space-none)"
-        icon="handHeart"
-        padding="var(--section-space-none)"
-        removable
-        title="New ministry"
-      />
-    ).toNodeTree();
-    actions.addNodeTree(tree, id);
+    const node = query.parseFreshNode({
+      data: {
+        isCanvas: false,
+        props: {
+          alignItems: "center",
+          background: "transparent",
+          borderWidth: "var(--section-space-none)",
+          icon: "handHeart",
+          padding: "var(--section-space-none)",
+          removable: true,
+          title: "New ministry",
+        },
+        type: IconBoxBlock,
+      },
+    }).toNode();
+    actions.add(node, id);
+    actions.selectNode();
   }
 
   return (
@@ -35,11 +47,11 @@ export function FeatureIconListBlock({
       <div className="grid" style={{ gap: "var(--section-space-lg)" }}>
         <div className="grid justify-items-center text-center" style={{ gap: "var(--section-space-xs)" }}>
           <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
-            {sectionTitle}
+            {activeTitle}
           </h2>
-          {showDescription && sectionDescription ? (
+          {activeShowDescription && activeDescription ? (
             <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
-              {sectionDescription}
+              {activeDescription}
             </p>
           ) : null}
         </div>
@@ -47,8 +59,18 @@ export function FeatureIconListBlock({
           {children}
           {enabled ? (
             <button
-              className="flex items-center justify-center border-2 border-dashed border-[var(--border-strong)] text-sm font-semibold text-[var(--brand-primary)]"
-              onClick={addItem}
+              className="flex items-center justify-center border-2 border-dashed border-[var(--border-strong)] text-sm font-semibold text-[var(--brand-primary)] cursor-pointer"
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                addItem();
+              }}
+              onMouseDown={(event) => {
+                event.stopPropagation();
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
               style={{ borderRadius: "var(--section-radius-card)", minHeight: "var(--section-card-add-height)" }}
               type="button"
             >

@@ -28,6 +28,37 @@ export function CtaSimpleBlock({
   title = "Take your next step with us",
   ...props
 }: CtaSimpleProps) {
+  const {
+    actionHref: nodeActionHref,
+    actionLabel: nodeActionLabel,
+    badge: nodeBadge,
+    button1Href,
+    button1Label,
+    description: nodeDescription,
+    layout: nodeLayout,
+    sectionDescription,
+    sectionTitle,
+    title: nodeTitle,
+  } = useNode((node) => ({
+    actionHref: node.data.props.actionHref,
+    actionLabel: node.data.props.actionLabel,
+    badge: node.data.props.badge,
+    button1Href: node.data.props.button1Href,
+    button1Label: node.data.props.button1Label,
+    description: node.data.props.description,
+    layout: node.data.props.layout,
+    sectionDescription: node.data.props.sectionDescription,
+    sectionTitle: node.data.props.sectionTitle,
+    title: node.data.props.title,
+  }));
+
+  const activeTitle = sectionTitle ?? nodeTitle ?? title;
+  const activeDescription = sectionDescription ?? nodeDescription ?? description;
+  const activeBadge = nodeBadge ?? badge;
+  const activeLabel = button1Label ?? nodeActionLabel ?? actionLabel;
+  const activeHref = button1Href ?? nodeActionHref ?? actionHref;
+  const activeLayout = nodeLayout ?? layout;
+
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
 
   const buttonElement = (
@@ -37,7 +68,7 @@ export function CtaSimpleBlock({
         getButtonVariantClass("gold"),
       )}
     >
-      {actionLabel}
+      {activeLabel}
     </div>
   );
 
@@ -46,7 +77,7 @@ export function CtaSimpleBlock({
       <div
         className={cn(
           "rounded-2xl text-[var(--text-inverse)]",
-          layout === "split"
+          activeLayout === "split"
             ? "flex flex-col items-center justify-between gap-6 md:flex-row md:text-left"
             : "flex flex-col items-center gap-6 text-center",
         )}
@@ -55,8 +86,8 @@ export function CtaSimpleBlock({
           width: "100%",
         }}
       >
-        <div className={cn("grid gap-2", layout === "split" ? "max-w-xl" : "max-w-2xl justify-items-center")}>
-          {badge ? (
+        <div className={cn("grid gap-2", activeLayout === "split" ? "max-w-xl" : "max-w-2xl justify-items-center")}>
+          {activeBadge ? (
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
               {badge}
             </span>

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useEditor } from "@craftjs/core";
+import { useEditor, useNode } from "@craftjs/core";
 import { NodeFrame } from "../../shared/NodeFrame";
 
 export type TestimonialItem = {
   buttonHref: string;
   buttonLabel: string;
+  imageUrl?: string;
   logoUrl: string;
   name: string;
   organization: string;
@@ -31,8 +32,25 @@ export function FeatureTestimonialListBlock({
   sectionTitle?: string;
   showDescription?: boolean;
 }) {
+  const {
+    items: nodeItems,
+    sectionDescription: nodeSectionDescription,
+    sectionTitle: nodeSectionTitle,
+    showDescription: nodeShowDescription,
+  } = useNode((node) => ({
+    items: node.data.props.items,
+    sectionDescription: node.data.props.sectionDescription,
+    sectionTitle: node.data.props.sectionTitle,
+    showDescription: node.data.props.showDescription,
+  }));
+
+  const activeTitle = nodeSectionTitle ?? sectionTitle;
+  const activeDescription = nodeSectionDescription ?? sectionDescription;
+  const activeShowDescription = nodeShowDescription !== undefined ? nodeShowDescription : showDescription;
+  const activeItems = (Array.isArray(nodeItems) && nodeItems.length ? nodeItems : items) || defaultTestimonials;
+
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeItem = items[Math.min(activeIndex, Math.max(items.length - 1, 0))];
+  const activeItem = activeItems[Math.min(activeIndex, Math.max(activeItems.length - 1, 0))];
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
 
   return (
@@ -40,21 +58,21 @@ export function FeatureTestimonialListBlock({
       <div className="grid" style={{ gap: "var(--section-space-lg)" }}>
         <div className="grid" style={{ gap: "var(--section-space-xs)" }}>
           <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
-            {sectionTitle}
+            {activeTitle}
           </h2>
-          {showDescription && sectionDescription ? (
+          {activeShowDescription && activeDescription ? (
             <p style={{ color: "var(--text-secondary)", margin: 0 }}>
-              {sectionDescription}
+              {activeDescription}
             </p>
           ) : null}
         </div>
         {activeItem ? (
           <div className="overflow-hidden border border-[var(--border-subtle)]" style={{ borderRadius: "var(--section-radius-card)" }}>
-            <div className="feature-testimonial-layout grid" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", padding: "var(--section-space-lg)" }}>
-              <div className="grid place-items-center bg-[var(--bg-card)]" style={{ borderRadius: "var(--section-radius)", minHeight: "var(--section-feature-showcase-height)" }}>
-                {activeItem.logoUrl ? (
+            <div className="feature-testimonial-layout grid items-center" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", padding: "var(--section-space-lg)" }}>
+              <div className="relative flex items-center justify-center bg-[var(--bg-card)] overflow-hidden w-full" style={{ borderRadius: "var(--section-radius)", height: "30rem" }}>
+                {activeItem.imageUrl || activeItem.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img alt={activeItem.organization} className="max-h-full max-w-full object-contain" src={activeItem.logoUrl} />
+                  <img alt={activeItem.organization} className="h-full w-full object-cover" key={activeItem.imageUrl || activeItem.logoUrl} src={activeItem.imageUrl || activeItem.logoUrl} />
                 ) : (
                   <strong style={{ fontSize: "var(--section-card-title-size)" }}>{activeItem.organization}</strong>
                 )}
@@ -81,8 +99,8 @@ export function FeatureTestimonialListBlock({
                 ) : null}
               </div>
             </div>
-            <div className="feature-testimonial-tabs grid border-t border-[var(--border-subtle)]" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-              {items.map((item, index) => (
+            <div className="feature-testimonial-tabs grid border-t border-[var(--border-subtle)]" style={{ gridTemplateColumns: `repeat(${activeItems.length}, minmax(0, 1fr))` }}>
+              {activeItems.map((item, index) => (
                 <button
                   className="border-r border-[var(--border-subtle)]"
                   key={`${item.organization}-${index}`}

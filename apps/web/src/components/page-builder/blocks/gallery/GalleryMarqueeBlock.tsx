@@ -36,9 +36,34 @@ export function GalleryMarqueeBlock({
   title = "Our Life Together in Photos",
   ...props
 }: GalleryMarqueeProps) {
+  const {
+    direction: nodeDirection,
+    images: nodeImages,
+    showSubtitle: nodeShowSubtitle,
+    showTitle: nodeShowTitle,
+    speedSec: nodeSpeedSec,
+    subtitle: nodeSubtitle,
+    title: nodeTitle,
+  } = useNode((node) => ({
+    direction: node.data.props.direction,
+    images: node.data.props.images,
+    showSubtitle: node.data.props.showSubtitle,
+    showTitle: node.data.props.showTitle,
+    speedSec: node.data.props.speedSec,
+    subtitle: node.data.props.subtitle,
+    title: node.data.props.title,
+  }));
+
+  const activeTitle = nodeTitle ?? title;
+  const activeSubtitle = nodeSubtitle ?? subtitle;
+  const activeShowTitle = nodeShowTitle !== undefined ? nodeShowTitle : showTitle;
+  const activeShowSubtitle = nodeShowSubtitle !== undefined ? nodeShowSubtitle : showSubtitle;
+  const activeDirection = nodeDirection ?? direction;
+  const activeSpeed = nodeSpeedSec ?? speedSec;
+  const activeImages = Array.isArray(nodeImages) && nodeImages.length ? nodeImages : (Array.isArray(images) && images.length ? images : defaultGalleryImages);
+
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
-  const imageList = Array.isArray(images) && images.length ? images : defaultGalleryImages;
-  const loopImages = [...imageList, ...imageList, ...imageList];
+  const loopImages = [...activeImages, ...activeImages, ...activeImages];
 
   return (
     <NodeFrame>
@@ -49,13 +74,13 @@ export function GalleryMarqueeBlock({
           width: "100%",
         }}
       >
-        {showTitle || showSubtitle ? (
+        {activeShowTitle || activeShowSubtitle ? (
           <div className="grid justify-items-center text-center">
-            {showTitle && title ? (
-              <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{title}</h2>
+            {activeShowTitle && activeTitle ? (
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{activeTitle}</h2>
             ) : null}
-            {showSubtitle && subtitle ? (
-              <p className="mt-1 max-w-xl text-sm text-[var(--text-secondary)]">{subtitle}</p>
+            {activeShowSubtitle && activeSubtitle ? (
+              <p className="mt-1 max-w-xl text-sm text-[var(--text-secondary)]">{activeSubtitle}</p>
             ) : null}
           </div>
         ) : null}

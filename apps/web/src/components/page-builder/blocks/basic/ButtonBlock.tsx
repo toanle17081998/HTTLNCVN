@@ -4,7 +4,7 @@ import { useEditor, useNode } from "@craftjs/core";
 import Link from "next/link";
 import { Input, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
-import { buildBoxStyle, getButtonVariantClass, resolveStyleToken, type ButtonVariant } from "../../shared/helpers";
+import { buildBoxStyle, getButtonVariantClass, resolveStyleToken, useIsMobile, type ButtonVariant } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
 import type { Align, BoxProps } from "../../shared/types";
 
@@ -12,19 +12,36 @@ type ButtonProps = BoxProps & {
   align?: Align;
   href?: string;
   label?: string;
+  mobileAlign?: Align;
   target?: "_self" | "_blank";
   variant?: ButtonVariant;
 };
 
-export function ButtonBlock({
-  align = "left",
-  href = "#",
-  label = "Call to Action",
-  target = "_self",
-  variant = "primary",
-  ...props
-}: ButtonProps) {
+export function ButtonBlock(props: ButtonProps) {
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const {
+    nodeAlign,
+    nodeHref,
+    nodeLabel,
+    nodeMobileAlign,
+    nodeTarget,
+    nodeVariant,
+  } = useNode((node) => ({
+    nodeAlign: node.data.props.align,
+    nodeHref: node.data.props.href,
+    nodeLabel: node.data.props.label,
+    nodeMobileAlign: node.data.props.mobileAlign,
+    nodeTarget: node.data.props.target,
+    nodeVariant: node.data.props.variant,
+  }));
+  const isMobile = useIsMobile();
+  const align = nodeAlign ?? props.align ?? "left";
+  const mobileAlign = nodeMobileAlign ?? props.mobileAlign;
+  const currentAlign = isMobile && mobileAlign ? mobileAlign : align;
+  const label = nodeLabel ?? props.label ?? "Call to Action";
+  const href = nodeHref ?? props.href ?? "#";
+  const target = nodeTarget ?? props.target ?? "_self";
+  const variant = nodeVariant ?? props.variant ?? "primary";
 
   const variantClass = getButtonVariantClass(variant);
   const boxStyle = buildBoxStyle(props);
@@ -61,7 +78,7 @@ export function ButtonBlock({
       <div
         className="page-builder-button-wrapper flex"
         style={{
-          justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
+          justifyContent: currentAlign === "center" ? "center" : currentAlign === "right" ? "flex-end" : "flex-start",
           width: "100%",
         }}
       >

@@ -24,7 +24,10 @@ export function HeroImageSliderBlock({
   images = defaultHeroSliderImages,
   ...props
 }: HeroSliderProps) {
-  const slideList = Array.isArray(images) && images.length ? images : defaultHeroSliderImages;
+  const { images: nodeImages } = useNode((node) => ({
+    images: node.data.props.images,
+  }));
+  const slideList = Array.isArray(nodeImages) && nodeImages.length ? nodeImages : (Array.isArray(images) && images.length ? images : defaultHeroSliderImages);
   const displayImages = [
     slideList[0] || defaultHeroSliderImages[0],
     slideList[1] || defaultHeroSliderImages[1],

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileText, Plus, ArrowLeft, Eye, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, cn, Switch } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -177,7 +178,12 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
 }
 
 export function AdminPages() {
-  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const requestedRoute = searchParams.get("route");
+  const requestedSlug = searchParams.get("slug");
+  const [editingSlug, setEditingSlug] = useState<string | null>(
+    requestedSlug ?? (requestedRoute ? "" : null)
+  );
   const { t } = useTranslation();
 
   if (editingSlug !== null) {
@@ -190,7 +196,7 @@ export function AdminPages() {
           </Button>
           <h1 className="text-xl font-bold">{t("pageBuilder.editor")}</h1>
         </div>
-        <CraftPageEditor initialSlug={editingSlug ?? undefined} />
+        <CraftPageEditor initialSlug={editingSlug || undefined} />
       </div>
     );
   }

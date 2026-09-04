@@ -454,162 +454,194 @@ export function EventPage() {
 
   return (
     <PageLayout
+      actions={
+        canManageEvents ? (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setCategoryModalOpen(true)}
+              size="sm"
+              variant="secondary"
+            >
+              <LayoutList aria-hidden="true" className="mr-2 h-4 w-4" />
+              {t("event.category.title")}
+            </Button>
+            <Button onClick={openCreateModal} size="sm">
+              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+              {t("event.action.add")}
+            </Button>
+          </div>
+        ) : null
+      }
       description={t("page.event.description")}
       eyebrow={t("page.event.eyebrow")}
       title={t("page.event.title")}
     >
-      <div className="grid gap-8">
+      <div className="grid gap-6">
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.total")}
             </p>
-            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{events.length}</p>
-          </Card>
-          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{events.length}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.upcoming")}
             </p>
-            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{upcomingCount}</p>
-          </Card>
-          <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{upcomingCount}</p>
+          </div>
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.targeted")}
             </p>
-            <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{targetedCount}</p>
+            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{targetedCount}</p>
             <p className="mt-1 text-xs text-[var(--text-secondary)]">
               {t("event.stats.published", { count: String(publishedCount) })}
             </p>
-          </Card>
+          </div>
         </div>
 
-        <div className="grid gap-6">
-          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-              <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto">
-                {canManageEvents ? (
-                  <div className="flex items-center gap-2 mr-auto lg:mr-2">
-                    <Button onClick={() => setCategoryModalOpen(true)} variant="secondary" className="h-11 rounded-xl px-4 hidden sm:flex">
-                      <LayoutList aria-hidden="true" className="mr-2 h-4 w-4" />
-                      {t("event.category.title")}
-                    </Button>
-                    <Button onClick={openCreateModal} className="h-11 rounded-xl px-4">
-                      <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                      {t("event.action.add")}
-                    </Button>
-                  </div>
-                ) : null}
-                <div className="flex bg-[var(--bg-base)] p-1 rounded-xl border border-[var(--border-subtle)]">
-                  <Button
-                    variant={viewMode === "calendar" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-9 px-3 rounded-lg"
-                    onClick={() => setViewMode("calendar")}
-                  >
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {t("event.calendar.view")}
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-9 px-3 rounded-lg"
-                    onClick={() => setViewMode("list")}
-                  >
-                    <LayoutList className="h-4 w-4 mr-2" />
-                    {t("event.list.view")}
-                  </Button>
-                </div>
-
-                <div className="relative min-w-0 flex-1 lg:w-80">
-                  <Search
-                    aria-hidden="true"
-                    className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
-                  />
-                  <Input
-                    className="h-11 rounded-xl pl-11"
-                    onChange={(target) => setQuery(target.target.value)}
-                    placeholder={t("event.list.search")}
-                    value={query}
-                  />
-                </div>
-                <button
-                  aria-label={t("admin.members.refresh")}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200 active:scale-95"
-                  onClick={() => {
-                    void eventsQuery.refetch();
-                    if (canReadMeta) {
-                      void metaQuery.refetch();
-                    }
-                  }}
-                  type="button"
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-end sm:flex-1">
+            <div className="flex flex-col gap-1 shrink-0">
+              <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                {t("common.viewMode")}
+              </span>
+              <div className="flex shrink-0 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-0.5">
+                <Button
+                  className="h-9 flex-1 sm:flex-none px-3 text-xs font-medium"
+                  onClick={() => setViewMode("calendar")}
+                  size="sm"
+                  variant={viewMode === "calendar" ? "secondary" : "ghost"}
                 >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={cn(
-                      "h-5 w-5",
-                      eventsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                    )}
-                  />
-                </button>
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{t("event.calendar.view")}</span>
+                </Button>
+                <Button
+                  className="h-9 flex-1 sm:flex-none px-3 text-xs font-medium"
+                  onClick={() => setViewMode("list")}
+                  size="sm"
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                >
+                  <LayoutList className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{t("event.list.view")}</span>
+                </Button>
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <FormField htmlFor="event-status-filter" label={t("event.form.status")}>
-                <Select
-                  id="event-status-filter"
-                  onChange={(event) => setStatusFilter(event.target.value)}
-                  value={statusFilter}
-                >
-                  <option value="all">{t("prayer.filter.all")}</option>
-                  <option value="published">{t("event.form.status.published")}</option>
-                  <option value="draft">{t("event.form.status.draft")}</option>
-                </Select>
-              </FormField>
-              <FormField htmlFor="event-audience-filter" label={t("event.form.audience")}>
-                <Select
-                  id="event-audience-filter"
-                  onChange={(event) => setAudienceFilter(event.target.value)}
-                  value={audienceFilter}
-                >
-                  <option value="all">{t("prayer.filter.all")}</option>
-                  <option value="public">{t("event.form.audience.public")}</option>
-                  <option value="church">{t("event.form.audience.church")}</option>
-                  <option value="church_unit">{t("event.form.audience.churchUnit")}</option>
-                  <option value="people">{t("event.form.audience.people")}</option>
-                </Select>
-              </FormField>
-              <FormField htmlFor="event-category-filter" label={t("event.form.category")}>
-                <Select
-                  id="event-category-filter"
-                  onChange={(event) => setCategoryFilter(event.target.value)}
-                  value={categoryFilter}
-                >
-                  <option value="all">{t("prayer.filter.all")}</option>
-                  {(meta?.categories ?? []).map((category) => (
-                    <option key={category.id} value={String(category.id)}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormField>
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-search-input">
+                {t("common.search")}
+              </label>
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
+                />
+                <Input
+                  id="event-search-input"
+                  className="h-9 pl-10 text-sm"
+                  onChange={(target) => setQuery(target.target.value)}
+                  placeholder={t("event.list.search")}
+                  value={query}
+                />
+              </div>
             </div>
           </div>
 
-          {eventsQuery.error || mutationError || metaQuery.error ? (
-            <div
-              className="m-6 rounded-xl border p-4 text-sm font-medium"
-              style={{
-                backgroundColor: "var(--status-danger-bg)",
-                borderColor: "color-mix(in srgb, var(--status-danger) 24%, var(--border-subtle))",
-                color: "var(--status-danger)",
-              }}
-            >
-              {mutationErrorMessage(eventsQuery.error ?? mutationError ?? metaQuery.error)}
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-status-filter">
+                {t("common.status")}
+              </label>
+              <Select
+                id="event-status-filter"
+                aria-label={t("event.form.status")}
+                className="h-9 text-sm"
+                onChange={(event) => setStatusFilter(event.target.value)}
+                value={statusFilter}
+              >
+                <option value="all">{t("prayer.filter.all")}</option>
+                <option value="published">{t("event.form.status.published")}</option>
+                <option value="draft">{t("event.form.status.draft")}</option>
+              </Select>
             </div>
-          ) : null}
+
+            <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-audience-filter">
+                {t("common.audience")}
+              </label>
+              <Select
+                id="event-audience-filter"
+                aria-label={t("event.form.audience")}
+                className="h-9 text-sm"
+                onChange={(event) => setAudienceFilter(event.target.value)}
+                value={audienceFilter}
+              >
+                <option value="all">{t("prayer.filter.all")}</option>
+                <option value="public">{t("event.form.audience.public")}</option>
+                <option value="church">{t("event.form.audience.church")}</option>
+                <option value="church_unit">{t("event.form.audience.churchUnit")}</option>
+                <option value="people">{t("event.form.audience.people")}</option>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-category-filter">
+                {t("common.category")}
+              </label>
+              <Select
+                id="event-category-filter"
+                aria-label={t("event.form.category")}
+                className="h-9 text-sm"
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                value={categoryFilter}
+              >
+                <option value="all">{t("prayer.filter.all")}</option>
+                {(meta?.categories ?? []).map((category) => (
+                  <option key={category.id} value={String(category.id)}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <button
+              aria-label={t("admin.members.refresh")}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
+              onClick={() => {
+                void eventsQuery.refetch();
+                if (canReadMeta) {
+                  void metaQuery.refetch();
+                }
+              }}
+              type="button"
+            >
+              <RefreshCw
+                aria-hidden="true"
+                className={cn(
+                  "h-4 w-4",
+                  eventsQuery.isFetching || (canReadMeta && metaQuery.isFetching) ? "animate-spin" : "",
+                )}
+              />
+            </button>
+          </div>
+        </div>
+
+        {eventsQuery.error || mutationError || metaQuery.error ? (
+          <div
+            className="rounded-xl border p-4 text-sm font-medium"
+            style={{
+              backgroundColor: "var(--status-danger-bg)",
+              borderColor: "color-mix(in srgb, var(--status-danger) 24%, var(--border-subtle))",
+              color: "var(--status-danger)",
+            }}
+          >
+            {mutationErrorMessage(eventsQuery.error ?? mutationError ?? metaQuery.error)}
+          </div>
+        ) : null}
+
+        <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-none">
 
           {viewMode === "list" ? (
             <div className="grid divide-y divide-[var(--border-subtle)] max-h-[70vh] overflow-y-auto snap-y snap-proximity scroll-smooth">
@@ -703,9 +735,8 @@ export function EventPage() {
               />
             </div>
           )}
-        </Card>
+        </div>
       </div>
-    </div>
 
       {modalOpen ? (
         <div

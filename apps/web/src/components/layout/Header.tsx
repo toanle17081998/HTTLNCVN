@@ -343,28 +343,9 @@ export function Header({ pathname }: HeaderProps) {
                 }}
                 type="button"
               >
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="text-xs font-bold leading-tight text-[var(--text-primary)] max-w-[11rem] truncate">
-                    {user?.username || user?.email || "User"}
-                  </span>
-                  {role ? (
-                    <span className="mt-0.5 inline-flex items-center rounded-md bg-[var(--brand-muted)] px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
-                      {locale === "vi"
-                        ? role === "SUPER_ADMIN"
-                          ? "Tổng quản trị"
-                          : role === "CHURCH_ADMIN"
-                            ? "Quản trị hội thánh"
-                            : role === "MINISTRY_LEADER"
-                              ? "Trưởng ban ngành"
-                              : role === "PASTOR"
-                                ? "Mục sư"
-                                : role === "EDITOR"
-                                  ? "Biên tập viên"
-                                  : "Thành viên"
-                        : role.replaceAll("_", " ")}
-                    </span>
-                  ) : null}
-                </div>
+                <span className="text-xs font-bold leading-tight text-[var(--text-primary)] max-w-[11rem] truncate">
+                  {user?.username || user?.email || "User"}
+                </span>
                 <ChevronDown
                   className={cn(
                     "h-3.5 w-3.5 text-[var(--text-secondary)] transition-transform duration-200 shrink-0",

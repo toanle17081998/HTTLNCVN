@@ -354,28 +354,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
   const filteredParentOptions = (meta?.units ?? []).filter((unit) => unit.id !== editingUnit?.id);
 
-  const LayoutWrapper = hideLayout
-    ? ({ children }: { children: React.ReactNode }) => <>{children}</>
-    : ({ children }: { children: React.ReactNode }) => (
-      <PageLayout
-        actions={
-          canCreateUnits ? (
-            <Button onClick={openCreateModal}>
-              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-              {t("admin.churchUnits.add")}
-            </Button>
-          ) : null
-        }
-        description={admin ? t("admin.churchUnits.description") : t("page.churchUnit.description")}
-        eyebrow={admin ? t("admin.common.admin") : t("page.churchUnit.eyebrow")}
-        title={t("nav.churchUnit.label")}
-      >
-        {children}
-      </PageLayout>
-    );
-
-  return (
-    <LayoutWrapper>
+  const content = (
+    <>
       {!authLoading && !unitsQuery.isLoading && !hasPageAccess ? (
         <Card className="p-5">
           <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
@@ -384,125 +364,126 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
           </p>
         </Card>
       ) : (
-        <div className="grid gap-8">
+        <div className="grid gap-6">
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.active")}
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{activeCount}</p>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{activeCount}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 Cell Groups
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{cellGroupCount}</p>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{cellGroupCount}</p>
+            </div>
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.membersAssigned")}
               </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">{memberCount}</p>
-            </Card>
+              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{memberCount}</p>
+            </div>
           </div>
 
-          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm transition-all duration-300">
-            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-                    {t("admin.churchUnits.list")}
-                  </h2>
-                  <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
-                    {unitsQuery.isLoading
-                      ? t("admin.churchUnits.loading")
-                      : t("admin.churchUnits.records", {
-                        count: String(visibleUnits.length),
-                        total: String(unitsQuery.data?.total ?? 0),
-                      })}
-                  </p>
-                </div>
-                <div className="flex w-full items-center gap-3 lg:w-auto">
-                  <div className="relative min-w-0 flex-1 lg:w-80">
-                    <Search
-                      aria-hidden="true"
-                      className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
-                    />
-                    <Input
-                      className="h-11 rounded-xl pl-11 shadow-sm"
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder={t("admin.churchUnits.search")}
-                      value={query}
-                    />
-                  </div>
-                  <button
-                    aria-label={t("admin.members.refresh")}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200 active:scale-95"
-                    onClick={() => {
-                      void unitsQuery.refetch();
-                      void metaQuery.refetch();
-                    }}
-                    type="button"
-                  >
-                    <RefreshCw
-                      aria-hidden="true"
-                      className={cn(
-                        "h-5 w-5",
-                        unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                      )}
-                    />
-                  </button>
-                  {hideLayout && canCreateUnits ? (
-                    <Button onClick={openCreateModal} className="h-11 shrink-0 rounded-xl">
-                      <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                      {t("admin.churchUnits.add")}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <FormField htmlFor="church-unit-type-filter" label={t("admin.churchUnits.type")}>
-                  <Select
-                    id="church-unit-type-filter"
-                    onChange={(event) => setTypeFilter(event.target.value)}
-                    value={typeFilter}
-                  >
-                    <option value="all">{t("prayer.filter.all")}</option>
-                    {(meta?.types ?? []).map((type) => (
-                      <option key={type} value={type}>
-                        {typeLabel(type)}
-                      </option>
-                    ))}
-                  </Select>
-                </FormField>
-                <FormField htmlFor="church-unit-status-filter" label={t("course.form.status")}>
-                  <Select
-                    id="church-unit-status-filter"
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                    value={statusFilter}
-                  >
-                    <option value="all">{t("prayer.filter.all")}</option>
-                    <option value="active">{t("admin.churchUnits.status.active")}</option>
-                    <option value="inactive">{t("admin.churchUnits.status.inactive")}</option>
-                  </Select>
-                </FormField>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-search">
+                {t("common.search")}
+              </label>
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
+                />
+                <Input
+                  id="church-unit-search"
+                  className="h-9 pl-10 text-sm"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={t("admin.churchUnits.search")}
+                  value={query}
+                />
               </div>
             </div>
 
-            {unitsQuery.error || metaQuery.error || mutationError ? (
-              <div
-                className="m-6 rounded-xl border p-4 text-sm font-medium"
-                style={{
-                  backgroundColor: "var(--status-danger-bg)",
-                  borderColor: "color-mix(in srgb, var(--status-danger) 24%, var(--border-subtle))",
-                  color: "var(--status-danger)",
-                }}
-              >
-                {mutationErrorMessage(unitsQuery.error ?? metaQuery.error ?? mutationError)}
+            <div className="flex items-end gap-2 shrink-0">
+              <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-40 sm:flex-none">
+                <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-type-filter">
+                  {t("common.type")}
+                </label>
+                <Select
+                  id="church-unit-type-filter"
+                  aria-label={t("admin.churchUnits.type")}
+                  className="h-9 text-sm"
+                  onChange={(event) => setTypeFilter(event.target.value)}
+                  value={typeFilter}
+                >
+                  <option value="all">{t("prayer.filter.all")}</option>
+                  {(meta?.types ?? []).map((type) => (
+                    <option key={type} value={type}>
+                      {typeLabel(type)}
+                    </option>
+                  ))}
+                </Select>
               </div>
-            ) : null}
 
+              <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
+                <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-status-filter">
+                  {t("common.status")}
+                </label>
+                <Select
+                  id="church-unit-status-filter"
+                  aria-label={t("course.form.status")}
+                  className="h-9 text-sm"
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  value={statusFilter}
+                >
+                  <option value="all">{t("prayer.filter.all")}</option>
+                  <option value="active">{t("admin.churchUnits.status.active")}</option>
+                  <option value="inactive">{t("admin.churchUnits.status.inactive")}</option>
+                </Select>
+              </div>
+
+              <button
+                aria-label={t("admin.members.refresh")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
+                onClick={() => {
+                  void unitsQuery.refetch();
+                  void metaQuery.refetch();
+                }}
+                type="button"
+              >
+                <RefreshCw
+                  aria-hidden="true"
+                  className={cn(
+                    "h-4 w-4",
+                    unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
+                  )}
+                />
+              </button>
+              {hideLayout && canCreateUnits ? (
+                <Button onClick={openCreateModal} size="sm">
+                  <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+                  {t("admin.churchUnits.add")}
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          {unitsQuery.error || metaQuery.error || mutationError ? (
+            <div
+              className="rounded-xl border p-4 text-sm font-medium"
+              style={{
+                backgroundColor: "var(--status-danger-bg)",
+                borderColor: "color-mix(in srgb, var(--status-danger) 24%, var(--border-subtle))",
+                color: "var(--status-danger)",
+              }}
+            >
+              {mutationErrorMessage(unitsQuery.error ?? metaQuery.error ?? mutationError)}
+            </div>
+          ) : null}
+
+          <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-none">
             <div className="grid divide-y divide-[var(--border-subtle)]">
               {visibleUnits.map((unit) => (
                 <div
@@ -608,7 +589,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
               />
             ) : null}
-          </Card>
+          </div>
         </div>
       )}
 
@@ -1129,7 +1110,29 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
           onClose={() => setActiveScoresUnit(null)}
         />
       )}
-    </LayoutWrapper>
+    </>
+  );
+
+  if (hideLayout) {
+    return content;
+  }
+
+  return (
+    <PageLayout
+      actions={
+        canCreateUnits ? (
+          <Button onClick={openCreateModal}>
+            <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+            {t("admin.churchUnits.add")}
+          </Button>
+        ) : null
+      }
+      description={admin ? t("admin.churchUnits.description") : t("page.churchUnit.description")}
+      eyebrow={admin ? t("admin.common.admin") : t("page.churchUnit.eyebrow")}
+      title={t("nav.churchUnit.label")}
+    >
+      {content}
+    </PageLayout>
   );
 }
 
@@ -1139,19 +1142,13 @@ type ClassScoresModalProps = {
 };
 
 function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
+  const { t } = useTranslation();
   const { data: scores, isLoading, error } = useClassScoresQuery(unit.id);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(() => unit.courses?.[0]?.id ?? "");
 
   const activeCourse = useMemo(() => {
     if (!unit.courses || unit.courses.length === 0) return null;
     return unit.courses.find((c) => c.id === selectedCourseId) || unit.courses[0];
-  }, [unit.courses, selectedCourseId]);
-
-  // Set default selected course
-  useMemo(() => {
-    if (unit.courses && unit.courses.length > 0 && !selectedCourseId) {
-      setSelectedCourseId(unit.courses[0].id);
-    }
   }, [unit.courses, selectedCourseId]);
 
   return (
@@ -1163,7 +1160,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
               <GraduationCap className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">Class Performance Scores</h2>
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.churchUnits.scores.title")}</h2>
               <p className="text-sm font-medium text-[var(--text-secondary)]">{unit.name}</p>
             </div>
           </div>
@@ -1180,7 +1177,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
             <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--bg-base)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
               <div className="flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)] shrink-0">
                 <BookOpen className="h-4 w-4 text-[var(--brand-primary)] shrink-0" />
-                <span>Select Course ({unit.courses.length}):</span>
+                <span>{t("admin.churchUnits.scores.selectCourse", { count: String(unit.courses.length) })}</span>
               </div>
               <div className="flex-1 max-w-lg">
                 <Select
@@ -1217,15 +1214,15 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
         ) : (
           <div className="mt-6 flex flex-col items-center justify-center border border-[var(--border-subtle)] rounded-xl p-8 bg-[var(--bg-base)]/30">
             <BookOpen className="h-10 w-10 text-[var(--text-tertiary)] opacity-30 mb-2" />
-            <p className="text-sm font-bold text-[var(--text-secondary)]">No Courses Assigned</p>
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">Please edit the Class unit to assign courses first.</p>
+            <p className="text-sm font-bold text-[var(--text-secondary)]">{t("admin.churchUnits.scores.noCourses")}</p>
+            <p className="text-xs text-[var(--text-tertiary)] mt-1">{t("admin.churchUnits.scores.noCoursesDesc")}</p>
           </div>
         )}
 
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
             <RefreshCw className="h-8 w-8 text-[var(--brand-primary)] animate-spin" />
-            <p className="text-sm font-medium text-[var(--text-secondary)] mt-2">Loading member scores...</p>
+            <p className="text-sm font-medium text-[var(--text-secondary)] mt-2">{t("admin.churchUnits.scores.loading")}</p>
           </div>
         ) : error ? (
           <div className="mt-4 p-4 rounded-xl border border-[var(--status-danger)]/20 bg-[var(--status-danger-bg)] text-sm text-[var(--status-danger)]">
@@ -1236,10 +1233,10 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[var(--bg-base)]/50 border-b border-[var(--border-subtle)]">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Student</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Overall Grade</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Quiz Attempts</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t("admin.churchUnits.scores.student")}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t("common.status")}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t("admin.churchUnits.scores.overallGrade")}</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t("admin.churchUnits.scores.quizAttempts")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--bg-surface)]">
@@ -1300,12 +1297,12 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                               >
                                 {qa.score !== null
                                   ? (qa.score_display || (qa.total_questions > 0 ? `${qa.score}/${qa.total_questions}` : qa.score))
-                                  : "Started"}
+                                  : t("admin.churchUnits.scores.started")}
                               </span>
                             </div>
                           ))
                         ) : (
-                          <span className="text-xs text-[var(--text-tertiary)] font-medium">No quiz attempts.</span>
+                          <span className="text-xs text-[var(--text-tertiary)] font-medium">{t("admin.churchUnits.scores.noAttempts")}</span>
                         )}
                       </td>
                     </tr>
@@ -1314,7 +1311,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                 {(scores ?? []).length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-6 py-10 text-center text-sm font-medium text-[var(--text-tertiary)]">
-                      No members enrolled in this class.
+                      {t("admin.churchUnits.scores.noMembers")}
                     </td>
                   </tr>
                 )}
@@ -1325,7 +1322,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
 
         <div className="mt-6 flex justify-end">
           <Button onClick={onClose} variant="secondary">
-            Close
+            {t("common.close")}
           </Button>
         </div>
       </div>

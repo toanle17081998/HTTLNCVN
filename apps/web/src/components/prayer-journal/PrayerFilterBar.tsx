@@ -20,12 +20,15 @@ export function PrayerFilterBar({
   const { t } = useTranslation();
 
   return (
-    <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 sm:grid-cols-2">
-      <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-          Status
-        </span>
+    <div className="flex flex-1 items-end gap-2 sm:flex-none">
+      <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
+        <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-status-filter">
+          {t("common.status")}
+        </label>
         <Select
+          id="prayer-status-filter"
+          aria-label={t("common.status")}
+          className="h-9 text-sm"
           onChange={(event) => onStatusChange(event.target.value as StatusFilter)}
           value={statusFilter}
         >
@@ -33,13 +36,16 @@ export function PrayerFilterBar({
           <option value="open">{t("prayer.filter.open")}</option>
           <option value="closed">{t("prayer.filter.closed")}</option>
         </Select>
-      </label>
+      </div>
 
-      <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-          Visibility
-        </span>
+      <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
+        <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-visibility-filter">
+          {t("common.visibility")}
+        </label>
         <Select
+          id="prayer-visibility-filter"
+          aria-label={t("common.visibility")}
+          className="h-9 text-sm"
           onChange={(event) => onVisibilityChange(event.target.value as VisibilityFilter)}
           value={visibilityFilter}
         >
@@ -48,7 +54,7 @@ export function PrayerFilterBar({
           <option value="shared">{t("prayer.filter.shared")}</option>
           <option value="private">{t("prayer.filter.private")}</option>
         </Select>
-      </label>
+      </div>
     </div>
   );
 }

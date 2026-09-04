@@ -21,24 +21,40 @@ type TextProps = BoxProps & {
   weight?: SizeValue;
 };
 
-export function TextBlock({
-  align = "left",
-  color = "inherit",
-  letterSpacing,
-  lineHeight = 1.6,
-  mobileAlign,
-  size = "1rem",
-  tag = "p",
-  tabletAlign,
-  text = "Add your text here...",
-  weight = "400",
-  ...props
-}: TextProps) {
+export function TextBlock(props: TextProps) {
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
   const {
     actions: { setProp },
-  } = useNode();
+    nodeAlign,
+    nodeColor,
+    nodeLetterSpacing,
+    nodeLineHeight,
+    nodeMobileAlign,
+    nodeSize,
+    nodeTag,
+    nodeText,
+    nodeWeight,
+  } = useNode((node) => ({
+    nodeAlign: node.data.props.align,
+    nodeColor: node.data.props.color,
+    nodeLetterSpacing: node.data.props.letterSpacing,
+    nodeLineHeight: node.data.props.lineHeight,
+    nodeMobileAlign: node.data.props.mobileAlign,
+    nodeSize: node.data.props.size,
+    nodeTag: node.data.props.tag,
+    nodeText: node.data.props.text,
+    nodeWeight: node.data.props.weight,
+  }));
   const isMobile = useIsMobile();
+  const align = nodeAlign ?? props.align ?? "left";
+  const mobileAlign = nodeMobileAlign ?? props.mobileAlign;
+  const color = nodeColor ?? props.color ?? "inherit";
+  const letterSpacing = nodeLetterSpacing ?? props.letterSpacing;
+  const lineHeight = nodeLineHeight ?? props.lineHeight ?? 1.6;
+  const size = nodeSize ?? props.size ?? "1rem";
+  const tag = nodeTag ?? props.tag ?? "p";
+  const text = nodeText ?? props.text ?? "Add your text here...";
+  const weight = nodeWeight ?? props.weight ?? "400";
   const Tag = (tag || "p") as ElementType;
 
   return (

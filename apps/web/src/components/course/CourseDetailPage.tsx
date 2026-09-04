@@ -44,38 +44,22 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
   return (
     <PageLayout
-      description={(locale === "vi" ? (course?.summary_vi || course?.summary_en) : (course?.summary_en || course?.summary_vi)) ?? (locale === "vi" ? "Bài học và câu hỏi trắc nghiệm của khóa học." : "Course lessons and quizzes.")}
-      eyebrow={t("nav.course.label")}
-      title={locale === "vi" ? (course?.title_vi || course?.title_en || "Khóa học") : (course?.title_en || course?.title_vi || "Course")}
-    >
-      {courseQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
-      ) : null}
-
-      {courseQuery.error ? (
-        <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
-          {courseQuery.error instanceof Error ? courseQuery.error.message : t("page.course.description")}
-        </Card>
-      ) : null}
-
-      {course ? (
-        <div className="grid gap-5">
-          <div className="grid min-w-0 gap-5">
-            {course.cover_image_url ? (
-              <img
-                alt=""
-                className="aspect-[16/9] w-full rounded-lg border border-[var(--border-subtle)] object-cover"
-                src={course.cover_image_url}
-              />
-            ) : null}
-
+      actions={
+        course ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+              {course.lesson_count} {t("lesson.label").toLowerCase()}s
+            </span>
+            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+              {course.estimated_duration_minutes} {t("quiz.minutes")}
+            </span>
             {can(PERMISSIONS.manageCourses) && (
-              <div className="flex justify-end gap-2">
-
-                <Button variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
                   {t("course.action.edit")}
                 </Button>
                 <Button
+                  size="sm"
                   variant="ghost"
                   className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                   onClick={async () => {
@@ -93,28 +77,40 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                 </Button>
               </div>
             )}
+          </div>
+        ) : undefined
+      }
+      coverImage={course?.cover_image_url || undefined}
+      description={(locale === "vi" ? (course?.summary_vi || course?.summary_en) : (course?.summary_en || course?.summary_vi)) || undefined}
+      eyebrow={
+        course?.category
+          ? (locale === "vi" ? course.category.name_vi : course.category.name_en)
+          : t("nav.course.label")
+      }
+      showHeroImage={Boolean(course?.cover_image_url)}
+      title={locale === "vi" ? (course?.title_vi || course?.title_en || "Khóa học") : (course?.title_en || course?.title_vi || "Course")}
+    >
+      {courseQuery.isLoading ? (
+        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
+      ) : null}
 
-            <Card className="p-6">
-              <div className="flex flex-wrap items-center gap-2">
-                {course.category ? (
-                  <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-                    {locale === "vi" ? course.category.name_vi : course.category.name_en}
-                  </span>
-                ) : null}
-                <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                  {course.lesson_count} {t("lesson.label").toLowerCase()}s
-                </span>
-                <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                  {course.estimated_duration_minutes} {t("quiz.minutes")}
-                </span>
-              </div>
-              {descriptionHtml ? (
+      {courseQuery.error ? (
+        <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
+          {courseQuery.error instanceof Error ? courseQuery.error.message : t("page.course.description")}
+        </Card>
+      ) : null}
+
+      {course ? (
+        <div className="grid gap-5">
+          <div className="grid min-w-0 gap-5">
+            {descriptionHtml ? (
+              <Card className="p-6">
                 <div
-                  className="mt-4 text-sm leading-6 text-[var(--text-secondary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
+                  className="text-sm leading-6 text-[var(--text-secondary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
                   dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                 />
-              ) : null}
-            </Card>
+              </Card>
+            ) : null}
 
             <section className="grid gap-3">
               <div className="flex items-center justify-between">

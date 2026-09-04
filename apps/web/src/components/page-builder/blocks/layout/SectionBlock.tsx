@@ -25,12 +25,16 @@ function getGridStyle(props: LayoutBlockProps) {
 }
 
 export function SectionBlock({ children, snapAlign = "none", ...props }: LayoutBlockProps & { snapAlign?: "start" | "center" | "none" }) {
+  const { nodeProps } = useNode((node) => ({
+    nodeProps: node.data.props,
+  }));
+  const activeProps = { ...props, ...nodeProps };
   const isMobile = useIsMobile();
-  const sectionStyle = buildBoxStyle(props);
-  const hasExplicitBackground = Boolean(props.backgroundImage) ||
-    (Boolean(props.background) && props.background !== "transparent" && props.background !== "var(--bg-surface)");
+  const sectionStyle = buildBoxStyle(activeProps);
+  const hasExplicitBackground = Boolean(activeProps.backgroundImage) ||
+    (Boolean(activeProps.background) && activeProps.background !== "transparent" && activeProps.background !== "var(--bg-surface)");
   const contentProps = {
-    ...props,
+    ...activeProps,
     background: "transparent",
     backgroundImage: "",
     borderColor: "transparent",

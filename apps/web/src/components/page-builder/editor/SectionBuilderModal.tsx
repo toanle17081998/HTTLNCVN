@@ -4,7 +4,8 @@ import { useState, type ReactElement, type ReactNode } from "react";
 import { Element, useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
 import { cn } from "@/components/ui";
-import { SectionInsertContext } from "../shared/NodeFrame";
+import { useTranslation } from "@/providers/I18nProvider";
+import { ContentEditContext, SectionInsertContext } from "../shared/NodeFrame";
 import { getButtonVariantClass } from "../shared/helpers";
 import { defaultHeroSliderImages, HeroImageSliderBlock } from "../blocks/hero/HeroImageSliderBlock";
 import { defaultGalleryImages, GalleryMarqueeBlock } from "../blocks/gallery/GalleryMarqueeBlock";
@@ -51,14 +52,14 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
   if (preset.category === "Hero") {
     if (preset.variant === 1) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
-        <Element canvas is={VerticalStackBlock} justifyContent="space-between" gap="var(--section-space-md)" minHeight="var(--section-hero-slider-height)">
-          <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)">
-            <TextBlock color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" size="var(--section-title-size)" tag="h1" text="Discover a place made for you" weight="var(--section-weight-bold)" />
-            <TextBlock color="var(--text-secondary)" size="var(--section-body-size)" text="Find meaningful community, grow in faith, and take your next step with us." />
+        <Element canvas is={VerticalStackBlock} justifyContent="space-between" gap="var(--section-space-md)" minHeight="var(--section-hero-slider-height)" mobileAlignItems="center">
+          <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
+            <TextBlock align="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Discover a place made for you" weight="var(--section-weight-bold)" />
+            <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Find meaningful community, grow in faith, and take your next step with us." />
           </Element>
-          <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)">
-            <ButtonBlock href="/contact" label="Plan a visit" />
-            <ButtonBlock href="/about" label="Learn more" variant="ghost" />
+          <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" mobileAlignItems="center">
+            <ButtonBlock href="/contact" label="Plan a visit" mobileAlign="center" />
+            <ButtonBlock href="/about" label="Learn more" mobileAlign="center" variant="ghost" />
           </Element>
         </Element>
         <HeroImageSliderBlock />
@@ -67,12 +68,12 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
 
     if (preset.variant === 2) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} gap="var(--section-space-lg)" minHeight="var(--section-hero-min-height)" padding="var(--section-hero-padding)">
-        <Element canvas is={VerticalStackBlock} alignItems="center" gap="var(--section-space-md)" justifyContent="center" mobileAlignItems="flex-start">
-          <TextBlock align="center" mobileAlign="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" size="var(--section-title-size)" tag="h1" text="Recovery and support" weight="var(--section-weight-bold)" />
-          <TextBlock align="center" mobileAlign="left" color="var(--text-secondary)" size="var(--section-body-size)" text="People and resources for every season of life." />
-          <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" justifyContent="center" mobileAlignItems="flex-start">
-            <ButtonBlock href="/contact" label="Get resources" />
-            <ButtonBlock href="/about" label="Stay connected" variant="secondary" />
+        <Element canvas is={VerticalStackBlock} alignItems="center" gap="var(--section-space-md)" justifyContent="center" mobileAlignItems="center">
+          <TextBlock align="center" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Recovery and support" weight="var(--section-weight-bold)" />
+          <TextBlock align="center" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="People and resources for every season of life." />
+          <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" justifyContent="center" mobileAlignItems="center">
+            <ButtonBlock href="/contact" label="Get resources" mobileAlign="center" />
+            <ButtonBlock href="/about" label="Stay connected" mobileAlign="center" variant="secondary" />
           </Element>
         </Element>
         <ImageBlock alt="Community gathering" borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={sampleImage} />
@@ -80,13 +81,13 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
     }
 
     return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
-      <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" justifyContent="space-between" minHeight="var(--section-media-height)">
-        <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)">
-          <TextBlock align="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" size="var(--section-title-size)" tag="h1" text="A church for the whole family" weight="var(--section-weight-bold)" />
-          <TextBlock align="left" color="var(--text-secondary)" size="var(--section-body-size)" text="Experience inspiring worship, biblical teaching, and meaningful connections for people of all ages and backgrounds." />
+      <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" justifyContent="space-between" minHeight="var(--section-media-height)" mobileAlignItems="center">
+        <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
+          <TextBlock align="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="A church for the whole family" weight="var(--section-weight-bold)" />
+          <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Experience inspiring worship, biblical teaching, and meaningful connections for people of all ages and backgrounds." />
         </Element>
-        <Element canvas is={RowBlock} gap="var(--section-space-sm)">
-          <ButtonBlock href="/contact" label="Plan a visit" />
+        <Element canvas is={RowBlock} gap="var(--section-space-sm)" mobileAlignItems="center">
+          <ButtonBlock href="/contact" label="Plan a visit" mobileAlign="center" />
         </Element>
       </Element>
       <ImageBlock alt="Church community gathering" borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={defaultHeroSliderImages[0]} />
@@ -576,7 +577,9 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
 
 export function SectionBuilderProvider({ children }: { children: ReactNode }) {
   const { actions, query } = useEditor();
+  const { t } = useTranslation();
   const [insertIndex, setInsertIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [category, setCategory] = useState<SectionCategory>("Hero");
   const [selectedId, setSelectedId] = useState(sectionPresets[0].id);
   const visiblePresets = sectionPresets.filter((preset) => preset.category === category);
@@ -594,72 +597,86 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SectionInsertContext.Provider value={setInsertIndex}>
-      {children}
-      <ContentEditorDialog />
-      {insertIndex !== null ? (
-        <div className="fixed inset-0 z-[70] grid place-items-center bg-black/55 p-4" onMouseDown={() => setInsertIndex(null)}>
-          <div className="grid max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-2xl bg-[var(--bg-elevated)] shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Section library</p>
-                <h3 className="text-xl font-semibold">Add a section</h3>
+    <ContentEditContext.Provider value={{ editingId, setEditingId }}>
+      <SectionInsertContext.Provider value={setInsertIndex}>
+        {children}
+        <ContentEditorDialog />
+        {insertIndex !== null ? (
+          <div className="fixed inset-0 z-[70] grid place-items-center bg-black/55 p-4" onMouseDown={() => setInsertIndex(null)}>
+            <div className="grid max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-2xl bg-[var(--bg-elevated)] shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionLibrary")}</p>
+                  <h3 className="text-xl font-semibold">{t("pageBuilder.addSection")}</h3>
+                </div>
+                <button aria-label="Close" className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button aria-label="Close" className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="grid min-h-0 md:grid-cols-[18rem_minmax(0,1fr)]">
-              <div className="grid content-start gap-1 overflow-y-auto border-r border-[var(--border-subtle)] p-4">
-                {(["Hero", "Feature list", "CTA", "Gallery"] as SectionCategory[]).map((item) => (
-                  <button
-                    className={cn(
-                      "rounded-lg px-4 py-3 text-left text-sm font-medium",
-                      category === item ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]" : "hover:bg-[var(--brand-soft)]",
-                    )}
-                    key={item}
-                    onClick={() => chooseCategory(item)}
-                    type="button"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-              <div className="grid min-h-0 gap-5 overflow-y-auto p-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                <div className="grid content-start gap-2">
-                  {visiblePresets.map((preset) => (
+              <div className="grid min-h-0 md:grid-cols-[18rem_minmax(0,1fr)]">
+                <div className="grid content-start gap-1 overflow-y-auto border-r border-[var(--border-subtle)] p-4">
+                  {(["Hero", "Feature list", "CTA", "Gallery"] as SectionCategory[]).map((item) => {
+                    const label =
+                      item === "Hero"
+                        ? t("pageBuilder.categoryHero")
+                        : item === "Feature list"
+                          ? t("pageBuilder.categoryFeatureList")
+                          : item === "CTA"
+                            ? t("pageBuilder.categoryCta")
+                            : t("pageBuilder.categoryGallery");
+                    return (
+                      <button
+                        className={cn(
+                          "rounded-lg px-4 py-3 text-left text-sm font-medium",
+                          category === item ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]" : "hover:bg-[var(--brand-soft)]",
+                        )}
+                        key={item}
+                        onClick={() => chooseCategory(item)}
+                        type="button"
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="grid min-h-0 gap-5 overflow-y-auto p-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+                  <div className="grid content-start gap-2">
+                    {visiblePresets.map((preset) => (
+                      <button
+                        className={cn(
+                          "rounded-lg border px-4 py-3 text-left",
+                          selectedPreset?.id === preset.id ? "border-[var(--brand-primary)] bg-[var(--brand-soft)]" : "border-[var(--border-subtle)]",
+                        )}
+                        key={preset.id}
+                        onClick={() => setSelectedId(preset.id)}
+                        type="button"
+                      >
+                        <span className="block text-sm font-semibold">{preset.name}</span>
+                        <span className="mt-1 block text-xs text-[var(--text-tertiary)]">
+                          {t("pageBuilder.styleVariant", { variant: String(preset.variant) })}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid content-start gap-4">
+                    {selectedPreset ? <SectionPresetPreview preset={selectedPreset} /> : null}
                     <button
                       className={cn(
-                        "rounded-lg border px-4 py-3 text-left",
-                        selectedPreset?.id === preset.id ? "border-[var(--brand-primary)] bg-[var(--brand-soft)]" : "border-[var(--border-subtle)]",
+                        "justify-self-end rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-300",
+                        getButtonVariantClass("primary"),
                       )}
-                      key={preset.id}
-                      onClick={() => setSelectedId(preset.id)}
+                      onClick={insertSection}
                       type="button"
                     >
-                      <span className="block text-sm font-semibold">{preset.name}</span>
-                      <span className="mt-1 block text-xs text-[var(--text-tertiary)]">Style variant {preset.variant}</span>
+                      {t("pageBuilder.addSectionToPage")}
                     </button>
-                  ))}
-                </div>
-                <div className="grid content-start gap-4">
-                  {selectedPreset ? <SectionPresetPreview preset={selectedPreset} /> : null}
-                  <button
-                    className={cn(
-                      "justify-self-end rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-300",
-                      getButtonVariantClass("primary"),
-                    )}
-                    onClick={insertSection}
-                    type="button"
-                  >
-                    Add this section to page
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
-    </SectionInsertContext.Provider>
+        ) : null}
+      </SectionInsertContext.Provider>
+    </ContentEditContext.Provider>
   );
 }

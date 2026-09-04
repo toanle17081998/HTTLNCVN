@@ -32,7 +32,6 @@ export * from "./blocks/gallery/FeedCard";
 export * from "./blocks/gallery/FeedCarouselBlock";
 
 // Editor UI Components
-export * from "./editor/RenderNodeSettings";
 export * from "./editor/PageComponentList";
 export * from "./editor/ContentEditorDialog";
 export * from "./editor/SectionBuilderModal";

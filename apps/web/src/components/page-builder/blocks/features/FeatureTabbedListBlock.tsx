@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useEditor } from "@craftjs/core";
+import { useEditor, useNode } from "@craftjs/core";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
 import { NodeFrame } from "../../shared/NodeFrame";
 
@@ -32,8 +32,25 @@ export function FeatureTabbedListBlock({
   sectionTitle?: string;
   showDescription?: boolean;
 }) {
+  const {
+    items: nodeItems,
+    sectionDescription: nodeSectionDescription,
+    sectionTitle: nodeSectionTitle,
+    showDescription: nodeShowDescription,
+  } = useNode((node) => ({
+    items: node.data.props.items,
+    sectionDescription: node.data.props.sectionDescription,
+    sectionTitle: node.data.props.sectionTitle,
+    showDescription: node.data.props.showDescription,
+  }));
+
+  const activeTitle = nodeSectionTitle ?? sectionTitle;
+  const activeDescription = nodeSectionDescription ?? sectionDescription;
+  const activeShowDescription = nodeShowDescription !== undefined ? nodeShowDescription : showDescription;
+  const activeItems = (Array.isArray(nodeItems) && nodeItems.length ? nodeItems : items) || defaultFeatureTabs;
+
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeItem = items[Math.min(activeIndex, Math.max(items.length - 1, 0))];
+  const activeItem = activeItems[Math.min(activeIndex, Math.max(activeItems.length - 1, 0))];
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
 
   return (
@@ -41,18 +58,18 @@ export function FeatureTabbedListBlock({
       <div className="grid" style={{ gap: "var(--section-space-lg)" }}>
         <div className="grid" style={{ gap: "var(--section-space-xs)" }}>
           <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
-            {sectionTitle}
+            {activeTitle}
           </h2>
-          {showDescription && sectionDescription ? (
+          {activeShowDescription && activeDescription ? (
             <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
-              {sectionDescription}
+              {activeDescription}
             </p>
           ) : null}
         </div>
         {activeItem ? (
           <div className="feature-tabbed-layout grid" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
             <div className="grid content-start">
-              {items.map((item, index) => (
+              {activeItems.map((item, index) => (
                 <div
                   className="grid border-b border-[var(--border-subtle)] text-left transition-colors"
                   key={`${item.title}-${index}`}

@@ -18,17 +18,34 @@ type ImageProps = BoxProps & {
   url?: string;
 };
 
-export function ImageBlock({
-  alt = "Image block",
-  aspectRatio = "16/9",
-  caption,
-  fit = "cover",
-  kind = "image",
-  overlayColor = "transparent",
-  overlayOpacity = 0,
-  url = "https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=1400&q=85",
-  ...props
-}: ImageProps) {
+export function ImageBlock(props: ImageProps) {
+  const {
+    nodeAlt,
+    nodeAspectRatio,
+    nodeCaption,
+    nodeFit,
+    nodeKind,
+    nodeOverlayColor,
+    nodeOverlayOpacity,
+    nodeUrl,
+  } = useNode((node) => ({
+    nodeAlt: node.data.props.alt,
+    nodeAspectRatio: node.data.props.aspectRatio,
+    nodeCaption: node.data.props.caption,
+    nodeFit: node.data.props.fit,
+    nodeKind: node.data.props.kind,
+    nodeOverlayColor: node.data.props.overlayColor,
+    nodeOverlayOpacity: node.data.props.overlayOpacity,
+    nodeUrl: node.data.props.url,
+  }));
+  const alt = nodeAlt ?? props.alt ?? "Image block";
+  const aspectRatio = nodeAspectRatio ?? props.aspectRatio ?? "16/9";
+  const caption = nodeCaption ?? props.caption;
+  const fit = nodeFit ?? props.fit ?? "cover";
+  const kind = nodeKind ?? props.kind ?? "image";
+  const overlayColor = nodeOverlayColor ?? props.overlayColor ?? "transparent";
+  const overlayOpacity = nodeOverlayOpacity ?? props.overlayOpacity ?? 0;
+  const url = nodeUrl ?? props.url ?? "https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=1400&q=85";
   const finalUrl = toEmbedUrl(url, kind);
 
   return (

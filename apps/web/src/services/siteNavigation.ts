@@ -106,7 +106,7 @@ export const defaultPageHeroes: Record<string, PageHeroConfig> = {
     eyebrowEn: "Church",
     eyebrowVi: "Hội thánh",
     titleEn: "Church Units & Departments",
-    titleVi: "Cơ cấu & Ban ngành",
+    titleVi: "Hội Thánh & Ban ngành",
   },
   "/prayer-journal": {
     coverImage: "https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=1400&q=85",

@@ -202,45 +202,8 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
     window.alert(t("admin.members.importPending", { name: file.name }));
   }
 
-  const LayoutWrapper = hideLayout
-    ? ({ children }: { children: React.ReactNode }) => <>{children}</>
-    : ({ children }: { children: React.ReactNode }) => (
-        <PageLayout
-          actions={
-            <div className="flex flex-wrap gap-2">
-              {admin ? (
-                <>
-                  <input
-                    accept=".csv,.xls,.xlsx"
-                    className="hidden"
-                    onChange={(event) => handleImportFile(event.target.files?.[0])}
-                    ref={importInputRef}
-                    type="file"
-                  />
-                  <Button onClick={() => importInputRef.current?.click()} variant="secondary">
-                    <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
-                    {t("action.importData")}
-                  </Button>
-                </>
-              ) : null}
-              {canCreateMembers ? (
-                <Button onClick={openCreateModal}>
-                  <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                  {t("action.inviteMember")}
-                </Button>
-              ) : null}
-            </div>
-          }
-          description={admin ? t("admin.members.description") : t("page.member.description")}
-          eyebrow={admin ? t("admin.common.admin") : t("page.member.eyebrow")}
-          title={t("nav.member.label")}
-        >
-          {children}
-        </PageLayout>
-      );
-
-  return (
-    <LayoutWrapper>
+  const content = (
+    <>
       {!authLoading && !canReadMembers ? (
         <Card className="p-5">
           <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
@@ -613,6 +576,45 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           </form>
         </div>
       ) : null}
-    </LayoutWrapper>
+    </>
+  );
+
+  if (hideLayout) {
+    return content;
+  }
+
+  return (
+    <PageLayout
+      actions={
+        <div className="flex flex-wrap gap-2">
+          {admin ? (
+            <>
+              <input
+                accept=".csv,.xls,.xlsx"
+                className="hidden"
+                onChange={(event) => handleImportFile(event.target.files?.[0])}
+                ref={importInputRef}
+                type="file"
+              />
+              <Button onClick={() => importInputRef.current?.click()} variant="secondary">
+                <Upload aria-hidden="true" className="mr-2 h-4 w-4" />
+                {t("action.importData")}
+              </Button>
+            </>
+          ) : null}
+          {canCreateMembers ? (
+            <Button onClick={openCreateModal}>
+              <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+              {t("action.inviteMember")}
+            </Button>
+          ) : null}
+        </div>
+      }
+      description={admin ? t("admin.members.description") : t("page.member.description")}
+      eyebrow={admin ? t("admin.common.admin") : t("page.member.eyebrow")}
+      title={t("nav.member.label")}
+    >
+      {content}
+    </PageLayout>
   );
 }

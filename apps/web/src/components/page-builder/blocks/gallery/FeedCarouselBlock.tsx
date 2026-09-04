@@ -27,22 +27,47 @@ type FeedProps = BoxProps & {
   slideWidth?: SizeValue;
 };
 
-export function FeedCarouselBlock({
-  autoPlay = true,
-  background = "transparent",
-  cardStyle = "cinematic",
-  columns = 3,
-  emptyMessage = "No content yet.",
-  feedType = "articles",
-  gap = "var(--section-space-sm)",
-  href = "/",
-  intervalMs = 5000,
-  itemsPerScreen = 1,
-  selectedItemIds = [],
-  slideWidth = "56%",
-  ...props
-}: FeedProps) {
+export function FeedCarouselBlock(props: FeedProps) {
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const {
+    nodeAutoPlay,
+    nodeBackground,
+    nodeCardStyle,
+    nodeColumns,
+    nodeEmptyMessage,
+    nodeFeedType,
+    nodeGap,
+    nodeHref,
+    nodeIntervalMs,
+    nodeItemsPerScreen,
+    nodeSelectedItemIds,
+    nodeSlideWidth,
+  } = useNode((node) => ({
+    nodeAutoPlay: node.data.props.autoPlay,
+    nodeBackground: node.data.props.background,
+    nodeCardStyle: node.data.props.cardStyle,
+    nodeColumns: node.data.props.columns,
+    nodeEmptyMessage: node.data.props.emptyMessage,
+    nodeFeedType: node.data.props.feedType,
+    nodeGap: node.data.props.gap,
+    nodeHref: node.data.props.href,
+    nodeIntervalMs: node.data.props.intervalMs,
+    nodeItemsPerScreen: node.data.props.itemsPerScreen,
+    nodeSelectedItemIds: node.data.props.selectedItemIds,
+    nodeSlideWidth: node.data.props.slideWidth,
+  }));
+  const autoPlay = nodeAutoPlay ?? props.autoPlay ?? true;
+  const background = nodeBackground ?? props.background ?? "transparent";
+  const cardStyle = nodeCardStyle ?? props.cardStyle ?? "cinematic";
+  const columns = nodeColumns ?? props.columns ?? 3;
+  const emptyMessage = nodeEmptyMessage ?? props.emptyMessage ?? "No content yet.";
+  const feedType = nodeFeedType ?? props.feedType ?? "articles";
+  const gap = nodeGap ?? props.gap ?? "var(--section-space-sm)";
+  const href = nodeHref ?? props.href ?? "/";
+  const intervalMs = nodeIntervalMs ?? props.intervalMs ?? 5000;
+  const itemsPerScreen = nodeItemsPerScreen ?? props.itemsPerScreen ?? 1;
+  const selectedItemIds = nodeSelectedItemIds ?? props.selectedItemIds ?? [];
+  const slideWidth = nodeSlideWidth ?? props.slideWidth ?? "56%";
   const isMobile = useIsMobile();
   const dragStartXRef = useRef<number | null>(null);
   const dragDeltaRef = useRef(0);

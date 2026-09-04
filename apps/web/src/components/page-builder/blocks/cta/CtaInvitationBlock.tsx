@@ -35,8 +35,41 @@ export function CtaInvitationBlock({
   title = "You belong here",
   ...props
 }: CtaInvitationProps) {
+  const {
+    actionHref: nodeActionHref,
+    actionLabel: nodeActionLabel,
+    badge: nodeBadge,
+    button1Href,
+    button1Label,
+    description: nodeDescription,
+    items,
+    schedules: nodeSchedules,
+    sectionDescription,
+    sectionTitle,
+    title: nodeTitle,
+  } = useNode((node) => ({
+    actionHref: node.data.props.actionHref,
+    actionLabel: node.data.props.actionLabel,
+    badge: node.data.props.badge,
+    button1Href: node.data.props.button1Href,
+    button1Label: node.data.props.button1Label,
+    description: node.data.props.description,
+    items: node.data.props.items,
+    schedules: node.data.props.schedules,
+    sectionDescription: node.data.props.sectionDescription,
+    sectionTitle: node.data.props.sectionTitle,
+    title: node.data.props.title,
+  }));
+
+  const activeTitle = sectionTitle ?? nodeTitle ?? title;
+  const activeDescription = sectionDescription ?? nodeDescription ?? description;
+  const activeBadge = nodeBadge ?? badge;
+  const activeLabel = button1Label ?? nodeActionLabel ?? actionLabel;
+  const activeHref = button1Href ?? nodeActionHref ?? actionHref;
+  const rawList = items || nodeSchedules || schedules;
+  const scheduleList = Array.isArray(rawList) && rawList.length ? rawList : defaultCtaSchedules;
+
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
-  const scheduleList = Array.isArray(schedules) && schedules.length ? schedules : defaultCtaSchedules;
 
   const buttonElement = (
     <div
@@ -45,7 +78,7 @@ export function CtaInvitationBlock({
         getButtonVariantClass("gold"),
       )}
     >
-      {actionLabel}
+      {activeLabel}
     </div>
   );
 
@@ -59,13 +92,13 @@ export function CtaInvitationBlock({
         }}
       >
         <div className="grid max-w-2xl justify-items-center gap-3">
-          {badge ? (
+          {activeBadge ? (
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
-              {badge}
+              {activeBadge}
             </span>
           ) : null}
-          <h2 className="text-3xl font-bold leading-tight md:text-5xl">{title}</h2>
-          <p className="text-sm leading-7 text-[var(--text-inverse-muted)] md:text-base">{description}</p>
+          <h2 className="text-3xl font-bold leading-tight md:text-5xl">{activeTitle}</h2>
+          <p className="text-sm leading-7 text-[var(--text-inverse-muted)] md:text-base">{activeDescription}</p>
         </div>
 
         <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
