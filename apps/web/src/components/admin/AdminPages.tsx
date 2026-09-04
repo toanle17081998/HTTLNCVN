@@ -10,11 +10,13 @@ import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { usePagesQuery, useDeletePageMutation, useRestorePageMutation, pageApi, type Page } from "@/services/page";
 import { CraftPageEditor } from "@/components/page-builder/CraftPageEditor";
+import { CreatePageModal } from "@/components/page-builder/editor/CreatePageModal";
 
 function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
   const { locale, t } = useTranslation();
   const { confirm, toast } = useFeedback();
   const [showDeleted, setShowDeleted] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const pagesQuery = usePagesQuery(showDeleted ? "deleted" : undefined);
   const deletePage = useDeletePageMutation();
   const restorePage = useRestorePageMutation();
@@ -68,7 +70,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
             <RotateCcw className="mr-2 h-4 w-4" />
             {showDeleted ? "Show active" : "Show deleted"}
           </Button>
-          <Button onClick={() => onEdit("")} className="gap-2">
+          <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             {t("pageBuilder.newPage")}
           </Button>
@@ -78,6 +80,11 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
       eyebrow={t("admin.common.admin")}
       title={t("admin.nav.pages")}
     >
+      <CreatePageModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreated={(slug) => onEdit(slug)}
+      />
       <div className="grid gap-3">
         {pagesQuery.isLoading ? (
           <Card className="p-5 text-sm text-[var(--text-secondary)]">{t("admin.articles.loading")}</Card>

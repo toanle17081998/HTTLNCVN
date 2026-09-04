@@ -19,7 +19,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/services/client";
 import {
   pageKeys,
-  useCreatePageMutation,
   useDeletePageMutation,
   usePageQuery,
   usePagesQuery,
@@ -27,23 +26,19 @@ import {
   useUpdatePageMutation,
   type Page,
 } from "@/services/page";
-import { Button, Card, Input, Select, cn } from "@/components/ui";
+import { Button, Card, Select, cn } from "@/components/ui";
 import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import {
   craftResolver,
   PageCanvas,
-  PageComponentList,
   SectionBuilderProvider,
 } from "./craftNodes";
 import {
-  createDefaultPageContent,
   ensureValidPageContent,
-  pageLayoutTemplates,
-  slugifyPageTitle,
-  type PageLayoutTemplateId,
 } from "./defaultContent";
+import { CreatePageModal } from "./editor/CreatePageModal";
 
 function LanguageSelector({
   activeLanguage,
@@ -255,95 +250,6 @@ function BuilderShell({
   );
 }
 
-function CreatePageCard({
-  onCreated,
-}: {
-  onCreated: (slug: string) => void;
-}) {
-  const [title, setTitle] = useState("");
-  const [routePath, setRoutePath] = useState("/");
-  const [templateId, setTemplateId] = useState<PageLayoutTemplateId>("welcome");
-  const createPage = useCreatePageMutation();
-  const homePageQuery = usePageQuery(templateId === "welcome" ? "home" : undefined);
-  const { toast } = useFeedback();
-  const { t } = useTranslation();
-
-  async function handleCreate() {
-    const slug = slugifyPageTitle(routePath === "/" ? "home" : routePath);
-    const normalizedRoute = routePath.trim().startsWith("/") ? routePath.trim() : `/${routePath.trim()}`;
-
-    try {
-      const defaultContent =
-        templateId === "welcome" && homePageQuery.data?.content_en
-          ? homePageQuery.data.content_en
-          : createDefaultPageContent(title || "New page", normalizedRoute, templateId);
-
-      const defaultContentVi =
-        templateId === "welcome" && homePageQuery.data?.content_vi
-          ? homePageQuery.data.content_vi
-          : defaultContent;
-
-      await createPage.mutateAsync({
-        content_en: defaultContent,
-        content_vi: defaultContentVi,
-        route_path: normalizedRoute,
-        slug,
-        title_en: title || "New page",
-        title_vi: title || "Trang mới",
-      });
-
-      toast({ title: t("toast.page.created"), variant: "success" });
-      onCreated(slug);
-    } catch (error) {
-      toast({
-        description: error instanceof ApiError ? error.message : undefined,
-        title: t("toast.page.createFailed"),
-        variant: "error",
-      });
-    }
-  }
-
-  return (
-    <Card className="rounded-2xl border-[var(--border-subtle)] p-6">
-      <div className="max-w-2xl space-y-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-            {t("pageBuilder.createPage")}
-          </p>
-          <h2 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
-            {t("pageBuilder.startRoute")}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            {t("pageBuilder.createDescription")}
-          </p>
-        </div>
-        <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
-          {t("pageBuilder.routePath")}
-          <Input onChange={(event) => setRoutePath(event.target.value)} value={routePath} />
-        </label>
-        <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
-          {t("form.title")}
-          <Input onChange={(event) => setTitle(event.target.value)} value={title} />
-        </label>
-        <label className="grid gap-2 text-sm font-medium text-[var(--text-primary)]">
-          {t("pageBuilder.starterLayout")}
-          <Select onChange={(event) => setTemplateId(event.target.value as PageLayoutTemplateId)} value={templateId}>
-            {pageLayoutTemplates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}: {template.description}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <Button isLoading={createPage.isPending || (templateId === "welcome" && homePageQuery.isLoading)} onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("pageBuilder.createAction")}
-        </Button>
-      </div>
-    </Card>
-  );
-}
-
 export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const searchParams = useSearchParams();
   const requestedRoute = searchParams.get("route");
@@ -356,7 +262,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const { t } = useTranslation();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(initialSlug || null);
   const [selectedDeletedId, setSelectedDeletedId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(initialSlug === "");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editLang, setEditLang] = useState<"en" | "vi">("vi");
   const pages = pagesQuery.data?.items ?? [];
 
@@ -542,7 +448,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               <RotateCcw className="mr-2 h-4 w-4" />
               {showDeleted ? t("pageBuilder.showActive") : t("pageBuilder.showDeleted")}
             </Button>
-            <Button onClick={() => setIsCreating((current) => !current)} size="sm" variant="secondary">
+            <Button onClick={() => setIsCreateModalOpen(true)} size="sm" variant="secondary">
               <Plus className="mr-2 h-4 w-4" />
               {t("pageBuilder.newPage")}
             </Button>
@@ -550,14 +456,13 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
         </div>
       </Card>
 
-      {isCreating ? (
-        <CreatePageCard
-          onCreated={(slug) => {
-            setSelectedSlug(slug);
-            setIsCreating(false);
-          }}
-        />
-      ) : null}
+      <CreatePageModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreated={(slug) => {
+          setSelectedSlug(slug);
+        }}
+      />
 
       <section className="space-y-4">
         <main className="space-y-6">

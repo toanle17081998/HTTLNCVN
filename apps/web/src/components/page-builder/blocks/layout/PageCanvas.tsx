@@ -25,7 +25,7 @@ export function PageCanvas({
   const isMobile = useIsMobile();
 
   return (
-    <NodeFrame>
+    <NodeFrame className="w-full">
       <main
         className={cn(
           "page-builder-canvas relative mx-auto w-full transition-all duration-300",
@@ -36,14 +36,21 @@ export function PageCanvas({
           if (ref) connect(ref);
         }}
         style={{
-          ...buildBoxStyle(props),
+          ...buildBoxStyle({
+            ...props,
+            maxWidth: "100%",
+            width: "100%",
+          }),
+          margin: "0 auto",
+          maxWidth: "100%",
           minHeight: "100vh",
           paddingLeft: isMobile ? 0 : props.paddingLeft,
           paddingRight: isMobile ? 0 : props.paddingRight,
           scrollSnapType: snapType === "none" ? undefined : snapType,
+          width: "100%",
         }}
       >
-        <div className="page-builder-section-list flex flex-col">{children}</div>
+        <div className="page-builder-section-list flex flex-col w-full">{children}</div>
       </main>
     </NodeFrame>
   );

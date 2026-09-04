@@ -32,7 +32,12 @@ export function SectionBlock({ children, snapAlign = "none", ...props }: LayoutB
   const isMobile = useIsMobile();
   const sectionStyle = buildBoxStyle(activeProps);
   const hasExplicitBackground = Boolean(activeProps.backgroundImage) ||
-    (Boolean(activeProps.background) && activeProps.background !== "transparent" && activeProps.background !== "var(--bg-surface)");
+    (Boolean(activeProps.background) &&
+      activeProps.background !== "transparent" &&
+      activeProps.background !== "var(--section-row-background, var(--section-bg-primary))" &&
+      activeProps.background !== "var(--section-row-background)" &&
+      activeProps.background !== "var(--section-bg-primary)" &&
+      activeProps.background !== "var(--bg-surface)");
   const contentProps = {
     ...activeProps,
     background: "transparent",
@@ -40,17 +45,19 @@ export function SectionBlock({ children, snapAlign = "none", ...props }: LayoutB
     borderColor: "transparent",
     borderWidth: "var(--section-space-none)",
     margin: "0 auto",
-    maxWidth: "var(--section-width)",
+    maxWidth: "var(--section-width, 80rem)",
     width: "100%",
   };
 
   return (
-    <NodeFrame>
+    <NodeFrame className="w-full">
       <section
-        className="page-builder-section"
+        className="page-builder-section w-full"
         style={{
           ...sectionStyle,
-          background: hasExplicitBackground ? sectionStyle.background : "var(--section-row-background, var(--section-bg-primary))",
+          background: hasExplicitBackground
+            ? sectionStyle.background
+            : "var(--section-row-background, var(--section-bg-primary))",
           margin: 0,
           maxWidth: "100%",
           padding: 0,
@@ -58,9 +65,12 @@ export function SectionBlock({ children, snapAlign = "none", ...props }: LayoutB
         }}
       >
         <div
-          className="page-builder-section-content"
+          className="page-builder-section-content mx-auto w-full"
           style={{
             ...getGridStyle(contentProps),
+            margin: "0 auto",
+            maxWidth: "var(--section-width, 80rem)",
+            width: "100%",
             ...(isMobile
               ? {
                 ...mobileBoxOverrides(contentProps),

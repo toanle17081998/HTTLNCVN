@@ -272,10 +272,14 @@ summary,
   margin-top: calc(var(--site-header-height) * -1);
 }
 
-.page-builder-section-list > .page-builder-node:nth-child(odd) {
+.page-builder-section-list > .page-builder-node:nth-child(odd),
+.page-builder-section-list > div:nth-child(odd),
+.page-builder-section-list > section:nth-child(odd) {
   --section-row-background: var(--section-bg-primary);
 }
-.page-builder-section-list > .page-builder-node:nth-child(even) {
+.page-builder-section-list > .page-builder-node:nth-child(even),
+.page-builder-section-list > div:nth-child(even),
+.page-builder-section-list > section:nth-child(even) {
   --section-row-background: var(--section-bg-secondary);
 }
 
