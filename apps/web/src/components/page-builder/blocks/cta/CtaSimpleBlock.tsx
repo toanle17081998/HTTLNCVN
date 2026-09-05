@@ -91,7 +91,15 @@ export function CtaSimpleBlock({
         }}
       >
         <div className={cn("grid gap-2", activeLayout === "split" ? "max-w-xl" : "max-w-2xl justify-items-center")}>
-          <h2 className="text-3xl font-bold leading-tight md:text-4xl">{title}</h2>
+          <h2
+            style={{
+              fontSize: "var(--section-heading-size)",
+              fontWeight: "var(--section-weight-bold)",
+              lineHeight: "var(--section-heading-line-height)",
+            }}
+          >
+            {title}
+          </h2>
           <p className={cn("text-sm leading-6 md:text-base", usesDefaultTheme ? "text-[var(--page-builder-cta-muted)]" : "text-[var(--text-inverse-muted)]")}>{description}</p>
         </div>
 

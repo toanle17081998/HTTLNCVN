@@ -98,7 +98,15 @@ export function CtaInvitationBlock({
         }}
       >
         <div className="grid max-w-2xl justify-items-center gap-3">
-          <h2 className="text-3xl font-bold leading-tight md:text-5xl">{activeTitle}</h2>
+          <h2
+            style={{
+              fontSize: "var(--section-heading-size)",
+              fontWeight: "var(--section-weight-bold)",
+              lineHeight: "var(--section-heading-line-height)",
+            }}
+          >
+            {activeTitle}
+          </h2>
           <p className={cn("text-sm leading-7 md:text-base", usesDefaultTheme && "text-[var(--page-builder-cta-muted)]")}>{activeDescription}</p>
         </div>
 

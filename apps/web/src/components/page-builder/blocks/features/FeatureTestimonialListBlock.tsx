@@ -69,7 +69,7 @@ export function FeatureTestimonialListBlock({
         {activeItem ? (
           <div className="overflow-hidden border border-[var(--border-subtle)]" style={{ borderRadius: "var(--section-radius-card)" }}>
             <div className="feature-testimonial-layout grid items-center" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", padding: "var(--section-space-lg)" }}>
-              <div className="relative flex items-center justify-center bg-[var(--bg-card)] overflow-hidden w-full" style={{ borderRadius: "var(--section-radius)", height: "30rem" }}>
+              <div className="feature-testimonial-image relative flex items-center justify-center bg-[var(--bg-card)] overflow-hidden w-full" style={{ borderRadius: "var(--section-radius)", height: "30rem" }}>
                 {activeItem.imageUrl || activeItem.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt={activeItem.organization} className="h-full w-full object-cover" key={activeItem.imageUrl || activeItem.logoUrl} src={activeItem.imageUrl || activeItem.logoUrl} />
