@@ -86,7 +86,7 @@
   "admin.lessons.edit": "Chỉnh sửa bài học",
   "admin.lessons.loadingOne": "Đang tải bài học...",
   "admin.lessons.notFound": "Không tìm thấy bài học.",
-  "admin.templates.title": "Danh sách câu hỏi: {name}",
+  "admin.templates.title": "Danh sách câu hỏi {name}",
   "admin.templates.backToCourses": "Quay lại danh sách khóa học",
   "admin.templates.add": "Thêm câu hỏi",
   "admin.templates.loading": "Đang tải danh sách câu hỏi...",

@@ -91,8 +91,8 @@ export default function TemplatesPage() {
       eyebrow="Admin"
       title={
         locale === "vi"
-          ? `Danh sách câu hỏi: ${lesson?.title_vi || lesson?.title_en || ""}`
-          : `Templates for: ${lesson?.title_en || lesson?.title_vi || ""}`
+          ? `Danh sách câu hỏi ${lesson?.title_vi || lesson?.title_en || ""}`
+          : `Templates for ${lesson?.title_en || lesson?.title_vi || ""}`
       }
       actions={
         <div className="flex gap-2">
