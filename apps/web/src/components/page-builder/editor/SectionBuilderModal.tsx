@@ -54,7 +54,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
       return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
         <Element canvas is={VerticalStackBlock} justifyContent="space-between" gap="var(--section-space-md)" minHeight="var(--section-hero-slider-height)" mobileAlignItems="center">
           <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
-            <TextBlock align="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Discover a place made for you" weight="var(--section-weight-bold)" />
+            <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Discover a place made for you" weight="var(--section-weight-bold)" />
             <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Find meaningful community, grow in faith, and take your next step with us." />
           </Element>
           <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" mobileAlignItems="center">
@@ -69,7 +69,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
     if (preset.variant === 2) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} gap="var(--section-space-lg)" minHeight="var(--section-hero-min-height)" padding="var(--section-hero-padding)">
         <Element canvas is={VerticalStackBlock} alignItems="center" gap="var(--section-space-md)" justifyContent="center" mobileAlignItems="center">
-          <TextBlock align="center" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Recovery and support" weight="var(--section-weight-bold)" />
+          <TextBlock align="center" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Recovery and support" weight="var(--section-weight-bold)" />
           <TextBlock align="center" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="People and resources for every season of life." />
           <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" justifyContent="center" mobileAlignItems="center">
             <ButtonBlock href="/contact" label="Get resources" mobileAlign="center" />
@@ -83,7 +83,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
     return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
       <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" justifyContent="space-between" minHeight="var(--section-media-height)" mobileAlignItems="center">
         <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
-          <TextBlock align="left" color="var(--brand-primary)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="A church for the whole family" weight="var(--section-weight-bold)" />
+          <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="A church for the whole family" weight="var(--section-weight-bold)" />
           <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Experience inspiring worship, biblical teaching, and meaningful connections for people of all ages and backgrounds." />
         </Element>
         <Element canvas is={RowBlock} gap="var(--section-space-sm)" mobileAlignItems="center">
@@ -143,19 +143,19 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
 
   if (preset.category === "CTA") {
     if (preset.variant === 1) {
-      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--brand-primary)" padding="var(--section-space-none)">
+      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
         <CtaInvitationBlock />
       </Element>;
     }
 
     if (preset.variant === 2) {
-      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--brand-primary)" padding="var(--section-space-none)">
+      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
         <CtaSimpleBlock layout="split" title="Stay connected with our community" />
       </Element>;
     }
 
     if (preset.variant === 3) {
-      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--brand-primary)" padding="var(--section-space-none)">
+      return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
         <CtaSimpleBlock layout="center" title="Ready to take your next step?" />
       </Element>;
     }
@@ -166,8 +166,8 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
       </Element>;
     }
 
-    return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--brand-primary)" padding="var(--section-space-none)">
-      <CtaSimpleBlock background="var(--brand-primary)" layout="split" title="Ready to take your next step?" />
+    return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
+      <CtaSimpleBlock background="var(--page-builder-cta-bg)" layout="split" title="Ready to take your next step?" />
     </Element>;
   }
 
@@ -397,32 +397,29 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
   }
 
   if (preset.category === "CTA" && preset.variant === 1) {
-    return <div className="grid min-h-72 content-between justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-primary)] p-6 text-center text-[var(--text-inverse)]">
-      <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Worship with us</span>
-      <span className="text-3xl font-semibold text-[var(--text-inverse)]">You belong here</span>
-      <span className="max-w-md text-sm text-[var(--text-inverse-muted)]">Join us this Sunday in person or online. We would love to welcome you and your family.</span>
+    return <div className="grid min-h-56 content-between justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
+      <span className="text-3xl font-semibold">You belong here</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Join us this Sunday in person or online. We would love to welcome you and your family.</span>
       <div className="grid w-full grid-cols-3 gap-2">
         {[{ time: "08:00 AM", title: "Early Gathering" }, { time: "10:00 AM", title: "Main Service" }, { time: "06:00 PM", title: "Youth" }].map((item, index) => <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-left" key={index}><span className="block text-[10px] font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.time}</span><span className="block text-xs font-semibold text-[var(--text-inverse)]">{item.title}</span></div>)}
       </div>
-      <span className="h-9 w-32 rounded-lg bg-[var(--accent-gold)]" />
+      <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
   }
 
   if (preset.category === "CTA" && preset.variant === 2) {
-    return <div className="grid min-h-72 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-primary)] p-6 text-center text-[var(--text-inverse)]">
-      <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Community</span>
-      <span className="text-3xl font-semibold text-[var(--text-inverse)]">Stay connected</span>
-      <span className="max-w-md text-sm text-[var(--text-inverse-muted)]">Receive church news, stories, and upcoming gathering details.</span>
-      <span className="h-9 w-32 rounded-lg bg-[var(--accent-gold)]" />
+    return <div className="grid min-h-56 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
+      <span className="text-3xl font-semibold">Stay connected</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Receive church news, stories, and upcoming gathering details.</span>
+      <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
   }
 
   if (preset.category === "CTA") {
-    return <div className="grid min-h-72 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-primary)] p-6 text-center text-[var(--text-inverse)]">
-      <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">{preset.category}</span>
-      <span className="text-3xl font-semibold text-[var(--text-inverse)]">{preset.name}</span>
-      <span className="max-w-md text-sm text-[var(--text-inverse-muted)]">Editable title, subtitle, and action button.</span>
-      <span className="h-9 w-32 rounded-lg bg-[var(--accent-gold)]" />
+    return <div className="grid min-h-56 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
+      <span className="text-3xl font-semibold">{preset.name}</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Editable title, subtitle, and action button.</span>
+      <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
   }
 

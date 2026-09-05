@@ -21,17 +21,16 @@ export function CtaSimpleBlock({
   actionHref = "/contact",
   actionLabel = "Get started",
   background = "var(--brand-primary)",
-  badge = "NEXT STEPS",
+  badge = "",
   description = "Ready to take your next step? We would love to connect with you.",
   layout = "center",
-  padding = "var(--section-space-xl) var(--section-gutter)",
+  padding = "var(--section-space-lg) var(--section-gutter)",
   title = "Take your next step with us",
   ...props
 }: CtaSimpleProps) {
   const {
     actionHref: nodeActionHref,
     actionLabel: nodeActionLabel,
-    badge: nodeBadge,
     button1Href,
     button1Label,
     description: nodeDescription,
@@ -42,7 +41,6 @@ export function CtaSimpleBlock({
   } = useNode((node) => ({
     actionHref: node.data.props.actionHref,
     actionLabel: node.data.props.actionLabel,
-    badge: node.data.props.badge,
     button1Href: node.data.props.button1Href,
     button1Label: node.data.props.button1Label,
     description: node.data.props.description,
@@ -54,18 +52,21 @@ export function CtaSimpleBlock({
 
   const activeTitle = sectionTitle ?? nodeTitle ?? title;
   const activeDescription = sectionDescription ?? nodeDescription ?? description;
-  const activeBadge = nodeBadge ?? badge;
   const activeLabel = button1Label ?? nodeActionLabel ?? actionLabel;
   const activeHref = button1Href ?? nodeActionHref ?? actionHref;
   const activeLayout = nodeLayout ?? layout;
 
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const usesDefaultTheme = background === "var(--brand-primary)" || background === "var(--page-builder-cta-bg)";
+  const effectiveBackground = usesDefaultTheme ? "var(--page-builder-cta-bg)" : background;
 
   const buttonElement = (
     <div
       className={cn(
         "inline-flex items-center justify-center font-semibold rounded-lg px-6 py-3 transition-all duration-300",
-        getButtonVariantClass("gold"),
+        usesDefaultTheme
+          ? "cursor-pointer border border-transparent bg-[var(--page-builder-cta-button-bg)] text-[var(--page-builder-cta-button-text)] shadow-md hover:opacity-90"
+          : getButtonVariantClass("gold"),
       )}
     >
       {activeLabel}
@@ -76,24 +77,22 @@ export function CtaSimpleBlock({
     <NodeFrame>
       <div
         className={cn(
-          "rounded-2xl text-[var(--text-inverse)]",
+          "page-builder-cta rounded-2xl",
+          usesDefaultTheme
+            ? "page-builder-cta-theme text-[var(--page-builder-cta-text)]"
+            : "text-[var(--text-inverse)]",
           activeLayout === "split"
             ? "flex flex-col items-center justify-between gap-6 md:flex-row md:text-left"
             : "flex flex-col items-center gap-6 text-center",
         )}
         style={{
-          ...buildBoxStyle({ ...props, background, padding }),
+          ...buildBoxStyle({ ...props, background: effectiveBackground, padding }),
           width: "100%",
         }}
       >
         <div className={cn("grid gap-2", activeLayout === "split" ? "max-w-xl" : "max-w-2xl justify-items-center")}>
-          {activeBadge ? (
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
-              {badge}
-            </span>
-          ) : null}
           <h2 className="text-3xl font-bold leading-tight md:text-4xl">{title}</h2>
-          <p className="text-sm leading-6 text-[var(--text-inverse-muted)] md:text-base">{description}</p>
+          <p className={cn("text-sm leading-6 md:text-base", usesDefaultTheme ? "text-[var(--page-builder-cta-muted)]" : "text-[var(--text-inverse-muted)]")}>{description}</p>
         </div>
 
         <div className="shrink-0">
@@ -115,14 +114,12 @@ function CtaSimpleBlockSettings() {
     actions: { setProp },
     actionHref,
     actionLabel,
-    badge,
     description,
     layout,
     title,
   } = useNode((node) => ({
     actionHref: node.data.props.actionHref,
     actionLabel: node.data.props.actionLabel,
-    badge: node.data.props.badge,
     description: node.data.props.description,
     layout: node.data.props.layout,
     title: node.data.props.title,
@@ -138,12 +135,6 @@ function CtaSimpleBlockSettings() {
           <option value="center">Centered</option>
           <option value="split">Split (Side by side)</option>
         </NativeSelect>
-      </Field>
-      <Field label="Badge kicker">
-        <Input
-          onChange={(event) => setProp((props: any) => (props.badge = event.target.value))}
-          value={badge ?? ""}
-        />
       </Field>
       <Field label="Title">
         <Input
@@ -183,12 +174,12 @@ CtaSimpleBlock.craft = {
     ...defaultBoxProps({
       background: "var(--brand-primary)",
       borderRadius: "24px",
-      padding: "var(--section-space-xl) var(--section-gutter)",
+      padding: "var(--section-space-lg) var(--section-gutter)",
       width: "100%",
     }),
     actionHref: "/contact",
     actionLabel: "Get started",
-    badge: "NEXT STEPS",
+    badge: "",
     description: "Ready to take your next step? We would love to connect with you.",
     layout: "center",
     title: "Take your next step with us",

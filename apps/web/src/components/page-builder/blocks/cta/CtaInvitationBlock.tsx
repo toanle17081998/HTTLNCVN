@@ -28,9 +28,9 @@ export function CtaInvitationBlock({
   actionHref = "/contact",
   actionLabel = "Plan a visit",
   background = "var(--brand-primary)",
-  badge = "WORSHIP WITH US",
+  badge = "",
   description = "Join us this Sunday in person or online. We would love to welcome you and your family.",
-  padding = "var(--section-space-xl) var(--section-gutter)",
+  padding = "var(--section-space-lg) var(--section-gutter)",
   schedules = defaultCtaSchedules,
   title = "You belong here",
   ...props
@@ -38,7 +38,6 @@ export function CtaInvitationBlock({
   const {
     actionHref: nodeActionHref,
     actionLabel: nodeActionLabel,
-    badge: nodeBadge,
     button1Href,
     button1Label,
     description: nodeDescription,
@@ -50,7 +49,6 @@ export function CtaInvitationBlock({
   } = useNode((node) => ({
     actionHref: node.data.props.actionHref,
     actionLabel: node.data.props.actionLabel,
-    badge: node.data.props.badge,
     button1Href: node.data.props.button1Href,
     button1Label: node.data.props.button1Label,
     description: node.data.props.description,
@@ -63,19 +61,22 @@ export function CtaInvitationBlock({
 
   const activeTitle = sectionTitle ?? nodeTitle ?? title;
   const activeDescription = sectionDescription ?? nodeDescription ?? description;
-  const activeBadge = nodeBadge ?? badge;
   const activeLabel = button1Label ?? nodeActionLabel ?? actionLabel;
   const activeHref = button1Href ?? nodeActionHref ?? actionHref;
   const rawList = items || nodeSchedules || schedules;
   const scheduleList = Array.isArray(rawList) && rawList.length ? rawList : defaultCtaSchedules;
 
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const usesDefaultTheme = background === "var(--brand-primary)" || background === "var(--page-builder-cta-bg)";
+  const effectiveBackground = usesDefaultTheme ? "var(--page-builder-cta-bg)" : background;
 
   const buttonElement = (
     <div
       className={cn(
         "inline-flex items-center justify-center font-semibold rounded-lg px-6 py-3 transition-all duration-300",
-        getButtonVariantClass("gold"),
+        usesDefaultTheme
+          ? "cursor-pointer border border-transparent bg-[var(--page-builder-cta-button-bg)] text-[var(--page-builder-cta-button-text)] shadow-md hover:opacity-90"
+          : getButtonVariantClass("gold"),
       )}
     >
       {activeLabel}
@@ -85,20 +86,20 @@ export function CtaInvitationBlock({
   return (
     <NodeFrame>
       <div
-        className="flex flex-col items-center gap-8 rounded-2xl text-center text-[var(--text-inverse)]"
+        className={cn(
+          "page-builder-cta flex flex-col items-center gap-8 rounded-2xl text-center",
+          usesDefaultTheme
+            ? "page-builder-cta-theme text-[var(--page-builder-cta-text)]"
+            : "text-[var(--text-inverse)]",
+        )}
         style={{
-          ...buildBoxStyle({ ...props, background, padding }),
+          ...buildBoxStyle({ ...props, background: effectiveBackground, padding }),
           width: "100%",
         }}
       >
         <div className="grid max-w-2xl justify-items-center gap-3">
-          {activeBadge ? (
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
-              {activeBadge}
-            </span>
-          ) : null}
           <h2 className="text-3xl font-bold leading-tight md:text-5xl">{activeTitle}</h2>
-          <p className="text-sm leading-7 text-[var(--text-black)] md:text-base">{activeDescription}</p>
+          <p className={cn("text-sm leading-7 md:text-base", usesDefaultTheme && "text-[var(--page-builder-cta-muted)]")}>{activeDescription}</p>
         </div>
 
         <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
@@ -139,25 +140,17 @@ function CtaInvitationBlockSettings() {
     actions: { setProp },
     actionHref,
     actionLabel,
-    badge,
     description,
     title,
   } = useNode((node) => ({
     actionHref: node.data.props.actionHref,
     actionLabel: node.data.props.actionLabel,
-    badge: node.data.props.badge,
     description: node.data.props.description,
     title: node.data.props.title,
   }));
 
   return (
     <div className="grid gap-3">
-      <Field label="Badge kicker">
-        <Input
-          onChange={(event) => setProp((props: any) => (props.badge = event.target.value))}
-          value={badge ?? ""}
-        />
-      </Field>
       <Field label="Title">
         <Input
           onChange={(event) => setProp((props: any) => (props.title = event.target.value))}
@@ -196,12 +189,12 @@ CtaInvitationBlock.craft = {
     ...defaultBoxProps({
       background: "var(--brand-primary)",
       borderRadius: "24px",
-      padding: "var(--section-space-xl) var(--section-gutter)",
+      padding: "var(--section-space-lg) var(--section-gutter)",
       width: "100%",
     }),
     actionHref: "/contact",
     actionLabel: "Plan a visit",
-    badge: "WORSHIP WITH US",
+    badge: "",
     description: "Join us this Sunday in person or online. We would love to welcome you and your family.",
     schedules: defaultCtaSchedules,
     title: "You belong here",

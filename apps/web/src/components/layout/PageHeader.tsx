@@ -117,7 +117,7 @@ export function PageHeader({
 
           <h1
             style={{
-              color: "var(--brand-primary)",
+              color: "var(--page-builder-hero-title)",
               fontFamily: "var(--font-lora), Georgia, serif",
               fontSize: "var(--section-title-size)",
               fontWeight: "var(--section-weight-bold)",
