@@ -3,7 +3,7 @@ import type {
   PrayerCategory,
   PrayerMember,
   PrayerVisibility,
-} from "@/services/prayer-journal";
+} from "@/hooks/prayer-journal";
 
 export type PrayerForm = {
   content: string;

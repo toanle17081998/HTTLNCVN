@@ -3,7 +3,8 @@
 import { Text, Button, Card, Title } from "@/components/ui";
 import { Download, RefreshCw } from "lucide-react";
 
-import { exportMyData, useAuditLogsQuery, useOperationalReportQuery } from "@/services/operations";
+import { exportMyData } from "@/api/operations";
+import { useAuditLogsQuery, useOperationalReportQuery } from "@/hooks/operations";
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return <Card className="p-5"><Text variant="small">{label}</Text><Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-bold text-[var(--text-primary)]">{value}</Text></Card>;

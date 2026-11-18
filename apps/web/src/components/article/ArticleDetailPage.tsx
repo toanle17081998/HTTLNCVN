@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { PageLayout } from "@/components/layout";
 import { Badge, Card, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useArticleQuery } from "@/services/article";
+import { useArticleQuery } from "@/hooks/article";
 import { markdownToHtml } from "./articleEditorUtils";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { getLocalizedField, type Locale } from "@/lib/i18n";

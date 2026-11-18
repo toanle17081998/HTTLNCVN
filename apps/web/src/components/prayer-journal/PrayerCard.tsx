@@ -3,7 +3,7 @@
 import { CheckCircle2, Circle, Edit3, Eye, Tag, Users } from "lucide-react";
 import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { Prayer } from "@/services/prayer-journal";
+import type { Prayer } from "@/hooks/prayer-journal";
 import { StatusBadge, VisibilityBadge } from "./PrayerBadges";
 import { formatPrayerDate } from "./prayerJournalTypes";
 

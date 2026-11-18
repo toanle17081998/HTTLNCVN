@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Button, Card, FormField, Input, Select, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { articleApi } from "@/api/article";
 import {
-  articleApi,
   useArticleQuery,
   useArticleCategoriesQuery,
   useCreateArticleMutation,
@@ -14,7 +14,7 @@ import {
   type Article,
   type ArticleStatus,
   type CreateArticleDto,
-} from "@/services/article";
+} from "@/hooks/article";
 import { type SubmitState } from "./articleEditorTypes";
 import { ModularEditor, type ModularEditorHandle } from "./ModularEditor";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";

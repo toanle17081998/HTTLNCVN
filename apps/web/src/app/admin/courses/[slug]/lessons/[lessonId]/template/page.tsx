@@ -14,7 +14,7 @@ import {
   useCreateTemplateMutation,
   useUpdateTemplateMutation,
   useDeleteTemplateMutation,
-} from "@/services/course";
+} from "@/hooks/course";
 
 export default function AdminTemplatesPage() {
   const router = useRouter();

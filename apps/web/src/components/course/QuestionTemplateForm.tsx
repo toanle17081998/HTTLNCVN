@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, Card, FormField, Input, Textarea, Select, cn, Title, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { QuestionTemplate } from "@/services/course";
+import { QuestionTemplate } from "@/hooks/course";
 
 type QuestionTemplateFormProps = {
   initialData?: QuestionTemplate;

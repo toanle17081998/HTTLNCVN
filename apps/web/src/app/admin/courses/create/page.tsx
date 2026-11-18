@@ -7,7 +7,7 @@ import { CourseForm } from "@/components/course/CourseForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCreateCourseMutation } from "@/services/course";
+import { useCreateCourseMutation } from "@/hooks/course";
 
 export default function AdminCreateCourseRoute() {
   const router = useRouter();

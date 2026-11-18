@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@/services/client";
+import { ApiError } from "@/api/client";
 import {
   pageKeys,
   useDeletePageMutation,
@@ -26,7 +26,7 @@ import {
   useRestorePageMutation,
   useUpdatePageMutation,
   type Page,
-} from "@/services/page";
+} from "@/hooks/page";
 import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";

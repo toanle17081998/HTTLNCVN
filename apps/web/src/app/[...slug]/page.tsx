@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CraftPageRenderer } from "@/components/page-builder/CraftPageRenderer";
 import { getLocalizedField } from "@/lib/i18n";
 import { summarizeText } from "@/lib/site";
-import { pageApi } from "@/services/page";
+import { pageApi } from "@/api/page";
 
 type CatchAllProps = {
   params: Promise<{ slug: string[] }>;

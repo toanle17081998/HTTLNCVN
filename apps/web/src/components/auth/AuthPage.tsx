@@ -4,7 +4,7 @@ import { Text, Button, Card, FormField, Input, Title } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
-import { useLoginMutation, useLogoutMutation } from "@/services/auth";
+import { useLoginMutation, useLogoutMutation } from "@/hooks/auth";
 
 const seededAccounts = [
   { email: "member@htnc.local", label: "Church Member" },

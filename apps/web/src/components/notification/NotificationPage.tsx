@@ -12,7 +12,7 @@ import {
   useMarkNotificationReadMutation,
   useNotificationsQuery,
   type NotificationDto,
-} from "@/services/notification";
+} from "@/hooks/notification";
 import { useRouter } from "next/navigation";
 
 export function NotificationPage() {

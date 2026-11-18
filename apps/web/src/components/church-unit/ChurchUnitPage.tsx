@@ -34,8 +34,8 @@ import {
   type ChurchUnit,
   type ChurchUnitMember,
   type CreateChurchUnitMemberInput,
-} from "@/services/church-unit";
-import { useCoursesQuery } from "@/services/course";
+} from "@/hooks/church-unit";
+import { useCoursesQuery } from "@/hooks/course";
 
 type ServiceTeamForm = {
   id?: string;

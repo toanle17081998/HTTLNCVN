@@ -11,7 +11,7 @@ import { useTranslation } from "@/providers/I18nProvider";
 import {
   useChurchUnitsQuery,
   type ChurchUnit,
-} from "@/services/church-unit";
+} from "@/hooks/church-unit";
 import {
   useGenerateServingSchedulesMutation,
   useServingPlannerQuery,
@@ -20,7 +20,7 @@ import {
   type ServingPlanner,
   type ServingScheduleType,
   type WorshipSkill,
-} from "@/services/serving-schedule";
+} from "@/hooks/serving-schedule";
 
 const WORSHIP_SKILLS: WorshipSkill[] = ["guitar", "drum", "bass", "sing", "organ"];
 const WORSHIP_ROLES = ["guitar", "drum", "bass", "sing", "organ"];

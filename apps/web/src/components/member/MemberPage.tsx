@@ -14,7 +14,7 @@ import {
   useMembersQuery,
   useUpdateMemberMutation,
   type Member,
-} from "@/services/member";
+} from "@/hooks/member";
 
 type MemberForm = {
   address: string;

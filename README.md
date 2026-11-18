@@ -72,10 +72,12 @@ Ly do chon monorepo:
 ```text
 src/
 |-- app/                     # route, layout, page
-|-- modules/                 # UI/business theo domain
 |-- components/              # component dung chung
-|-- lib/                     # helper, api client, util
-|-- hooks/
+|-- hooks/                   # query, mutation, UI orchestration
+|-- api/                     # HTTP client va transport DTO
+|-- mappers/                 # API response -> view model
+|-- domain/                  # business rule doc lap framework
+|-- lib/                     # helper va util
 |-- providers/
 |-- styles/
 `-- types/
@@ -87,7 +89,9 @@ Quy uoc:
 - React component dung `PascalCase`
 - Hook dung `useXxx.ts`
 - Khong de business logic phuc tap trong `page.tsx`
-- Tach UI theo domain vao `modules/<domain>`
+- Dependency flow: `Page -> Component -> Hook -> API Client`
+- Chi tao mapper khi response API khac view model
+- Chi tach domain logic khi co business rule ro rang
 
 ### `apps/api`
 
@@ -111,9 +115,13 @@ src/
 Quy uoc:
 
 - Mot module backend = mot domain business
-- Moi domain co the co `controller`, `service`, `dto`, `entity`, `repository`
+- Dependency flow: `Middleware / Guard / Validation -> Controller -> Application Service -> Domain Rules / Repository -> Database`
+- Chi repository duoc truy cap `PrismaService`
+- Controller chi xu ly HTTP va delegate sang application service
 - Khong import cheo tuy tien giua module; giao tiep qua service ro rang
 - Logic dung chung dua vao `common/`, khong nhan ban qua nhieu module
+
+Chi tiet xem [docs/layering-architecture.md](docs/layering-architecture.md).
 
 ## 4. Local development environment
 
@@ -260,7 +268,7 @@ pnpm.cmd api:dev
 API mac dinh:
 
 ```text
-http://localhost:3001
+http://localhost:5001/api
 ```
 
 ### Chay frontend
@@ -279,6 +287,18 @@ http://localhost:5000
 ```
 
 Port nay lay tu `WEB_PORT` trong file `.env`.
+
+### Chay tren LAN de kiem tra bang dien thoai
+
+Lay dia chi IPv4 cua Wi-Fi bang `ipconfig`, vi du `192.168.50.24`, sau do chay:
+
+```powershell
+$env:NEXT_PUBLIC_API_URL="http://192.168.50.24:5001"
+$env:NEXT_PUBLIC_APP_URL="http://192.168.50.24:5000"
+pnpm --filter web dev
+```
+
+Backend chay rieng bang `pnpm api:dev`. Dien thoai phai cung Wi-Fi, sau do truy cap `http://192.168.50.24:5000`. Thay IP vi du bang IP hien tai cua may.
 
 ### Thu tu setup nhanh
 
@@ -395,5 +415,7 @@ Chi tiet xem tai [docs/branching-release.md](docs/branching-release.md).
 - [Branching va release](docs/branching-release.md)
 - [Local infra](docs/infra-local.md)
 - [API contract](docs/api-contract.md)
+- [Layering architecture](docs/layering-architecture.md)
+- [Frontend coding conventions](docs/frontend-coding-conventions.md)
 - [Web app placeholder](apps/web/README.md)
 - [API app placeholder](apps/api/README.md)

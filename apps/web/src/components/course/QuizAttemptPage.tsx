@@ -10,7 +10,7 @@ import {
   useFinishAttemptMutation,
   useQuizAttemptQuery,
   useSubmitAnswerMutation,
-} from "@/services/course";
+} from "@/hooks/course";
 
 type QuizAttemptPageProps = {
   attemptId: string;

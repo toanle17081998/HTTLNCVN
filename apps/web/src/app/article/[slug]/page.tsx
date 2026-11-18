@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { ArticleDetailPage } from "@/components/article/ArticleDetailPage";
-import { articleApi } from "@/services/article";
+import { articleApi } from "@/api/article";
 import { getLocalizedField } from "@/lib/i18n";
 import { summarizeText } from "@/lib/site";
 

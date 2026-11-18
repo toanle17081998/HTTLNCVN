@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button, Card, FormField, Input, cn, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { CreateLessonDto, Lesson } from "@/services/course";
+import { CreateLessonDto, Lesson } from "@/hooks/course";
 import { ModularEditor, type ModularEditorHandle } from "@/components/article/ModularEditor";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 

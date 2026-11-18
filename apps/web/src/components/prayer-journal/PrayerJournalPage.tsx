@@ -15,7 +15,7 @@ import {
   usePrayerJournalQuery,
   useUpdatePrayerMutation,
   type Prayer,
-} from "@/services/prayer-journal";
+} from "@/hooks/prayer-journal";
 import { CategorySidebar } from "./CategorySidebar";
 import { PrayerCard } from "./PrayerCard";
 import { PrayerFilterBar } from "./PrayerFilterBar";

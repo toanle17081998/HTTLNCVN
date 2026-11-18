@@ -3,8 +3,8 @@
 import { Editor, Element, Frame } from "@craftjs/core";
 import { SquarePen } from "lucide-react";
 import Link from "next/link";
-import { ApiError } from "@/services/client";
-import { useResolvedPageQuery } from "@/services/page";
+import { ApiError } from "@/api/client";
+import { useResolvedPageQuery } from "@/hooks/page";
 import { Button, ButtonLink, Card, Title, Text } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";

@@ -35,7 +35,7 @@ import {
   type EventItem,
   type EventRepeat,
   type EventStatus,
-} from "@/services/event";
+} from "@/hooks/event";
 
 type EventForm = {
   audience: EventAudience;

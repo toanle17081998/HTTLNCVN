@@ -3,7 +3,7 @@
 import { useRouter, useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { LessonForm } from "@/components/course/LessonForm";
-import { useCreateLessonMutation } from "@/services/course";
+import { useCreateLessonMutation } from "@/hooks/course";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useEffect } from "react";

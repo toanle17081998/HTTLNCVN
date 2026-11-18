@@ -6,7 +6,7 @@ import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { useArticlesQuery, useDeleteArticleMutation } from "@/services/article";
+import { useArticlesQuery, useDeleteArticleMutation } from "@/hooks/article";
 
 export function AdminArticles() {
   const { localize, t } = useTranslation();

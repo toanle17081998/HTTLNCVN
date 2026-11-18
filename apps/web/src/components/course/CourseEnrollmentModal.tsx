@@ -4,8 +4,8 @@ import { Title, Button, Card, Select, Textarea, Input, Label, Text } from "@/com
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { useChurchUnitMetaQuery } from "@/services/church-unit";
-import { useEnrollOthersMutation, useEnrollPreviewMutation, type EnrollPreviewDto, type EnrollPreviewMemberDto } from "@/services/course";
+import { useChurchUnitMetaQuery } from "@/hooks/church-unit";
+import { useEnrollOthersMutation, useEnrollPreviewMutation, type EnrollPreviewDto, type EnrollPreviewMemberDto } from "@/hooks/course";
 import { Search, UserCheck, UserPlus, X } from "lucide-react";
 
 type CourseEnrollmentModalProps = {

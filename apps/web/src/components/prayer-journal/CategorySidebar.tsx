@@ -3,7 +3,7 @@
 import { Tag } from "lucide-react";
 import { cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { Prayer, PrayerCategory } from "@/services/prayer-journal";
+import type { Prayer, PrayerCategory } from "@/hooks/prayer-journal";
 
 type CategorySidebarProps = {
   prayers: Prayer[];

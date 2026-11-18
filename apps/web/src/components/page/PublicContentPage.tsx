@@ -2,7 +2,7 @@
 
 import { Card, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { usePageQuery } from "@/services/page";
+import { usePageQuery } from "@/hooks/page";
 
 type PublicContentPageProps = {
   fallback: {

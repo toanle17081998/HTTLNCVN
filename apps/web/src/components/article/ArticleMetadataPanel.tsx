@@ -2,7 +2,7 @@
 
 import { Title, Button, Card, FormField, Input, Select, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useArticleCategoriesQuery } from "@/services/article";
+import { useArticleCategoriesQuery } from "@/hooks/article";
 import type { SubmitState } from "./articleEditorTypes";
 import { CategorySelect } from "./CategorySelect";
 

@@ -24,14 +24,13 @@ import { IconPicker, resolveIcon } from "@/components/page-builder/shared/iconLi
 import {
   defaultPageHeroes,
   defaultSiteNavigationConfig,
-  useSiteNavigationQuery,
-  useUpdateSiteNavigationMutation,
   type FooterContactItem,
   type FooterLinkItem,
   type HeaderNavItem,
   type PageHeroConfig,
   type SiteNavigationConfig,
-} from "@/services/siteNavigation";
+} from "@/domain/site-navigation";
+import { useSiteNavigationQuery, useUpdateSiteNavigationMutation } from "@/hooks/siteNavigation";
 
 const HERO_PAGES = [
   { key: "/article", labelKey: "nav.article.label" },

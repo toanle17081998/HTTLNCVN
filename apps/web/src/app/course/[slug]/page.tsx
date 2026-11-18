@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { CourseDetailPage } from "@/components/course/CourseDetailPage";
-import { courseApi } from "@/services/course";
+import { courseApi } from "@/api/course";
 import { getLocalizedField } from "@/lib/i18n";
 import { absoluteUrl } from "@/lib/site";
 

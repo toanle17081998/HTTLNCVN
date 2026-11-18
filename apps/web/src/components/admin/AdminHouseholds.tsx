@@ -12,8 +12,8 @@ import {
   useRemoveHouseholdMemberMutation,
   useUpdateHouseholdMutation,
   type Household,
-} from "@/services/household";
-import { useMembersQuery } from "@/services/member";
+} from "@/hooks/household";
+import { useMembersQuery } from "@/hooks/member";
 
 const emptyForm = { address: "", name: "", note: "", phone: "" };
 

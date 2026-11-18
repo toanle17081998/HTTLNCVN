@@ -4,7 +4,7 @@ import { Text, Button, FormField, Input, Select, Textarea, Title, Label } from "
 import type { FormEvent } from "react";
 import { CheckCircle2, Edit3, Globe, Lock, Tag, Users, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { Prayer, PrayerCategory, PrayerMember, PrayerVisibility } from "@/services/prayer-journal";
+import type { Prayer, PrayerCategory, PrayerMember, PrayerVisibility } from "@/hooks/prayer-journal";
 import { StatusBadge, VisibilityBadge } from "./PrayerBadges";
 import {
   formatPrayerDate,

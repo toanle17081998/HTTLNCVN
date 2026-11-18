@@ -5,7 +5,7 @@ import { CourseTestPanel } from "@/components/course/CourseTestPanel";
 import { PageLayout } from "@/components/layout";
 import { Card, Select, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCourseQuery, useCoursesQuery } from "@/services/course";
+import { useCourseQuery, useCoursesQuery } from "@/hooks/course";
 
 export function AdminTests() {
   const { localize, t } = useTranslation();

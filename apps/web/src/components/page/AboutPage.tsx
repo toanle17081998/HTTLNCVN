@@ -2,7 +2,7 @@
 
 import { Title, Card, Text } from "@/components/ui";
 import { PageLayout } from "@/components/layout";
-import { usePageQuery } from "@/services/page";
+import { usePageQuery } from "@/hooks/page";
 import { useTranslation } from "@/providers/I18nProvider";
 
 function stripHtml(html: string): string {

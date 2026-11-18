@@ -9,7 +9,7 @@ import {
   useAccessToken,
   useMeQuery,
   type AuthUser,
-} from "@/services/auth";
+} from "@/hooks/auth";
 
 export { PERMISSIONS };
 export type { Permission };

@@ -2,7 +2,7 @@ import { Title, Button, Card, cn, Text } from "@/components/ui";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Clock3, MapPin, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
-import type { EventItem } from "@/services/event";
+import type { EventItem } from "@/hooks/event";
 
 interface EventCalendarProps {
   events: EventItem[];

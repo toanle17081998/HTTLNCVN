@@ -13,7 +13,7 @@ import {
   useArticlesQuery,
   useArticleCategoriesQuery,
   useDeleteArticleMutation,
-} from "@/services/article";
+} from "@/hooks/article";
 
 const PAGE_SIZE_DEFAULT = 4;
 

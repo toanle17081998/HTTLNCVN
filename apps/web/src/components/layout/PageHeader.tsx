@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useSiteNavigationQuery } from "@/services/siteNavigation";
+import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 
 export const defaultPageHeroImage = "https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=1400&q=85";
 

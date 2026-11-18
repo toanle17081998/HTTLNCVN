@@ -18,7 +18,7 @@ import {
   useDeleteTemplateMutation,
   useDeleteLessonMutation,
   type QuizListItem,
-} from "@/services/course";
+} from "@/hooks/course";
 
 type LessonDetailPageProps = {
   courseSlug: string;

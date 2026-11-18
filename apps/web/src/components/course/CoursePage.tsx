@@ -9,7 +9,7 @@ import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
-import { useCoursesQuery, useCourseCategoriesQuery } from "@/services/course";
+import { useCoursesQuery, useCourseCategoriesQuery } from "@/hooks/course";
 
 const PAGE_SIZE_DEFAULT = 10;
 const statusLabelKeys = {

@@ -14,7 +14,7 @@ import {
   useCourseQuery,
   useDeleteCourseMutation,
   useDeleteLessonMutation,
-} from "@/services/course";
+} from "@/hooks/course";
 import { useState } from "react";
 
 type CourseDetailPageProps = {

@@ -66,7 +66,7 @@ import {
   type FileLoader,
   type UploadAdapter,
 } from "ckeditor5";
-import { uploadMedia } from "@/services/media";
+import { uploadMedia } from "@/api/media";
 
 class ServerUploadAdapter implements UploadAdapter {
   private readonly abortController = new AbortController();

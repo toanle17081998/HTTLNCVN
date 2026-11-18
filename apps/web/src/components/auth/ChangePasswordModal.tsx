@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Lock, X, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button, FormField, Input, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useChangePasswordMutation } from "@/services/auth";
+import { useChangePasswordMutation } from "@/hooks/auth";
 
 type ChangePasswordModalProps = {
   isOpen: boolean;

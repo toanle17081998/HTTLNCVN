@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { Badge, Card, Skeleton, Text, Title, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { usePageQuery } from "@/services/page";
-import { useArticlesQuery, type ArticleListItem } from "@/services/article";
-import { useCoursesQuery, type CourseListItem } from "@/services/course";
-import { useEventsQuery, type EventItem } from "@/services/event";
+import { usePageQuery } from "@/hooks/page";
+import { useArticlesQuery, type ArticleListItem } from "@/hooks/article";
+import { useCoursesQuery, type CourseListItem } from "@/hooks/course";
+import { useEventsQuery, type EventItem } from "@/hooks/event";
 
 function formatDateTime(value: string, locale: string) {
   const date = new Date(value);

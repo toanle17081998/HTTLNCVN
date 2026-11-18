@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
-import { type ArticleCategory } from "@/services/article";
+import { type ArticleCategory } from "@/hooks/article";
 
 type CategorySelectProps = {
   categories: ArticleCategory[];

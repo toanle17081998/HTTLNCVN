@@ -8,7 +8,7 @@ import { LessonForm } from "@/components/course/LessonForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useLessonQuery, useUpdateLessonMutation } from "@/services/course";
+import { useLessonQuery, useUpdateLessonMutation } from "@/hooks/course";
 
 export default function AdminEditLessonRoute() {
   const router = useRouter();

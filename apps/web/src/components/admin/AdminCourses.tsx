@@ -18,7 +18,7 @@ import {
   useDeleteCourseCategoryMutation,
   type CourseListItem,
   type CourseCategory,
-} from "@/services/course";
+} from "@/hooks/course";
 
 export function AdminCourses() {
   const { localize, t } = useTranslation();

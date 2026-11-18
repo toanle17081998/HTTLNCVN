@@ -4,13 +4,13 @@ import { Badge, Text, Title, Button, Card, Input, Label } from "@/components/ui"
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
-import type { Course, PublishCourseTestDto } from "@/services/course";
+import type { Course, PublishCourseTestDto } from "@/hooks/course";
 import {
   useCloseCourseTestMutation,
   useCourseTestQuery,
   usePublishCourseTestMutation,
   useStartCourseTestMutation,
-} from "@/services/course";
+} from "@/hooks/course";
 import { useTranslation } from "@/providers/I18nProvider";
 
 type DraftQuestion = {

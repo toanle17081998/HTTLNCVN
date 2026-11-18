@@ -8,7 +8,8 @@ import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Switch, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { usePagesQuery, useDeletePageMutation, useRestorePageMutation, pageApi, type Page } from "@/services/page";
+import { pageApi } from "@/api/page";
+import { usePagesQuery, useDeletePageMutation, useRestorePageMutation, type Page } from "@/hooks/page";
 import { CraftPageEditor } from "@/components/page-builder/CraftPageEditor";
 import { CreatePageModal } from "@/components/page-builder/editor/CreatePageModal";
 

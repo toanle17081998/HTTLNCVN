@@ -4,7 +4,8 @@ import { ButtonLink, Text, Title } from "@/components/ui";
 import Link from "next/link";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ChurchLogo } from "./ChurchLogo";
-import { useSiteNavigationQuery, defaultSiteNavigationConfig } from "@/services/siteNavigation";
+import { defaultSiteNavigationConfig } from "@/domain/site-navigation";
+import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 import { resolveIcon } from "@/components/page-builder/shared/iconList";
 
 export function Footer() {

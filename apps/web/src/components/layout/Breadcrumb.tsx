@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useCourseQuery, useLessonQuery } from "@/services/course";
-import { useArticleQuery } from "@/services/article";
+import { useCourseQuery, useLessonQuery } from "@/hooks/course";
+import { useArticleQuery } from "@/hooks/article";
 import { navItems } from "./navigation";
 
 type BreadcrumbProps = {

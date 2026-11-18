@@ -5,11 +5,11 @@ import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { ApiError } from "@/services/client";
+import { ApiError } from "@/api/client";
 import {
   useCreatePageMutation,
   usePageQuery,
-} from "@/services/page";
+} from "@/hooks/page";
 import {
   createDefaultPageContent,
   pageLayoutTemplates,
