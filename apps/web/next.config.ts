@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const remotePatterns: NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]> = [
   { hostname: "images.unsplash.com", protocol: "https" },
 ];
@@ -13,6 +14,7 @@ remotePatterns.push({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: appUrl ? [new URL(appUrl).hostname] : [],
   async headers() {
     return [
       {
