@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Lock, X, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { Button, FormField, Input } from "@/components/ui";
+import { Button, FormField, Input, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useChangePasswordMutation } from "@/services/auth";
 
@@ -95,12 +95,12 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               <Lock className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
+              <Title as="h3" variant="labelStrong">
                 {t("settings.changePasswordTitle")}
-              </h3>
-              <p className="text-xs text-[var(--text-secondary)]">
+              </Title>
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-secondary)]">
                 {t("nav.auth.description")}
-              </p>
+              </Text>
             </div>
           </div>
           <button

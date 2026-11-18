@@ -1,8 +1,8 @@
 "use client";
 
+import { Text, Button, Card, FormField, Input, Title } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, FormField, Input } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLoginMutation, useLogoutMutation } from "@/services/auth";
 
@@ -37,16 +37,16 @@ export function AuthPage() {
       <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_20rem]">
         <Card className="grid gap-6 p-6 sm:p-8">
           <div>
-            <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
               Authentication
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+            </Text>
+            <Title as="h1" className="mt-2 text-3xl font-semibold" variant="inherit">
               Sign in
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+            </Title>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
               Sign in with a real API account. Authorization is loaded from database roles,
               actions, resources, and role permissions.
-            </p>
+            </Text>
           </div>
 
           <form className="grid gap-4" onSubmit={handleLogin}>
@@ -85,11 +85,11 @@ export function AuthPage() {
             </div>
 
             {loginMutation.error ? (
-              <p className="text-sm font-medium text-[var(--status-danger)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium text-[var(--status-danger)]">
                 {loginMutation.error instanceof Error
                   ? loginMutation.error.message
                   : "Login failed."}
-              </p>
+              </Text>
             ) : null}
           </form>
 
@@ -114,24 +114,24 @@ export function AuthPage() {
         </Card>
 
         <Card className="h-max p-6">
-          <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
             Current session
-          </p>
-          <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
+          </Text>
+          <Title as="h2" className="mt-2" variant="cardSoft">
             {isAuthenticated ? role : "Guest"}
-          </h2>
+          </Title>
           <div className="mt-5 rounded-md border border-[var(--border-subtle)] px-4 py-3">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-primary)]">
               {user?.username ?? "Public visitor"}
-            </p>
-            <p className="text-sm text-[var(--text-secondary)]">
+            </Text>
+            <Text variant="small">
               {user?.email ?? "No API session"}
-            </p>
+            </Text>
           </div>
           {user ? (
-            <p className="mt-4 text-sm text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-4 text-sm text-[var(--text-secondary)]">
               {user.permissions.length} permissions loaded from the database.
-            </p>
+            </Text>
           ) : null}
         </Card>
       </div>

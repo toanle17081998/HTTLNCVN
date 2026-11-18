@@ -1,7 +1,7 @@
 "use client";
 
+import { Text, Title, Button, FormField, Input, Textarea } from "@/components/ui";
 import type { FormEvent } from "react";
-import { Button, FormField, Input, Textarea } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { ImageFormState, ImageModalState } from "./articleEditorTypes";
 
@@ -33,14 +33,14 @@ export function MediaInsertModal({
         onSubmit={onSubmit}
       >
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+          <Title as="h2" variant="subsection">
             {isImage ? t("editor.media.imageTitle") : t("editor.media.videoTitle")}
-          </h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          </Title>
+          <Text className="mt-1" variant="small">
             {isImage
               ? t("editor.media.imageDescription")
               : t("editor.media.videoDescription")}
-          </p>
+          </Text>
         </div>
 
         <FormField htmlFor="media-url" label={isImage ? t("editor.media.imageUrl") : t("editor.media.videoUrl")}>

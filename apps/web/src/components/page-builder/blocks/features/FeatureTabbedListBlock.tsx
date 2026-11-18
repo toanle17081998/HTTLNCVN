@@ -1,5 +1,6 @@
 "use client";
 
+import { Title, Text } from "@/components/ui";
 import { useState } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
@@ -57,13 +58,13 @@ export function FeatureTabbedListBlock({
     <NodeFrame>
       <div className="grid" style={{ gap: "var(--section-space-lg)" }}>
         <div className="grid" style={{ gap: "var(--section-space-xs)" }}>
-          <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
+          <Title as="h2" tone="inherit" variant="inherit" style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
             {activeTitle}
-          </h2>
+          </Title>
           {activeShowDescription && activeDescription ? (
-            <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
+            <Text as="p" tone="inherit" variant="inherit" style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
               {activeDescription}
-            </p>
+            </Text>
           ) : null}
         </div>
         {activeItem ? (

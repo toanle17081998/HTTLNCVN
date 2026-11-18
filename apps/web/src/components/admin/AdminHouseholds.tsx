@@ -1,9 +1,9 @@
 "use client";
 
+import { Text, Title, Button, Card, Input } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 
-import { Button, Card, Input } from "@/components/ui";
 import {
   useAddHouseholdMemberMutation,
   useCreateHouseholdMutation,
@@ -53,9 +53,9 @@ export function AdminHouseholds() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-bold uppercase tracking-wider text-[var(--brand-primary)]">Member administration</p>
-        <h1 className="mt-1 text-3xl font-bold text-[var(--text-primary)]">Households</h1>
-        <p className="mt-2 text-[var(--text-secondary)]">Manage families and connect member records to a household.</p>
+        <Text as="p" tone="inherit" variant="inherit" className="text-sm font-bold uppercase tracking-wider text-[var(--brand-primary)]">Member administration</Text>
+        <Title as="h1" className="mt-1" variant="pagePlain">Households</Title>
+        <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-[var(--text-secondary)]">Manage families and connect member records to a household.</Text>
       </div>
 
       <Card className="p-6">
@@ -81,8 +81,8 @@ export function AdminHouseholds() {
             <Card className="p-6" key={household.id}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-[var(--text-primary)]">{household.name}</h2>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">{household.address || "No address"} · {household.phone || "No phone"}</p>
+                  <Title as="h2" variant="card">{household.name}</Title>
+                  <Text className="mt-1" variant="small">{household.address || "No address"} · {household.phone || "No phone"}</Text>
                 </div>
                 <div className="flex gap-2">
                   <Button aria-label={`Edit ${household.name}`} onClick={() => { setEditingId(household.id); setForm({ address: household.address ?? "", name: household.name, note: household.note ?? "", phone: household.phone ?? "" }); }} size="sm" variant="secondary"><Pencil className="h-4 w-4" /></Button>
@@ -93,11 +93,11 @@ export function AdminHouseholds() {
               <div className="mt-5 space-y-2">
                 {household.members.map((member) => (
                   <div className="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] px-3 py-2" key={member.id}>
-                    <div><p className="font-medium">{member.name}</p><p className="text-xs text-[var(--text-secondary)]">{member.role || "member"}</p></div>
+                    <div><Text as="p" tone="inherit" variant="inherit" className="font-medium">{member.name}</Text><Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-secondary)]">{member.role || "member"}</Text></div>
                     <button aria-label={`Remove ${member.name}`} onClick={() => removeMemberMutation.mutate({ householdId: household.id, userId: member.id })} type="button"><X className="h-4 w-4" /></button>
                   </div>
                 ))}
-                {!household.members.length ? <p className="text-sm text-[var(--text-secondary)]">No members assigned.</p> : null}
+                {!household.members.length ? <Text variant="small">No members assigned.</Text> : null}
               </div>
 
               <div className="mt-4 flex gap-2">
@@ -112,8 +112,8 @@ export function AdminHouseholds() {
         })}
       </div>
 
-      {householdsQuery.isLoading ? <p>Loading households…</p> : null}
-      {householdsQuery.isError ? <p className="text-[var(--status-danger)]">Unable to load households.</p> : null}
+      {householdsQuery.isLoading ? <Text as="p" tone="inherit" variant="inherit">Loading households…</Text> : null}
+      {householdsQuery.isError ? <Text as="p" tone="inherit" variant="inherit" className="text-[var(--status-danger)]">Unable to load households.</Text> : null}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { FileText, Plus, ArrowLeft, Eye, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, cn, Switch } from "@/components/ui";
+import { Badge, Button, Card, Switch, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { usePagesQuery, useDeletePageMutation, useRestorePageMutation, pageApi, type Page } from "@/services/page";
@@ -97,20 +97,16 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
                 <FileText aria-hidden="true" className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-base font-bold text-[var(--text-primary)]">
+                <Title as="h2" className="truncate" variant="labelStrong">
                   {localize(page, "title")}
-                </h2>
+                </Title>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                  <span className={cn(
-                    "rounded px-1.5 py-0.5",
-                    page.status === 'published'
-                      ? "bg-[var(--status-success-bg)] text-[var(--status-success)]"
-                      : page.status === 'deleted'
-                        ? "bg-[var(--status-danger-bg)] text-[var(--status-danger)]"
-                        : "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
-                  )}>
+                  <Badge
+                    size="xs"
+                    variant={page.status === "published" ? "success" : page.status === "deleted" ? "danger" : "warning"}
+                  >
                     {page.status}
-                  </span>
+                  </Badge>
                   <span>•</span>
                   <span>{page.route_path}</span>
                 </div>
@@ -201,7 +197,7 @@ export function AdminPages() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("action.goBack")}
           </Button>
-          <h1 className="text-xl font-bold">{t("pageBuilder.editor")}</h1>
+          <Title as="h1" tone="inherit" variant="card">{t("pageBuilder.editor")}</Title>
         </div>
         <CraftPageEditor initialSlug={editingSlug || undefined} />
       </div>

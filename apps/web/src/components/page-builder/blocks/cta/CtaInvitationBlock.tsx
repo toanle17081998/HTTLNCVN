@@ -1,12 +1,11 @@
 "use client";
 
+import { Input, Textarea, cn, Text } from "@/components/ui";
 import { useEditor, useNode } from "@craftjs/core";
 import Link from "next/link";
-import { Input, Textarea } from "@/components/ui";
 import { Field, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, getButtonVariantClass } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
-import { cn } from "@/components/ui";
 import type { BoxProps, CtaScheduleItem } from "../../shared/types";
 
 const defaultCtaSchedules: CtaScheduleItem[] = [
@@ -107,7 +106,7 @@ export function CtaInvitationBlock({
           >
             {activeTitle}
           </h2>
-          <p className={cn("text-sm leading-7 md:text-base", usesDefaultTheme && "text-[var(--page-builder-cta-muted)]")}>{activeDescription}</p>
+          <Text as="p" tone="inherit" variant="inherit" className={cn("text-sm leading-7 md:text-base", usesDefaultTheme && "text-[var(--page-builder-cta-muted)]")}>{activeDescription}</Text>
         </div>
 
         <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
@@ -124,7 +123,7 @@ export function CtaInvitationBlock({
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.time}</span>
                 <span className="font-semibold text-[var(--text-white)]">{item.title}</span>
               </div>
-              <p className="text-xs text-[var(--text-white)] opacity-75">{item.description}</p>
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-white)] opacity-75">{item.description}</Text>
             </div>
           ))}
         </div>

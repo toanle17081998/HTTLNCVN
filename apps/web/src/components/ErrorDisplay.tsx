@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, Home, RefreshCcw } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 
 type ErrorDisplayProps = {
@@ -42,17 +42,17 @@ export function ErrorDisplay({
         <AlertCircle className="h-12 w-12" />
       </div>
 
-      <h1 className="mb-2 text-6xl font-black tracking-tighter text-[var(--text-primary)]">
+      <Title as="h1" className="mb-2 text-6xl font-black tracking-tighter" variant="inherit">
         {statusCode}
-      </h1>
+      </Title>
 
-      <h2 className="mb-4 text-2xl font-bold text-[var(--text-primary)]">
+      <Title as="h2" className="mb-4" variant="sectionPlain">
         {title ?? defaultTitle}
-      </h2>
+      </Title>
 
-      <p className="mb-10 max-w-md text-sm leading-relaxed text-[var(--text-secondary)]">
+      <Text as="p" tone="inherit" variant="inherit" className="mb-10 max-w-md text-sm leading-relaxed text-[var(--text-secondary)]">
         {message ?? defaultMessage}
-      </p>
+      </Text>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
         <Button

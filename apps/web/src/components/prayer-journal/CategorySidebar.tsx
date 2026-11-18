@@ -1,7 +1,7 @@
 "use client";
 
 import { Tag } from "lucide-react";
-import { cn } from "@/components/ui";
+import { cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer, PrayerCategory } from "@/services/prayer-journal";
 
@@ -26,12 +26,12 @@ export function CategorySidebar({
     <div className="h-max rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-gold)]">
+          <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-gold)]">
             {t("prayer.form.category")}
-          </p>
-          <h2 className="mt-1 text-base font-bold text-[var(--text-primary)]">
+          </Text>
+          <Title as="h2" className="mt-1" variant="labelStrong">
             {t("prayer.form.category")}
-          </h2>
+          </Title>
         </div>
         <Tag aria-hidden="true" className="h-4 w-4 text-[var(--text-tertiary)]" />
       </div>

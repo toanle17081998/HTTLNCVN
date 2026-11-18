@@ -1,7 +1,7 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 import { cn } from "./cn";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
 type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -19,6 +19,8 @@ const variantClasses: Record<ButtonVariant, string> = {
     "border-transparent bg-transparent text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]",
   danger:
     "border-transparent bg-[var(--status-danger)] text-[var(--text-inverse)] shadow-sm hover:brightness-95",
+  link:
+    "border-transparent bg-transparent text-inherit hover:text-[var(--brand-primary)]",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -39,9 +41,9 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md border hover:cursor-pointer font-semibold transition focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] disabled:pointer-events-none disabled:opacity-55",
+        "inline-flex items-center rounded-md border font-semibold transition hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] disabled:pointer-events-none disabled:opacity-55",
         variantClasses[variant],
-        sizeClasses[size],
+        variant === "link" ? "justify-start" : cn("justify-center", sizeClasses[size]),
         className,
       )}
       type={type}
@@ -53,6 +55,28 @@ export function Button({
       ) : null}
       {children}
     </button>
+  );
+}
+
+type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant;
+};
+
+export function ButtonLink({
+  className,
+  variant = "link",
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <a
+      className={cn(
+        "inline-flex items-center rounded-md border font-semibold transition focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]",
+        variantClasses[variant],
+        variant === "link" ? "justify-start" : "h-10 justify-center px-5 text-sm",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 

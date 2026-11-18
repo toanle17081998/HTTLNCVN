@@ -1,7 +1,7 @@
 "use client";
 
+import { Text, Title, Button, FormField, Input } from "@/components/ui";
 import type { FormEvent } from "react";
-import { Button, FormField, Input } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TableFormState } from "./articleEditorTypes";
 
@@ -30,10 +30,10 @@ export function TableInsertModal({
         onSubmit={onSubmit}
       >
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("editor.table.title")}</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Title as="h2" variant="subsection">{t("editor.table.title")}</Title>
+          <Text className="mt-1" variant="small">
             {t("editor.table.description")}
-          </p>
+          </Text>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

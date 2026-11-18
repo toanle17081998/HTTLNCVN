@@ -1,6 +1,6 @@
 "use client";
 
-import { Select } from "@/components/ui";
+import { Select, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { StatusFilter, VisibilityFilter } from "./prayerJournalTypes";
 
@@ -22,9 +22,9 @@ export function PrayerFilterBar({
   return (
     <div className="flex flex-1 items-end gap-2 sm:flex-none">
       <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
-        <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-status-filter">
+        <Label variant="caption"  htmlFor="prayer-status-filter">
           {t("common.status")}
-        </label>
+        </Label>
         <Select
           id="prayer-status-filter"
           aria-label={t("common.status")}
@@ -39,9 +39,9 @@ export function PrayerFilterBar({
       </div>
 
       <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
-        <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-visibility-filter">
+        <Label variant="caption"  htmlFor="prayer-visibility-filter">
           {t("common.visibility")}
-        </label>
+        </Label>
         <Select
           id="prayer-visibility-filter"
           aria-label={t("common.visibility")}

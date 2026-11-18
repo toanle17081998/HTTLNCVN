@@ -20,7 +20,7 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
-import { Button, cn } from "@/components/ui";
+import { Button, cn, Title, Text } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -157,8 +157,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     H
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold tracking-tight text-[var(--text-primary)]">{t("admin.layout.title")}</p>
-                    <p className="truncate text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] opacity-70">{t("admin.layout.contentManagement")}</p>
+                    <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-bold tracking-tight text-[var(--text-primary)]">{t("admin.layout.title")}</Text>
+                    <Text as="p" tone="inherit" variant="inherit" className="truncate text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] opacity-70">{t("admin.layout.contentManagement")}</Text>
                   </div>
                 </div>
                 <button
@@ -193,8 +193,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-[var(--text-primary)]">{user?.email?.split("@")[0] || t("admin.layout.defaultUser")}</p>
-                    <p className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{role || t("admin.layout.defaultRole")}</p>
+                    <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-bold text-[var(--text-primary)]">{user?.email?.split("@")[0] || t("admin.layout.defaultUser")}</Text>
+                    <Text as="p" tone="inherit" variant="inherit" className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{role || t("admin.layout.defaultRole")}</Text>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -268,12 +268,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-muted)] text-[var(--brand-primary)]">
                       <ShieldCheck className="h-8 w-8" />
                     </div>
-                    <h1 className="mt-6 text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                    <Title as="h1" className="mt-6" variant="section">
                       {t("admin.layout.restrictedTitle")}
-                    </h1>
-                    <p className="mx-auto mt-2 max-w-md text-base text-[var(--text-secondary)]">
+                    </Title>
+                    <Text as="p" tone="inherit" variant="inherit" className="mx-auto mt-2 max-w-md text-base text-[var(--text-secondary)]">
                       {t("admin.layout.restrictedDescription")}
-                    </p>
+                    </Text>
                     <Link
                       className="mt-8 inline-flex h-11 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-8 text-sm font-bold text-[var(--text-inverse)] transition hover:bg-[var(--brand-primary-strong)] shadow-lg shadow-[var(--brand-shadow)]"
                       href="/auth"

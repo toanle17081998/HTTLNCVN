@@ -1,9 +1,9 @@
 "use client";
 
+import { Input, Skeleton, Textarea, cn } from "@/components/ui";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Input, Textarea, cn } from "@/components/ui";
 import { useArticlesQuery } from "@/services/article";
 import { useCoursesQuery } from "@/services/course";
 import { useEventsQuery } from "@/services/event";
@@ -27,6 +27,63 @@ type FeedProps = BoxProps & {
   selectedItemIds?: string[];
   slideWidth?: SizeValue;
 };
+
+function FeedCardSkeleton({ style }: { style: FeedCardStyle }) {
+  if (style === "minimal") {
+    return (
+      <div className="flex min-h-72 flex-col justify-between border-y border-[var(--border-strong)] px-2 py-6">
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-9 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <Skeleton className="h-4 w-20" />
+      </div>
+    );
+  }
+
+  if (style === "split") {
+    return (
+      <div className="grid min-h-72 overflow-hidden rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] sm:grid-cols-[0.9fr_1.1fr]">
+        <Skeleton className="min-h-48 rounded-none" />
+        <div className="space-y-4 p-6">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      </div>
+    );
+  }
+
+  if (style === "editorial") {
+    return (
+      <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <Skeleton className="aspect-[16/9] rounded-none" />
+        <div className="space-y-3 p-5">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-7 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-[4/5] min-h-[22rem] overflow-hidden rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6">
+      <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+      <div className="relative flex h-full flex-col justify-between">
+        <Skeleton className="h-7 w-24 rounded-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-4/5 bg-white/20" />
+          <Skeleton className="h-4 w-full bg-white/20" />
+          <Skeleton className="h-4 w-2/3 bg-white/20" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function FeedCarouselBlock(props: FeedProps) {
   const { localize } = useTranslation();
@@ -214,10 +271,7 @@ export function FeedCarouselBlock(props: FeedProps) {
             }}
           >
             {Array.from({ length: Math.max(1, parseNumberLike(columns, 3)) }).map((_, index) => (
-              <div
-                className="h-40 animate-pulse rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]"
-                key={index}
-              />
+              <FeedCardSkeleton key={index} style={cardStyle} />
             ))}
           </div>
         ) : items.length ? (

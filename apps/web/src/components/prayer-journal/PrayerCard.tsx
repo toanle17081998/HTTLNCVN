@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Circle, Edit3, Eye, Tag, Users } from "lucide-react";
-import { Button, cn } from "@/components/ui";
+import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer } from "@/services/prayer-journal";
 import { StatusBadge, VisibilityBadge } from "./PrayerBadges";
@@ -72,29 +72,32 @@ export function PrayerCard({
             ) : null}
           </div>
 
-          <h3
+          <Title
+            as="h3"
             className={cn(
-              "mt-3 text-base font-semibold text-[var(--text-primary)]",
-              isClosed ? "line-through text-[var(--text-secondary)]" : "",
+              "mt-3",
+              isClosed && "line-through",
             )}
+            tone={isClosed ? "secondary" : "primary"}
+            variant="label"
           >
             {prayer.title ?? t("prayer.form.titlePlaceholder")}
-          </h3>
-          <p
+          </Title>
+          <Text as="p" tone="inherit" variant="inherit"
             className={cn(
               "mt-1 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]",
               isClosed ? "text-[var(--text-tertiary)]" : "",
             )}
           >
             {prayer.content}
-          </p>
-          <p className="mt-3 text-xs text-[var(--text-tertiary)]">
+          </Text>
+          <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-xs text-[var(--text-tertiary)]">
             {prayer.created_by_name} · {formatPrayerDate(prayer.created_at)}
-          </p>
+          </Text>
           {prayer.close_reason ? (
-            <p className="mt-2 rounded-xl bg-[var(--bg-base)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 rounded-xl bg-[var(--bg-base)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               {prayer.close_reason}
-            </p>
+            </Text>
           ) : null}
         </button>
 

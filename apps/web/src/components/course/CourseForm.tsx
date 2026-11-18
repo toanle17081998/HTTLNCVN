@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
+import { Button, Card, FormField, Input, Textarea, Select, cn, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { CreateCourseDto, Course, useCourseCategoriesQuery } from "@/services/course";
 import { ModularEditor, type ModularEditorHandle } from "@/components/article/ModularEditor";
@@ -64,9 +64,9 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
   return (
     <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
+        <Title as="h1" className="tracking-tight" variant="modal">
           {title}
-        </h1>
+        </Title>
         <LanguageSelector activeLanguage={editLang} onLanguageChange={setEditLang} />
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">

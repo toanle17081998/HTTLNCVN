@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FileText, Plus } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, cn } from "@/components/ui";
+import { Badge, Button, Card, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@/services/article";
@@ -51,18 +51,16 @@ export function AdminArticles() {
                 <FileText aria-hidden="true" className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-base font-bold text-[var(--text-primary)]">
+                <Title as="h2" className="truncate" variant="labelStrong">
                   {localize(article, "title")}
-                </h2>
+                </Title>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                  <span className={cn(
-                    "rounded px-1.5 py-0.5",
-                    article.status === 'published'
-                      ? "bg-[var(--status-success-bg)] text-[var(--status-success)]"
-                      : "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
-                  )}>
+                  <Badge
+                    size="xs"
+                    variant={article.status === "published" ? "success" : "warning"}
+                  >
                     {article.status}
-                  </span>
+                  </Badge>
                   {article.category ? (
                     <>
                       <span>•</span>

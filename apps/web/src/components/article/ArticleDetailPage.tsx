@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { PageLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
+import { Badge, Card, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleQuery } from "@/services/article";
 import { markdownToHtml } from "./articleEditorUtils";
@@ -111,9 +111,9 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
       actions={
         article ? (
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-[var(--text-secondary)]">
-            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 font-bold uppercase tracking-wider text-[var(--brand-primary)]">
+            <Badge uppercase>
               {article.status}
-            </span>
+            </Badge>
             <span>By {article.creator.username}</span>
             {article.published_at ? (
               <span>
@@ -187,7 +187,7 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
 
           <aside className="xl:sticky xl:top-24">
             <Card className="p-4">
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">On this page</h2>
+              <Title as="h2" variant="microSoft">On this page</Title>
               {renderedBody.headings.length > 0 ? (
                 <nav className="mt-3 grid gap-1" aria-label="Article sections">
                   {renderedBody.headings.map((heading) => (
@@ -205,9 +205,9 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
                   ))}
                 </nav>
               ) : (
-                <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
                   No sections in this article.
-                </p>
+                </Text>
               )}
             </Card>
           </aside>

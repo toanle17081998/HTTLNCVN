@@ -1,9 +1,9 @@
 "use client";
 
+import { Text, Button, Card, FormField, Input, Select, cn } from "@/components/ui";
 import { useMemo, useState } from "react";
 import { CalendarDays, Music4, RefreshCw, Sparkles, Trash2, Users } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -143,10 +143,10 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
         <div className="flex items-center gap-3">
           <Music4 className="h-5 w-5 text-[var(--brand-primary)]" />
           <div>
-            <p className="font-semibold text-[var(--text-primary)]">{t("serving.schedule.memberSkills")}</p>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("serving.schedule.memberSkills")}</Text>
+            <Text variant="small">
               {t("serving.schedule.memberSkillsHelp")}
-            </p>
+            </Text>
           </div>
         </div>
 
@@ -170,7 +170,7 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
                   </td>
                   {WORSHIP_SKILLS.map((skill) => (
                     <td className="py-3 pr-4" key={skill}>
-                      <input
+                      <Input
                         checked={member.skills.includes(skill)}
                         onChange={() => toggleSkill(member.id, skill)}
                         type="checkbox"
@@ -207,10 +207,10 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
       <Card className="p-5" key={schedule.id}>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-semibold text-[var(--text-primary)]">{formatDate(schedule.service_date, locale)}</p>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{formatDate(schedule.service_date, locale)}</Text>
+            <Text variant="small">
               {type === "worship" ? t("serving.schedule.worshipTeamAllocation") : t("serving.schedule.cleaningTeamAllocation")}
-            </p>
+            </Text>
           </div>
           <CalendarDays className="h-5 w-5 text-[var(--brand-primary)]" />
         </div>
@@ -248,10 +248,10 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
     <PageLayout description={description} eyebrow={t("serving.schedule.eyebrow")} title={title}>
       {!canManage ? (
         <Card className="p-5">
-          <p className="font-semibold text-[var(--text-primary)]">{t("serving.schedule.restricted.title")}</p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("serving.schedule.restricted.title")}</Text>
+          <Text className="mt-1" variant="small">
             {t("serving.schedule.restricted.desc")}
-          </p>
+          </Text>
         </Card>
       ) : (
         <div className="grid gap-5">
@@ -292,20 +292,20 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
 
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.members")}</p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.members")}</Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                 {planner?.members.length ?? 0}
-              </p>
+              </Text>
             </Card>
             <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.scheduledWeeks")}</p>
-              <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.scheduledWeeks")}</Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                 {planner?.schedules.length ?? 0}
-              </p>
+              </Text>
             </Card>
             <Card className="p-5">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.mode")}</p>
-              <p className="mt-2 text-3xl font-semibold capitalize text-[var(--text-primary)]">{type}</p>
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-secondary)]">{t("serving.schedule.stats.mode")}</Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-semibold capitalize text-[var(--text-primary)]">{type}</Text>
             </Card>
           </div>
 
@@ -313,9 +313,9 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
 
           {plannerQuery.error ? (
             <Card className="p-5">
-              <p className="text-sm font-medium text-[var(--status-danger)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium text-[var(--status-danger)]">
                 {plannerQuery.error instanceof Error ? plannerQuery.error.message : t("serving.schedule.requestFailed")}
-              </p>
+              </Text>
             </Card>
           ) : null}
 
@@ -325,7 +325,7 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
               <Card className="p-5">
                 <div className="flex items-center gap-3 text-[var(--text-secondary)]">
                   {type === "worship" ? <Music4 className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-                  <p>{t("serving.schedule.empty")}</p>
+                  <Text as="p" tone="inherit" variant="inherit">{t("serving.schedule.empty")}</Text>
                 </div>
               </Card>
             ) : null}

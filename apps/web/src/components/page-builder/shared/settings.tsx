@@ -2,7 +2,7 @@
 
 import { useContext, type ReactNode } from "react";
 import { useNode } from "@craftjs/core";
-import { Input } from "@/components/ui";
+import { Input, Label, Text } from "@/components/ui";
 import { EditorBreakpointContext } from "./NodeFrame";
 import type { BoxProps } from "./types";
 
@@ -14,10 +14,10 @@ export function Field({
   label: string;
 }) {
   return (
-    <label className="grid gap-1 text-sm font-medium">
+    <Label variant="control" className="grid gap-1">
       {label}
       {children}
-    </label>
+    </Label>
   );
 }
 
@@ -248,9 +248,9 @@ export function BoxSettings({
 
       {includePosition ? (
         <div className="grid gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
             Position
-          </p>
+          </Text>
           <Field label="Mode">
             <NativeSelect onChange={(value) => setValue("position", value)} value={getValue("position") || (currentBreakpoint === "desktop" ? "static" : "")}>
               {currentBreakpoint !== "desktop" ? <option value="">Inherit desktop</option> : null}
@@ -301,9 +301,9 @@ export function BoxSettings({
         </NativeSelect>
       </Field>
       <div className="grid gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
+        <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
           Padding
-        </p>
+        </Text>
         <DimensionFields
           getValue={getValue}
           labels={[
@@ -316,9 +316,9 @@ export function BoxSettings({
         />
       </div>
       <div className="grid gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
+        <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
           Margin
-        </p>
+        </Text>
         <DimensionFields
           getValue={getValue}
           labels={[

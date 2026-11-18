@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Card, Skeleton, cn } from "@/components/ui";
+import { Badge, Card, Skeleton, Text, Title, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { usePageQuery } from "@/services/page";
 import { useArticlesQuery, type ArticleListItem } from "@/services/article";
@@ -50,12 +50,12 @@ function SectionHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)]">
+        <Text className="tracking-wider" tone="brand" variant="eyebrow">
           {eyebrow}
-        </p>
-        <h2 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+        </Text>
+        <Title className="mt-1" variant="sectionSoft">
           {title}
-        </h2>
+        </Title>
       </div>
       {action ? (
         <Link
@@ -85,24 +85,24 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
       )}
       <div className="grid gap-4 p-5 flex-1">
         <div className="flex items-center justify-between gap-3">
-          <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
+          <Badge uppercase>
             {(article.category ? localize(article.category, "name") : null) || t("nav.article.label")}
-          </span>
+          </Badge>
           {article.published_at ? (
-            <span className="text-sm font-medium text-[var(--text-secondary)]">
+            <Text as="span" className="font-medium" variant="small">
               {formatDateTime(article.published_at, locale)}
-            </span>
+            </Text>
           ) : null}
         </div>
         <div>
-          <h3 className="text-lg font-semibold leading-6 text-[var(--text-primary)] line-clamp-2">
+          <Title as="h3" className="leading-6 line-clamp-2" variant="subsection">
             {localize(article, "title")}
-          </h3>
+          </Title>
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
-          <span className="font-medium text-[var(--text-primary)]">
+          <Text as="span" className="font-medium" tone="primary" variant="small">
             {article.creator.username}
-          </span>
+          </Text>
           <Link
             href={`/article/${encodeURIComponent(article.slug)}`}
             className="text-[var(--brand-primary)] font-semibold hover:underline"
@@ -183,23 +183,23 @@ function CourseCardSkeleton({ className }: { className?: string }) {
           ) : null}
           <div className="grid gap-4 p-5">
             <div>
-              <p className="text-sm font-semibold text-[var(--brand-primary)]">
+              <Text tone="brand" variant="label">
                 {formatDateTime(event.starts_at, locale)}
-              </p>
-              <h3 className="mt-1 text-xl font-semibold text-[var(--text-primary)]">
+              </Text>
+              <Title as="h3" className="mt-1" variant="cardSoft">
                 {event.title}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+              </Title>
+              <Text className="mt-2" variant="prose">
                 {event.description}
-              </p>
+              </Text>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
+              <Badge variant="outline">
                 {event.location || t("event.location.online")}
-              </span>
-              <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
+              </Badge>
+              <Badge variant="outline">
                 {event.creator.username}
-              </span>
+              </Badge>
             </div>
           </div>
         </Card>
@@ -223,26 +223,26 @@ function CourseCardSkeleton({ className }: { className?: string }) {
           <div className="grid gap-4 p-5 flex-1">
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               {course.category ? (
-                <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-[var(--brand-primary)]">
+                <Badge>
                   {localize(course.category, "name")}
-                </span>
+                </Badge>
               ) : null}
-              <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
+              <Badge variant="outline">
                 {course.lesson_count} {t("course.form.lessons")}
-              </span>
+              </Badge>
             </div>
             <div>
-              <h3 className="text-xl font-semibold leading-7 text-[var(--text-primary)] line-clamp-2">
+              <Title as="h3" className="leading-7 line-clamp-2" variant="cardSoft">
                 {localize(course, "title")}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
+              </Title>
+              <Text className="mt-2 line-clamp-3" variant="prose">
                 {localize(course, "summary")}
-              </p>
+              </Text>
             </div>
             <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
-              <span className="font-medium text-[var(--text-primary)]">
+              <Text as="span" className="font-medium" tone="primary" variant="small">
                 {course.creator?.username || "HTNC"}
-              </span>
+              </Text>
               <Link
                 href={`/course/${encodeURIComponent(course.slug)}`}
                 className="text-[var(--brand-primary)] font-semibold hover:underline"
@@ -399,15 +399,15 @@ function CourseCardSkeleton({ className }: { className?: string }) {
                 <div className="relative z-10 mx-auto w-full max-w-6xl px-4 sm:px-6">
                   <div className="flex w-full flex-col justify-center gap-6 py-12 lg:max-w-4xl lg:px-4">
                     <div className="space-y-3">
-                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-[var(--brand-primary)] drop-shadow-sm">
+                      <Text as="p" tone="inherit" variant="inherit" className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-[var(--brand-primary)] drop-shadow-sm">
                         {heroContent.eyebrow}
-                      </p>
-                      <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-[var(--text-inverse)] sm:text-5xl lg:text-7xl">
+                      </Text>
+                      <Title as="h1" className="leading-[1.1] sm:text-5xl lg:text-7xl" tone="inverse" variant="pageHeavy">
                         {heroContent.headline}
-                      </h1>
-                      <p className="max-w-xl text-sm font-medium leading-relaxed text-[var(--text-inverse-muted)] sm:text-lg">
+                      </Title>
+                      <Text as="p" tone="inherit" variant="inherit" className="max-w-xl text-sm font-medium leading-relaxed text-[var(--text-inverse-muted)] sm:text-lg">
                         {heroContent.subheadline}
-                      </p>
+                      </Text>
                     </div>
 
                       <div className="flex flex-wrap gap-3 sm:gap-4">
@@ -439,12 +439,12 @@ function CourseCardSkeleton({ className }: { className?: string }) {
                                 borderColor: "var(--hero-panel-border)",
                               }}
                             >
-                              <p className="text-xl font-black text-[var(--text-inverse)] sm:text-3xl">
+                              <Text as="p" tone="inherit" variant="inherit" className="text-xl font-black text-[var(--text-inverse)] sm:text-3xl">
                                 {stat.value}
-                              </p>
-                              <p className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--text-inverse-muted)] sm:text-[10px]">
+                              </Text>
+                              <Text as="p" tone="inherit" variant="inherit" className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.2em] text-[var(--text-inverse-muted)] sm:text-[10px]">
                                 {stat.label}
-                              </p>
+                              </Text>
                             </div>
                           ))}
                         </div>

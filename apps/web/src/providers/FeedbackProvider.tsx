@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { AlertTriangle, Trash2, Save, Info, AlertCircle } from "lucide-react";
-import { Button, cn } from "@/components/ui";
+import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { Toaster, toast as sonnerToast } from "sonner";
 
@@ -218,13 +218,13 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
               <ConfirmVariantIcon variant={confirmState.variant ?? "info"} />
 
               <div className="mt-5">
-                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                <Title as="h2" className="tracking-tight" variant="card">
                   {confirmState.title}
-                </h2>
+                </Title>
                 {confirmState.description ? (
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                     {confirmState.description}
-                  </p>
+                  </Text>
                 ) : null}
               </div>
             </div>

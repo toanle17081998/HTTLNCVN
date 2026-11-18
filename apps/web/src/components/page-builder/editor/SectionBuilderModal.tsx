@@ -1,9 +1,9 @@
 "use client";
 
+import { Text, Title, cn } from "@/components/ui";
 import { useState, type ReactElement, type ReactNode } from "react";
 import { Element, useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
-import { cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ContentEditContext, SectionInsertContext } from "../shared/NodeFrame";
 import { getButtonVariantClass } from "../shared/helpers";
@@ -200,7 +200,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 grid-cols-2 items-center gap-6 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid gap-3">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Hero</span>
+            <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
             <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">Discover a place made for you</span>
             <span className="text-xs text-[var(--text-secondary)]">Find meaningful community, grow in faith, and take your next step with us.</span>
             <div className="flex gap-2 pt-2">
@@ -221,7 +221,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-2 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Hero</span>
+            <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
             <span className="text-2xl font-bold text-[var(--text-primary)]">Recovery and support</span>
             <span className="max-w-md text-xs text-[var(--text-secondary)]">People and resources for every season of life.</span>
             <div className="flex gap-2 pt-1">
@@ -237,7 +237,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 grid-cols-2 items-center gap-6 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="grid gap-3">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Hero</span>
+          <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
           <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">A church for the whole family</span>
           <span className="text-xs text-[var(--text-secondary)]">Experience inspiring worship, biblical teaching, and meaningful connections.</span>
           <div className="pt-2">
@@ -254,8 +254,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-            <span className="text-xl font-bold text-[var(--text-primary)]">Ways to grow together</span>
+            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+            <Title as="span" variant="card">Ways to grow together</Title>
           </div>
           <div className="grid gap-2">
             <div className="grid grid-cols-[0.8fr_1.2fr] items-center gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2.5">
@@ -283,8 +283,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid justify-items-center text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-            <span className="text-xl font-bold text-[var(--text-primary)]">Everyone has a next step</span>
+            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+            <Title as="span" variant="card">Everyone has a next step</Title>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -308,8 +308,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-            <span className="text-xl font-bold text-[var(--text-primary)]">Find your place to grow</span>
+            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+            <Title as="span" variant="card">Find your place to grow</Title>
           </div>
           <div className="grid grid-cols-2 items-center gap-3">
             <div className="grid gap-1">
@@ -329,8 +329,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-            <span className="text-xl font-bold text-[var(--text-primary)]">Lives changed through community</span>
+            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+            <Title as="span" variant="card">Lives changed through community</Title>
           </div>
           <div className="rounded-lg border border-[var(--border-subtle)] p-3">
             <blockquote className="text-xs italic text-[var(--text-primary)]">“This church helped our family find real community and grow closer to Jesus together.”</blockquote>
@@ -354,8 +354,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid justify-items-center text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-            <span className="text-xl font-bold text-[var(--text-primary)]">Serve in a fellowship ministry</span>
+            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+            <Title as="span" variant="card">Serve in a fellowship ministry</Title>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
@@ -376,8 +376,8 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
         <div className="grid justify-items-center text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Feature list</span>
-          <span className="text-xl font-bold text-[var(--text-primary)]">Values that shape our church</span>
+          <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
+          <Title as="span" variant="card">Values that shape our church</Title>
         </div>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="grid gap-2 text-center">
@@ -428,7 +428,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Gallery</span>
+            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
             <span className="text-2xl font-semibold text-[var(--text-primary)]">Endless image loop</span>
             <span className="text-xs text-[var(--text-secondary)]">Continuous horizontal scrolling photo marquee.</span>
           </div>
@@ -449,7 +449,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Gallery</span>
+            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
             <span className="text-2xl font-semibold text-[var(--text-primary)]">Editorial feed</span>
             <span className="text-xs text-[var(--text-secondary)]">Equal-height multi-column cards with top cover images and structured typography.</span>
           </div>
@@ -480,7 +480,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Gallery</span>
+            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
             <span className="text-2xl font-semibold text-[var(--text-primary)]">Minimal feed</span>
             <span className="text-xs text-[var(--text-secondary)]">Clean editorial text feed with refined typography and top/bottom borders.</span>
           </div>
@@ -511,7 +511,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Gallery</span>
+            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
             <span className="text-2xl font-semibold text-[var(--text-primary)]">Split-card feed</span>
             <span className="text-xs text-[var(--text-secondary)]">Horizontal dual-pane cards featuring prominent photography alongside story details.</span>
           </div>
@@ -542,7 +542,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="grid justify-items-center gap-1 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">Gallery</span>
+          <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
           <span className="text-2xl font-semibold text-[var(--text-primary)]">Featured feed</span>
           <span className="text-xs text-[var(--text-secondary)]">Heroic cinematic showcase highlighting our marquee story or upcoming series.</span>
         </div>
@@ -565,7 +565,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
 
   return (
     <div className="grid min-h-72 content-center justify-items-center gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 text-center">
-      <span className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">{preset.category}</span>
+      <Text as="span" tone="gold" variant="eyebrow">{preset.category}</Text>
       <span className="text-2xl font-semibold text-[var(--text-primary)]">{preset.name}</span>
       <span className="text-xs text-[var(--text-secondary)]">Editable title, subtitle, description, images, and links.</span>
     </div>
@@ -603,8 +603,8 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
             <div className="grid max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-2xl bg-[var(--bg-elevated)] shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
               <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionLibrary")}</p>
-                  <h3 className="text-xl font-semibold">{t("pageBuilder.addSection")}</h3>
+                  <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionLibrary")}</Text>
+                  <Title as="h3" tone="inherit" variant="cardSoft">{t("pageBuilder.addSection")}</Title>
                 </div>
                 <button aria-label="Close" className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
                   <X className="h-4 w-4" />

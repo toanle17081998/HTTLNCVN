@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, Title, Button, Card, FormField, Input, Pagination, Select, Textarea, cn, Label } from "@/components/ui";
 import { useMemo, useState, type FormEvent } from "react";
 import {
   Building2,
@@ -19,7 +20,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Pagination, Select, Textarea, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -358,39 +358,39 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
     <>
       {!authLoading && !unitsQuery.isLoading && !hasPageAccess ? (
         <Card className="p-5">
-          <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</Text>
+          <Text className="mt-1" variant="small">
             {t("admin.members.restrictedDescription")}
-          </p>
+          </Text>
         </Card>
       ) : (
         <div className="grid gap-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.active")}
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{activeCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{activeCount}</Text>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 Cell Groups
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{cellGroupCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{cellGroupCount}</Text>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.churchUnits.membersAssigned")}
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{memberCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{memberCount}</Text>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-search">
+              <Label variant="caption"  htmlFor="church-unit-search">
                 {t("common.search")}
-              </label>
+              </Label>
               <div className="relative">
                 <Search
                   aria-hidden="true"
@@ -408,9 +408,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
             <div className="flex items-end gap-2 shrink-0">
               <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-40 sm:flex-none">
-                <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-type-filter">
+                <Label variant="caption"  htmlFor="church-unit-type-filter">
                   {t("common.type")}
-                </label>
+                </Label>
                 <Select
                   id="church-unit-type-filter"
                   aria-label={t("admin.churchUnits.type")}
@@ -428,9 +428,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               </div>
 
               <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
-                <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="church-unit-status-filter">
+                <Label variant="caption"  htmlFor="church-unit-status-filter">
                   {t("common.status")}
-                </label>
+                </Label>
                 <Select
                   id="church-unit-status-filter"
                   aria-label={t("course.form.status")}
@@ -496,9 +496,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-base font-bold text-[var(--text-primary)]">
+                        <Text as="p" tone="inherit" variant="inherit" className="truncate text-base font-bold text-[var(--text-primary)]">
                           {unit.name}
-                        </p>
+                        </Text>
                         <span
                           className={cn(
                             "inline-flex rounded-full px-2 py-0.5 text-xs font-bold capitalize",
@@ -512,12 +512,12 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                             : t("admin.churchUnits.status.inactive")}
                         </span>
                       </div>
-                      <p className="truncate text-sm font-medium capitalize text-[var(--text-tertiary)]">
+                      <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-medium capitalize text-[var(--text-tertiary)]">
                         {typeLabel(unit.type)}
                         {unit.parent ? ` · ${unit.parent.name}` : ""}
                         {unit.leader ? ` · ${unit.leader.display_name}` : ""}
                         {unit.leader_position ? ` (${unit.leader_position})` : ""}
-                      </p>
+                      </Text>
                     </div>
                   </div>
 
@@ -571,9 +571,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               {!unitsQuery.isLoading && visibleUnits.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Building2 className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20" />
-                  <p className="text-base font-medium text-[var(--text-secondary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-base font-medium text-[var(--text-secondary)]">
                     {t("admin.churchUnits.empty")}
-                  </p>
+                  </Text>
                 </div>
               ) : null}
             </div>
@@ -602,12 +602,12 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
                   {t("admin.churchUnits.eyebrow")}
-                </p>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                </Text>
+                <Title as="h2" variant="cardSoft">
                   {editingUnit ? t("admin.churchUnits.edit") : t("admin.churchUnits.add")}
-                </h2>
+                </Title>
               </div>
               <button
                 aria-label={t("action.close")}
@@ -729,15 +729,15 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               {/* CLASS FLOW: Class Admins, Class Members, Courses list */}
               {form.type === "class" && (
                 <div className="sm:col-span-2 space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/30 p-4">
-                  <h3 className="text-sm font-bold text-[var(--brand-primary)]">Class Room Configuration</h3>
+                  <Title as="h3" tone="brand" variant="micro">Class Room Configuration</Title>
 
                   <FormField htmlFor="class-assigned-courses" label="Assign Courses">
                     <div className="grid max-h-40 gap-2 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2">
                       {courses.map((course) => {
                         const checked = form.assigned_course_ids.includes(course.id);
                         return (
-                          <label key={course.id} className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
-                            <input
+                          <Label variant="inherit" key={course.id} className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
+                            <Input
                               type="checkbox"
                               checked={checked}
                               className="h-4 w-4 accent-[var(--brand-primary)]"
@@ -751,11 +751,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                               }}
                             />
                             <span>{localize(course, "title")}</span>
-                          </label>
+                          </Label>
                         );
                       })}
                       {courses.length === 0 && (
-                        <p className="text-xs text-[var(--text-tertiary)] p-2">No courses available.</p>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] p-2">No courses available.</Text>
                       )}
                     </div>
                   </FormField>
@@ -766,8 +766,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                         {(meta?.members ?? []).map((member) => {
                           const checked = form.class_admin_ids.includes(member.id);
                           return (
-                            <label key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
-                              <input
+                            <Label variant="inherit" key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
+                              <Input
                                 type="checkbox"
                                 checked={checked}
                                 className="h-4 w-4 accent-[var(--brand-primary)]"
@@ -781,7 +781,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                 }}
                               />
                               <span>{member.display_name}</span>
-                            </label>
+                            </Label>
                           );
                         })}
                       </div>
@@ -792,8 +792,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                         {(meta?.members ?? []).map((member) => {
                           const checked = form.class_member_ids.includes(member.id);
                           return (
-                            <label key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
-                              <input
+                            <Label variant="inherit" key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
+                              <Input
                                 type="checkbox"
                                 checked={checked}
                                 className="h-4 w-4 accent-[var(--brand-primary)]"
@@ -807,7 +807,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                 }}
                               />
                               <span>{member.display_name}</span>
-                            </label>
+                            </Label>
                           );
                         })}
                       </div>
@@ -819,7 +819,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               {/* CARE TEAM / PRAISE & WORSHIP FLOW: Team Admins, Members (with schedule auto-assign check) */}
               {(form.type === "care_team" || form.type === "praise_worship") && (
                 <div className="sm:col-span-2 space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/30 p-4">
-                  <h3 className="text-sm font-bold text-[var(--brand-primary)]">Team Configuration</h3>
+                  <Title as="h3" tone="brand" variant="micro">Team Configuration</Title>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField htmlFor="team-admins-select" label="Team Admins">
@@ -827,8 +827,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                         {(meta?.members ?? []).map((member) => {
                           const checked = form.team_admin_ids.includes(member.id);
                           return (
-                            <label key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
-                              <input
+                            <Label variant="inherit" key={member.id} className="flex items-center gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-sm">
+                              <Input
                                 type="checkbox"
                                 checked={checked}
                                 className="h-4 w-4 accent-[var(--brand-primary)]"
@@ -842,7 +842,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                 }}
                               />
                               <span>{member.display_name}</span>
-                            </label>
+                            </Label>
                           );
                         })}
                       </div>
@@ -855,8 +855,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                           const isAutoAssign = form.auto_assign_schedule_ids.includes(member.id);
                           return (
                             <div key={member.id} className="flex items-center justify-between gap-3 px-2 py-1 rounded hover:bg-[var(--bg-base)] text-sm">
-                              <label className="flex items-center gap-3 flex-1 cursor-pointer">
-                                <input
+                              <Label variant="inherit" className="flex items-center gap-3 flex-1 cursor-pointer">
+                                <Input
                                   type="checkbox"
                                   checked={checked}
                                   className="h-4 w-4 accent-[var(--brand-primary)]"
@@ -874,11 +874,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                   }}
                                 />
                                 <span>{member.display_name}</span>
-                              </label>
+                              </Label>
 
                               {checked && (
-                                <label className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] bg-[var(--brand-muted)] px-2 py-0.5 rounded cursor-pointer transition-all hover:bg-[var(--brand-primary)] hover:text-white">
-                                  <input
+                                <Label variant="inherit" className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] bg-[var(--brand-muted)] px-2 py-0.5 rounded cursor-pointer transition-all hover:bg-[var(--brand-primary)] hover:text-white">
+                                  <Input
                                     type="checkbox"
                                     checked={isAutoAssign}
                                     className="h-3 w-3 accent-[var(--brand-primary)]"
@@ -892,7 +892,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                     }}
                                   />
                                   <span>Auto Schedule</span>
-                                </label>
+                                </Label>
                               )}
                             </div>
                           );
@@ -923,7 +923,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
                   <div className="sm:col-span-2 space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/30 p-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-sm font-bold text-[var(--brand-primary)]">Service Teams Configuration</h3>
+                      <Title as="h3" tone="brand" variant="micro">Service Teams Configuration</Title>
                       <Button
                         type="button"
                         size="sm"
@@ -999,8 +999,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                 {(meta?.members ?? []).map((m) => {
                                   const checked = team.member_ids.includes(m.id);
                                   return (
-                                    <label key={m.id} className="flex items-center gap-2 px-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-xs">
-                                      <input
+                                    <Label variant="inherit" key={m.id} className="flex items-center gap-2 px-1 rounded hover:bg-[var(--bg-base)] cursor-pointer text-xs">
+                                      <Input
                                         type="checkbox"
                                         checked={checked}
                                         className="h-3.5 w-3.5 accent-[var(--brand-primary)]"
@@ -1017,7 +1017,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                         }}
                                       />
                                       <span>{m.display_name}</span>
-                                    </label>
+                                    </Label>
                                   );
                                 })}
                               </div>
@@ -1026,7 +1026,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                         </div>
                       ))}
                       {form.service_teams.length === 0 && (
-                        <p className="text-xs text-[var(--text-tertiary)] text-center py-4">No service teams added yet.</p>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] text-center py-4">No service teams added yet.</Text>
                       )}
                     </div>
                   </div>
@@ -1043,7 +1043,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                     {(meta?.members ?? []).map((member) => {
                       const checked = form.class_member_ids.includes(member.id);
                       return (
-                        <label
+                        <Label variant="inherit"
                           className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-[var(--bg-base)] cursor-pointer"
                           key={member.id}
                         >
@@ -1055,7 +1055,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                               @{member.username}
                             </span>
                           </span>
-                          <input
+                          <Input
                             checked={checked}
                             className="h-4 w-4 accent-[var(--brand-primary)]"
                             onChange={(event) =>
@@ -1068,7 +1068,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                             }
                             type="checkbox"
                           />
-                        </label>
+                        </Label>
                       );
                     })}
                   </div>
@@ -1175,8 +1175,8 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
               <GraduationCap className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.churchUnits.scores.title")}</h2>
-              <p className="text-sm font-medium text-[var(--text-secondary)]">{unit.name}</p>
+              <Title as="h2" variant="card">{t("admin.churchUnits.scores.title")}</Title>
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium text-[var(--text-secondary)]">{unit.name}</Text>
             </div>
           </div>
           <button
@@ -1229,15 +1229,15 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
         ) : (
           <div className="mt-6 flex flex-col items-center justify-center border border-[var(--border-subtle)] rounded-xl p-8 bg-[var(--bg-base)]/30">
             <BookOpen className="h-10 w-10 text-[var(--text-tertiary)] opacity-30 mb-2" />
-            <p className="text-sm font-bold text-[var(--text-secondary)]">{t("admin.churchUnits.scores.noCourses")}</p>
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">{t("admin.churchUnits.scores.noCoursesDesc")}</p>
+            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-bold text-[var(--text-secondary)]">{t("admin.churchUnits.scores.noCourses")}</Text>
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] mt-1">{t("admin.churchUnits.scores.noCoursesDesc")}</Text>
           </div>
         )}
 
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20">
             <RefreshCw className="h-8 w-8 text-[var(--brand-primary)] animate-spin" />
-            <p className="text-sm font-medium text-[var(--text-secondary)] mt-2">{t("admin.churchUnits.scores.loading")}</p>
+            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium text-[var(--text-secondary)] mt-2">{t("admin.churchUnits.scores.loading")}</Text>
           </div>
         ) : error ? (
           <div className="mt-4 p-4 rounded-xl border border-[var(--status-danger)]/20 bg-[var(--status-danger-bg)] text-sm text-[var(--status-danger)]">
@@ -1265,8 +1265,8 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                   return (
                     <tr key={scoreItem.member_id} className="hover:bg-[var(--bg-base)]/20 transition-colors">
                       <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-[var(--text-primary)]">{scoreItem.display_name}</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">@{scoreItem.username}</p>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-sm font-bold text-[var(--text-primary)]">{scoreItem.display_name}</Text>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)]">@{scoreItem.username}</Text>
                       </td>
                       <td className="px-6 py-4">
                         <span

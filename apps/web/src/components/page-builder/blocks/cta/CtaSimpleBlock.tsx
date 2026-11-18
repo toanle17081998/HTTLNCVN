@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import Link from "next/link";
-import { Input, Textarea, cn } from "@/components/ui";
+import { Input, Textarea, cn, Text } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, getButtonVariantClass } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -100,7 +100,7 @@ export function CtaSimpleBlock({
           >
             {title}
           </h2>
-          <p className={cn("text-sm leading-6 md:text-base", usesDefaultTheme ? "text-[var(--page-builder-cta-muted)]" : "text-[var(--text-inverse-muted)]")}>{description}</p>
+          <Text as="p" tone="inherit" variant="inherit" className={cn("text-sm leading-6 md:text-base", usesDefaultTheme ? "text-[var(--page-builder-cta-muted)]" : "text-[var(--text-inverse-muted)]")}>{description}</Text>
         </div>
 
         <div className="shrink-0">

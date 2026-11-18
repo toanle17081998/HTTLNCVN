@@ -1,10 +1,10 @@
 "use client";
 
+import { Text, Button, Card, Title, Label, Input } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, GraduationCap, Plus, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import {
@@ -132,7 +132,7 @@ function CategoryManager({
   return (
     <Card className="mb-6 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-[var(--text-primary)]">{t("admin.category.title")}</h3>
+        <Title as="h3" variant="micro">{t("admin.category.title")}</Title>
         <Button size="sm" variant="secondary" onClick={startCreate}>
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           {t("admin.category.add")}
@@ -140,7 +140,7 @@ function CategoryManager({
       </div>
 
       {categories.length === 0 ? (
-        <p className="mt-3 text-xs text-[var(--text-tertiary)]">{t("admin.category.empty")}</p>
+        <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-xs text-[var(--text-tertiary)]">{t("admin.category.empty")}</Text>
       ) : (
         <div className="mt-3 flex flex-wrap gap-2">
           {categories.map((cat) => (
@@ -172,20 +172,20 @@ function CategoryManager({
         <div className="mt-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
+              <Label variant="caption" className="mb-1 block">
                 {t("admin.category.nameEn")}
-              </label>
-              <input
+              </Label>
+              <Input
                 className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
+              <Label variant="caption" className="mb-1 block">
                 {t("admin.category.nameVi")}
-              </label>
-              <input
+              </Label>
+              <Input
                 className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
                 value={nameVi}
                 onChange={(e) => setNameVi(e.target.value)}
@@ -258,8 +258,8 @@ function CoursePanel({
               <GraduationCap aria-hidden="true" className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-base font-bold text-[var(--text-primary)]">{title}</h2>
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+              <Title as="h2" className="truncate" variant="labelStrong">{title}</Title>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                 <span className="rounded bg-[var(--brand-muted)] px-1.5 py-0.5 text-[var(--brand-primary)]">
                   {course.status}
                 </span>
@@ -273,7 +273,7 @@ function CoursePanel({
                     <span>{localize(course.category, "name")}</span>
                   </>
                 ) : null}
-              </p>
+              </Text>
             </div>
           </div>
           
@@ -312,7 +312,7 @@ function CoursePanel({
           {courseQuery.isLoading ? (
             <div className="flex items-center gap-3 p-4">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
-              <p className="text-sm text-[var(--text-secondary)]">{t("admin.courses.loadingLessons")}</p>
+              <Text variant="small">{t("admin.courses.loadingLessons")}</Text>
             </div>
           ) : null}
 
@@ -327,10 +327,10 @@ function CoursePanel({
                     <FileText aria-hidden="true" className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-[var(--text-primary)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-bold text-[var(--text-primary)]">
                       {localize(lesson, "title")}
-                    </p>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] flex flex-wrap gap-2 items-center">
+                    </Text>
+                    <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] flex flex-wrap gap-2 items-center">
                       <span>
                         {t("admin.courses.quizMeta", {
                           count: String(lesson.quiz_count ?? 0),
@@ -341,7 +341,7 @@ function CoursePanel({
                       <span>
                         Templates: {lesson.template_count ?? 0}
                       </span>
-                    </p>
+                    </Text>
                   </div>
                 </div>
                 <div className="flex gap-2 sm:ml-auto">
@@ -374,7 +374,7 @@ function CoursePanel({
           {lessons.length === 0 && !courseQuery.isLoading ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <FileText className="mb-2 h-8 w-8 text-[var(--text-tertiary)] opacity-20" />
-              <p className="text-sm text-[var(--text-secondary)]">{t("admin.courses.lessonsEmpty")}</p>
+              <Text variant="small">{t("admin.courses.lessonsEmpty")}</Text>
             </div>
           ) : null}
         </div>

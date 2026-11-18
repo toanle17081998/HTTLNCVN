@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, FormField, Input, Textarea, Select, cn } from "@/components/ui";
+import { Button, Card, FormField, Input, Textarea, Select, cn, Title, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { QuestionTemplate } from "@/services/course";
 
@@ -103,9 +103,9 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
   return (
     <Card className="w-full border-[var(--border-subtle)] bg-[var(--bg-card)] p-8 shadow-xl">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
+        <Title as="h1" className="text-3xl font-extrabold tracking-tight" variant="inherit">
           {title}
-        </h1>
+        </Title>
         <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
           {(["en", "vi"] as const).map((lang) => (
             <button
@@ -205,9 +205,9 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
         ) : formData.template_type === "multiple_choices" ? (
           <div className="space-y-6 border-t border-[var(--border-subtle)] pt-6">
             <div>
-              <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              <Label variant="field" className="block mb-2">
                 Correct Answers
-              </label>
+              </Label>
               <div className="space-y-3">
                 {correctAnswers.map((ans, idx) => (
                   <div key={idx} className="flex gap-3 items-center">
@@ -240,9 +240,9 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">
+              <Label variant="field" className="block mb-2">
                 Incorrect Answers
-              </label>
+              </Label>
               <div className="space-y-3">
                 {incorrectAnswers.map((ans, idx) => (
                   <div key={idx} className="flex gap-3 items-center">

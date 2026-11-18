@@ -1,9 +1,9 @@
 "use client";
 
+import { Text, Button, Card, FormField, Input, Pagination, Select, cn, Title } from "@/components/ui";
 import { useRef, useState, type FormEvent } from "react";
 import { Edit3, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Pagination, Select, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -206,54 +206,54 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
     <>
       {!authLoading && !canReadMembers ? (
         <Card className="p-5">
-          <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</Text>
+          <Text className="mt-1" variant="small">
             {t("admin.members.restrictedDescription")}
-          </p>
+          </Text>
         </Card>
       ) : (
         <div className="grid gap-8">
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.active")}
-              </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {String(membersQuery.data?.total ?? 0)}
-              </p>
+              </Text>
             </Card>
             <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.adminRoles")}
-              </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {adminCount}
-              </p>
+              </Text>
             </Card>
             <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("admin.members.pendingReview")}
-              </p>
-              <p className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
                 {pendingCount}
-              </p>
+              </Text>
             </Card>
           </div>
 
           <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
             <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                <Title as="h2" className="tracking-tight" variant="card">
                   {t("admin.members.list")}
-                </h2>
-                <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
+                </Title>
+                <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
                   {membersQuery.isLoading
                     ? t("admin.members.loading")
                     : t("admin.members.records", {
                       count: String(visibleMembers.length),
                       total: String(membersQuery.data?.total ?? 0),
                     })}
-                </p>
+                </Text>
               </div>
               <div className="flex w-full items-center gap-3 sm:w-auto">
                 <div className="relative min-w-0 flex-1 sm:w-80">
@@ -282,7 +282,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   <>
                     {admin ? (
                       <>
-                        <input
+                        <Input
                           accept=".csv,.xls,.xlsx"
                           className="hidden"
                           onChange={(event) => handleImportFile(event.target.files?.[0])}
@@ -330,9 +330,9 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-base font-bold text-[var(--text-primary)]">
+                        <Text as="p" tone="inherit" variant="inherit" className="truncate text-base font-bold text-[var(--text-primary)]">
                           {displayName(member)}
-                        </p>
+                        </Text>
                         <span className={cn(
                           "inline-flex h-2 w-2 shrink-0 rounded-full",
                           member.status === "active"
@@ -342,9 +342,9 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                               : "bg-[var(--status-danger)]"
                         )} />
                       </div>
-                      <p className="truncate text-sm font-medium text-[var(--text-tertiary)]">
+                      <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-medium text-[var(--text-tertiary)]">
                         @{member.username} • {member.email}
-                      </p>
+                      </Text>
                     </div>
                   </div>
 
@@ -391,9 +391,9 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
               {!membersQuery.isLoading && visibleMembers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <UserRound className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20" />
-                  <p className="text-base font-medium text-[var(--text-secondary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-base font-medium text-[var(--text-secondary)]">
                     {t("admin.members.empty")}
-                  </p>
+                  </Text>
                 </div>
               ) : null}
             </div>
@@ -422,12 +422,12 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
                   {t("admin.members.rbac")}
-                </p>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                </Text>
+                <Title as="h2" variant="cardSoft">
                   {editingMember ? t("admin.members.edit") : t("admin.members.add")}
-                </h2>
+                </Title>
               </div>
               <button
                 aria-label={t("action.close")}
@@ -589,7 +589,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
         <div className="flex flex-wrap gap-2">
           {admin ? (
             <>
-              <input
+              <Input
                 accept=".csv,.xls,.xlsx"
                 className="hidden"
                 onChange={(event) => handleImportFile(event.target.files?.[0])}

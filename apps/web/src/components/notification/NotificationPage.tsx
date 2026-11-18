@@ -1,9 +1,9 @@
 "use client";
 
+import { Title, Button, Card, FormField, Input, Pagination, Select, Textarea, cn, Text } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { Bell, Plus, RefreshCw, Send, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Pagination, Select, Textarea, cn } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -56,12 +56,12 @@ export function NotificationPage() {
       >
         <Card className="p-6 text-center max-w-md mx-auto mt-8">
           <Bell className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20 mx-auto" />
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+          <Title as="h2" variant="subsectionStrong">
             Restricted access
-          </h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)] animate-pulse">
+          </Title>
+          <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)] animate-pulse">
             {t("admin.layout.protectedContent")}
-          </p>
+          </Text>
         </Card>
       </PageLayout>
     );
@@ -126,14 +126,14 @@ export function NotificationPage() {
       <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+            <Title as="h2" className="tracking-tight" variant="card">
               {t("nav.notification.label")}
-            </h2>
-            <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
+            </Title>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
               {notificationsQuery.isLoading
                 ? "Loading notifications..."
                 : `Showing ${notifications.length} of ${total} notifications`}
-            </p>
+            </Text>
           </div>
           <button
             aria-label="Refresh"
@@ -167,19 +167,19 @@ export function NotificationPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className={cn("truncate text-sm font-bold", n.is_read ? "text-[var(--text-secondary)]" : "text-[var(--text-primary)] font-extrabold")}>
+                    <Text as="p" tone="inherit" variant="inherit" className={cn("truncate text-sm font-bold", n.is_read ? "text-[var(--text-secondary)]" : "text-[var(--text-primary)] font-extrabold")}>
                       {n.title}
-                    </p>
+                    </Text>
                     {!n.is_read && (
                       <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--brand-primary)]" />
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-2">
+                  <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-2">
                     {n.message}
-                  </p>
-                  <p className="mt-1.5 text-[10px] text-[var(--text-tertiary)]">
+                  </Text>
+                  <Text as="p" tone="inherit" variant="inherit" className="mt-1.5 text-[10px] text-[var(--text-tertiary)]">
                     {new Date(n.created_at).toLocaleString()}
-                  </p>
+                  </Text>
                 </div>
               </div>
             </div>
@@ -188,9 +188,9 @@ export function NotificationPage() {
           {!notificationsQuery.isLoading && notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Bell className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20" />
-              <p className="text-base font-medium text-[var(--text-secondary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-base font-medium text-[var(--text-secondary)]">
                 No notifications found.
-              </p>
+              </Text>
             </div>
           ) : null}
         </div>
@@ -220,12 +220,12 @@ export function NotificationPage() {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
                   Admin Action
-                </p>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+                </Text>
+                <Title as="h2" variant="cardSoft">
                   Create Notification
-                </h2>
+                </Title>
               </div>
               <button
                 aria-label="Close"

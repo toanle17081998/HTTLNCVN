@@ -1,10 +1,10 @@
 "use client";
 
+import { Text, Button, Card, Title } from "@/components/ui";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { PERMISSIONS } from "@/lib/rbac";
@@ -120,19 +120,19 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
 
           <aside className="lg:sticky lg:top-24 grid gap-5">
             <Card className="p-5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("quiz.practiceTitle")}</h2>
+              <Title as="h2" variant="label">{t("quiz.practiceTitle")}</Title>
               <div className="mt-4 grid gap-3">
                 {lesson.quizzes.map((quiz) => (
                   <div
                     className="rounded-md border border-[var(--border-subtle)] p-3"
                     key={quiz.id}
                   >
-                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                    <Title as="h3" variant="microSoft">
                       {localize(quiz, "title")}
-                    </h3>
-                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    </Title>
+                    <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-secondary)]">
                       {quiz.question_count} questions
-                    </p>
+                    </Text>
                     <Button
                       className="mt-3 w-full"
                       disabled={!isAuthenticated || !canTakeQuiz || startQuiz.isPending}
@@ -145,19 +145,19 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                 ))}
               </div>
               {lesson.quizzes.length === 0 ? (
-                <p className="mt-3 text-sm text-[var(--text-secondary)]">No quizzes yet.</p>
+                <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm text-[var(--text-secondary)]">No quizzes yet.</Text>
               ) : null}
             </Card>
 
             {can(PERMISSIONS.manageCourses) && (
               <Card className="p-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[var(--text-primary)]">Templates</h2>
+                  <Title as="h2" variant="label">Templates</Title>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-[var(--text-secondary)]">
+                  <Text variant="small">
                     Total templates: <span className="font-bold text-[var(--text-primary)]">{lesson.templates?.length || 0}</span>
-                  </p>
+                  </Text>
                   <Button
                     size="sm"
                     variant="ghost"

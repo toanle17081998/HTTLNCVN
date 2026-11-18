@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, Title, Button, Card, FormField, Input, Select, Textarea, cn, Label } from "@/components/ui";
 import { useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import { EventCalendar } from "./EventCalendar";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, Textarea, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -479,25 +479,25 @@ export function EventPage() {
       <div className="grid gap-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.total")}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{events.length}</p>
+            </Text>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{events.length}</Text>
           </div>
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.upcoming")}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{upcomingCount}</p>
+            </Text>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{upcomingCount}</Text>
           </div>
           <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
               {t("event.stats.targeted")}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{targetedCount}</p>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+            </Text>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{targetedCount}</Text>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-secondary)]">
               {t("event.stats.published", { count: String(publishedCount) })}
-            </p>
+            </Text>
           </div>
         </div>
 
@@ -530,9 +530,9 @@ export function EventPage() {
             </div>
 
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-search-input">
+              <Label variant="caption"  htmlFor="event-search-input">
                 {t("common.search")}
-              </label>
+              </Label>
               <div className="relative">
                 <Search
                   aria-hidden="true"
@@ -551,9 +551,9 @@ export function EventPage() {
 
           <div className="flex items-end gap-2">
             <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-status-filter">
+              <Label variant="caption"  htmlFor="event-status-filter">
                 {t("common.status")}
-              </label>
+              </Label>
               <Select
                 id="event-status-filter"
                 aria-label={t("event.form.status")}
@@ -568,9 +568,9 @@ export function EventPage() {
             </div>
 
             <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-audience-filter">
+              <Label variant="caption"  htmlFor="event-audience-filter">
                 {t("common.audience")}
-              </label>
+              </Label>
               <Select
                 id="event-audience-filter"
                 aria-label={t("event.form.audience")}
@@ -587,9 +587,9 @@ export function EventPage() {
             </div>
 
             <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="event-category-filter">
+              <Label variant="caption"  htmlFor="event-category-filter">
                 {t("common.category")}
-              </label>
+              </Label>
               <Select
                 id="event-category-filter"
                 aria-label={t("event.form.category")}
@@ -650,9 +650,9 @@ export function EventPage() {
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-lg font-bold text-[var(--text-primary)]">
+                        <Title as="p" className="truncate" variant="subsectionStrong">
                           {event.title}
-                        </p>
+                        </Title>
                         <span className="rounded-full bg-[var(--brand-muted)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
                           {audienceLabel(event.audience, t)}
                         </span>
@@ -688,9 +688,9 @@ export function EventPage() {
                       </div>
 
                       {event.description ? (
-                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
+                        <Text as="p" tone="inherit" variant="inherit" className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
                           {event.description}
-                        </p>
+                        </Text>
                       ) : null}
                     </div>
 
@@ -716,12 +716,12 @@ export function EventPage() {
 
               {!eventsQuery.isLoading && visibleEvents.length === 0 ? (
                 <div className="px-6 py-12 text-center">
-                  <p className="text-base font-semibold text-[var(--text-primary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-base font-semibold text-[var(--text-primary)]">
                     {t("event.list.emptyTitle")}
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  </Text>
+                  <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">
                     {t("event.list.emptyDescription")}
-                  </p>
+                  </Text>
                 </div>
               ) : null}
             </div>
@@ -751,12 +751,12 @@ export function EventPage() {
           <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-6 py-5">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
                   {t("event.config.eyebrow")}
-                </p>
-                <h2 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">
+                </Text>
+                <Title as="h2" className="mt-2" variant="sectionPlain">
                   {editingEvent ? t("event.config.title.edit") : t("event.config.title.add")}
-                </h2>
+                </Title>
               </div>
               <Button className="h-10 w-10 rounded-xl p-0" onClick={closeModal} variant="ghost">
                 <X aria-hidden="true" className="h-5 w-5" />
@@ -863,8 +863,8 @@ export function EventPage() {
                 </FormField>
               </div>
 
-              <label className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
-                <input
+              <Label variant="inherit" className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)]">
+                <Input
                   checked={form.is_all_day}
                   onChange={(event) =>
                     setForm((current) => {
@@ -892,7 +892,7 @@ export function EventPage() {
                   type="checkbox"
                 />
                 <span>{t("event.form.allDay")}</span>
-              </label>
+              </Label>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField htmlFor="event-location" label={t("event.form.location")}>
@@ -946,12 +946,12 @@ export function EventPage() {
 
               <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-5 py-5">
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                  <Title as="h3" variant="subsection">
                     {t("event.form.assignment")}
-                  </h3>
-                  <p className="text-sm text-[var(--text-secondary)]">
+                  </Title>
+                  <Text variant="small">
                     {t("event.form.assignmentHelp")}
-                  </p>
+                  </Text>
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -979,22 +979,22 @@ export function EventPage() {
 
                 {form.audience === "church_unit" ? (
                   <div className="mt-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-4">
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-primary)]">
                       {t("event.form.assignChurchUnits")}
-                    </p>
+                    </Text>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {(meta?.church_units ?? []).map((unit) => (
-                        <label
+                        <Label variant="inherit"
                           className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-3 text-sm text-[var(--text-primary)]"
                           key={unit.id}
                         >
-                          <input
+                          <Input
                             checked={form.church_unit_ids.includes(unit.id)}
                             onChange={() => toggleCheckboxValue("church_unit_ids", unit.id)}
                             type="checkbox"
                           />
                           <span>{unit.name}</span>
-                        </label>
+                        </Label>
                       ))}
                     </div>
                   </div>
@@ -1002,22 +1002,22 @@ export function EventPage() {
 
                 {form.audience === "people" ? (
                   <div className="mt-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-4">
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-primary)]">
                       {t("event.form.assignPeople")}
-                    </p>
+                    </Text>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {(meta?.members ?? []).map((member) => (
-                        <label
+                        <Label variant="inherit"
                           className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-3 text-sm text-[var(--text-primary)]"
                           key={member.id}
                         >
-                          <input
+                          <Input
                             checked={form.user_ids.includes(member.id)}
                             onChange={() => toggleCheckboxValue("user_ids", member.id)}
                             type="checkbox"
                           />
                           <span>{member.display_name}</span>
-                        </label>
+                        </Label>
                       ))}
                     </div>
                   </div>
@@ -1063,15 +1063,15 @@ export function EventPage() {
           <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)]">
             <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-6 py-5">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
                   {t("event.category.eyebrow")}
-                </p>
-                <h2 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
+                </Text>
+                <Title as="h2" className="mt-2" variant="card">
                   {t("event.category.title")}
-                </h2>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                </Title>
+                <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">
                   {t("event.category.description")}
-                </p>
+                </Text>
               </div>
               <Button className="h-10 w-10 rounded-xl p-0" onClick={() => setCategoryModalOpen(false)} variant="ghost">
                 <X aria-hidden="true" className="h-5 w-5" />
@@ -1123,11 +1123,11 @@ export function EventPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-[var(--text-primary)]">{category.name}</p>
+                        <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{category.name}</Text>
                         {category.description ? (
-                          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
+                          <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
                             {category.description}
-                          </p>
+                          </Text>
                         ) : null}
                       </div>
                       {canManageEvents ? (
@@ -1145,8 +1145,8 @@ export function EventPage() {
               </div>
 
               <div className="rounded-2xl border border-dashed border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-4 text-sm text-[var(--text-secondary)]">
-                <p className="font-semibold text-[var(--text-primary)]">{t("event.utc.title")}</p>
-                <p className="mt-2 leading-6">{t("event.utc.description")}</p>
+                <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("event.utc.title")}</Text>
+                <Text as="p" tone="inherit" variant="inherit" className="mt-2 leading-6">{t("event.utc.description")}</Text>
               </div>
             </div>
           </div>

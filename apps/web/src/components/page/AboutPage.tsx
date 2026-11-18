@@ -1,7 +1,7 @@
 "use client";
 
+import { Title, Card, Text } from "@/components/ui";
 import { PageLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
 import { usePageQuery } from "@/services/page";
 import { useTranslation } from "@/providers/I18nProvider";
 
@@ -38,9 +38,9 @@ export function AboutPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
           <Card className="rounded-[2rem] border-[var(--border-subtle)] p-8 shadow-sm sm:p-10">
-            <h2 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
+            <Title as="h2" variant="pageHeavy">
               {content.title}
-            </h2>
+            </Title>
             <div
               className="mt-6 prose prose-slate max-w-none text-base leading-relaxed text-[var(--text-secondary)] [&_a]:text-[var(--brand-primary)] [&_a]:underline [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--text-secondary)] [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--text-primary)] [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[var(--text-primary)] [&_li]:mt-1 [&_p]:mt-3 [&_strong]:font-bold [&_strong]:text-[var(--text-primary)] [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5"
               dangerouslySetInnerHTML={{ __html: content.htmlBody }}
@@ -49,12 +49,12 @@ export function AboutPage() {
 
           <div className="space-y-6">
             <Card className="rounded-3xl border-[var(--brand-muted)] bg-[var(--brand-muted)]/30 p-6">
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">
+              <Title as="h2" variant="subsectionStrong">
                 {t("about.access.title")}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+              </Title>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
                 {t("about.access.description")}
-              </p>
+              </Text>
             </Card>
           </div>
         </div>

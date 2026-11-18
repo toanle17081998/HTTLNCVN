@@ -1,9 +1,9 @@
 "use client";
 
+import { Badge, Title, Button, Card, Text } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -45,12 +45,12 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
       actions={
         course ? (
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+            <Badge>
               {course.lesson_count} {t("lesson.label").toLowerCase()}s
-            </span>
-            <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+            </Badge>
+            <Badge>
               {course.estimated_duration_minutes} {t("quiz.minutes")}
-            </span>
+            </Badge>
             {can(PERMISSIONS.manageCourses) && (
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
@@ -112,7 +112,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
             <section className="grid gap-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("lesson.label")}</h2>
+                <Title as="h2" variant="subsection">{t("lesson.label")}</Title>
                 {can(PERMISSIONS.manageCourses) && (
                   <Button
                     size="sm"
@@ -137,12 +137,12 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                       <Card className="p-5 transition hover:border-[var(--brand-primary)]">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
+                            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                               {t("lesson.label")} {lesson.order_index ?? "-"}
-                            </p>
-                            <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
+                            </Text>
+                            <Title as="h3" className="mt-1" variant="label">
                               {localize(lesson, "title")}
-                            </h3>
+                            </Title>
                           </div>
                           <div className="flex items-center gap-3">
                             {lesson.quiz_count ? (

@@ -1,6 +1,6 @@
+import { Title, Button, Card, cn, Text } from "@/components/ui";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Clock3, MapPin, X } from "lucide-react";
-import { Button, Card, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { EventItem } from "@/services/event";
 
@@ -236,9 +236,9 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
     <Card className="overflow-hidden border-[var(--border-subtle)] shadow-sm">
       <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 px-6 py-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] capitalize">
+          <Title as="h2" className="capitalize" variant="card">
             {monthName} {year}
-          </h2>
+          </Title>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -353,9 +353,9 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
           />
           <Card className="relative w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-6 py-4">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">
+              <Title as="h3" variant="subsectionStrong">
                 {new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(selectedDayEvents.date)}
-              </h3>
+              </Title>
               <Button
                 variant="ghost"
                 size="sm"
@@ -380,9 +380,9 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                     style={{ backgroundColor: event.color || "var(--brand-primary)" }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-[var(--text-primary)] transition-colors group-hover:text-[var(--brand-primary)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-sm font-bold text-[var(--text-primary)] transition-colors group-hover:text-[var(--brand-primary)]">
                       {event.title}
-                    </p>
+                    </Text>
                     <div className="mt-1 flex items-center gap-2 text-xs font-medium text-[var(--text-tertiary)]">
                       <Clock3 className="h-3.5 w-3.5" />
                       <span>{formatEventTime(locale, event, t("event.form.allDay"))}</span>

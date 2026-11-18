@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CourseTestPanel } from "@/components/course/CourseTestPanel";
 import { PageLayout } from "@/components/layout";
-import { Card, Select } from "@/components/ui";
+import { Card, Select, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useCourseQuery, useCoursesQuery } from "@/services/course";
 
@@ -21,9 +21,9 @@ export function AdminTests() {
       title={t("admin.tests.title")}
     >
       <Card className="p-5">
-        <label className="mb-2 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="test-course">
+        <Label variant="field" className="mb-2 block" htmlFor="test-course">
           {t("admin.tests.selectCourse")}
-        </label>
+        </Label>
         <Select
           disabled={coursesQuery.isLoading || !coursesQuery.data?.items.length}
           id="test-course"

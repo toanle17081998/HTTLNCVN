@@ -1,8 +1,8 @@
 "use client";
 
+import { Title, Button, Input, Select, Label, Text } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
-import { Button, Input, Select } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { ApiError } from "@/services/client";
@@ -106,12 +106,12 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
       >
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
               {t("pageBuilder.createPage")}
-            </p>
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+            </Text>
+            <Title as="h3" variant="subsection">
               {t("pageBuilder.newPage")}
-            </h3>
+            </Title>
           </div>
           <button
             aria-label="Close"
@@ -124,7 +124,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
         </div>
 
         <form onSubmit={handleCreate} className="space-y-4 p-6">
-          <label className="grid gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+          <Label variant="control" className="grid gap-1.5">
             <span>{t("form.title")}</span>
             <Input
               autoFocus
@@ -132,18 +132,18 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
               placeholder="e.g. Giới thiệu / About Us"
               value={title}
             />
-          </label>
+          </Label>
 
-          <label className="grid gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+          <Label variant="control" className="grid gap-1.5">
             <span>{t("pageBuilder.routePath")}</span>
             <Input
               onChange={(e) => handleRouteChange(e.target.value)}
               placeholder="/gioi-thieu"
               value={routePath}
             />
-          </label>
+          </Label>
 
-          <label className="grid gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+          <Label variant="control" className="grid gap-1.5">
             <span>{t("pageBuilder.starterLayout")}</span>
             <Select
               onChange={(e) => setTemplateId(e.target.value as PageLayoutTemplateId)}
@@ -159,7 +159,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
                 );
               })}
             </Select>
-          </label>
+          </Label>
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button onClick={onClose} type="button" variant="secondary">

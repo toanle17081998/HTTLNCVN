@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, FormField, Input, Select } from "@/components/ui";
+import { Title, Button, Card, FormField, Input, Select, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleCategoriesQuery } from "@/services/article";
 import type { SubmitState } from "./articleEditorTypes";
@@ -36,9 +36,9 @@ export function ArticleMetadataPanel({
 
   return (
     <Card className="grid gap-4 p-5">
-      <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+      <Title as="h2" variant="subsection">
         {t("article.create.metadata")}
-      </h2>
+      </Title>
 
       <FormField htmlFor="article-title" label={t("form.title")}>
         <Input
@@ -85,7 +85,7 @@ export function ArticleMetadataPanel({
       </Button>
 
       {submitState.message ? (
-        <p
+        <Text as="p" tone="inherit" variant="inherit"
           className={
             submitState.status === "success"
               ? "text-sm font-medium text-[var(--status-success)]"
@@ -93,7 +93,7 @@ export function ArticleMetadataPanel({
           }
         >
           {submitState.message}
-        </p>
+        </Text>
       ) : null}
     </Card>
   );

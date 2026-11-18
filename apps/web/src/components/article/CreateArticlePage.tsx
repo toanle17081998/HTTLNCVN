@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select } from "@/components/ui";
+import { Button, Card, FormField, Input, Select, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import {
   articleApi,
@@ -186,9 +186,9 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
       <Card className="mx-auto w-full min-w-0 max-w-5xl overflow-hidden border-[var(--border-subtle)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6 lg:p-8">
         <form className="space-y-8" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between gap-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+            <Title as="h3" className="uppercase tracking-wider text-[var(--text-tertiary)]" tone="inherit" variant="micro">
               {t("placeholder.content")}
-            </h3>
+            </Title>
             <LanguageSelector activeLanguage={activeLang} onLanguageChange={handleLangChange} />
           </div>
 
@@ -245,7 +245,7 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
 
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border-subtle)] pt-6">
             {submitState.message ? (
-              <p
+              <Text as="p" tone="inherit" variant="inherit"
                 className={
                   submitState.status === "success"
                     ? "text-sm font-medium text-[var(--status-success)]"
@@ -253,7 +253,7 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
                 }
               >
                 {submitState.message}
-              </p>
+              </Text>
             ) : (
               <span />
             )}

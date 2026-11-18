@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, Title, Button, Card, Input, Textarea, cn, Label } from "@/components/ui";
 import { useEffect, useState } from "react";
 import {
   ArrowDown,
@@ -17,7 +18,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Input, Textarea, cn } from "@/components/ui";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { IconPicker, resolveIcon } from "@/components/page-builder/shared/iconList";
@@ -62,12 +62,12 @@ export function AdminNavigation() {
     try {
       await updateMutation.mutateAsync(config);
       toast({
-        title: t("admin.navigation.saveSuccess" as any),
+        title: t("admin.navigation.saveSuccess"),
         variant: "success",
       });
     } catch {
       toast({
-        title: t("admin.navigation.saveError" as any),
+        title: t("admin.navigation.saveError"),
         variant: "error",
       });
     }
@@ -75,9 +75,9 @@ export function AdminNavigation() {
 
   const handleResetDefaults = async () => {
     const ok = await confirm({
-      confirmLabel: t("admin.navigation.resetConfirmLabel" as any),
-      description: t("admin.navigation.resetConfirmDesc" as any),
-      title: t("admin.navigation.resetConfirmTitle" as any),
+      confirmLabel: t("admin.navigation.resetConfirmLabel"),
+      description: t("admin.navigation.resetConfirmDesc"),
+      title: t("admin.navigation.resetConfirmTitle"),
       variant: "warning",
     });
     if (!ok) return;
@@ -263,7 +263,7 @@ export function AdminNavigation() {
             variant="secondary"
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
-            {t("action.tryAgain" as any) || "Reset"}
+            {t("action.tryAgain") || "Reset"}
           </Button>
           <Button
             className="cursor-pointer bg-[var(--brand-primary)] text-[var(--text-inverse)]"
@@ -272,13 +272,13 @@ export function AdminNavigation() {
             type="button"
           >
             <Save className="mr-2 h-4 w-4" />
-            {updateMutation.isPending ? t("admin.articles.loading" as any) : t("action.update" as any)}
+            {updateMutation.isPending ? t("admin.articles.loading") : t("action.update")}
           </Button>
         </div>
       }
-      description={t("admin.navigation.description" as any)}
+      description={t("admin.navigation.description")}
       eyebrow={t("admin.common.admin")}
-      title={t("admin.navigation.title" as any)}
+      title={t("admin.navigation.title")}
     >
       <div className="grid gap-6">
         {/* Navigation Tabs */}
@@ -294,7 +294,7 @@ export function AdminNavigation() {
             type="button"
           >
             <MenuIcon className="h-4 w-4" />
-            {t("admin.navigation.tabHeader" as any)}
+            {t("admin.navigation.tabHeader")}
           </button>
           <button
             className={cn(
@@ -307,7 +307,7 @@ export function AdminNavigation() {
             type="button"
           >
             <ImageIcon className="h-4 w-4" />
-            {t("admin.navigation.tabHeroes" as any)}
+            {t("admin.navigation.tabHeroes")}
           </button>
           <button
             className={cn(
@@ -320,7 +320,7 @@ export function AdminNavigation() {
             type="button"
           >
             <LayoutTemplate className="h-4 w-4" />
-            {t("admin.navigation.tabFooter" as any)}
+            {t("admin.navigation.tabFooter")}
           </button>
         </div>
 
@@ -328,14 +328,14 @@ export function AdminNavigation() {
         {activeTab === "header" ? (
           <div className="grid gap-8">
             <Card className="grid gap-4 p-6">
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                {t("admin.navigation.branding" as any)}
-              </h2>
+              <Title as="h2" variant="subsectionStrong">
+                {t("admin.navigation.branding")}
+              </Title>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.brandName" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.brandName")}
+                  </Label>
                   <Input
                     onChange={(e) =>
                       setConfig((prev) => ({
@@ -348,9 +348,9 @@ export function AdminNavigation() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.tagline" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.tagline")}
+                  </Label>
                   <Input
                     onChange={(e) =>
                       setConfig((prev) => ({
@@ -367,9 +367,9 @@ export function AdminNavigation() {
 
             <Card className="grid gap-4 p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  {t("admin.navigation.menuItems" as any)}
-                </h2>
+                <Title as="h2" variant="subsectionStrong">
+                  {t("admin.navigation.menuItems")}
+                </Title>
                 <Button
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddNavItem}
@@ -377,7 +377,7 @@ export function AdminNavigation() {
                   type="button"
                 >
                   <Plus className="h-4 w-4" />
-                  {t("admin.navigation.addMenuItem" as any)}
+                  {t("admin.navigation.addMenuItem")}
                 </Button>
               </div>
 
@@ -400,10 +400,10 @@ export function AdminNavigation() {
                             <IconComp className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="font-bold text-[var(--text-primary)]">
+                            <Text as="p" tone="inherit" variant="inherit" className="font-bold text-[var(--text-primary)]">
                               {localize(item, "label")}
-                            </p>
-                            <p className="text-xs text-[var(--text-secondary)]">{item.href}</p>
+                            </Text>
+                            <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-secondary)]">{item.href}</Text>
                           </div>
                         </div>
 
@@ -466,27 +466,27 @@ export function AdminNavigation() {
 
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                            {t("admin.navigation.labelVi" as any)}
-                          </label>
+                          <Label variant="caption" className="mb-1 block">
+                            {t("admin.navigation.labelVi")}
+                          </Label>
                           <Input
                             onChange={(e) => handleUpdateNavItem(index, { labelVi: e.target.value })}
                             value={item.labelVi}
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                            {t("admin.navigation.labelEn" as any)}
-                          </label>
+                          <Label variant="caption" className="mb-1 block">
+                            {t("admin.navigation.labelEn")}
+                          </Label>
                           <Input
                             onChange={(e) => handleUpdateNavItem(index, { labelEn: e.target.value })}
                             value={item.labelEn}
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                            {t("admin.navigation.url" as any)}
-                          </label>
+                          <Label variant="caption" className="mb-1 block">
+                            {t("admin.navigation.url")}
+                          </Label>
                           <Input
                             onChange={(e) => handleUpdateNavItem(index, { href: e.target.value })}
                             placeholder="/about"
@@ -496,9 +496,9 @@ export function AdminNavigation() {
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-xs font-semibold text-[var(--text-secondary)]">
-                          {t("admin.navigation.icon" as any)}
-                        </label>
+                        <Label variant="caption" className="mb-2 block">
+                          {t("admin.navigation.icon")}
+                        </Label>
                         <IconPicker
                           onChange={(newIcon) => handleUpdateNavItem(index, { icon: newIcon })}
                           value={item.icon ?? "users"}
@@ -513,11 +513,11 @@ export function AdminNavigation() {
             {/* Header CTA Button */}
             <Card className="grid gap-4 p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  {t("admin.navigation.cta" as any)}
-                </h2>
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-                  <input
+                <Title as="h2" variant="subsectionStrong">
+                  {t("admin.navigation.cta")}
+                </Title>
+                <Label variant="field" className="flex cursor-pointer items-center gap-2">
+                  <Input
                     checked={config.header.cta.enabled}
                     className="h-4 w-4 rounded accent-[var(--brand-primary)]"
                     onChange={(e) =>
@@ -531,16 +531,16 @@ export function AdminNavigation() {
                     }
                     type="checkbox"
                   />
-                  {t("admin.navigation.enableCta" as any)}
-                </label>
+                  {t("admin.navigation.enableCta")}
+                </Label>
               </div>
 
               {config.header.cta.enabled ? (
                 <div className="grid gap-3 pt-2 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                      {t("admin.navigation.ctaLabelVi" as any)}
-                    </label>
+                    <Label variant="caption" className="mb-1 block">
+                      {t("admin.navigation.ctaLabelVi")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         setConfig((prev) => ({
@@ -555,9 +555,9 @@ export function AdminNavigation() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                      {t("admin.navigation.ctaLabelEn" as any)}
-                    </label>
+                    <Label variant="caption" className="mb-1 block">
+                      {t("admin.navigation.ctaLabelEn")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         setConfig((prev) => ({
@@ -572,9 +572,9 @@ export function AdminNavigation() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                      {t("admin.navigation.ctaUrl" as any)}
-                    </label>
+                    <Label variant="caption" className="mb-1 block">
+                      {t("admin.navigation.ctaUrl")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         setConfig((prev) => ({
@@ -600,9 +600,9 @@ export function AdminNavigation() {
           <div className="grid gap-8">
             <Card className="p-6">
               <div className="mb-6">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  {t("admin.navigation.heroesTitle" as any)}
-                </h2>
+                <Title as="h2" variant="subsectionStrong">
+                  {t("admin.navigation.heroesTitle")}
+                </Title>
               </div>
 
               {/* Page Selector Tabs */}
@@ -629,9 +629,9 @@ export function AdminNavigation() {
               <div className="grid gap-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.eyebrowVi" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.eyebrowVi")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         handleUpdateHero(selectedHeroPage, { eyebrowVi: e.target.value })
@@ -641,9 +641,9 @@ export function AdminNavigation() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.eyebrowEn" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.eyebrowEn")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         handleUpdateHero(selectedHeroPage, { eyebrowEn: e.target.value })
@@ -656,9 +656,9 @@ export function AdminNavigation() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.titleVi" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.titleVi")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         handleUpdateHero(selectedHeroPage, { titleVi: e.target.value })
@@ -668,9 +668,9 @@ export function AdminNavigation() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.titleEn" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.titleEn")}
+                    </Label>
                     <Input
                       onChange={(e) =>
                         handleUpdateHero(selectedHeroPage, { titleEn: e.target.value })
@@ -683,9 +683,9 @@ export function AdminNavigation() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.descVi" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.descVi")}
+                    </Label>
                     <Textarea
                       className="min-h-24"
                       onChange={(e) =>
@@ -695,9 +695,9 @@ export function AdminNavigation() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                      {t("admin.navigation.descEn" as any)}
-                    </label>
+                    <Label variant="overline" className="mb-1.5 block">
+                      {t("admin.navigation.descEn")}
+                    </Label>
                     <Textarea
                       className="min-h-24"
                       onChange={(e) =>
@@ -709,9 +709,9 @@ export function AdminNavigation() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.coverImage" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.coverImage")}
+                  </Label>
                   <Input
                     onChange={(e) =>
                       handleUpdateHero(selectedHeroPage, { coverImage: e.target.value })
@@ -723,22 +723,22 @@ export function AdminNavigation() {
 
                 {/* Live Preview */}
                 <div className="mt-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)] mb-4">
-                    {t("admin.navigation.preview" as any)}
-                  </p>
+                  <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)] mb-4">
+                    {t("admin.navigation.preview")}
+                  </Text>
                   <div className="grid items-start gap-8 lg:grid-cols-2">
                     <div className="flex flex-col items-start gap-3">
                       {localize(currentHeroConfig, "eyebrow") ? (
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
+                        <Text tone="gold" variant="eyebrow">
                           {localize(currentHeroConfig, "eyebrow")}
-                        </p>
+                        </Text>
                       ) : null}
-                      <h3 className="font-serif text-3xl font-bold text-[var(--brand-primary)]">
+                      <Title as="h3" className="font-serif" tone="brand" variant="pagePlain">
                         {localize(currentHeroConfig, "title", "Title")}
-                      </h3>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                      </Title>
+                      <Text as="p" tone="inherit" variant="inherit" className="text-sm text-[var(--text-secondary)] leading-relaxed">
                         {localize(currentHeroConfig, "description", "Description")}
-                      </p>
+                      </Text>
                     </div>
 
                     <div className="relative h-48 w-full overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)]">
@@ -760,15 +760,15 @@ export function AdminNavigation() {
         {activeTab === "footer" ? (
           <div className="grid gap-8">
             <Card className="grid gap-4 p-6">
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                {t("admin.navigation.footerBio" as any)}
-              </h2>
+              <Title as="h2" variant="subsectionStrong">
+                {t("admin.navigation.footerBio")}
+              </Title>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.communityTitle" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.communityTitle")}
+                  </Label>
                   <Input
                     onChange={(e) =>
                       setConfig((prev) => ({
@@ -781,9 +781,9 @@ export function AdminNavigation() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.copyright" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.copyright")}
+                  </Label>
                   <Input
                     onChange={(e) =>
                       setConfig((prev) => ({
@@ -799,9 +799,9 @@ export function AdminNavigation() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.descVi" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.descVi")}
+                  </Label>
                   <Textarea
                     className="min-h-24"
                     onChange={(e) =>
@@ -814,9 +814,9 @@ export function AdminNavigation() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-                    {t("admin.navigation.descEn" as any)}
-                  </label>
+                  <Label variant="overline" className="mb-1.5 block">
+                    {t("admin.navigation.descEn")}
+                  </Label>
                   <Textarea
                     className="min-h-24"
                     onChange={(e) =>
@@ -833,9 +833,9 @@ export function AdminNavigation() {
 
             <Card className="grid gap-4 p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  {t("admin.navigation.footerContacts" as any)}
-                </h2>
+                <Title as="h2" variant="subsectionStrong">
+                  {t("admin.navigation.footerContacts")}
+                </Title>
                 <Button
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddContact}
@@ -843,7 +843,7 @@ export function AdminNavigation() {
                   type="button"
                 >
                   <Plus className="h-4 w-4" />
-                  {t("admin.navigation.addContact" as any)}
+                  {t("admin.navigation.addContact")}
                 </Button>
               </div>
 
@@ -862,24 +862,24 @@ export function AdminNavigation() {
                         onClick={() => handleDeleteContact(index)}
                         type="button"
                       >
-                        {t("action.delete" as any)}
+                        {t("action.delete")}
                       </button>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                          {t("admin.navigation.labelVi" as any)}
-                        </label>
+                        <Label variant="caption" className="mb-1 block">
+                          {t("admin.navigation.labelVi")}
+                        </Label>
                         <Input
                           onChange={(e) => handleUpdateContact(index, { labelVi: e.target.value })}
                           value={contact.labelVi}
                         />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                          {t("admin.navigation.labelEn" as any)}
-                        </label>
+                        <Label variant="caption" className="mb-1 block">
+                          {t("admin.navigation.labelEn")}
+                        </Label>
                         <Input
                           onChange={(e) => handleUpdateContact(index, { labelEn: e.target.value })}
                           value={contact.labelEn}
@@ -889,18 +889,18 @@ export function AdminNavigation() {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                          {t("admin.navigation.valueVi" as any)}
-                        </label>
+                        <Label variant="caption" className="mb-1 block">
+                          {t("admin.navigation.valueVi")}
+                        </Label>
                         <Input
                           onChange={(e) => handleUpdateContact(index, { valueVi: e.target.value })}
                           value={contact.valueVi}
                         />
                       </div>
                       <div>
-                        <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                          {t("admin.navigation.valueEn" as any)}
-                        </label>
+                        <Label variant="caption" className="mb-1 block">
+                          {t("admin.navigation.valueEn")}
+                        </Label>
                         <Input
                           onChange={(e) => handleUpdateContact(index, { valueEn: e.target.value })}
                           value={contact.valueEn}
@@ -909,9 +909,9 @@ export function AdminNavigation() {
                     </div>
 
                     <div>
-                      <label className="mb-1 block text-xs font-semibold text-[var(--text-secondary)]">
-                        {t("admin.navigation.contactUrl" as any)}
-                      </label>
+                      <Label variant="caption" className="mb-1 block">
+                        {t("admin.navigation.contactUrl")}
+                      </Label>
                       <Input
                         onChange={(e) => handleUpdateContact(index, { href: e.target.value || undefined })}
                         placeholder="mailto:hello@httlncvn.local"
@@ -925,9 +925,9 @@ export function AdminNavigation() {
 
             <Card className="grid gap-4 p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  {t("admin.navigation.footerLinks" as any)}
-                </h2>
+                <Title as="h2" variant="subsectionStrong">
+                  {t("admin.navigation.footerLinks")}
+                </Title>
                 <Button
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddFooterLink}
@@ -935,7 +935,7 @@ export function AdminNavigation() {
                   type="button"
                 >
                   <Plus className="h-4 w-4" />
-                  {t("admin.navigation.addFooterLink" as any)}
+                  {t("admin.navigation.addFooterLink")}
                 </Button>
               </div>
 
@@ -954,7 +954,7 @@ export function AdminNavigation() {
                         onClick={() => handleDeleteFooterLink(index)}
                         type="button"
                       >
-                        {t("action.delete" as any)}
+                        {t("action.delete")}
                       </button>
                     </div>
 

@@ -57,7 +57,7 @@ import {
   Volume2,
   Zap,
 } from "lucide-react";
-import { cn } from "@/components/ui";
+import { cn, Input } from "@/components/ui";
 
 export type IconOption = {
   category: "Community" | "Faith" | "Ministry" | "Media" | "Events" | "General";
@@ -245,7 +245,7 @@ export function IconPicker({
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input
+          <Input
             className="h-8 w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] pl-8 pr-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none"
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search 50+ icons..."

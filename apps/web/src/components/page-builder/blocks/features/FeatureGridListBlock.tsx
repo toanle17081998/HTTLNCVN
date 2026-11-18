@@ -1,5 +1,6 @@
 "use client";
 
+import { Text } from "@/components/ui";
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus } from "lucide-react";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
@@ -59,7 +60,7 @@ export function FeatureGridListBlock({
             {sectionTitle}
           </h2>
           {showDescription && sectionDescription ? (
-            <p
+            <Text as="p" tone="inherit" variant="inherit"
               className="outline-none"
               contentEditable={enabled}
               onBlur={(event: any) => {
@@ -71,7 +72,7 @@ export function FeatureGridListBlock({
               suppressContentEditableWarning={enabled}
             >
               {sectionDescription}
-            </p>
+            </Text>
           ) : null}
         </div>
         <div className="feature-card-grid grid" style={{ gap: "var(--section-space-md)", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>

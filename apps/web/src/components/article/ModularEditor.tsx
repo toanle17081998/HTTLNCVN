@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, Title, cn } from "@/components/ui";
 import dynamic from "next/dynamic";
 import {
   forwardRef,
@@ -10,7 +11,6 @@ import {
   type ForwardedRef,
 } from "react";
 import type { DecoupledEditor } from "ckeditor5";
-import { cn } from "@/components/ui";
 import {
   hasMeaningfulRichHtml,
   isRichTextHtml,
@@ -78,10 +78,10 @@ export const ModularEditor = forwardRef(function ModularEditor(
     >
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-5 py-4">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{label}</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Title as="h2" variant="subsection">{label}</Title>
+          <Text className="mt-1" variant="small">
             {hasMeaningfulRichHtml(contentHtml) ? "Editing document content" : placeholder}
-          </p>
+          </Text>
         </div>
       </div>
 

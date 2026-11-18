@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui";
+import { Card, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { usePageQuery } from "@/services/page";
 
@@ -23,9 +23,9 @@ export function PublicContentPage({ fallback, slug }: PublicContentPageProps) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6">
       <section className="grid gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">
+        <Title as="h1" variant="pageSoft">
           {title == "about" ? '' : title}
-        </h1>
+        </Title>
       </section>
 
       {(page as any)?.cover_image_url ? (

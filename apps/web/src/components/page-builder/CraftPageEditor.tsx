@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, Title, Button, Card, Select, cn } from "@/components/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Editor, Element, Frame, useEditor } from "@craftjs/core";
 import {
@@ -26,7 +27,6 @@ import {
   useUpdatePageMutation,
   type Page,
 } from "@/services/page";
-import { Button, Card, Select, cn } from "@/components/ui";
 import { useAdminLayoutChrome } from "@/components/admin/AdminLayout";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -193,13 +193,13 @@ function BuilderShell({
             <Card className="rounded-2xl border-[var(--border-subtle)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
                     {t("pageBuilder.editing")}
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{page.title_en}</h2>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  </Text>
+                  <Title as="h2" className="mt-1" variant="subsection">{page.title_en}</Title>
+                  <Text className="mt-1" variant="small">
                     {t("pageBuilder.routeLabel", { route: page.route_path })}
-                  </p>
+                  </Text>
                 </div>
                 <BuilderHeaderActions
                   editLang={editLang}
@@ -217,12 +217,12 @@ function BuilderShell({
             <Card className={cn("overflow-hidden rounded-2xl border-[var(--border-subtle)]", isFullscreen && "flex h-full flex-col rounded-none border-0 shadow-none")}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
                       {t("pageBuilder.canvas")}
-                    </p>
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    </Text>
+                    <Title as="h3" variant="subsection">
                       {t("pageBuilder.title")}
-                    </h3>
+                    </Title>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -413,12 +413,12 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               <PenSquare className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
                 {t("pageBuilder.editor")}
-              </p>
-              <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+              </Text>
+              <Title as="h1" variant="cardSoft">
                 {t("pageBuilder.title")}
-              </h1>
+              </Title>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -471,21 +471,21 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               <Card className="p-6">
                 <div className="flex flex-wrap items-center justify-between gap-5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--status-danger)]">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--status-danger)]">
                       {t("pageBuilder.deletedPage")}
-                    </p>
-                    <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+                    </Text>
+                    <Title as="h2" className="mt-2" variant="modal">
                       {selectedDeletedPage.title_en}
-                    </h2>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    </Title>
+                    <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">
                       {selectedDeletedPage.route_path} / {selectedDeletedPage.slug}
-                    </p>
+                    </Text>
                     {selectedDeletedPage.deleted_at ? (
-                      <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                      <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-tertiary)]">
                         {t("pageBuilder.deletedAt", {
                           date: new Date(selectedDeletedPage.deleted_at).toLocaleString(),
                         })}
-                      </p>
+                      </Text>
                     ) : null}
                   </div>
                   <Button isLoading={restorePage.isPending} onClick={handleRestore}>
@@ -523,9 +523,9 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
             </Card>
           ) : (
             <Card className="rounded-2xl p-8">
-              <p className="text-sm leading-6 text-[var(--text-secondary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm leading-6 text-[var(--text-secondary)]">
                 {t("pageBuilder.emptyState")}
-              </p>
+              </Text>
             </Card>
           )}
         </main>

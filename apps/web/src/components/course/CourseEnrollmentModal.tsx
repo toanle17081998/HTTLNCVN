@@ -1,9 +1,9 @@
 "use client";
 
+import { Title, Button, Card, Select, Textarea, Input, Label, Text } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { Button, Card, Select, Textarea, Input } from "@/components/ui";
 import { useChurchUnitMetaQuery } from "@/services/church-unit";
 import { useEnrollOthersMutation, useEnrollPreviewMutation, type EnrollPreviewDto, type EnrollPreviewMemberDto } from "@/services/course";
 import { Search, UserCheck, UserPlus, X } from "lucide-react";
@@ -120,7 +120,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
         {/* Left Column: Form */}
         <div className="flex flex-1 flex-col border-r border-[var(--border-subtle)] p-8 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">Enroll Others</h2>
+            <Title as="h2" variant="card">Enroll Others</Title>
             <button onClick={onClose} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
               <X className="h-5 w-5" />
             </button>
@@ -128,9 +128,9 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
           
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+              <Label variant="control" className="block text-[var(--text-secondary)] mb-1.5">
                 Church Unit
-              </label>
+              </Label>
               <Select
                 value={churchUnitId}
                 onChange={(e) => setChurchUnitId(e.target.value)}
@@ -145,9 +145,9 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+              <Label variant="control" className="block text-[var(--text-secondary)] mb-1.5">
                 Individual Emails
-              </label>
+              </Label>
               <Textarea
                 placeholder="Enter emails separated by comma, space or newline..."
                 value={emailsText}
@@ -155,15 +155,15 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                 rows={5}
                 className="resize-none"
               />
-              <p className="mt-2 text-xs text-[var(--text-tertiary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-xs text-[var(--text-tertiary)]">
                 Targeted members will appear in the list on the right.
-              </p>
+              </Text>
             </div>
 
             {preview?.invalid_emails && preview.invalid_emails.length > 0 && (
               <div className="rounded-xl border border-[var(--status-danger-muted)] bg-[var(--status-danger-soft)] p-4 text-xs text-[var(--status-danger)]">
-                <p className="font-semibold mb-1">Invalid Emails:</p>
-                <p>{preview.invalid_emails.join(", ")}</p>
+                <Text as="p" tone="inherit" variant="inherit" className="font-semibold mb-1">Invalid Emails:</Text>
+                <Text as="p" tone="inherit" variant="inherit">{preview.invalid_emails.join(", ")}</Text>
               </div>
             )}
           </div>
@@ -185,10 +185,10 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
         {/* Right Column: Preview List */}
         <div className="flex w-[22rem] flex-col bg-[var(--bg-muted)] overflow-hidden">
           <div className="p-6 border-b border-[var(--border-subtle)]">
-            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <Title as="h3" className="mb-4 flex items-center gap-2" variant="micro">
               <UserPlus className="h-4 w-4 text-[var(--brand-primary)]" />
               Target Members ({preview?.members.length || 0})
-            </h3>
+            </Title>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
               <Input
@@ -213,7 +213,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                   onClick={() => toggleMember(member)}
                 >
                   <div className="relative flex items-center justify-center">
-                    <input
+                    <Input
                       type="checkbox"
                       checked={selectedMemberIds.has(member.id)}
                       onChange={() => toggleMember(member)}
@@ -222,12 +222,12 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                    <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-primary)] truncate">
                       {member.first_name || member.last_name 
                         ? `${member.first_name || ""} ${member.last_name || ""}`.trim() 
                         : member.username}
-                    </p>
-                    <p className="text-xs text-[var(--text-tertiary)] truncate">{member.email}</p>
+                    </Text>
+                    <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] truncate">{member.email}</Text>
                   </div>
                   {member.is_enrolled && (
                     <span className={`flex-shrink-0 ${removedMemberIds.has(member.id) ? 'text-[var(--status-danger)]' : 'text-[var(--status-success)]'}`} title={removedMemberIds.has(member.id) ? "To be removed" : (member.is_authorized ? "Fully enrolled and authorized" : "Enrolled, but access not yet configured")}>
@@ -239,7 +239,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-50">
                 <Search className="h-8 w-8 mb-2" />
-                <p className="text-xs">No members found</p>
+                <Text as="p" tone="inherit" variant="inherit" className="text-xs">No members found</Text>
               </div>
             )}
           </div>

@@ -1,9 +1,9 @@
 "use client";
 
+import { Title, Button, Card, Input, cn, Text } from "@/components/ui";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Input, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import {
@@ -172,9 +172,9 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                     ) : null}
                   </div>
 
-                  <h2 className="mt-3 text-base font-semibold text-[var(--text-primary)]">
+                  <Title as="h2" className="mt-3" variant="label">
                     {localize(template, "body_template", t("quiz.question"))}
-                  </h2>
+                  </Title>
 
                   {completed ? (
                     <div className="mt-4 space-y-3 text-sm">
@@ -224,9 +224,9 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                       {localize(template, "explanation_template") ? (
                         <div className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-secondary)]">
                           <span className="font-bold text-[var(--text-primary)] block">{t("quiz.explanation")}:</span>
-                          <p className="mt-1 italic leading-relaxed">
+                          <Text as="p" tone="inherit" variant="inherit" className="mt-1 italic leading-relaxed">
                             {localize(template, "explanation_template")}
-                          </p>
+                          </Text>
                         </div>
                       ) : null}
                     </div>
@@ -252,7 +252,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                       : "border-[var(--border-subtle)] hover:bg-[var(--bg-base)] text-[var(--text-primary)]"
                                   )}
                                 >
-                                  <input
+                                  <Input
                                     type="checkbox"
                                     checked={isSelected}
                                     readOnly
@@ -323,13 +323,13 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
 
           <aside className="lg:sticky lg:top-24">
             <Card className="p-5">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Progress</h2>
+              <Title as="h2" variant="label">Progress</Title>
               {remainingSeconds !== null ? (
-                <p className="mt-2 rounded-md bg-[var(--brand-muted)] p-3 text-center text-lg font-bold text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="mt-2 rounded-md bg-[var(--brand-muted)] p-3 text-center text-lg font-bold text-[var(--brand-primary)]">
                   {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:{String(remainingSeconds % 60).padStart(2, "0")}
-                </p>
+                </Text>
               ) : null}
-              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">
                 {
                   attempt.snapshots.filter((snapshot) => {
                     if (snapshot.student_answer !== null) return true;
@@ -338,12 +338,12 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                   }).length
                 }{" "}
                 of {attempt.snapshots.length} answered
-              </p>
+              </Text>
               {attempt.is_completed ? (
                 <div className="mt-4 rounded-md bg-[var(--brand-muted)] p-3">
-                  <p className="text-sm font-semibold text-[var(--brand-primary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--brand-primary)]">
                     Score: {Math.round(attempt.total_score ?? 0)}%
-                  </p>
+                  </Text>
                 </div>
               ) : (
                 <Button
@@ -391,18 +391,18 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                   ? t("quiz.modal.passed")
                   : t("quiz.modal.failed")}
               </span>
-              <h3 className="text-xl font-bold text-[var(--text-primary)]">
+              <Title as="h3" variant="card">
                 {localize(attempt.quiz, "title", t("quiz.title"))}
-              </h3>
+              </Title>
             </div>
 
             <div className="rounded-xl bg-[var(--bg-base)] p-4 space-y-1">
-              <p className="text-4xl font-black text-[var(--brand-primary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-4xl font-black text-[var(--brand-primary)]">
                 {Math.round(attempt.total_score ?? 0)}%
-              </p>
-              <p className="text-xs font-semibold text-[var(--text-tertiary)]">
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold text-[var(--text-tertiary)]">
                 ({attempt.snapshots.filter((s) => s.is_correct).length}/{attempt.snapshots.length}) {t("quiz.modal.correctCount")}
-              </p>
+              </Text>
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2">

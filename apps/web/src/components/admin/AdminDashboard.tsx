@@ -1,8 +1,8 @@
 "use client";
 
+import { Title, Card, Text } from "@/components/ui";
 import Link from "next/link";
 import { Activity, CalendarDays, FileText, PenLine, ShieldCheck } from "lucide-react";
-import { Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 
 const stats = [
@@ -31,13 +31,13 @@ export function AdminDashboard() {
     <div className="space-y-8">
       <section className="flex flex-wrap items-center justify-between gap-6">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold uppercase tracking-wider text-[var(--brand-primary)]">CMS Overview</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">
+          <Text as="p" tone="inherit" variant="inherit" className="text-sm font-bold uppercase tracking-wider text-[var(--brand-primary)]">CMS Overview</Text>
+          <Title as="h1" className="mt-1" variant="page">
             {t("admin.layout.dashboard")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-base text-[var(--text-secondary)]">
+          </Title>
+          <Text as="p" tone="inherit" variant="inherit" className="mt-2 max-w-2xl text-base text-[var(--text-secondary)]">
             {t("admin.dashboard.description")}
-          </p>
+          </Text>
         </div>
         <Link
           className="inline-flex h-11 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 text-sm font-bold text-[var(--text-inverse)] shadow-lg shadow-[var(--brand-shadow)] transition hover:bg-[var(--brand-primary-strong)] active:scale-95"
@@ -51,9 +51,9 @@ export function AdminDashboard() {
         {stats.map((stat) => (
           <Card className="group relative overflow-hidden rounded-2xl border-[var(--border-subtle)] p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1" key={stat.labelKey}>
             <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-[var(--brand-muted)] opacity-20 transition-transform group-hover:scale-150" />
-            <p className="relative text-sm font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t(stat.labelKey)}</p>
-            <p className="relative mt-3 text-3xl font-bold tracking-tight text-[var(--text-primary)]">{t(stat.valueKey)}</p>
-            <p className="relative mt-2 text-sm font-medium text-[var(--text-secondary)]">{t(stat.hintKey)}</p>
+            <Text as="p" tone="inherit" variant="inherit" className="relative text-sm font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{t(stat.labelKey)}</Text>
+            <Text as="p" tone="inherit" variant="inherit" className="relative mt-3 text-3xl font-bold tracking-tight text-[var(--text-primary)]">{t(stat.valueKey)}</Text>
+            <Text as="p" tone="inherit" variant="inherit" className="relative mt-2 text-sm font-medium text-[var(--text-secondary)]">{t(stat.hintKey)}</Text>
           </Card>
         ))}
       </section>
@@ -67,7 +67,7 @@ export function AdminDashboard() {
             >
               <ShieldCheck aria-hidden="true" className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.dashboard.quickActions")}</h2>
+            <Title as="h2" variant="card">{t("admin.dashboard.quickActions")}</Title>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {quickActions.map((action) => {
@@ -96,7 +96,7 @@ export function AdminDashboard() {
             >
               <Activity aria-hidden="true" className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">{t("admin.dashboard.siteStatus")}</h2>
+            <Title as="h2" variant="card">{t("admin.dashboard.siteStatus")}</Title>
           </div>
           <div className="mt-6 space-y-3">
             {activityItems.map((item) => (

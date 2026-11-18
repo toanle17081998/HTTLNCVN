@@ -1,5 +1,6 @@
 "use client";
 
+import { Title, Text } from "@/components/ui";
 import { useNode } from "@craftjs/core";
 import { HandHeart } from "lucide-react";
 import { featureIconMap } from "../basic/IconBoxBlock";
@@ -79,12 +80,12 @@ export function FeatureOrbitListBlock({
         <span className="grid place-items-center border border-[var(--border-subtle)]" style={{ borderRadius: "var(--section-radius)", height: "var(--section-icon-box-size)", width: "var(--section-icon-box-size)" }}>
           <ValueIcon style={{ height: "var(--section-icon-size)", width: "var(--section-icon-size)" }} />
         </span>
-        <h3 style={{ fontSize: "var(--section-card-title-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
+        <Title as="h3" tone="inherit" variant="inherit" style={{ fontSize: "var(--section-card-title-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
           {item.title}
-        </h3>
-        <p style={{ color: "var(--text-secondary)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
+        </Title>
+        <Text as="p" tone="inherit" variant="inherit" style={{ color: "var(--text-secondary)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>
           {item.description}
-        </p>
+        </Text>
       </div>
     );
   }
@@ -93,13 +94,13 @@ export function FeatureOrbitListBlock({
     <NodeFrame>
       <div className="grid" style={{ gap: "var(--section-space-xl)" }}>
         <div className="grid justify-items-center text-center" style={{ gap: "var(--section-space-xs)" }}>
-          <h2 style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
+          <Title as="h2" tone="inherit" variant="inherit" style={{ fontSize: "var(--section-heading-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>
             {activeTitle}
-          </h2>
+          </Title>
           {activeShowDescription && activeDescription ? (
-            <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0, maxWidth: "var(--section-text-width)" }}>
+            <Text as="p" tone="inherit" variant="inherit" style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0, maxWidth: "var(--section-text-width)" }}>
               {activeDescription}
-            </p>
+            </Text>
           ) : null}
         </div>
         <div className="feature-orbit-layout grid items-center" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr)" }}>

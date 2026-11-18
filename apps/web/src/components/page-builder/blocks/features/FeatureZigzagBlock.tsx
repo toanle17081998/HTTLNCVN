@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus, Trash2 } from "lucide-react";
-import { cn } from "@/components/ui";
+import { cn, Text } from "@/components/ui";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
 import { NodeFrame } from "../../shared/NodeFrame";
 import { getButtonVariantClass } from "../../shared/helpers";
@@ -73,7 +73,7 @@ export function FeatureZigzagCardBlock({
           >
             {title}
           </h3>
-          <p
+          <Text as="p" tone="inherit" variant="inherit"
             className="outline-none"
             contentEditable={enabled}
             onBlur={(event: any) => {
@@ -85,7 +85,7 @@ export function FeatureZigzagCardBlock({
             suppressContentEditableWarning={enabled}
           >
             {description}
-          </p>
+          </Text>
           {showButton ? (
             <a
               className={cn(
@@ -215,7 +215,7 @@ export function FeatureZigzagListBlock({
             {sectionTitle}
           </h2>
           {showDescription && sectionDescription ? (
-            <p
+            <Text as="p" tone="inherit" variant="inherit"
               className="outline-none"
               contentEditable={enabled}
               onBlur={(event: any) => {
@@ -227,7 +227,7 @@ export function FeatureZigzagListBlock({
               suppressContentEditableWarning={enabled}
             >
               {sectionDescription}
-            </p>
+            </Text>
           ) : null}
         </div>
         <div className="feature-zigzag-cards grid" style={{ gap: "var(--section-space-md)" }}>

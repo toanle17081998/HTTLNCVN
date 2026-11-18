@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import { Trash2 } from "lucide-react";
-import { Input, Textarea } from "@/components/ui";
+import { Input, Textarea, Title, Text } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, resolveStyleToken, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -95,9 +95,9 @@ export function IconBoxBlock(props: IconBoxProps) {
         <div style={{ color: resolveStyleToken(iconColor), fontSize: withUnitFallback(iconSize), lineHeight: 1 }}>
           {createElement(ResolvedIcon, { style: { height: withUnitFallback(iconSize), width: withUnitFallback(iconSize) } })}
         </div>
-        <h3 style={{ color: "var(--text-primary)", fontSize: "var(--section-card-title-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>{title}</h3>
+        <Title as="h3" tone="inherit" variant="inherit" style={{ color: "var(--text-primary)", fontSize: "var(--section-card-title-size)", fontWeight: "var(--section-weight-bold)", lineHeight: "var(--section-heading-line-height)", margin: 0 }}>{title}</Title>
         {description ? (
-          <p style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>{description}</p>
+          <Text as="p" tone="inherit" variant="inherit" style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>{description}</Text>
         ) : null}
         {enabled ? (
           <button

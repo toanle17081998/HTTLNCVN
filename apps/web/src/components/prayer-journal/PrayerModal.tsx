@@ -1,8 +1,8 @@
 "use client";
 
+import { Text, Button, FormField, Input, Select, Textarea, Title, Label } from "@/components/ui";
 import type { FormEvent } from "react";
 import { CheckCircle2, Edit3, Globe, Lock, Tag, Users, X } from "lucide-react";
-import { Button, FormField, Input, Select, Textarea } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer, PrayerCategory, PrayerMember, PrayerVisibility } from "@/services/prayer-journal";
 import { StatusBadge, VisibilityBadge } from "./PrayerBadges";
@@ -65,10 +65,10 @@ export function PrayerModal({
       <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-3xl gap-5 overflow-y-auto rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
               {t("prayer.config.eyebrow")}
-            </p>
-            <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
+            </Text>
+            <Title as="h2" variant="modal">
               {modalMode === "create"
                 ? t("prayer.config.title.add")
                 : modalMode === "edit"
@@ -76,7 +76,7 @@ export function PrayerModal({
                   : modalMode === "close"
                     ? t("prayer.action.close")
                     : activePrayer?.title ?? t("prayer.config.title.view")}
-            </h2>
+            </Title>
           </div>
           <button
             aria-label={t("action.close")}
@@ -100,11 +100,11 @@ export function PrayerModal({
           />
         ) : modalMode === "close" && activePrayer ? (
           <form className="grid gap-5" onSubmit={onClosePrayer}>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <Text variant="small">
               {t("prayer.close.description", {
                 defaultValue: "Record how this prayer was answered.",
               })}
-            </p>
+            </Text>
             <FormField htmlFor="prayer-close-reason" label={t("prayer.form.closeReason")}>
               <Textarea
                 id="prayer-close-reason"
@@ -193,7 +193,7 @@ export function PrayerModal({
                       const checked = form.selected_member_ids.includes(member.id);
 
                       return (
-                        <label
+                        <Label variant="inherit"
                           className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-[var(--bg-base)]"
                           key={member.id}
                         >
@@ -205,7 +205,7 @@ export function PrayerModal({
                               @{member.username}
                             </span>
                           </span>
-                          <input
+                          <Input
                             checked={checked}
                             className="h-4 w-4 accent-[var(--brand-primary)]"
                             onChange={(event) =>
@@ -218,7 +218,7 @@ export function PrayerModal({
                             }
                             type="checkbox"
                           />
-                        </label>
+                        </Label>
                       );
                     })}
                   </div>
@@ -321,16 +321,16 @@ function PrayerViewPanel({
           ) : null}
         </div>
 
-        <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-primary)]">
+        <Text as="p" tone="inherit" variant="inherit" className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-primary)]">
           {activePrayer.content}
-        </p>
+        </Text>
 
         {activePrayer.close_reason ? (
           <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-            <p className="text-xs font-semibold uppercase text-[var(--brand-primary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--brand-primary)]">
               {t("prayer.action.close")}
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">{activePrayer.close_reason}</p>
+            </Text>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">{activePrayer.close_reason}</Text>
           </div>
         ) : null}
       </div>

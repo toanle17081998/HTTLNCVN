@@ -1,5 +1,7 @@
+import { Text } from "@/components/ui";
 import type { ReactNode } from "react";
 import { cn } from "./cn";
+import { Label } from "./Label";
 
 type FormFieldProps = {
   label: string;
@@ -20,20 +22,17 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div className={cn("grid gap-2", className)}>
-      <label
-        className="text-sm font-semibold text-[var(--text-primary)]"
-        htmlFor={htmlFor}
-      >
+      <Label htmlFor={htmlFor} variant="field">
         {label}
-      </label>
+      </Label>
       {children}
       {hint ? (
-        <p className="text-sm leading-5 text-[var(--text-secondary)]">{hint}</p>
+        <Text as="p" tone="inherit" variant="inherit" className="text-sm leading-5 text-[var(--text-secondary)]">{hint}</Text>
       ) : null}
       {error ? (
-        <p className="text-sm font-medium leading-5 text-[var(--status-danger)]">
+        <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium leading-5 text-[var(--status-danger)]">
           {error}
-        </p>
+        </Text>
       ) : null}
     </div>
   );

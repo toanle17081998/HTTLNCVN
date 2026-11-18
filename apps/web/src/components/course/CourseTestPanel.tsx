@@ -1,9 +1,9 @@
 "use client";
 
+import { Badge, Text, Title, Button, Card, Input, Label } from "@/components/ui";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { Button, Card, Input } from "@/components/ui";
 import type { Course, PublishCourseTestDto } from "@/services/course";
 import {
   useCloseCourseTestMutation,
@@ -128,17 +128,17 @@ export function CourseTestPanel({ course }: { course: Course }) {
     <Card className="flex flex-col p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Title as="h2" variant="subsection">{title}</Title>
+          <Text className="mt-1" variant="small">
             {t("courseTest.passingDescription")}
-          </p>
+          </Text>
         </div>
         {status.availability ? (
-          <span className="rounded-md bg-[var(--brand-muted)] px-3 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+          <Badge>
             {status.can_manage
               ? status.availability.target_user?.name || status.availability.church_unit.name
               : status.availability.church_unit.name}
-          </span>
+          </Badge>
         ) : null}
       </div>
 
@@ -146,20 +146,20 @@ export function CourseTestPanel({ course }: { course: Course }) {
         <div className="mt-5 rounded-lg border border-[var(--border-subtle)] p-4">
           {attempt?.is_completed ? (
             <div>
-              <p className="font-semibold text-[var(--text-primary)]">
+              <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">
                 {t("courseTest.completed")}
-              </p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              </Text>
+              <Text className="mt-1" variant="small">
                 {t("quiz.score")}: {Math.round(attempt.total_score ?? 0)}% · {(attempt.total_score ?? 0) >= 70 ? t("courseTest.passed") : t("courseTest.failed")}
-              </p>
+              </Text>
             </div>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-[var(--text-secondary)]">
+              <Text variant="small">
                 {attempt
                   ? t("courseTest.inProgress")
                   : `${Math.ceil(status.availability.duration_seconds / 60)} min`}
-              </p>
+              </Text>
               <Button disabled={startTest.isPending} onClick={handleStart}>
                 {attempt ? t("courseTest.resume") : t("courseTest.start")}
               </Button>
@@ -171,14 +171,14 @@ export function CourseTestPanel({ course }: { course: Course }) {
       {status.can_manage && status.availability ? (
         <div className="order-last mt-5 overflow-hidden rounded-lg border border-[var(--border-subtle)]">
           <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
-            <h3 className="font-semibold text-[var(--text-primary)]">
+            <Title as="h3" className="font-semibold" variant="inherit">
               {status.availability.is_active
                 ? t("courseTest.assignedStatus")
                 : t("courseTest.latestResults")}
-            </h3>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+            </Title>
+            <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-secondary)]">
               {t("courseTest.assignedCount", { count: String(status.assigned_users.length) })}
-            </p>
+            </Text>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -201,8 +201,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
                   return (
                     <tr key={assignedUser.id}>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-[var(--text-primary)]">{assignedUser.name}</p>
-                        <p className="text-xs text-[var(--text-tertiary)]">{assignedUser.email}</p>
+                        <Text as="p" tone="inherit" variant="inherit" className="font-medium text-[var(--text-primary)]">{assignedUser.name}</Text>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)]">{assignedUser.email}</Text>
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)]">{statusLabel}</td>
                       <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">
@@ -224,12 +224,12 @@ export function CourseTestPanel({ course }: { course: Course }) {
 
       {status.can_manage ? (
         <div className="mt-6 border-t border-[var(--border-subtle)] pt-5">
-          <h3 className="font-semibold text-[var(--text-primary)]">{t("courseTest.publishTitle")}</h3>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          <Title as="h3" className="font-semibold" variant="inherit">{t("courseTest.publishTitle")}</Title>
+          <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">
             {t("courseTest.publishDescription")}
-          </p>
+          </Text>
           <div className="mt-4 grid gap-4 sm:max-w-sm">
-            <label className="grid gap-1 text-sm font-medium">
+            <Label variant="control" className="grid gap-1">
               {t("courseTest.class")}
               <select
                 className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
@@ -243,8 +243,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
                   <option key={managedClass.id} value={managedClass.id}>{managedClass.name}</option>
                 ))}
               </select>
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
+            </Label>
+            <Label variant="control" className="grid gap-1">
               {t("courseTest.testTaker")}
               <select
                 className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
@@ -256,11 +256,11 @@ export function CourseTestPanel({ course }: { course: Course }) {
                   <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
                 ))}
               </select>
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
+            </Label>
+            <Label variant="control" className="grid gap-1">
               {t("courseTest.duration")}
               <Input min={1} type="number" value={durationMinutes} onChange={(event) => setDurationMinutes(Number(event.target.value))} />
-            </label>
+            </Label>
           </div>
 
           <div className="mt-4">
@@ -281,7 +281,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
             {draftQuestions.map((question, index) => (
               <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-4" key={question.id}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold">{t("courseTest.newQuestion", { number: String(index + 1) })}</p>
+                  <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold">{t("courseTest.newQuestion", { number: String(index + 1) })}</Text>
                   <Button onClick={() => setDraftQuestions((current) => current.filter((item) => item.id !== question.id))} size="sm" variant="secondary">
                     {t("courseTest.remove")}
                   </Button>
@@ -333,9 +333,9 @@ export function CourseTestPanel({ course }: { course: Course }) {
           <Card className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] p-5">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+              <Title as="h3" variant="subsection">
                 {t("courseTest.selectQuestions")}
-              </h3>
+              </Title>
               <button
                 className="rounded-md p-1.5 text-[var(--text-tertiary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] cursor-pointer"
                 onClick={handleCloseModal}
@@ -373,7 +373,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                 filteredQuestions.map((question) => {
                   const isChecked = selectedIds.includes(question.id);
                   return (
-                    <label
+                    <Label variant="inherit"
                       key={question.id}
                       className={`flex gap-3 rounded-lg border p-4 text-sm cursor-pointer transition ${
                         isChecked
@@ -381,7 +381,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                           : "border-[var(--border-subtle)] hover:bg-[var(--bg-soft)] text-[var(--text-primary)]"
                       }`}
                     >
-                      <input
+                      <Input
                         checked={isChecked}
                         onChange={() =>
                           setSelectedIds((current) =>
@@ -394,21 +394,21 @@ export function CourseTestPanel({ course }: { course: Course }) {
                         className="mt-0.5 h-4 w-4 rounded border-[var(--border-strong)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] cursor-pointer"
                       />
                       <div className="flex-1">
-                        <p className="font-medium">
+                        <Text as="p" tone="inherit" variant="inherit" className="font-medium">
                           {localize(question, "body_template")}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--text-tertiary)]">
+                        </Text>
+                        <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-tertiary)]">
                           {localize(question.lesson, "title")}
-                        </p>
+                        </Text>
                       </div>
-                    </label>
+                    </Label>
                   );
                 })
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 text-center text-[var(--text-tertiary)]">
-                  <p className="text-sm">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-sm">
                     {t("courseTest.empty")}
-                  </p>
+                  </Text>
                 </div>
               )}
             </div>

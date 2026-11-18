@@ -1,9 +1,9 @@
 "use client";
 
+import { Text, Button, Card, Input, Pagination, cn, Label } from "@/components/ui";
 import { useMemo, useState, type FormEvent } from "react";
 import { BookOpen, ListTodo, Plus, RefreshCw, Search } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Input, Pagination, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -242,39 +242,39 @@ export function PrayerJournalPage() {
     >
       {!authLoading && !canRead ? (
         <Card className="p-5">
-          <p className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</p>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</Text>
+          <Text className="mt-1" variant="small">
             {t("admin.members.restrictedDescription")}
-          </p>
+          </Text>
         </Card>
       ) : (
         <div className="grid gap-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.mine")}
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{ownPrayerCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{ownPrayerCount}</Text>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.shared")}
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{sharedPrayerCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{sharedPrayerCount}</Text>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                 {t("prayer.summary.answered")}
-              </p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{answeredPrayerCount}</p>
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{answeredPrayerCount}</Text>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]" htmlFor="prayer-search-input">
+              <Label variant="caption"  htmlFor="prayer-search-input">
                 {t("common.search")}
-              </label>
+              </Label>
               <div className="relative">
                 <Search
                   aria-hidden="true"
@@ -336,12 +336,12 @@ export function PrayerJournalPage() {
               ) : visiblePrayers.length === 0 ? (
                 <div className="grid place-items-center gap-2 py-16 text-center text-[var(--text-secondary)]">
                   <BookOpen aria-hidden="true" className="h-10 w-10 text-[var(--text-tertiary)]" />
-                  <p className="text-sm font-semibold text-[var(--text-secondary)]">
+                  <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold text-[var(--text-secondary)]">
                     {t("prayer.list.empty")}
-                  </p>
-                  <p className="text-xs text-[var(--text-tertiary)]">
+                  </Text>
+                  <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)]">
                     {t("prayer.list.emptyHint")}
-                  </p>
+                  </Text>
                 </div>
               ) : (
                 <div className="grid gap-3">

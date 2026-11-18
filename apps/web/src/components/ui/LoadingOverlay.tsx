@@ -1,3 +1,4 @@
+import { Text } from "@/components/ui";
 import { ChurchLogo } from "@/components/layout/ChurchLogo";
 
 type LoadingOverlayProps = {
@@ -14,9 +15,9 @@ export function LoadingOverlay({ text }: LoadingOverlayProps) {
         </div>
       </div>
       {text && (
-        <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-[var(--accent-gold)] animate-pulse">
+        <Text as="p" tone="inherit" variant="inherit" className="mt-4 text-xs font-semibold uppercase tracking-widest text-[var(--accent-gold)] animate-pulse">
           {text}
-        </p>
+        </Text>
       )}
     </div>
   );

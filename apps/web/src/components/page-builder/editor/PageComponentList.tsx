@@ -1,5 +1,6 @@
 "use client";
 
+import { Text } from "@/components/ui";
 import { useContext, useMemo } from "react";
 import { useEditor } from "@craftjs/core";
 import { Layers3, Plus, Trash2 } from "lucide-react";
@@ -28,10 +29,10 @@ export function PageComponentList() {
   return (
     <div className="grid gap-2 border-t border-[var(--border-subtle)] pt-3">
       <div className="flex items-center justify-between px-2">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">
+        <Text as="p" tone="inherit" variant="inherit" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">
           <Layers3 className="h-3.5 w-3.5" />
           Sections
-        </p>
+        </Text>
         {openSectionPicker ? (
           <button
             className="inline-flex items-center gap-1 rounded-md bg-[var(--brand-muted)] px-2 py-0.5 text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-soft)] cursor-pointer"
