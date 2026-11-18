@@ -69,6 +69,7 @@ The header Settings menu exposes the current role and quick role switching. Navi
 ## Development
 
 ```powershell
+pnpm api:dev
 pnpm --filter web dev
 ```
 
