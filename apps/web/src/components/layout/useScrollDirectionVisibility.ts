@@ -15,9 +15,11 @@ export function useScrollDirectionVisibility() {
       const currentScrollY = window.scrollY;
       const scrollDelta = currentScrollY - lastScrollYRef.current;
       const isNearTop = currentScrollY < 24;
+      const isNearBottom =
+        window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 24;
 
       setIsAtTop(isNearTop);
-      if (isNearTop || scrollDelta < -1) {
+      if (isNearTop || isNearBottom || scrollDelta < -1) {
         setIsVisible(true);
       } else if (scrollDelta > 6) {
         setIsVisible(false);
