@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Card, FormField, Select } from "@/components/ui";
+import { Card, FormField, Select, Text } from "@/components/ui";
 import { LessonForm } from "@/components/course/LessonForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -71,9 +71,9 @@ export default function AdminCreateLessonRoute() {
             </Select>
           </FormField>
           {courses.length === 0 && !coursesQuery.isLoading ? (
-            <p className="mt-3 text-sm text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm text-[var(--text-secondary)]">
               {t("admin.lessons.createCourseFirst")}
-            </p>
+            </Text>
           ) : null}
         </Card>
 

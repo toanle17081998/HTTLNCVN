@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { ArticleDetailPage } from "@/components/article/ArticleDetailPage";
 import { articleApi } from "@/services/article";
 import { getLocalizedField } from "@/lib/i18n";
+import { summarizeText } from "@/lib/site";
 
 type ArticleDetailRouteProps = {
   params: Promise<{
@@ -13,20 +14,26 @@ export async function generateMetadata({ params }: ArticleDetailRouteProps): Pro
   const { slug } = await params;
   try {
     const article = await articleApi.detail(slug);
+    const title = getLocalizedField(article, "title");
+    const description = summarizeText(getLocalizedField(article, "content_markdown")) || title;
     return {
-      title: `${getLocalizedField(article, "title")} | HTNC`,
-      description: article.title_en,
+      title,
+      description,
+      alternates: { canonical: `/article/${encodeURIComponent(article.slug)}` },
       openGraph: {
-        title: getLocalizedField(article, "title"),
-        description: article.title_en,
+        title,
+        description,
         images: article.cover_image_url ? [article.cover_image_url] : [],
         type: "article",
         publishedTime: article.published_at ?? undefined,
+        url: `/article/${encodeURIComponent(article.slug)}`,
       },
+      twitter: { title, description, images: article.cover_image_url ? [article.cover_image_url] : [] },
     };
   } catch {
     return {
-      title: "Article | HTNC",
+      title: "Article",
+      robots: { index: false },
     };
   }
 }

@@ -7,6 +7,12 @@
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "ffmpeg-static",
+      "sharp"
+    ]
+  },
   "scripts": {
     "prepare": "husky",
     "lint": "pnpm --filter web lint",

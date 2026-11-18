@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useEditor, useNode } from "@craftjs/core";
+import { useNode } from "@craftjs/core";
+import Image from "next/image";
 import { Input, Textarea, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle } from "../../shared/helpers";
@@ -59,10 +59,13 @@ export function HeroImageSliderBlock({
                   : "var(--section-hero-slider-side-height, calc(var(--section-hero-slider-height) * 0.82))",
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 alt={`Hero window frame ${index + 1}`}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                fetchPriority={isCenter ? "high" : "auto"}
+                fill
+                priority={isCenter}
+                sizes="(min-width: 1024px) 33vw, 34vw"
                 src={url}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />

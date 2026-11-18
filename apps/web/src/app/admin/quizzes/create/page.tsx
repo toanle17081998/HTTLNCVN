@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select } from "@/components/ui";
+import { Button, Card, FormField, Input, Select, Title, Label, Text } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -173,16 +173,16 @@ export default function AdminCreateQuizRoute() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+          <Title as="h2" variant="label">
             {t("admin.quizzes.questionTemplates")}
-          </h2>
+          </Title>
           <div className="mt-4 grid gap-3">
             {templates.map((template) => (
-              <label
+              <Label variant="inherit"
                 className="flex items-start gap-3 rounded-md border border-[var(--border-subtle)] p-3 text-sm"
                 key={template.id}
               >
-                <input
+                <Input
                   checked={selectedTemplateIds.includes(template.id)}
                   className="mt-1 h-4 w-4"
                   onChange={(event) => {
@@ -202,13 +202,13 @@ export default function AdminCreateQuizRoute() {
                     {template.template_type} / {template.difficulty}
                   </span>
                 </span>
-              </label>
+              </Label>
             ))}
           </div>
           {templates.length === 0 ? (
-            <p className="mt-3 text-sm text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm text-[var(--text-secondary)]">
               {t("admin.quizzes.templatesEmpty")}
-            </p>
+            </Text>
           ) : null}
         </Card>
 

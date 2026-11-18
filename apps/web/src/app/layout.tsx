@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 import { AppShell } from "@/components/layout";
+import { WebMcpBridge } from "@/components/seo/WebMcpBridge";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { FeedbackProvider } from "@/providers/FeedbackProvider";
 import { I18nProvider } from "@/providers/I18nProvider";
 import { TanStackProvider } from "@/providers/TanStackProvider";
-import "ckeditor5/ckeditor5.css";
+import { absoluteUrl, getSiteUrl, siteConfig } from "@/lib/site";
 import "@/css/globals.css";
 
 const geistSans = Geist({
@@ -24,8 +25,36 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "HTNC Platform",
-  description: "Learning and community platform for HTNC.",
+  metadataBase: getSiteUrl(),
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.shortName}`,
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  category: "community",
+  keywords: ["HTNC", "church", "Christian community", "Bible courses", "church events", "Vietnamese church"],
+  openGraph: {
+    description: siteConfig.description,
+    locale: "en_US",
+    alternateLocale: ["vi_VN"],
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    type: "website",
+    url: "/",
+    images: [{ url: "/church-logo.png", alt: siteConfig.name }],
+  },
+  robots: {
+    follow: true,
+    index: true,
+    googleBot: { follow: true, index: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  twitter: {
+    card: "summary_large_image",
+    description: siteConfig.description,
+    images: ["/church-logo.png"],
+    title: siteConfig.name,
+  },
 };
 
 export default function RootLayout({
@@ -33,12 +62,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteConfig.name,
+    url: absoluteUrl("/"),
+    logo: absoluteUrl("/church-logo.png"),
+  };
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
     >
+      <head>
+        <link href={absoluteUrl("/.well-known/ard.json")} rel="ard" />
+      </head>
       <body className="min-h-full" suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c") }}
+          type="application/ld+json"
+        />
+        <WebMcpBridge />
         <TanStackProvider>
           <I18nProvider>
             <AuthProvider>

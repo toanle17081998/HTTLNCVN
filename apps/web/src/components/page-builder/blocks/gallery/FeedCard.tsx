@@ -1,8 +1,9 @@
 "use client";
 
 import { useEditor } from "@craftjs/core";
+import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/components/ui";
+import { Text, Title, cn } from "@/components/ui";
 import type { FeedCardStyle } from "../../shared/types";
 
 export type FeedCardProps = {
@@ -31,10 +32,11 @@ export function FeedCard({
   const hasRealCover = Boolean(coverImage && coverImage.trim());
 
   const cinematicCover = hasRealCover ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       alt={title}
-      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+      className="object-cover transition duration-500 group-hover:scale-[1.03]"
+      fill
+      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
       src={coverImage || ""}
     />
   ) : (
@@ -51,18 +53,20 @@ export function FeedCard({
       {cinematicCover}
       <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-overlay)] via-black/45 to-transparent" />
       <div className="relative flex h-full flex-col justify-between">
-        <span
+          <Text
+            as="span"
           className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
+            tone="inherit"
           style={{
             borderColor: `color-mix(in srgb, ${accentColor} 45%, var(--border-subtle))`,
             color: accentColor,
           }}
         >
           {kicker}
-        </span>
+          </Text>
         <div className="grid gap-2">
-          <h3 className="line-clamp-2 text-2xl font-semibold leading-tight text-[var(--text-inverse)]">{title}</h3>
-          <p className="line-clamp-3 text-sm leading-6 text-[var(--text-inverse-muted)]">{description}</p>
+          <Title as="h3" className="line-clamp-2" tone="inverse" variant="headline">{title}</Title>
+          <Text className="line-clamp-3" tone="inverseMuted" variant="prose">{description}</Text>
         </div>
       </div>
     </div>
@@ -71,10 +75,11 @@ export function FeedCard({
   const cover = (
     <div className="relative min-h-44 overflow-hidden bg-[var(--bg-card-strong)]">
       {hasRealCover ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           alt={title}
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
           src={coverImage || ""}
         />
       ) : (
@@ -91,9 +96,9 @@ export function FeedCard({
       <div className="aspect-[16/9] w-full shrink-0 overflow-hidden bg-[var(--bg-card-strong)]">{cover}</div>
       <div className="flex flex-1 flex-col justify-between gap-3 p-5">
         <div className="grid gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-gold)]">{kicker}</span>
-          <h3 className="line-clamp-2 text-xl font-semibold leading-tight text-[var(--text-primary)]">{title}</h3>
-          <p className="line-clamp-3 text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
+          <Text as="span" tone="gold" variant="kicker">{kicker}</Text>
+          <Title as="h3" className="line-clamp-2" variant="cardSoftTight">{title}</Title>
+          <Text className="line-clamp-3" variant="prose">{description}</Text>
         </div>
       </div>
     </div>
@@ -104,12 +109,12 @@ export function FeedCard({
       <div className="grid gap-4">
         <div className="flex items-center gap-3">
           <span className="h-px w-10 bg-[var(--accent-gold)]" />
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{kicker}</span>
+          <Text as="span" className="tracking-[0.2em]" tone="tertiary" variant="kicker">{kicker}</Text>
         </div>
-        <h3 className="max-w-xl text-3xl font-semibold leading-tight text-[var(--text-primary)]">{title}</h3>
-        <p className="max-w-xl text-sm leading-7 text-[var(--text-secondary)]">{description}</p>
+        <Title as="h3" className="max-w-xl" variant="feature">{title}</Title>
+        <Text className="max-w-xl" variant="relaxed">{description}</Text>
       </div>
-      <span className="mt-8 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-primary)]">Read more</span>
+      <Text as="span" className="mt-8" tone="brand" variant="action">Read more</Text>
     </div>
   );
 
@@ -117,10 +122,10 @@ export function FeedCard({
     <div className="grid h-full min-h-72 overflow-hidden rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] sm:grid-cols-[0.9fr_1.1fr]">
       {cover}
       <div className="flex flex-col justify-center gap-4 p-6">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-gold)]">{kicker}</span>
-        <h3 className="text-2xl font-semibold leading-tight text-[var(--text-primary)]">{title}</h3>
-        <p className="text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-primary)]">View details</span>
+        <Text as="span" tone="gold" variant="kicker">{kicker}</Text>
+        <Title as="h3" variant="headline">{title}</Title>
+        <Text variant="prose">{description}</Text>
+        <Text as="span" tone="brand" variant="action">View details</Text>
       </div>
     </div>
   );
@@ -149,6 +154,7 @@ export function FeedCard({
 
   return (
     <Link
+      aria-label={`Open ${title}`}
       className={sharedClassName}
       href={href}
     >

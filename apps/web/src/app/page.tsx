@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { CraftPageRenderer } from "@/components/page-builder/CraftPageRenderer";
+import { createPageMetadata, siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = createPageMetadata(siteConfig.name, siteConfig.description, "/");
 
 export default async function Home({
   searchParams,

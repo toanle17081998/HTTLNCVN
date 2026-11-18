@@ -1,9 +1,9 @@
 "use client";
 
+import { Title, Button, Card } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
 import { QuestionTemplateForm } from "@/components/course/QuestionTemplateForm";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -117,9 +117,9 @@ export default function TemplatesPage() {
                   <span className="inline-flex items-center rounded-md bg-[var(--brand-muted)] px-2 py-1 text-xs font-medium text-[var(--brand-primary)] uppercase">
                     {template.template_type.replace("_", " ")}
                   </span>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  <Title as="h3" variant="labelStrong">
                     {localize(template, "body_template")}
-                  </h3>
+                  </Title>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -151,9 +151,9 @@ export default function TemplatesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="w-full max-w-4xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 shadow-2xl flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4 mb-4">
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">
+              <Title as="h2" variant="card">
                 {editingTemplate ? "Edit Question Template" : "Create Question Template"}
-              </h2>
+              </Title>
               <button
                 onClick={() => {
                   setShowModal(false);

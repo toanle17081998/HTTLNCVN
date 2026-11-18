@@ -2,6 +2,8 @@ import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { resolve } from 'node:path';
 
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/http/http-exception.filter';
@@ -18,13 +20,19 @@ import { PrismaService } from './database/prisma.service';
 
 async function bootstrap(): Promise<void> {
   const env = getEnv();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const reflector = app.get(Reflector);
   const prisma = app.get(PrismaService);
   const cache = app.get(CacheService);
   const auditBuffer = app.get(AuditBufferService);
 
   app.setGlobalPrefix('api');
+  app.useStaticAssets(resolve(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+    setHeaders: (response) => {
+      response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
+  });
   app.getHttpAdapter().getInstance().set('trust proxy', env.trustProxyHops);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalGuards(

@@ -1,6 +1,6 @@
 import { clearSessionQueryCache } from "@/lib/sessionQueryCache";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const tokenStorageKey = "httlncvn.authTokens";
 
 export type ApiEnvelope<T> = {
@@ -92,10 +92,11 @@ async function requestWithToken<T>(
   token: string | null | undefined,
 ): Promise<{ payload: ApiEnvelope<T> | ApiErrorEnvelope | null; response: Response }> {
   const { headers, token: _ignoredToken, ...init } = options;
+  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
   const response = await fetch(`${apiBaseUrl}/api${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },

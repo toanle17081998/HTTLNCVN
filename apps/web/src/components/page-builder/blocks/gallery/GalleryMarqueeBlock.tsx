@@ -1,7 +1,8 @@
 "use client";
 
 import { useEditor, useNode } from "@craftjs/core";
-import { cn } from "@/components/ui";
+import Image from "next/image";
+import { cn, Title, Text } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -77,10 +78,10 @@ export function GalleryMarqueeBlock({
         {activeShowTitle || activeShowSubtitle ? (
           <div className="grid justify-items-center text-center">
             {activeShowTitle && activeTitle ? (
-              <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{activeTitle}</h2>
+              <Title as="h2" className="md:text-3xl" variant="section">{activeTitle}</Title>
             ) : null}
             {activeShowSubtitle && activeSubtitle ? (
-              <p className="mt-1 max-w-xl text-sm text-[var(--text-secondary)]">{activeSubtitle}</p>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-1 max-w-xl text-sm text-[var(--text-secondary)]">{activeSubtitle}</Text>
             ) : null}
           </div>
         ) : null}
@@ -101,10 +102,11 @@ export function GalleryMarqueeBlock({
                 className="group relative h-48 w-72 shrink-0 overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-md transition-all duration-300 hover:scale-[1.02] md:h-56 md:w-80"
                 key={index}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   alt={img.alt || "Gallery image"}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  sizes="(min-width: 768px) 20rem, 18rem"
                   src={img.url}
                 />
                 {img.alt ? (

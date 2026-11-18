@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Pagination, Skeleton, cn } from "@/components/ui";
+import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -79,7 +80,7 @@ export function ArticlePage() {
     >
       {/* Search bar */}
       <div className="mb-4 flex gap-2">
-        <input
+        <Input
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
           placeholder="Search articles…"
           value={searchInput}
@@ -153,10 +154,12 @@ export function ArticlePage() {
               href={`/article/${encodeURIComponent(article.slug)}`}
             >
               {article.cover_image_url ? (
-                <div className="aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)]">
-                  <img
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)]">
+                  <Image
+                    alt={localize(article, "title")}
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
                     src={article.cover_image_url}
                   />
                 </div>
@@ -169,28 +172,29 @@ export function ArticlePage() {
               )}
               <div className="p-6">
                 <div className="flex items-center justify-between gap-3">
-                  <span className={cn(
-                    "rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-                    article.status === 'published' ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]" : "bg-[var(--bg-base)] text-[var(--text-tertiary)]"
-                  )}>
+                  <Badge
+                    size="xs"
+                    uppercase
+                    variant={article.status === "published" ? "brand" : "neutral"}
+                  >
                     {article.status}
-                  </span>
+                  </Badge>
                   {article.category ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+                    <Text as="span" tone="tertiary" variant="meta">
                       {localize(article.category, "name")}
-                    </span>
+                    </Text>
                   ) : null}
                 </div>
-                <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
+                <Title as="h2" className="mt-4 transition-colors group-hover:text-[var(--brand-primary)]" variant="card">
                   {localize(article, "title")}
-                </h2>
+                </Title>
                 <div className="mt-4 flex items-center gap-3">
                   <div className="h-7 w-7 rounded-full bg-[var(--bg-base)] flex items-center justify-center text-[10px] font-bold text-[var(--text-tertiary)]">
                     {article.creator.username.slice(0, 2).toUpperCase()}
                   </div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+                  <Text tone="tertiary" variant="meta">
                     {article.creator.username} • {article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Draft'}
-                  </p>
+                  </Text>
                 </div>
               </div>
             </Link>

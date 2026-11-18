@@ -202,7 +202,6 @@ if ($Target -in @("all", "backend")) {
         Invoke-NativeOrThrow -FilePath npm -Arguments @(
             "install",
             "--omit=dev",
-            "--ignore-scripts",
             "--no-audit",
             "--no-fund"
         )

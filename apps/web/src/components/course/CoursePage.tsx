@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Pagination, Skeleton, cn } from "@/components/ui";
+import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -69,7 +70,7 @@ export function CoursePage() {
     >
       {/* Search bar */}
       <div className="mb-4 flex gap-2">
-        <input
+        <Input
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
           placeholder="Search courses…"
           value={searchInput}
@@ -141,11 +142,15 @@ export function CoursePage() {
           >
             <Card className="h-full overflow-hidden transition hover:border-[var(--brand-primary)]">
               {course.cover_image_url ? (
-                <img
-                  alt=""
-                  className="aspect-[16/9] w-full object-cover"
-                  src={course.cover_image_url}
-                />
+                <div className="relative aspect-[16/9] w-full overflow-hidden">
+                  <Image
+                    alt={localize(course, "title")}
+                    className="object-cover"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    src={course.cover_image_url}
+                  />
+                </div>
               ) : (
                 <div className="aspect-[16/9] bg-[var(--brand-muted)] flex items-center justify-center">
                   <span className="text-[var(--brand-primary)] font-bold text-3xl opacity-20">HTNC</span>
@@ -154,29 +159,29 @@ export function CoursePage() {
               <div className="p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   {course.category ? (
-                    <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
+                    <Badge uppercase>
                       {localize(course.category, "name")}
-                    </span>
+                    </Badge>
                   ) : null}
-                  <span className="text-xs font-medium text-[var(--text-tertiary)]">
+                  <Text as="span" className="font-medium" tone="tertiary" variant="caption">
                     {course.lesson_count} {t("course.form.lessons")}
-                  </span>
+                  </Text>
                   {canManageCourses ? (
-                    <span className={cn(
-                      "text-xs font-medium px-2 py-0.5 rounded border",
-                      course.status === 'published' ? "border-[var(--brand-primary)] text-[var(--brand-primary)]" : "border-[var(--border-subtle)] text-[var(--text-tertiary)]"
-                    )}>
+                    <Badge
+                      size="xs"
+                      variant={course.status === "published" ? "brand" : "outline"}
+                    >
                       {t(getStatusLabelKey(course.status))}
-                    </span>
+                    </Badge>
                   ) : null}
                 </div>
 
-                <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">
+                <Title as="h2" className="mt-4" variant="cardSoft">
                   {localize(course, "title")}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
+                </Title>
+                <Text className="mt-2 line-clamp-3" variant="prose">
                   {localize(course, "summary")}
-                </p>
+                </Text>
               </div>
             </Card>
           </Link>

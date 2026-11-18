@@ -2,12 +2,12 @@
 
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { useMemo, useRef } from "react";
+import "ckeditor5/ckeditor5.css";
 import {
   Alignment,
   Autoformat,
   AutoImage,
   AutoLink,
-  Base64UploadAdapter,
   BlockQuote,
   Bold,
   Code,
@@ -15,6 +15,7 @@ import {
   DecoupledEditor,
   Essentials,
   FindAndReplace,
+  FileRepository,
   FontBackgroundColor,
   FontColor,
   FontFamily,
@@ -60,8 +61,35 @@ import {
   TableToolbar,
   TodoList,
   Underline,
+  type Editor,
   type EditorConfig,
+  type FileLoader,
+  type UploadAdapter,
 } from "ckeditor5";
+import { uploadMedia } from "@/services/media";
+
+class ServerUploadAdapter implements UploadAdapter {
+  private readonly abortController = new AbortController();
+
+  constructor(private readonly loader: FileLoader) {}
+
+  abort() {
+    this.abortController.abort();
+  }
+
+  async upload() {
+    const file = await this.loader.file;
+    if (!file) throw new Error("No image was selected.");
+
+    const media = await uploadMedia(file, this.abortController.signal);
+    return { default: media.url };
+  }
+}
+
+function ServerUploadAdapterPlugin(editor: Editor) {
+  const repository = editor.plugins.get(FileRepository);
+  repository.createUploadAdapter = (loader) => new ServerUploadAdapter(loader);
+}
 
 type CkDocumentEditorProps = {
   initialValue: string;
@@ -82,12 +110,12 @@ export default function CkDocumentEditor({
     () => ({
       licenseKey: "GPL",
       placeholder,
+      extraPlugins: [ServerUploadAdapterPlugin],
       plugins: [
         Alignment,
         Autoformat,
         AutoImage,
         AutoLink,
-        Base64UploadAdapter,
         BlockQuote,
         Bold,
         Code,

@@ -14,6 +14,7 @@ import { EventModule } from './modules/event/event.module';
 import { HouseholdModule } from './modules/household/household.module';
 import { HealthModule } from './modules/health/health.module';
 import { MemberModule } from './modules/member/member.module';
+import { MediaModule } from './modules/media/media.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PageModule } from './modules/page/page.module';
 import { PrayerJournalModule } from './modules/prayer-journal/prayer-journal.module';
@@ -30,6 +31,7 @@ import { ServingScheduleModule } from './modules/serving-schedule/serving-schedu
     AuthModule,
     ChurchUnitModule,
     MemberModule,
+    MediaModule,
     ArticleModule,
     AuditModule,
     CourseModule,

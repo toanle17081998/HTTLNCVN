@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { cn } from "@/components/ui";
+import { cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useSiteNavigationQuery } from "@/services/siteNavigation";
 
@@ -59,17 +60,17 @@ export function PageHeader({
       <div className="flex min-w-0 flex-col gap-4 border-b border-[var(--border-subtle)] pb-6 pt-1 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0 max-w-3xl">
           {resolvedEyebrow ? (
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-gold)]">
+            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent-gold)]">
               {resolvedEyebrow}
-            </p>
+            </Text>
           ) : null}
-          <h1 className="mt-1 break-words text-2xl font-bold leading-tight text-[var(--text-primary)] sm:text-3xl">
+          <Title as="h1" className="mt-1 break-words leading-tight sm:text-3xl" variant="sectionPlain">
             {resolvedTitle}
-          </h1>
+          </Title>
           {resolvedDescription ? (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
               {resolvedDescription}
-            </p>
+            </Text>
           ) : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-3 shrink-0">{actions}</div> : null}
@@ -101,7 +102,7 @@ export function PageHeader({
           }}
         >
           {resolvedEyebrow ? (
-            <p
+            <Text as="p" tone="inherit" variant="inherit"
               style={{
                 color: "var(--accent-gold)",
                 fontSize: "var(--section-kicker-size, 0.75rem)",
@@ -112,10 +113,13 @@ export function PageHeader({
               }}
             >
               {resolvedEyebrow}
-            </p>
+            </Text>
           ) : null}
 
-          <h1
+          <Title
+            as="h1"
+            tone="inherit"
+            variant="inherit"
             style={{
               color: "var(--page-builder-hero-title)",
               fontFamily: "var(--font-lora), Georgia, serif",
@@ -127,10 +131,10 @@ export function PageHeader({
             }}
           >
             {resolvedTitle}
-          </h1>
+          </Title>
 
           {resolvedDescription ? (
-            <p
+            <Text as="p" tone="inherit" variant="inherit"
               style={{
                 color: "var(--text-secondary)",
                 fontSize: "var(--section-body-size)",
@@ -140,7 +144,7 @@ export function PageHeader({
               }}
             >
               {resolvedDescription}
-            </p>
+            </Text>
           ) : null}
 
           {actions ? (
@@ -166,10 +170,13 @@ export function PageHeader({
               minHeight: "18rem",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt={title}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            <Image
+              alt={resolvedTitle}
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              fetchPriority="high"
+              fill
+              priority
+              sizes="(min-width: 1024px) 50vw, 100vw"
               src={heroImageSrc}
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
