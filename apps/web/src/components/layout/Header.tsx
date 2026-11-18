@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useNotificationsQuery, useMarkNotificationReadMutation } from "@/services/notification";
+import { useNotificationsQuery, useMarkNotificationReadMutation } from "@/hooks/notification";
 import {
   LogOut,
   Shield,
@@ -21,7 +21,8 @@ import { ChangePasswordModal } from "../auth/ChangePasswordModal";
 import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
-import { useSiteNavigationQuery, defaultSiteNavigationConfig } from "@/services/siteNavigation";
+import { defaultSiteNavigationConfig } from "@/domain/site-navigation";
+import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 import { resolveIcon } from "@/components/page-builder/shared/iconList";
 import { useScrollDirectionVisibility } from "./useScrollDirectionVisibility";
 
@@ -118,15 +119,24 @@ export function Header({ pathname }: HeaderProps) {
   return (
     <>
       <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 backdrop-blur-md transition-all duration-300 ease-out",
-        isAtTop ? "bg-[var(--header-hero-overlay)]" : "bg-[var(--header-scrolled-bg)] shadow-sm",
-        isVisible
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none -translate-y-full opacity-0 shadow-none",
-      )}
-    >
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
+        className={cn(
+          "fixed inset-x-0 top-0 z-50 bg-transparent transition-all duration-300 ease-out",
+          !isAtTop && "shadow-sm",
+          isVisible
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-full opacity-0 shadow-none",
+        )}
+      >
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-0 backdrop-blur-xs lg:backdrop-blur-md",
+            isAtTop
+              ? "bg-[var(--bg-surface)]/30 lg:bg-[var(--header-hero-overlay)]"
+              : "bg-[var(--bg-surface)]/10 lg:bg-[var(--header-scrolled-bg)]",
+          )}
+        />
+        <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
         <Link
           aria-label={t("app.name")}
           className="flex shrink-0 items-center rounded-md transition-opacity hover:opacity-80"
@@ -415,18 +425,27 @@ export function Header({ pathname }: HeaderProps) {
                 aria-current={isActive ? "page" : undefined}
                 aria-label={label}
                 className={cn(
-                  "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[10px] font-semibold transition-colors active:scale-95",
+                  "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 text-[10px] transition-colors active:scale-95",
                   isActive
-                    ? "text-[var(--brand-primary)]"
+                    ? "font-bold text-[var(--text-primary)]"
                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                 )}
                 href={item.href}
                 key={item.id || item.href}
               >
-                <IconComp aria-hidden="true" className="h-5 w-5 shrink-0" />
+                <span
+                  className={cn(
+                    "flex h-8 w-10 items-center justify-center rounded-xl transition-[background-color,color,box-shadow,transform] duration-200",
+                    isActive
+                      ? "-translate-y-0.5 bg-[var(--brand-primary)] text-[var(--text-inverse)] shadow-md"
+                      : "text-[var(--text-secondary)]",
+                  )}
+                >
+                  <IconComp aria-hidden="true" className="h-[22px] w-[22px] shrink-0" strokeWidth={isActive ? 2.6 : 2} />
+                </span>
                 <span className="w-full truncate text-center">{label}</span>
                 {isActive ? (
-                  <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-[var(--accent-gold)]" />
+                  <span className="absolute left-1/2 top-0 h-1 w-8 -translate-x-1/2 rounded-b-full bg-[var(--accent-gold)]" />
                 ) : null}
               </Link>
             );

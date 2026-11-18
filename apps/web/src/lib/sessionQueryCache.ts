@@ -1,4 +1,4 @@
-export const sessionQueryCacheKey = "httlncvn.query-cache.v1";
+export const sessionQueryCacheKey = "httlncvn.query-cache.v2";
 
 export function clearSessionQueryCache() {
   if (typeof window === "undefined") return;

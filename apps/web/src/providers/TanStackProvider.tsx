@@ -8,28 +8,32 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
-import { ApiError } from "@/services/client";
+import { ApiError } from "@/api/client";
 import { clearSessionQueryCache, sessionQueryCacheKey } from "@/lib/sessionQueryCache";
 
 type StoredQueryCache = {
   state: ReturnType<typeof dehydrate>;
-  version: 1;
+  version: 2;
 };
+
+const hydrationSensitiveQueryKeys = new Set(["course-categories", "courses", "pages"]);
+
+function isHydrationSafeQuery(queryKey: readonly unknown[]) {
+  return !hydrationSensitiveQueryKeys.has(String(queryKey[0]));
+}
 
 function restoreSessionCache(queryClient: QueryClient) {
   try {
     const raw = window.sessionStorage.getItem(sessionQueryCacheKey);
     if (!raw) return;
     const cached = JSON.parse(raw) as StoredQueryCache;
-    if (cached.version !== 1 || !cached.state) {
+    if (cached.version !== 2 || !cached.state) {
       clearSessionQueryCache();
       return;
     }
     hydrate(queryClient, {
       ...cached.state,
-      queries: cached.state.queries.filter(
-        (query) => query.queryKey[0] !== "pages" && query.queryKey[0] !== "courses",
-      ),
+      queries: cached.state.queries.filter((query) => isHydrationSafeQuery(query.queryKey)),
     });
   } catch {
     clearSessionQueryCache();
@@ -39,8 +43,7 @@ function restoreSessionCache(queryClient: QueryClient) {
 function persistSessionCache(queryClient: QueryClient) {
   const dehydrated = dehydrate(queryClient, {
     shouldDehydrateQuery: (query) =>
-      query.queryKey[0] !== "pages" &&
-      query.queryKey[0] !== "courses" &&
+      isHydrationSafeQuery(query.queryKey) &&
       query.state.status === "success",
   });
   const queries = [...dehydrated.queries].sort(
@@ -51,7 +54,7 @@ function persistSessionCache(queryClient: QueryClient) {
     try {
       const cache: StoredQueryCache = {
         state: { ...dehydrated, queries },
-        version: 1,
+        version: 2,
       };
       window.sessionStorage.setItem(sessionQueryCacheKey, JSON.stringify(cache));
       return;

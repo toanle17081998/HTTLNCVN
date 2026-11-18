@@ -12,6 +12,22 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-render": "warn",
     },
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}", "src/providers/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/services/*"],
+              message: "UI layers must use @/hooks, @/api, @/mappers, or @/domain instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
