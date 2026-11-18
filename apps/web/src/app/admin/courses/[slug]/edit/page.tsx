@@ -15,7 +15,7 @@ export default function AdminEditCourseRoute() {
   const params = useParams();
   const slug = params.slug as string;
   const { can } = useAuth();
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const courseQuery = useCourseQuery(slug);
   const updateCourse = useUpdateCourseMutation(slug);
 
@@ -51,7 +51,7 @@ export default function AdminEditCourseRoute() {
   return (
     <PageLayout
       eyebrow={t("admin.common.admin")}
-      title={t("admin.common.editNamed", { name: courseQuery.data.title_vi || courseQuery.data.title_en })}
+      title={t("admin.common.editNamed", { name: localize(courseQuery.data, "title") })}
     >
       <CourseForm
         initialData={courseQuery.data}

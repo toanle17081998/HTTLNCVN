@@ -28,6 +28,7 @@ import { Button, cn } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
+import type { TranslationKey } from "@/lib/i18n";
 import { ChangePasswordModal } from "../auth/ChangePasswordModal";
 import { ChurchLogo } from "./ChurchLogo";
 import { LanguageToggle } from "./LanguageToggle";
@@ -54,7 +55,7 @@ const navIconMap: Record<string, React.ReactNode> = {
 
 export function Header({ pathname }: HeaderProps) {
   const router = useRouter();
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { can, canAny, isAuthenticated, logout, role, user } = useAuth();
 
   const siteNavQuery = useSiteNavigationQuery();
@@ -208,7 +209,7 @@ export function Header({ pathname }: HeaderProps) {
           <div className="flex items-center gap-1 lg:gap-2">
             {dynamicItems.map((item) => {
               const IconComp = resolveIcon(item.icon);
-              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+              const label = localize(item, "label");
               const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
               return (
@@ -239,9 +240,7 @@ export function Header({ pathname }: HeaderProps) {
               href={headerConfig.cta.href}
             >
               <Button size="sm" className="rounded-lg font-semibold">
-                {locale === "vi"
-                  ? headerConfig.cta.labelVi || headerConfig.cta.labelEn
-                  : headerConfig.cta.labelEn || headerConfig.cta.labelVi}
+                {localize(headerConfig.cta, "label")}
               </Button>
             </Link>
           ) : null}
@@ -369,21 +368,7 @@ export function Header({ pathname }: HeaderProps) {
                   </p>
                   {role && (
                     <span className="mt-1.5 inline-flex items-center rounded-full bg-[var(--brand-muted)] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-primary)]">
-                      {locale === "vi"
-                        ? !isAuthenticated
-                          ? t("nav.guest" as any)
-                          : role === "SUPER_ADMIN"
-                          ? "Tổng quản trị"
-                          : role === "CHURCH_ADMIN"
-                            ? "Quản trị hội thánh"
-                            : role === "MINISTRY_LEADER"
-                              ? "Trưởng ban ngành"
-                              : role === "PASTOR"
-                                ? "Mục sư"
-                                : role === "EDITOR"
-                                  ? "Biên tập viên"
-                                  : "Thành viên"
-                        : role.replaceAll("_", " ")}
+                      {!isAuthenticated ? t("nav.guest" as any) : t(roleLabelKeys[role] ?? "role.member")}
                     </span>
                   )}
                 </div>
@@ -495,8 +480,8 @@ export function Header({ pathname }: HeaderProps) {
         <div className="grid gap-2">
           {dynamicItems.map((item) => {
             const IconComp = resolveIcon(item.icon);
-            const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
-            const description = locale === "vi" ? item.descriptionVi : item.descriptionEn;
+            const label = localize(item, "label");
+            const description = localize(item, "description");
             const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
             return (
@@ -534,9 +519,7 @@ export function Header({ pathname }: HeaderProps) {
                 className="block"
               >
                 <Button className="w-full rounded-xl">
-                  {locale === "vi"
-                    ? headerConfig.cta.labelVi || headerConfig.cta.labelEn
-                    : headerConfig.cta.labelEn || headerConfig.cta.labelVi}
+                  {localize(headerConfig.cta, "label")}
                 </Button>
               </Link>
             </div>
@@ -554,3 +537,11 @@ export function Header({ pathname }: HeaderProps) {
     </header>
   );
 }
+const roleLabelKeys: Record<string, TranslationKey> = {
+  CHURCH_ADMIN: "role.churchAdmin",
+  EDITOR: "role.editor",
+  MEMBER: "role.member",
+  MINISTRY_LEADER: "role.ministryLeader",
+  PASTOR: "role.pastor",
+  SUPER_ADMIN: "role.superAdmin",
+};

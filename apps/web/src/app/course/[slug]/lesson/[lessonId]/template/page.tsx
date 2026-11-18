@@ -22,7 +22,7 @@ export default function TemplatesPage() {
   const slug = params.slug as string;
   const lessonId = params.lessonId as string;
   const { can } = useAuth();
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
 
   const lessonQuery = useLessonQuery(slug, lessonId);
@@ -89,11 +89,7 @@ export default function TemplatesPage() {
   return (
     <PageLayout
       eyebrow="Admin"
-      title={
-        locale === "vi"
-          ? `Danh sách câu hỏi ${lesson?.title_vi || lesson?.title_en || ""}`
-          : `Templates for ${lesson?.title_en || lesson?.title_vi || ""}`
-      }
+      title={t("admin.templates.title", { name: localize(lesson, "title") })}
       actions={
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => router.push(`/course/${slug}/lesson/${lessonId}`)}>
@@ -122,13 +118,8 @@ export default function TemplatesPage() {
                     {template.template_type.replace("_", " ")}
                   </span>
                   <h3 className="text-base font-bold text-[var(--text-primary)]">
-                    {template.body_template_vi || template.body_template_en}
+                    {localize(template, "body_template")}
                   </h3>
-                  {template.body_template_en && template.body_template_vi && (
-                    <p className="text-sm text-[var(--text-secondary)] italic">
-                      EN: {template.body_template_en}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">

@@ -30,7 +30,7 @@ export function PageHeader({
   title,
 }: PageHeaderProps) {
   const pathname = usePathname();
-  const { locale } = useTranslation();
+  const { localize } = useTranslation();
   const siteNavQuery = useSiteNavigationQuery();
   const isAdmin = pathname?.startsWith("/admin");
   const isCentered = align === "center";
@@ -44,13 +44,13 @@ export function PageHeader({
   const heroOverride = matchedRoute ? siteNavQuery.data?.pageHeroes?.[matchedRoute] : undefined;
 
   const resolvedEyebrow =
-    (locale === "vi" ? heroOverride?.eyebrowVi : heroOverride?.eyebrowEn) ||
+    localize(heroOverride, "eyebrow") ||
     eyebrow;
   const resolvedTitle =
-    (locale === "vi" ? heroOverride?.titleVi : heroOverride?.titleEn) ||
+    localize(heroOverride, "title") ||
     title;
   const resolvedDescription =
-    (locale === "vi" ? heroOverride?.descriptionVi : heroOverride?.descriptionEn) ||
+    localize(heroOverride, "description") ||
     description;
   const heroImageSrc = heroOverride?.coverImage || coverImage || image || defaultPageHeroImage;
 

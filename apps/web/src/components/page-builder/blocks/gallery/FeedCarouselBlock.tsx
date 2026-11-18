@@ -12,6 +12,7 @@ import { buildBoxStyle, isAnchorTarget, parseNumberLike, resolveFeedCardHref, us
 import { NodeFrame } from "../../shared/NodeFrame";
 import { FeedCard } from "./FeedCard";
 import type { BoxProps, FeedCardStyle, FeedItem, FeedType, SizeValue } from "../../shared/types";
+import { useTranslation } from "@/providers/I18nProvider";
 
 type FeedProps = BoxProps & {
   autoPlay?: boolean;
@@ -28,6 +29,7 @@ type FeedProps = BoxProps & {
 };
 
 export function FeedCarouselBlock(props: FeedProps) {
+  const { localize } = useTranslation();
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
   const {
     nodeAutoPlay,
@@ -84,12 +86,12 @@ export function FeedCarouselBlock(props: FeedProps) {
       ? courseItems.map((course) => ({
         accent: "var(--brand-primary)",
         coverImage: course.cover_image_url,
-        description: course.summary_vi ?? course.summary_en ?? "Published course",
+        description: localize(course, "summary", "Published course"),
         href: `/course/${course.slug}`,
         id: course.id,
-        kicker: course.category?.name_vi ?? course.category?.name_en ?? "",
+        kicker: localize(course.category, "name"),
         slug: course.slug,
-        title: course.title_vi || course.title_en,
+        title: localize(course, "title"),
       }))
       : feedType === "events"
         ? eventItems.map((event) => ({
@@ -105,12 +107,12 @@ export function FeedCarouselBlock(props: FeedProps) {
         : articleItems.map((article) => ({
           accent: "var(--brand-primary)",
           coverImage: article.cover_image_url,
-          description: (article.category?.name_vi || article.category?.name_en) ?? "Published article",
+          description: localize(article.category, "name", "Published article"),
           href: `/article/${article.slug}`,
           id: article.id,
           kicker: article.status,
           slug: article.slug,
-          title: article.title_vi || article.title_en,
+          title: localize(article, "title"),
         }));
   const items = selectedItemIds.length
     ? allItems.filter((item) => item.id && selectedItemIds.includes(item.id))

@@ -43,7 +43,7 @@ const HERO_PAGES = [
 ] as const;
 
 export function AdminNavigation() {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { toast, confirm } = useFeedback();
   const navQuery = useSiteNavigationQuery();
   const updateMutation = useUpdateSiteNavigationMutation();
@@ -401,7 +401,7 @@ export function AdminNavigation() {
                           </div>
                           <div>
                             <p className="font-bold text-[var(--text-primary)]">
-                              {locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi}
+                              {localize(item, "label")}
                             </p>
                             <p className="text-xs text-[var(--text-secondary)]">{item.href}</p>
                           </div>
@@ -728,17 +728,16 @@ export function AdminNavigation() {
                   </p>
                   <div className="grid items-start gap-8 lg:grid-cols-2">
                     <div className="flex flex-col items-start gap-3">
-                      {(locale === "vi" ? currentHeroConfig.eyebrowVi : currentHeroConfig.eyebrowEn) ? (
+                      {localize(currentHeroConfig, "eyebrow") ? (
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--accent-gold)]">
-                          {locale === "vi" ? currentHeroConfig.eyebrowVi : currentHeroConfig.eyebrowEn}
+                          {localize(currentHeroConfig, "eyebrow")}
                         </p>
                       ) : null}
                       <h3 className="font-serif text-3xl font-bold text-[var(--brand-primary)]">
-                        {(locale === "vi" ? currentHeroConfig.titleVi : currentHeroConfig.titleEn) || "Title"}
+                        {localize(currentHeroConfig, "title", "Title")}
                       </h3>
                       <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                        {(locale === "vi" ? currentHeroConfig.descriptionVi : currentHeroConfig.descriptionEn) ||
-                          "Description"}
+                        {localize(currentHeroConfig, "description", "Description")}
                       </p>
                     </div>
 

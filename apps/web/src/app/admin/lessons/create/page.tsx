@@ -14,7 +14,7 @@ export default function AdminCreateLessonRoute() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { can } = useAuth();
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const coursesQuery = useCoursesQuery({ take: 100 });
   const requestedCourseSlug = searchParams.get("course") ?? "";
   const [courseSlug, setCourseSlug] = useState(requestedCourseSlug);
@@ -65,7 +65,7 @@ export default function AdminCreateLessonRoute() {
             >
               {courses.map((course) => (
                 <option key={course.id} value={course.slug}>
-                  {course.title_vi || course.title_en || course.slug}
+                  {localize(course, "title", course.slug)}
                 </option>
               ))}
             </Select>

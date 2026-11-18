@@ -17,7 +17,7 @@ type QuizAttemptPageProps = {
 };
 
 export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const attemptQuery = useQuizAttemptQuery(attemptId);
   const submitAnswer = useSubmitAnswerMutation(attemptId);
@@ -115,7 +115,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
     <PageLayout
       description={t("quiz.timeLimit")}
       eyebrow={attempt?.is_test ? t("quiz.title") : t("quiz.practiceTitle")}
-      title={locale === "vi" ? (attempt?.quiz?.title_vi || attempt?.quiz?.title_en || "Làm bài trắc nghiệm") : (attempt?.quiz?.title_en || attempt?.quiz?.title_vi || "Quiz attempt")}
+      title={localize(attempt?.quiz, "title", t("quiz.title"))}
     >
       {attemptQuery.isLoading ? (
         <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
@@ -173,7 +173,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                   </div>
 
                   <h2 className="mt-3 text-base font-semibold text-[var(--text-primary)]">
-                    {locale === "vi" ? (template?.body_template_vi || template?.body_template_en || t("quiz.question")) : (template?.body_template_en || template?.body_template_vi || t("quiz.question"))}
+                    {localize(template, "body_template", t("quiz.question"))}
                   </h2>
 
                   {completed ? (
@@ -221,11 +221,11 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                         </div>
                       )}
 
-                      {(template?.explanation_template_vi || template?.explanation_template_en) ? (
+                      {localize(template, "explanation_template") ? (
                         <div className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-xs text-[var(--text-secondary)]">
                           <span className="font-bold text-[var(--text-primary)] block">{t("quiz.explanation")}:</span>
                           <p className="mt-1 italic leading-relaxed">
-                            {locale === "vi" ? (template.explanation_template_vi || template.explanation_template_en) : (template.explanation_template_en || template.explanation_template_vi)}
+                            {localize(template, "explanation_template")}
                           </p>
                         </div>
                       ) : null}
@@ -300,7 +300,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                   : "border-[var(--border-subtle)] hover:bg-[var(--bg-base)] text-[var(--text-primary)]"
                               )}
                             >
-                              {val === "true" ? (locale === "vi" ? "Đúng" : "True") : (locale === "vi" ? "Sai" : "False")}
+                              {val === "true" ? t("quiz.answer.true") : t("quiz.answer.false")}
                             </button>
                           ))}
                         </div>
@@ -392,7 +392,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                   : t("quiz.modal.failed")}
               </span>
               <h3 className="text-xl font-bold text-[var(--text-primary)]">
-                {locale === "vi" ? (attempt.quiz?.title_vi || attempt.quiz?.title_en || t("quiz.title")) : (attempt.quiz?.title_en || attempt.quiz?.title_vi || t("quiz.title"))}
+                {localize(attempt.quiz, "title", t("quiz.title"))}
               </h3>
             </div>
 

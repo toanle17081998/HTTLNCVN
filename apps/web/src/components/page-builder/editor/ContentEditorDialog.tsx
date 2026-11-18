@@ -37,22 +37,21 @@ function GalleryBindingFields({
   selectedItemIds: string[];
   setValue: (key: string, value: unknown) => void;
 }) {
+  const { t, localize } = useTranslation();
   const articlesQuery = useArticlesQuery({ status: "published", take: 50 });
   const coursesQuery = useCoursesQuery({ status: "published", take: 50 });
   const eventsQuery = useEventsQuery({ audience: "public", status: "published", upcoming: true, take: 50 });
   const items = feedType === "courses"
-    ? (coursesQuery.data?.items ?? []).map((item) => ({ id: item.id, title: item.title_vi || item.title_en }))
+    ? (coursesQuery.data?.items ?? []).map((item) => ({ id: item.id, title: localize(item, "title") }))
     : feedType === "events"
       ? (eventsQuery.data?.items ?? []).map((item) => ({ id: item.id, title: item.title }))
-      : (articlesQuery.data?.items ?? []).map((item) => ({ id: item.id, title: item.title_vi || item.title_en }));
+      : (articlesQuery.data?.items ?? []).map((item) => ({ id: item.id, title: localize(item, "title") }));
 
   function toggleItem(id: string) {
     setValue("selectedItemIds", selectedItemIds.includes(id)
       ? selectedItemIds.filter((itemId) => itemId !== id)
       : [...selectedItemIds, id]);
   }
-
-  const { t } = useTranslation();
 
   return <div className="grid gap-3 border-t border-[var(--border-subtle)] pt-4">
     <div>

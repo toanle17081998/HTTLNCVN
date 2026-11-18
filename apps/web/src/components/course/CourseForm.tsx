@@ -15,7 +15,7 @@ type CourseFormProps = {
 };
 
 export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFormProps) {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const categoriesQuery = useCourseCategoriesQuery();
   const categories = categoriesQuery.data ?? [];
   const descriptionEnRef = useRef<ModularEditorHandle>(null);
@@ -152,7 +152,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                 <option value="">{t("course.form.categoryNone")}</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {locale === "vi" ? cat.name_vi : cat.name_en}
+                    {localize(cat, "name")}
                   </option>
                 ))}
               </Select>

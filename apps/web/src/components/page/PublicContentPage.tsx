@@ -14,15 +14,11 @@ type PublicContentPageProps = {
 };
 
 export function PublicContentPage({ fallback, slug }: PublicContentPageProps) {
-  const { locale } = useTranslation();
+  const { localize } = useTranslation();
   const pageQuery = usePageQuery(slug);
   const page = pageQuery.data;
-  const title = page ? (locale === "vi" ? page.title_vi : page.title_en) : fallback.title;
-  const body = page
-    ? locale === "vi"
-      ? page.content_vi
-      : page.content_en
-    : fallback.body;
+  const title = page ? localize(page, "title", fallback.title) : fallback.title;
+  const body = page ? localize(page, "content", fallback.body) : fallback.body;
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6">

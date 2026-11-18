@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { ArticleDetailPage } from "@/components/article/ArticleDetailPage";
 import { articleApi } from "@/services/article";
+import { getLocalizedField } from "@/lib/i18n";
 
 type ArticleDetailRouteProps = {
   params: Promise<{
@@ -13,10 +14,10 @@ export async function generateMetadata({ params }: ArticleDetailRouteProps): Pro
   try {
     const article = await articleApi.detail(slug);
     return {
-      title: `${article.title_vi || article.title_en} | HTNC`,
+      title: `${getLocalizedField(article, "title")} | HTNC`,
       description: article.title_en,
       openGraph: {
-        title: article.title_vi || article.title_en,
+        title: getLocalizedField(article, "title"),
         description: article.title_en,
         images: article.cover_image_url ? [article.cover_image_url] : [],
         type: "article",

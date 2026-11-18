@@ -7,7 +7,7 @@ import { useSiteNavigationQuery, defaultSiteNavigationConfig } from "@/services/
 import { resolveIcon } from "@/components/page-builder/shared/iconList";
 
 export function Footer() {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const siteNavQuery = useSiteNavigationQuery();
@@ -17,14 +17,8 @@ export function Footer() {
   const communityTitle = footerData.communityTitle || t("footer.contact.community");
   const appName = footerData.appName || t("app.name");
   const tagline = footerData.tagline || t("app.tagline");
-  const description =
-    locale === "vi"
-      ? footerData.descriptionVi || footerData.descriptionEn || t("footer.description")
-      : footerData.descriptionEn || footerData.descriptionVi || t("footer.description");
-  const copyrightText =
-    locale === "vi"
-      ? footerData.copyrightTextVi || footerData.copyrightTextEn || t("footer.rights")
-      : footerData.copyrightTextEn || footerData.copyrightTextVi || t("footer.rights");
+  const description = localize(footerData, "description", t("footer.description"));
+  const copyrightText = localize(footerData, "copyrightText", t("footer.rights"));
 
   const contacts = footerData.contacts ?? defaultSiteNavigationConfig.footer.contacts;
   const links = footerData.links ?? defaultSiteNavigationConfig.footer.links;
@@ -73,8 +67,8 @@ export function Footer() {
           <div className="grid gap-3 sm:grid-cols-2">
             {contacts.map((item) => {
               const IconComp = resolveIcon(item.icon);
-              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
-              const value = locale === "vi" ? item.valueVi || item.valueEn : item.valueEn || item.valueVi;
+              const label = localize(item, "label");
+              const value = localize(item, "value");
 
               const content = (
                 <>
@@ -119,7 +113,7 @@ export function Footer() {
 
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
             {links.map((item) => {
-              const label = locale === "vi" ? item.labelVi || item.labelEn : item.labelEn || item.labelVi;
+              const label = localize(item, "label");
               return (
                 <Link
                   className="rounded-sm px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"

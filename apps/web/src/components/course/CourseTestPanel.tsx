@@ -46,7 +46,7 @@ function isDraftComplete(question: DraftQuestion) {
 
 export function CourseTestPanel({ course }: { course: Course }) {
   const router = useRouter();
-  const { locale } = useTranslation();
+  const { t, locale, localize } = useTranslation();
   const testQuery = useCourseTestQuery(course.slug);
   const publishTest = usePublishCourseTestMutation(course.slug);
   const closeTest = useCloseCourseTestMutation(course.slug);
@@ -122,7 +122,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
   }
 
   const attempt = status.attempt;
-  const title = locale === "vi" ? "Bài kiểm tra cuối khóa" : "Final course test";
+  const title = t("courseTest.title");
 
   return (
     <Card className="flex flex-col p-6">
@@ -130,7 +130,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
         <div>
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {locale === "vi" ? "Điểm đạt: 70%. Mỗi đợt mở chỉ có một lượt làm bài." : "Passing grade: 70%. One attempt per availability."}
+            {t("courseTest.passingDescription")}
           </p>
         </div>
         {status.availability ? (
@@ -147,21 +147,21 @@ export function CourseTestPanel({ course }: { course: Course }) {
           {attempt?.is_completed ? (
             <div>
               <p className="font-semibold text-[var(--text-primary)]">
-                {locale === "vi" ? "Bài kiểm tra đã kết thúc" : "Test completed"}
+                {t("courseTest.completed")}
               </p>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                {locale === "vi" ? "Điểm" : "Score"}: {Math.round(attempt.total_score ?? 0)}% · {(attempt.total_score ?? 0) >= 70 ? (locale === "vi" ? "Đạt" : "Passed") : (locale === "vi" ? "Không đạt" : "Not passed")}
+                {t("quiz.score")}: {Math.round(attempt.total_score ?? 0)}% · {(attempt.total_score ?? 0) >= 70 ? t("courseTest.passed") : t("courseTest.failed")}
               </p>
             </div>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-[var(--text-secondary)]">
                 {attempt
-                  ? (locale === "vi" ? "Đang làm" : "In progress")
+                  ? t("courseTest.inProgress")
                   : `${Math.ceil(status.availability.duration_seconds / 60)} min`}
               </p>
               <Button disabled={startTest.isPending} onClick={handleStart}>
-                {attempt ? (locale === "vi" ? "Tiếp tục" : "Resume test") : (locale === "vi" ? "Bắt đầu" : "Start test")}
+                {attempt ? t("courseTest.resume") : t("courseTest.start")}
               </Button>
             </div>
           )}
@@ -173,31 +173,31 @@ export function CourseTestPanel({ course }: { course: Course }) {
           <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
             <h3 className="font-semibold text-[var(--text-primary)]">
               {status.availability.is_active
-                ? (locale === "vi" ? "Trạng thái người làm bài" : "Assigned test takers")
-                : (locale === "vi" ? "Kết quả đợt gần nhất" : "Latest test results")}
+                ? t("courseTest.assignedStatus")
+                : t("courseTest.latestResults")}
             </h3>
             <p className="mt-1 text-xs text-[var(--text-secondary)]">
-              {status.assigned_users.length} {locale === "vi" ? "người được giao" : "assigned"}
+              {t("courseTest.assignedCount", { count: String(status.assigned_users.length) })}
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-[var(--bg-base)] text-xs uppercase text-[var(--text-tertiary)]">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Người làm bài" : "Test taker"}</th>
-                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Trạng thái" : "Status"}</th>
-                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Điểm" : "Score"}</th>
-                  <th className="px-4 py-3 font-semibold">{locale === "vi" ? "Cập nhật" : "Updated"}</th>
+                  <th className="px-4 py-3 font-semibold">{t("courseTest.testTaker")}</th>
+                  <th className="px-4 py-3 font-semibold">{t("courseTest.status")}</th>
+                  <th className="px-4 py-3 font-semibold">{t("quiz.score")}</th>
+                  <th className="px-4 py-3 font-semibold">{t("courseTest.updated")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">
                 {status.assigned_users.map((assignedUser) => {
                   const timestamp = assignedUser.completed_at ?? assignedUser.started_at ?? status.availability!.created_at;
                   const statusLabel = assignedUser.status === "done"
-                    ? (locale === "vi" ? "Hoàn thành" : "Done")
+                    ? t("quiz.status.completed")
                     : assignedUser.status === "in_progress"
-                      ? (locale === "vi" ? "Đang làm" : "In progress")
-                      : (locale === "vi" ? "Chưa bắt đầu" : "Not started");
+                      ? t("courseTest.inProgress")
+                      : t("quiz.status.notStarted");
                   return (
                     <tr key={assignedUser.id}>
                       <td className="px-4 py-3">
@@ -211,7 +211,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                           : "—"}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-xs text-[var(--text-tertiary)]">
-                        {new Date(timestamp).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
+                        {new Date(timestamp).toLocaleString(locale)}
                       </td>
                     </tr>
                   );
@@ -224,15 +224,13 @@ export function CourseTestPanel({ course }: { course: Course }) {
 
       {status.can_manage ? (
         <div className="mt-6 border-t border-[var(--border-subtle)] pt-5">
-          <h3 className="font-semibold text-[var(--text-primary)]">{locale === "vi" ? "Mở đợt kiểm tra" : "Publish test availability"}</h3>
+          <h3 className="font-semibold text-[var(--text-primary)]">{t("courseTest.publishTitle")}</h3>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            {locale === "vi"
-              ? "Mở bài kiểm tra cho cả lớp hoặc một cá nhân cụ thể. Mỗi đợt mở chỉ có một lượt làm bài."
-              : "Open the test for a whole class or one individual. Each opening allows one attempt."}
+            {t("courseTest.publishDescription")}
           </p>
           <div className="mt-4 grid gap-4 sm:max-w-sm">
             <label className="grid gap-1 text-sm font-medium">
-              {locale === "vi" ? "Lớp" : "Class"}
+              {t("courseTest.class")}
               <select
                 className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
                 value={activeClassId}
@@ -247,20 +245,20 @@ export function CourseTestPanel({ course }: { course: Course }) {
               </select>
             </label>
             <label className="grid gap-1 text-sm font-medium">
-              {locale === "vi" ? "Người làm bài" : "Test taker"}
+              {t("courseTest.testTaker")}
               <select
                 className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
                 value={targetUserId}
                 onChange={(event) => setTargetUserId(event.target.value)}
               >
-                <option value="">{locale === "vi" ? "Tất cả thành viên trong lớp" : "Everyone in the class"}</option>
+                <option value="">{t("courseTest.everyone")}</option>
                 {activeClass?.members.map((member) => (
                   <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
                 ))}
               </select>
             </label>
             <label className="grid gap-1 text-sm font-medium">
-              {locale === "vi" ? "Thời gian (phút)" : "Duration (minutes)"}
+              {t("courseTest.duration")}
               <Input min={1} type="number" value={durationMinutes} onChange={(event) => setDurationMinutes(Number(event.target.value))} />
             </label>
           </div>
@@ -271,21 +269,21 @@ export function CourseTestPanel({ course }: { course: Course }) {
               variant="secondary"
               onClick={handleOpenModal}
             >
-              {locale === "vi" ? "Chọn câu hỏi có sẵn" : "Select existing questions"}
+              {t("courseTest.selectQuestions")}
               {selectedIds.length > 0 && ` (${selectedIds.length})`}
             </Button>
           </div>
 
           <Button className="mt-4" onClick={() => setDraftQuestions((current) => [...current, createDraftQuestion()])} size="sm" variant="secondary">
-            {locale === "vi" ? "Thêm câu hỏi" : "Add question"}
+            {t("courseTest.addQuestion")}
           </Button>
           <div className="mt-4 grid gap-4">
             {draftQuestions.map((question, index) => (
               <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-4" key={question.id}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold">{locale === "vi" ? `Câu hỏi mới ${index + 1}` : `New question ${index + 1}`}</p>
+                  <p className="text-sm font-semibold">{t("courseTest.newQuestion", { number: String(index + 1) })}</p>
                   <Button onClick={() => setDraftQuestions((current) => current.filter((item) => item.id !== question.id))} size="sm" variant="secondary">
-                    {locale === "vi" ? "Xóa" : "Remove"}
+                    {t("courseTest.remove")}
                   </Button>
                 </div>
                 <select className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3" value={question.type} onChange={(event) => updateDraft(question.id, { correctAnswer: "", incorrectAnswers: "", type: event.target.value })}>
@@ -320,11 +318,11 @@ export function CourseTestPanel({ course }: { course: Course }) {
               }
               onClick={handlePublish}
             >
-              {locale === "vi" ? "Mở đợt kiểm tra" : "Open test round"}
+              {t("courseTest.open")}
             </Button>
             {status.availability?.is_active ? (
               <Button disabled={closeTest.isPending} onClick={() => closeTest.mutate(status.availability!.id)} variant="secondary">
-                {locale === "vi" ? "Đóng bài kiểm tra" : "Close test"}
+                {t("courseTest.close")}
               </Button>
             ) : null}
           </div>
@@ -336,7 +334,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] p-5">
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                {locale === "vi" ? "Chọn câu hỏi có sẵn" : "Select existing questions"}
+                {t("courseTest.selectQuestions")}
               </h3>
               <button
                 className="rounded-md p-1.5 text-[var(--text-tertiary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] cursor-pointer"
@@ -352,7 +350,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
                 <Input
                   className="pl-9"
-                  placeholder={locale === "vi" ? "Tìm kiếm câu hỏi hoặc bài học..." : "Search questions or lessons..."}
+                  placeholder={t("courseTest.searchPlaceholder")}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -364,7 +362,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                   variant="ghost"
                   onClick={() => setSearchQuery("")}
                 >
-                  {locale === "vi" ? "Xóa" : "Clear"}
+                  {t("courseTest.clear")}
                 </Button>
               )}
             </div>
@@ -397,12 +395,10 @@ export function CourseTestPanel({ course }: { course: Course }) {
                       />
                       <div className="flex-1">
                         <p className="font-medium">
-                          {locale === "vi" ? question.body_template_vi : question.body_template_en}
+                          {localize(question, "body_template")}
                         </p>
                         <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                          {locale === "vi"
-                            ? `Bài học: ${question.lesson?.title_vi || question.lesson?.title_en || ""}`
-                            : `Lesson: ${question.lesson?.title_en || question.lesson?.title_vi || ""}`}
+                          {localize(question.lesson, "title")}
                         </p>
                       </div>
                     </label>
@@ -411,7 +407,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 text-center text-[var(--text-tertiary)]">
                   <p className="text-sm">
-                    {locale === "vi" ? "Không tìm thấy câu hỏi nào" : "No questions found"}
+                    {t("courseTest.empty")}
                   </p>
                 </div>
               )}
@@ -420,12 +416,10 @@ export function CourseTestPanel({ course }: { course: Course }) {
             {/* Footer */}
             <div className="flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-soft)] p-5">
               <div className="text-xs text-[var(--text-secondary)]">
-                {locale === "vi"
-                  ? `Đã chọn ${selectedIds.length} câu hỏi`
-                  : `Selected ${selectedIds.length} question(s)`}
+                {t("courseTest.selectedCount", { count: String(selectedIds.length) })}
               </div>
               <Button onClick={handleCloseModal}>
-                {locale === "vi" ? "Xong" : "Done"}
+                {t("courseTest.done")}
               </Button>
             </div>
           </Card>

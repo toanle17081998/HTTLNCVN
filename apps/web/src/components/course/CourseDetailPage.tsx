@@ -23,7 +23,7 @@ type CourseDetailPageProps = {
 
 
 export function CourseDetailPage({ slug }: CourseDetailPageProps) {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const router = useRouter();
   const { can } = useAuth();
@@ -33,9 +33,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
 
   const course = courseQuery.data;
 
-  const rawDescription = locale === "vi"
-    ? (course?.description_vi || course?.description_en)
-    : (course?.description_en || course?.description_vi);
+  const rawDescription = localize(course, "description");
   const descriptionHtml = rawDescription
     ? isRichTextHtml(rawDescription)
       ? rawDescription
@@ -81,14 +79,14 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
         ) : undefined
       }
       coverImage={course?.cover_image_url || undefined}
-      description={(locale === "vi" ? (course?.summary_vi || course?.summary_en) : (course?.summary_en || course?.summary_vi)) || undefined}
+      description={localize(course, "summary") || undefined}
       eyebrow={
         course?.category
-          ? (locale === "vi" ? course.category.name_vi : course.category.name_en)
+          ? localize(course.category, "name")
           : t("nav.course.label")
       }
       showHeroImage={Boolean(course?.cover_image_url)}
-      title={locale === "vi" ? (course?.title_vi || course?.title_en || "Khóa học") : (course?.title_en || course?.title_vi || "Course")}
+      title={localize(course, "title", t("nav.course.label"))}
     >
       {courseQuery.isLoading ? (
         <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
@@ -143,7 +141,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
                               {t("lesson.label")} {lesson.order_index ?? "-"}
                             </p>
                             <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                              {locale === "vi" ? (lesson.title_vi || lesson.title_en) : (lesson.title_en || lesson.title_vi)}
+                              {localize(lesson, "title")}
                             </h3>
                           </div>
                           <div className="flex items-center gap-3">

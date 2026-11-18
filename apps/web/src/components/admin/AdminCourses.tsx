@@ -21,7 +21,7 @@ import {
 } from "@/services/course";
 
 export function AdminCourses() {
-  const { locale, t } = useTranslation();
+  const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
   const coursesQuery = useCoursesQuery({ take: 100 });
   const deleteCourse = useDeleteCourseMutation();
@@ -51,7 +51,7 @@ export function AdminCourses() {
       title={t("admin.courses.title")}
     >
       {/* Category Manager */}
-      <CategoryManager locale={locale} t={t} confirm={confirm} />
+      <CategoryManager localize={localize} t={t} confirm={confirm} />
 
       <div className="grid gap-3">
         {coursesQuery.isLoading ? (
@@ -63,7 +63,7 @@ export function AdminCourses() {
             course={course}
             isDeletingCourse={deleteCourse.isPending}
             key={course.id}
-            locale={locale}
+            localize={localize}
             onDeleteCourse={handleDelete}
             t={t}
           />
@@ -80,11 +80,11 @@ export function AdminCourses() {
 }
 
 function CategoryManager({
-  locale,
+  localize,
   t,
   confirm,
 }: {
-  locale: string;
+  localize: ReturnType<typeof useTranslation>["localize"];
   t: ReturnType<typeof useTranslation>["t"];
   confirm: ReturnType<typeof useFeedback>["confirm"];
 }) {
@@ -148,7 +148,7 @@ function CategoryManager({
               key={cat.id}
               className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-1 text-xs font-medium text-[var(--text-primary)]"
             >
-              <span>{locale === "vi" ? cat.name_vi : cat.name_en}</span>
+              <span>{localize(cat, "name")}</span>
               <button
                 className="ml-1 rounded p-0.5 text-[var(--text-tertiary)] hover:text-[var(--brand-primary)]"
                 onClick={() => startEdit(cat)}
@@ -214,13 +214,13 @@ function CategoryManager({
 function CoursePanel({
   course,
   isDeletingCourse,
-  locale,
+  localize,
   onDeleteCourse,
   t,
 }: {
   course: CourseListItem;
   isDeletingCourse: boolean;
-  locale: string;
+  localize: ReturnType<typeof useTranslation>["localize"];
   onDeleteCourse: (slug: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }) {
@@ -228,8 +228,7 @@ function CoursePanel({
   const courseQuery = useCourseQuery(isOpen ? course.slug : undefined);
   const deleteLesson = useDeleteLessonMutation(course.slug);
   const lessons = courseQuery.data?.lessons ?? [];
-  const title =
-    locale === "vi" ? course.title_vi || course.title_en : course.title_en || course.title_vi;
+  const title = localize(course, "title");
 
   const { confirm } = useFeedback();
 
@@ -271,7 +270,7 @@ function CoursePanel({
                 {course.category ? (
                   <>
                     <span>•</span>
-                    <span>{locale === "vi" ? course.category.name_vi : course.category.name_en}</span>
+                    <span>{localize(course.category, "name")}</span>
                   </>
                 ) : null}
               </p>
@@ -329,9 +328,7 @@ function CoursePanel({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[var(--text-primary)]">
-                      {locale === "vi"
-                        ? lesson.title_vi || lesson.title_en
-                        : lesson.title_en || lesson.title_vi}
+                      {localize(lesson, "title")}
                     </p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] flex flex-wrap gap-2 items-center">
                       <span>

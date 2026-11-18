@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Pagination, cn } from "@/components/ui";
+import { Button, Card, Pagination, Skeleton, cn } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -18,7 +18,7 @@ const PAGE_SIZE_DEFAULT = 4;
 
 export function ArticlePage() {
   const { can } = useAuth();
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
   const [searchInput, setSearchInput] = useState("");
@@ -107,14 +107,33 @@ export function ArticlePage() {
             variant={selectedCategoryId === cat.id ? "primary" : "secondary"}
             onClick={() => handleCategoryChange(cat.id)}
           >
-            {locale === "vi" ? (cat.name_vi || cat.name_en) : (cat.name_en || cat.name_vi)}
+            {localize(cat, "name")}
           </Button>
         ))}
       </div>
 
       {articlesQuery.isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2, 3, 4].map(i => <Card key={i} className="h-48 animate-pulse bg-[var(--bg-surface)]" />)}
+        <div className="grid gap-6 md:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="aspect-[16/9] w-full rounded-none" />
+              <div className="space-y-4 p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-6 w-4/5" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-7 w-7 rounded-full" />
+                  <Skeleton className="h-3 w-36" />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       ) : null}
 
@@ -158,16 +177,13 @@ export function ArticlePage() {
                   </span>
                   {article.category ? (
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
-                      {locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)}
+                      {localize(article.category, "name")}
                     </span>
                   ) : null}
                 </div>
                 <h2 className="mt-4 text-xl font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
-                  {locale === 'vi' ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi)}
+                  {localize(article, "title")}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-2">
-                  {locale === 'vi' ? article.title_en : article.title_vi}
-                </p>
                 <div className="mt-4 flex items-center gap-3">
                   <div className="h-7 w-7 rounded-full bg-[var(--bg-base)] flex items-center justify-center text-[10px] font-bold text-[var(--text-tertiary)]">
                     {article.creator.username.slice(0, 2).toUpperCase()}

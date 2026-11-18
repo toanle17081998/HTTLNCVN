@@ -18,6 +18,24 @@ export const messages = {
   vi: viMessages satisfies Record<TranslationKey, string>,
 } as const;
 
+export function getLocalizedField(
+  record: object | null | undefined,
+  field: string,
+  locale: Locale = defaultLocale,
+  fallback = "",
+): string {
+  if (!record) return fallback;
+  const values = record as Record<string, unknown>;
+  const read = (candidate: Locale) => {
+    const snakeCase = values[`${field}_${candidate}`];
+    const camelCase = values[`${field}${candidate[0].toUpperCase()}${candidate.slice(1)}`];
+    const value = snakeCase || camelCase;
+    return typeof value === "string" ? value : "";
+  };
+
+  return read(locale) || read(defaultLocale) || locales.map(read).find(Boolean) || fallback;
+}
+
 export function isLocale(value: string): value is Locale {
   return locales.includes(value as Locale);
 }

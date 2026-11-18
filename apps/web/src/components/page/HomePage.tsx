@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Card, cn } from "@/components/ui";
-import {
-  homepageMockData,
-  type HomepageEvent,
-} from "@/mock-data";
+import { Card, Skeleton, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { usePageQuery } from "@/services/page";
 import { useArticlesQuery, type ArticleListItem } from "@/services/article";
 import { useCoursesQuery, type CourseListItem } from "@/services/course";
+import { useEventsQuery, type EventItem } from "@/services/event";
 
 function formatDateTime(value: string, locale: string) {
   const date = new Date(value);
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -73,7 +70,7 @@ function SectionHeader({
 }
 
 function ArticleCard({ article }: { article: ArticleListItem }) {
-  const { t, locale } = useTranslation();
+  const { t, locale, localize } = useTranslation();
   return (
     <Card className="overflow-hidden flex flex-col">
       {article.cover_image_url ? (
@@ -89,7 +86,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
       <div className="grid gap-4 p-5 flex-1">
         <div className="flex items-center justify-between gap-3">
           <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-            {(article.category ? (locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)) : null) || t("nav.article.label")}
+            {(article.category ? localize(article.category, "name") : null) || t("nav.article.label")}
           </span>
           {article.published_at ? (
             <span className="text-sm font-medium text-[var(--text-secondary)]">
@@ -99,11 +96,8 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
         </div>
         <div>
           <h3 className="text-lg font-semibold leading-6 text-[var(--text-primary)] line-clamp-2">
-            {locale === "vi" ? (article.title_vi || article.title_en) : (article.title_en || article.title_vi)}
+            {localize(article, "title")}
           </h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
-            {locale === "vi" ? article.title_en : ""}
-          </p>
         </div>
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
           <span className="font-medium text-[var(--text-primary)]">
@@ -121,11 +115,58 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
   );
 }
 
+function ArticleCardSkeleton({ className }: { className?: string }) {
+  return (
+    <Card className={cn("overflow-hidden", className)}>
+      <Skeleton className="h-40 w-full rounded-none" />
+      <div className="space-y-4 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-6 w-4/5" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <div className="flex items-center justify-between border-t border-[var(--border-subtle)] pt-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function CourseCardSkeleton({ className }: { className?: string }) {
+  return (
+    <Card className={cn("overflow-hidden", className)}>
+      <Skeleton className="h-40 w-full rounded-none" />
+      <div className="space-y-4 p-5">
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-6 w-20" />
+        </div>
+        <Skeleton className="h-7 w-4/5" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <div className="flex items-center justify-between border-t border-[var(--border-subtle)] pt-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
         function EventCard({
           event,
           featured = false,
 }: {
-          event: HomepageEvent;
+          event: EventItem;
         featured?: boolean;
 }) {
   const {t, locale} = useTranslation();
@@ -149,15 +190,15 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
                 {event.title}
               </h3>
               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                {event.excerpt}
+                {event.description}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
-                {event.is_online ? t("event.location.online") : event.location_name}
+                {event.location || t("event.location.online")}
               </span>
               <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
-                {event.organizer.name}
+                {event.creator.username}
               </span>
             </div>
           </div>
@@ -166,7 +207,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
 }
 
         function CourseCard({course}: {course: CourseListItem }) {
-  const {t, locale} = useTranslation();
+  const {t, localize} = useTranslation();
         return (
         <Card className="overflow-hidden flex flex-col">
           {course.cover_image_url ? (
@@ -183,7 +224,7 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               {course.category ? (
                 <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-[var(--brand-primary)]">
-                  {locale === "vi" ? course.category.name_vi : course.category.name_en}
+                  {localize(course.category, "name")}
                 </span>
               ) : null}
               <span className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1 text-[var(--text-secondary)]">
@@ -192,10 +233,10 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
             </div>
             <div>
               <h3 className="text-xl font-semibold leading-7 text-[var(--text-primary)] line-clamp-2">
-                {locale === "vi" ? (course.title_vi || course.title_en) : (course.title_en || course.title_vi)}
+                {localize(course, "title")}
               </h3>
               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
-                {locale === "vi" ? (course.summary_vi || course.summary_en) : (course.summary_en || course.summary_vi)}
+                {localize(course, "summary")}
               </p>
             </div>
             <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4 text-sm">
@@ -316,26 +357,25 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
 }
 
             export function HomePage() {
-  const {t, locale} = useTranslation();
+  const {t, localize} = useTranslation();
             const articlesQuery = useArticlesQuery({take: 3, status: "published" });
             const coursesQuery = useCoursesQuery({take: 3, status: "published" });
+            const eventsQuery = useEventsQuery({take: 3, status: "published", upcoming: true });
             const {data: pageData } = usePageQuery("home");
 
-            const {events} = homepageMockData;
+            const events = eventsQuery.data?.items ?? [];
             const [featuredEvent, ...secondaryEvents] = events;
-            const allEvents = [featuredEvent, ...secondaryEvents].filter(Boolean) as HomepageEvent[];
+            const allEvents = [featuredEvent, ...secondaryEvents].filter(Boolean) as EventItem[];
 
             const stats = [
-            {label: t("home.stats.courses"), value: "12" },
-            {label: t("home.stats.lectures"), value: "28" },
-            {label: t("home.stats.gatherings"), value: "6" },
+            {label: t("home.stats.courses"), value: String(coursesQuery.data?.total ?? 0) },
+            {label: t("home.stats.lectures"), value: String(articlesQuery.data?.total ?? 0) },
+            {label: t("home.stats.gatherings"), value: String(eventsQuery.data?.total ?? 0) },
             ];
 
             const heroContent = {
               eyebrow: t("home.hero.eyebrow"),
-            headline: locale === "vi"
-            ? (pageData?.title_vi || t("home.hero.headline"))
-            : (pageData?.title_en || t("home.hero.headline")),
+            headline: localize(pageData, "title", t("home.hero.headline")),
             subheadline: t("home.hero.subheadline"),
             image: (pageData as any)?.cover_image_url || "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=1400&q=80"
   };
@@ -422,7 +462,9 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
                       />
                       {articlesQuery.isLoading ? (
                         <div className="grid gap-6 lg:grid-cols-3">
-                          {[1, 2, 3].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-base)] rounded-2xl" />)}
+                          {[1, 2, 3].map((i) => (
+                            <ArticleCardSkeleton className={i > 1 ? "hidden lg:block" : undefined} key={i} />
+                          ))}
                         </div>
                       ) : (
                         <>
@@ -469,7 +511,9 @@ function ArticleCard({ article }: { article: ArticleListItem }) {
                       />
                       {coursesQuery.isLoading ? (
                         <div className="grid gap-6 lg:grid-cols-3">
-                          {[1, 2, 3].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-base)] rounded-2xl" />)}
+                          {[1, 2, 3].map((i) => (
+                            <CourseCardSkeleton className={i > 1 ? "hidden lg:block" : undefined} key={i} />
+                          ))}
                         </div>
                       ) : (
                         <>

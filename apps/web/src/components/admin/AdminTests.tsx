@@ -8,7 +8,7 @@ import { useTranslation } from "@/providers/I18nProvider";
 import { useCourseQuery, useCoursesQuery } from "@/services/course";
 
 export function AdminTests() {
-  const { locale, t } = useTranslation();
+  const { localize, t } = useTranslation();
   const coursesQuery = useCoursesQuery({ take: 100 });
   const [selectedSlug, setSelectedSlug] = useState("");
   const activeSlug = selectedSlug || (coursesQuery.data?.items || []).filter((c) => c.slug !== "isom-b-5")[0]?.slug || "";
@@ -32,7 +32,7 @@ export function AdminTests() {
         >
           {(coursesQuery.data?.items || []).filter((c) => c.slug !== "isom-b-5").map((course) => (
             <option key={course.id} value={course.slug}>
-              {locale === "vi" ? course.title_vi : course.title_en}
+              {localize(course, "title")}
             </option>
           ))}
         </Select>

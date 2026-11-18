@@ -16,7 +16,7 @@ export default function AdminEditLessonRoute() {
   const slug = params.slug as string;
   const lessonId = params.lessonId as string;
   const { can } = useAuth();
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const lessonQuery = useLessonQuery(slug, lessonId);
   const updateLesson = useUpdateLessonMutation(lessonId, slug);
 
@@ -52,7 +52,7 @@ export default function AdminEditLessonRoute() {
   return (
     <PageLayout
       eyebrow={t("admin.common.admin")}
-      title={t("admin.common.editNamed", { name: lessonQuery.data.title_vi || lessonQuery.data.title_en })}
+      title={t("admin.common.editNamed", { name: localize(lessonQuery.data, "title") })}
       actions={
         <Button variant="secondary" onClick={() => router.push("/admin/courses")}>
           {t("admin.templates.backToCourses")}

@@ -18,7 +18,7 @@ export default function AdminCreateQuizRoute() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { can } = useAuth();
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const coursesQuery = useCoursesQuery({ take: 100 });
   const requestedCourseSlug = searchParams.get("course") ?? "";
   const requestedLessonId = searchParams.get("lesson") ?? "";
@@ -104,7 +104,7 @@ export default function AdminCreateQuizRoute() {
             >
               {courses.map((course) => (
                 <option key={course.id} value={course.slug}>
-                  {course.title_vi || course.title_en || course.slug}
+                  {localize(course, "title", course.slug)}
                 </option>
               ))}
             </Select>
@@ -123,7 +123,7 @@ export default function AdminCreateQuizRoute() {
             >
               {lessons.map((lesson) => (
                 <option key={lesson.id} value={lesson.id}>
-                  {lesson.title_vi || lesson.title_en || lesson.id}
+                  {localize(lesson, "title", lesson.id)}
                 </option>
               ))}
             </Select>
@@ -196,7 +196,7 @@ export default function AdminCreateQuizRoute() {
                 />
                 <span>
                   <span className="block font-semibold text-[var(--text-primary)]">
-                    {template.body_template_vi || template.body_template_en}
+                    {localize(template, "body_template")}
                   </span>
                   <span className="mt-1 block text-xs text-[var(--text-secondary)]">
                     {template.template_type} / {template.difficulty}

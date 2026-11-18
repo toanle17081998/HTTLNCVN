@@ -8,12 +8,14 @@ import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useEffect } from "react";
 import { Card } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 
 export default function EditCoursePage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
   const { can } = useAuth();
+  const { localize } = useTranslation();
   
   const courseQuery = useCourseQuery(slug);
   const updateCourse = useUpdateCourseMutation(slug);
@@ -52,7 +54,7 @@ export default function EditCoursePage() {
   }
 
   return (
-    <PageLayout eyebrow="Admin" title={`Edit: ${courseQuery.data.title_vi || courseQuery.data.title_en}`}>
+    <PageLayout eyebrow="Admin" title={`Edit: ${localize(courseQuery.data, "title")}`}>
       <div className="py-10">
         <CourseForm
           title="Edit Course"

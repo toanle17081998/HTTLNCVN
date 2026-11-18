@@ -88,7 +88,7 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
 
   const categoriesQuery = useArticleCategoriesQuery();
   const { locale } = useTranslation();
-  const [activeLang, setActiveLang] = useState<"en" | "vi">((locale as any) === "vi" ? "vi" : "en");
+  const [activeLang, setActiveLang] = useState<"en" | "vi">(locale);
 
   const [titles, setTitles] = useState({
     en: initialArticle?.title_en || "",

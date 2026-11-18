@@ -36,7 +36,7 @@ function nextSundayInput() {
 }
 
 function formatDate(value: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
 }
 
 type ServingSchedulePageProps = {

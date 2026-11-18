@@ -18,18 +18,14 @@ export function CategorySelect({
   onChange,
   placeholder = "Select category",
 }: CategorySelectProps) {
-  const { locale } = useTranslation();
+  const { localize } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTooltipId, setActiveTooltipId] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedCat = categories.find((c) => String(c.id) === value);
-  const selectedLabel = selectedCat
-    ? locale === "vi"
-      ? selectedCat.name_vi || selectedCat.name_en
-      : selectedCat.name_en || selectedCat.name_vi
-    : placeholder;
+  const selectedLabel = selectedCat ? localize(selectedCat, "name") : placeholder;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -93,11 +89,8 @@ export function CategorySelect({
           </div>
 
           {categories.map((cat) => {
-            const name = locale === "vi" ? cat.name_vi || cat.name_en : cat.name_en || cat.name_vi;
-            const description =
-              locale === "vi"
-                ? cat.description_vi || cat.description_en
-                : cat.description_en || cat.description_vi;
+            const name = localize(cat, "name");
+            const description = localize(cat, "description");
             const isSelected = String(cat.id) === value;
             const showTooltip = activeTooltipId === cat.id && Boolean(description);
 

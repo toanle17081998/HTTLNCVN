@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   defaultLocale,
+  getLocalizedField,
   isLocale,
   messages,
   type Locale,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/i18n";
 
 type I18nContextValue = {
+  localize: (record: object | null | undefined, field: string, fallback?: string) => string;
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, params?: Record<string, string>) => string;
@@ -80,6 +82,9 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   const value = useMemo<I18nContextValue>(() => {
     return {
+      localize(record, field, fallback = "") {
+        return getLocalizedField(record, field, locale, fallback);
+      },
       locale,
       setLocale(nextLocale: Locale) {
         updateClientLocale(nextLocale);

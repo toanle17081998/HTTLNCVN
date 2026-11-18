@@ -8,6 +8,7 @@ import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleQuery } from "@/services/article";
 import { markdownToHtml } from "./articleEditorUtils";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { getLocalizedField, type Locale } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 
 type ArticleDetailPageProps = {
@@ -89,24 +90,19 @@ function renderArticleBody(value: string) {
 }
 
 export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
-  const { t, locale } = useTranslation();
+  const { t, locale, localize } = useTranslation();
   const articleQuery = useArticleQuery(slug);
   const article = articleQuery.data;
 
-  const [readerLang, setReaderLang] = useState<"en" | "vi">((locale as any) === "vi" ? "vi" : "en");
+  const [readerLang, setReaderLang] = useState<Locale>(locale);
 
   // Sync with global locale changes
   useEffect(() => {
-    setReaderLang((locale as any) === "vi" ? "vi" : "en");
+    setReaderLang(locale);
   }, [locale]);
 
-  const activeTitle = readerLang === "vi"
-    ? article?.title_vi || article?.title_en
-    : article?.title_en || article?.title_vi;
-
-  const activeBody = readerLang === "vi"
-    ? article?.content_markdown_vi || article?.content_markdown_en || ""
-    : article?.content_markdown_en || article?.content_markdown_vi || "";
+  const activeTitle = getLocalizedField(article, "title", readerLang);
+  const activeBody = getLocalizedField(article, "content_markdown", readerLang);
 
   const renderedBody = useMemo(() => renderArticleBody(activeBody), [activeBody]);
 
@@ -121,7 +117,7 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
             <span>By {article.creator.username}</span>
             {article.published_at ? (
               <span>
-                {new Date(article.published_at).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
+                {new Date(article.published_at).toLocaleDateString(locale, {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
@@ -134,7 +130,7 @@ export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
       coverImage={article?.cover_image_url || undefined}
       eyebrow={
         article?.category
-          ? (locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi))
+          ? localize(article.category, "name")
           : t("nav.article.label")
       }
       showHeroImage={Boolean(article?.cover_image_url)}

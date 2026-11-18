@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { CourseDetailPage } from "@/components/course/CourseDetailPage";
 import { courseApi } from "@/services/course";
+import { getLocalizedField } from "@/lib/i18n";
 
 type CourseDetailRouteProps = {
   params: Promise<{ slug: string }>;
@@ -11,11 +12,11 @@ export async function generateMetadata({ params }: CourseDetailRouteProps): Prom
   try {
     const course = await courseApi.detail(slug);
     return {
-      title: `${course.title_vi || course.title_en} | HTNC`,
-      description: course.summary_vi ?? course.summary_en ?? undefined,
+      title: `${getLocalizedField(course, "title")} | HTNC`,
+      description: getLocalizedField(course, "summary") || undefined,
       openGraph: {
-        title: course.title_vi || course.title_en,
-        description: course.summary_vi ?? course.summary_en ?? undefined,
+        title: getLocalizedField(course, "title"),
+        description: getLocalizedField(course, "summary") || undefined,
         images: course.cover_image_url ? [course.cover_image_url] : [],
         type: "website",
       },

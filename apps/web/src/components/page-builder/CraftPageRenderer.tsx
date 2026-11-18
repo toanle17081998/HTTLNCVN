@@ -10,19 +10,20 @@ import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";
 import { ensureValidPageContent } from "./defaultContent";
 import { useTranslation } from "@/providers/I18nProvider";
+import { getLocalizedField, type Locale } from "@/lib/i18n";
 
 export function CraftPageRenderer({
   path,
   previewLanguage,
 }: {
   path: string;
-  previewLanguage?: "en" | "vi";
+  previewLanguage?: Locale;
 }) {
   const pageQuery = useResolvedPageQuery(path);
   const { can } = useAuth();
   const { locale } = useTranslation();
   const canEdit = can(PERMISSIONS.manageArticle);
-  const readerLang = previewLanguage ?? (locale === "vi" ? "vi" : "en");
+  const readerLang = previewLanguage ?? locale;
 
   if (pageQuery.isLoading) {
     return (
@@ -61,12 +62,12 @@ export function CraftPageRenderer({
   const page = pageQuery.data;
   if (!page) return null;
 
-  const rawActive = readerLang === "vi" ? page.content_vi : page.content_en;
+  const rawActive = getLocalizedField(page, "content", readerLang);
   // If the active language content is empty or default template, use the non-empty content
-  const activeContent = rawActive && rawActive.trim() && rawActive !== "{}" ? rawActive : (page.content_en || page.content_vi);
+  const activeContent = rawActive && rawActive.trim() && rawActive !== "{}" ? rawActive : getLocalizedField(page, "content");
   const validContent = ensureValidPageContent(
     activeContent,
-    readerLang === "vi" ? page.title_vi || page.title_en : page.title_en || page.title_vi,
+    getLocalizedField(page, "title", readerLang),
     page.route_path
   );
 

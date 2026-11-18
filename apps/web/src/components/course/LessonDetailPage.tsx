@@ -8,6 +8,7 @@ import { Button, Card } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { PERMISSIONS } from "@/lib/rbac";
+import { getLocalizedField } from "@/lib/i18n";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { markdownToHtml, isRichTextHtml } from "@/components/article/articleEditorUtils";
@@ -29,7 +30,7 @@ function renderLessonBody(value: string) {
 }
 
 export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps) {
-  const { t, locale, setLocale } = useTranslation();
+  const { t, locale, localize, setLocale } = useTranslation();
   const { confirm } = useFeedback();
   const router = useRouter();
   const { can, isAuthenticated } = useAuth();
@@ -39,10 +40,8 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
   const deleteTemplate = useDeleteTemplateMutation(lessonId);
   const deleteLesson = useDeleteLessonMutation(courseSlug);
   const lesson = lessonQuery.data;
-  const readerLang = locale === "vi" ? "vi" : "en";
-  const body = readerLang === "vi"
-    ? (lesson?.content_markdown_vi || lesson?.content_markdown_en || "")
-    : (lesson?.content_markdown_en || lesson?.content_markdown_vi || "");
+  const readerLang = locale;
+  const body = getLocalizedField(lesson, "content_markdown", readerLang);
   const html = useMemo(() => renderLessonBody(body), [body]);
 
   async function handleStartQuiz(quiz: QuizListItem) {
@@ -52,9 +51,9 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
 
   return (
     <PageLayout
-      description={locale === "vi" ? (lesson?.course.title_vi ?? "Bài học khóa học.") : (lesson?.course.title_en ?? "Course lesson.")}
-      eyebrow={locale === "vi" ? (lesson?.course.title_vi ?? "Bài học") : (lesson?.course.title_en ?? "Lesson")}
-      title={locale === "vi" ? (lesson?.title_vi || lesson?.title_en || "Bài học") : (lesson?.title_en || lesson?.title_vi || "Lesson")}
+      description={localize(lesson?.course, "title", t("lesson.label"))}
+      eyebrow={localize(lesson?.course, "title", t("lesson.label"))}
+      title={localize(lesson, "title", t("lesson.label"))}
     >
       {lessonQuery.isLoading ? (
         <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
@@ -129,7 +128,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                     key={quiz.id}
                   >
                     <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-                      {locale === "vi" ? (quiz.title_vi || quiz.title_en) : (quiz.title_en || quiz.title_vi)}
+                      {localize(quiz, "title")}
                     </h3>
                     <p className="mt-1 text-xs text-[var(--text-secondary)]">
                       {quiz.question_count} questions

@@ -31,7 +31,7 @@ const adminPathMap: Record<string, string> = {
 };
 
 export function Breadcrumb({ pathname }: BreadcrumbProps) {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const segments = pathname.split("/").filter(Boolean);
 
   // Extract params for dynamic labels
@@ -79,17 +79,17 @@ export function Breadcrumb({ pathname }: BreadcrumbProps) {
           if (segment === courseSlug) {
              if (courseQuery.isLoading) label = "...";
              else if (courseQuery.data) {
-                label = locale === 'vi' ? (courseQuery.data.title_vi || courseQuery.data.title_en) : (courseQuery.data.title_en || courseQuery.data.title_vi);
+                label = localize(courseQuery.data, "title");
              }
           } else if (segment === lessonId) {
              if (lessonQuery.isLoading) label = "...";
              else if (lessonQuery.data) {
-                label = locale === 'vi' ? (lessonQuery.data.title_vi || lessonQuery.data.title_en) : (lessonQuery.data.title_en || lessonQuery.data.title_vi);
+                label = localize(lessonQuery.data, "title");
              }
           } else if (segment === articleSlug) {
              if (articleQuery.isLoading) label = "...";
              else if (articleQuery.data) {
-                label = locale === 'vi' ? (articleQuery.data.title_vi || articleQuery.data.title_en) : (articleQuery.data.title_en || articleQuery.data.title_vi);
+                label = localize(articleQuery.data, "title");
              }
           }
 

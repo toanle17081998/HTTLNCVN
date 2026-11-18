@@ -141,7 +141,7 @@ type ChurchUnitPageProps = {
 };
 
 export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnitPageProps) {
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const { can, isAuthenticated, isLoading: authLoading, user: currentUser } = useAuth();
   const { confirm, toast } = useFeedback();
 
@@ -750,7 +750,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                 }));
                               }}
                             />
-                            <span>{course.title_vi} ({course.title_en})</span>
+                            <span>{localize(course, "title")}</span>
                           </label>
                         );
                       })}
@@ -1142,7 +1142,7 @@ type ClassScoresModalProps = {
 };
 
 function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
-  const { t } = useTranslation();
+  const { t, localize } = useTranslation();
   const { data: scores, isLoading, error } = useClassScoresQuery(unit.id);
   const [selectedCourseId, setSelectedCourseId] = useState<string>(() => unit.courses?.[0]?.id ?? "");
 
@@ -1202,7 +1202,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                 >
                   {unit.courses.map((course) => (
                     <option key={course.id} value={course.id}>
-                      {course.title_vi}
+                      {localize(course, "title")}
                     </option>
                   ))}
                 </Select>
@@ -1221,7 +1221,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                       : "bg-[var(--bg-base)] text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]",
                   )}
                 >
-                  {course.title_vi}
+                  {localize(course, "title")}
                 </button>
               ))}
             </div>
@@ -1302,7 +1302,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                           courseScore.quiz_attempts.map((qa: any, idx: number) => (
                             <div key={idx} className="flex items-center justify-between gap-4 text-xs">
                               <span className="font-semibold text-[var(--text-secondary)] truncate max-w-[200px]">
-                                {qa.quiz_title_vi || qa.quiz_title_en}
+                                {localize(qa, "quiz_title")}
                               </span>
                               <span
                                 className={cn(

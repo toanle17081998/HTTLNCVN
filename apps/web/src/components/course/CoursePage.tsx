@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, Pagination, cn } from "@/components/ui";
+import { Button, Card, Pagination, Skeleton, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -21,7 +21,7 @@ function getStatusLabelKey(status: string) {
 }
 
 export function CoursePage() {
-  const { t, locale } = useTranslation();
+  const { t, localize } = useTranslation();
   const router = useRouter();
   const { can } = useAuth();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
@@ -97,14 +97,30 @@ export function CoursePage() {
             variant={selectedCategoryId === cat.id ? "primary" : "secondary"}
             onClick={() => handleCategoryChange(cat.id)}
           >
-            {locale === "vi" ? cat.name_vi : cat.name_en}
+            {localize(cat, "name")}
           </Button>
         ))}
       </div>
 
       {coursesQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2, 3, 4].map(i => <Card key={i} className="h-64 animate-pulse bg-[var(--bg-surface)]" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="aspect-[16/9] w-full rounded-none" />
+              <div className="space-y-4 p-6">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-6 w-4/5" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       ) : null}
 
@@ -139,7 +155,7 @@ export function CoursePage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {course.category ? (
                     <span className="rounded-md bg-[var(--brand-muted)] px-2.5 py-1 text-xs font-semibold uppercase text-[var(--brand-primary)]">
-                      {locale === "vi" ? course.category.name_vi : course.category.name_en}
+                      {localize(course.category, "name")}
                     </span>
                   ) : null}
                   <span className="text-xs font-medium text-[var(--text-tertiary)]">
@@ -156,10 +172,10 @@ export function CoursePage() {
                 </div>
 
                 <h2 className="mt-4 text-xl font-semibold text-[var(--text-primary)]">
-                  {locale === "vi" ? (course.title_vi || course.title_en) : (course.title_en || course.title_vi)}
+                  {localize(course, "title")}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)] line-clamp-3">
-                  {locale === "vi" ? (course.summary_vi || course.summary_en) : (course.summary_en || course.summary_vi)}
+                  {localize(course, "summary")}
                 </p>
               </div>
             </Card>

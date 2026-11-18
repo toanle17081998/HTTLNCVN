@@ -9,7 +9,7 @@ import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@/services/article";
 
 export function AdminArticles() {
-  const { locale, t } = useTranslation();
+  const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
   const articlesQuery = useArticlesQuery({ take: 100 });
   const deleteArticle = useDeleteArticleMutation();
@@ -52,7 +52,7 @@ export function AdminArticles() {
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-base font-bold text-[var(--text-primary)]">
-                  {locale === "vi" ? article.title_vi || article.title_en : article.title_en || article.title_vi}
+                  {localize(article, "title")}
                 </h2>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                   <span className={cn(
@@ -67,7 +67,7 @@ export function AdminArticles() {
                     <>
                       <span>•</span>
                       <span className="text-[var(--brand-primary)]">
-                        {locale === "vi" ? (article.category.name_vi || article.category.name_en) : (article.category.name_en || article.category.name_vi)}
+                        {localize(article.category, "name")}
                       </span>
                     </>
                   ) : null}

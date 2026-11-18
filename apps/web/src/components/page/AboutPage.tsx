@@ -11,17 +11,12 @@ function stripHtml(html: string): string {
 
 export function AboutPage() {
   const { data: pageData } = usePageQuery("about");
-  const { locale, t } = useTranslation();
+  const { localize, t } = useTranslation();
 
-  const htmlContent = locale === "vi"
-    ? (pageData?.content_vi || "")
-    : (pageData?.content_en || "");
+  const htmlContent = localize(pageData, "content");
 
   const content = {
-    title:
-      locale === "vi"
-        ? (pageData?.title_vi || t("nav.about.label"))
-        : (pageData?.title_en || t("nav.about.label")),
+    title: localize(pageData, "title", t("nav.about.label")),
     htmlBody: htmlContent,
     plainText: stripHtml(htmlContent) || t("about.fallback.body"),
     cover: (pageData as any)?.cover_image_url,

@@ -8,6 +8,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useEffect } from "react";
 import { Card } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 
 export default function EditLessonPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function EditLessonPage() {
   const slug = params.slug as string;
   const lessonId = params.lessonId as string;
   const { can } = useAuth();
+  const { localize } = useTranslation();
   
   const lessonQuery = useLessonQuery(slug, lessonId);
   const updateLesson = useUpdateLessonMutation(lessonId, slug);
@@ -53,7 +55,7 @@ export default function EditLessonPage() {
   }
 
   return (
-    <PageLayout eyebrow="Admin" title={`Edit: ${lessonQuery.data.title_vi || lessonQuery.data.title_en}`}>
+    <PageLayout eyebrow="Admin" title={`Edit: ${localize(lessonQuery.data, "title")}`}>
       <div className="py-10">
         <LessonForm
           title="Edit Lesson"

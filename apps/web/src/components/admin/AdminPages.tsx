@@ -13,7 +13,7 @@ import { CraftPageEditor } from "@/components/page-builder/CraftPageEditor";
 import { CreatePageModal } from "@/components/page-builder/editor/CreatePageModal";
 
 function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
-  const { locale, t } = useTranslation();
+  const { localize, t } = useTranslation();
   const { confirm, toast } = useFeedback();
   const [showDeleted, setShowDeleted] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -98,7 +98,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-base font-bold text-[var(--text-primary)]">
-                  {locale === "vi" ? page.title_vi || page.title_en : page.title_en || page.title_vi}
+                  {localize(page, "title")}
                 </h2>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                   <span className={cn(
