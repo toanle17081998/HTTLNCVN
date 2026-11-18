@@ -50,6 +50,8 @@ const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },
   { href: "/admin/tests", labelKey: "nav.test.label", icon: ClipboardCheck },
   { href: "/admin/church", labelKey: "nav.church.label", icon: Network },
+  { href: "/admin/households", labelKey: "admin.nav.households", icon: Users },
+  { href: "/admin/reports", labelKey: "admin.nav.reports", icon: ShieldCheck },
   { href: "/admin/serving-schedules/worship", labelKey: "nav.servingWorship.label", icon: CalendarDays },
   { href: "/admin/serving-schedules/cleaning", labelKey: "nav.servingCleaning.label", icon: CalendarDays },
 ];
