@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonLink, Text, Title } from "@/components/ui";
 import Link from "next/link";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ChurchLogo } from "./ChurchLogo";
@@ -42,21 +43,21 @@ export function Footer() {
                 <ChurchLogo className="h-11 w-11" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-gold)] hover:text-[var(--brand-primary)]">
+                <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-gold)] hover:text-[var(--brand-primary)]">
                   {communityTitle}
-                </p>
-                <p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
+                </Text>
+                <Title as="p" className="mt-1" variant="subsection">
                   {appName}
-                </p>
-                <p className="text-sm text-[var(--text-secondary)]">
+                </Title>
+                <Text variant="small">
                   {tagline}
-                </p>
+                </Text>
               </div>
             </div>
 
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
+            <Text as="p" tone="inherit" variant="inherit" className="mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
               {description}
-            </p>
+            </Text>
 
             <div className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
               <span className="h-px w-8 bg-[var(--accent-gold)]" />
@@ -87,13 +88,13 @@ export function Footer() {
               );
 
               return item.href ? (
-                <a
-                  className="group flex min-h-20 items-center gap-4 px-1 py-3 transition-colors hover:text-[var(--brand-primary)]"
+                <ButtonLink
+                  className="group min-h-20 gap-4 px-1 py-3"
                   href={item.href}
                   key={item.id || item.labelEn}
                 >
                   {content}
-                </a>
+                </ButtonLink>
               ) : (
                 <div
                   className="group flex min-h-20 items-center gap-4 px-1 py-3"
@@ -107,9 +108,9 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-          <p className="text-sm text-[var(--text-secondary)]">
+          <Text variant="small">
             {"\u00A9"} {appName} {currentYear}. {copyrightText}
-          </p>
+          </Text>
 
           <nav aria-label="Footer" className="flex flex-wrap gap-2">
             {links.map((item) => {

@@ -10,6 +10,8 @@ import type {
   UpdatePageDto,
 } from './page.types';
 
+const authenticatedOnlyNavigationRoutes = new Set(['/church', '/prayer-journal']);
+
 @Injectable()
 export class PageRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -196,7 +198,9 @@ export class PageRepository {
       ? header.items.filter((item) => {
           if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
           const navItem = item as Record<string, unknown>;
-          return navItem.visible !== false && navItem.guestVisible !== false;
+          return navItem.visible !== false &&
+            navItem.guestVisible !== false &&
+            !authenticatedOnlyNavigationRoutes.has(String(navItem.href ?? ''));
         })
       : [];
 

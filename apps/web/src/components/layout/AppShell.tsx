@@ -35,7 +35,7 @@ export function AppShell({ children }: AppShellProps) {
         <NavigationProgressBar />
       </Suspense>
       <ThemeInitializer />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <Header pathname={pathname} />
         <main className="min-w-0 flex-1 mt-16 md:mt-20">
           {showBreadcrumb && (
