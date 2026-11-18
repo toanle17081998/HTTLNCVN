@@ -1,8 +1,8 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { randomInt } from 'node:crypto';
 
 import { PrismaService } from '../../database/prisma.service';
+import { isAnswerCorrect, shuffle } from './course.domain';
 import type {
   CourseDto,
   CourseListDto,
@@ -93,49 +93,6 @@ type AttemptWithRelations = Prisma.QuizAttemptGetPayload<{
 function toNumber(value: Prisma.Decimal | number | null | undefined): number | null {
   if (value === null || value === undefined) return null;
   return Number(value);
-}
-
-function normalizeAnswer(value: string | null | undefined): string {
-  return String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
-
-function isAnswerCorrect(
-  studentAnswer: string,
-  rightAnswer: string | null,
-  type: string,
-  logicConfig?: Prisma.JsonValue,
-): boolean {
-  if (!studentAnswer || !studentAnswer.trim()) return false;
-
-  const normalizedStudent = normalizeAnswer(studentAnswer);
-
-  const config = logicConfig as {
-    answers?: Array<{ text?: string; value?: string; is_correct?: boolean }>;
-  };
-  if (Array.isArray(config?.answers) && config.answers.length > 0) {
-    const correctChoices = config.answers.filter((a) => a.is_correct);
-    return correctChoices.some(
-      (a) =>
-        (a.value && normalizeAnswer(a.value) === normalizedStudent) ||
-        (a.text && normalizeAnswer(a.text) === normalizedStudent),
-    );
-  }
-
-  if (!rightAnswer || !rightAnswer.trim()) return false;
-
-  if (type !== 'multiple_choices') return normalizedStudent === normalizeAnswer(rightAnswer);
-  const normalizeList = (value: string | null) =>
-    String(value ?? '').split(',').map(normalizeAnswer).filter(Boolean).sort().join('|');
-  return normalizeList(studentAnswer) === normalizeList(rightAnswer);
-}
-
-function shuffle<T>(values: readonly T[]): T[] {
-  const result = [...values];
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const swapIndex = randomInt(index + 1);
-    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-  }
-  return result;
 }
 
 function getCorrectAnswerDisplay(template: {

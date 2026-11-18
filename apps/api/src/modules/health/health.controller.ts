@@ -1,23 +1,22 @@
 import { Controller, Get } from '@nestjs/common';
 
 import { Public } from '../../common/decorators/public.decorator';
-import { PrismaService } from '../../database/prisma.service';
+import { HealthService } from './health.service';
 
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly healthService: HealthService) {}
 
   @Public()
   @Get('live')
   live() {
-    return { status: 'ok' };
+    return this.healthService.live();
   }
 
   @Public()
   @Get('ready')
   async ready() {
-    await this.prisma.$queryRaw`SELECT 1`;
-    return { database: 'ok', status: 'ok' };
+    return this.healthService.ready();
   }
 }
 

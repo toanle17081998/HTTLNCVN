@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../database/prisma.service';
 import { CacheService } from '../../common/performance/cache.service';
+import { ReportRepository } from './report.repository';
 import type { OperationalReportDto } from './report.types';
 
 @Injectable()
 export class ReportService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly reportRepository: ReportRepository,
     private readonly cache: CacheService,
   ) {}
 
@@ -17,39 +17,19 @@ export class ReportService {
 
   private async generateOperationalReport(): Promise<OperationalReportDto> {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const [
-      courseCheckIns,
-      eventCheckIns,
-      courseAttendees,
-      eventAttendees,
-      grades,
-      workload,
+    const {
       activeMembers,
       completedLessons,
+      courseAttendees,
+      courseCheckIns,
+      eventAttendees,
+      eventCheckIns,
+      grades,
       prayersLast30Days,
-    ] = await Promise.all([
-      this.prisma.courseAttendance.count(),
-      this.prisma.eventAttendance.count(),
-      this.prisma.courseAttendance.groupBy({ by: ['user_id'] }),
-      this.prisma.eventAttendance.groupBy({ by: ['user_id'] }),
-      this.prisma.courseGrade.groupBy({ by: ['status'], _count: { _all: true } }),
-      this.prisma.servingAssignment.groupBy({
-        by: ['user_id'],
-        _count: { _all: true },
-        orderBy: { _count: { user_id: 'desc' } },
-      }),
-      this.prisma.user.count({ where: { deleted_at: null, status: 'active' } }),
-      this.prisma.userLessonProgress.count({ where: { status: 'completed' } }),
-      this.prisma.prayer.count({ where: { created_at: { gte: thirtyDaysAgo } } }),
-    ]);
-
-    const topWorkload = workload.slice(0, 10);
-    const users = topWorkload.length
-      ? await this.prisma.user.findMany({
-          include: { profile: true },
-          where: { id: { in: topWorkload.map((item) => item.user_id) } },
-        })
-      : [];
+      topWorkload,
+      users,
+      workload,
+    } = await this.reportRepository.getOperationalData(thirtyDaysAgo);
     const userMap = new Map(users.map((user) => [
       user.id,
       [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ') || user.username,

@@ -1,26 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../database/prisma.service';
+import { PrivacyRepository } from './privacy.repository';
 
 @Injectable()
 export class PrivacyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly privacyRepository: PrivacyRepository) {}
 
   async exportUserData(userId: string) {
-    const user = await this.prisma.user.findFirst({
-      select: {
-        created_at: true,
-        email: true,
-        household_memberships: { include: { household: true } },
-        lesson_progress: true,
-        profile: true,
-        prayers_created: true,
-        role: { select: { name: true } },
-        status: true,
-        username: true,
-      },
-      where: { deleted_at: null, id: userId },
-    });
+    const user = await this.privacyRepository.findUserData(userId);
     if (!user) throw new NotFoundException({ code: 'NOT_FOUND', message: 'User not found.' });
     return { exported_at: new Date().toISOString(), user };
   }
