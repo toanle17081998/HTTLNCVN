@@ -53,13 +53,13 @@ export class MemberRepository {
       deleted_at: null,
       ...(q && {
         OR: [
-          { email: { contains: q, mode: 'insensitive' } },
-          { username: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q } },
+          { username: { contains: q } },
           {
             profile: {
               OR: [
-                { first_name: { contains: q, mode: 'insensitive' } },
-                { last_name: { contains: q, mode: 'insensitive' } },
+                { first_name: { contains: q } },
+                { last_name: { contains: q } },
               ],
             },
           },

@@ -418,8 +418,8 @@ export class CourseRepository {
       ...(categoryId !== undefined && { category_id: categoryId }),
       ...(q && {
         OR: [
-          { title_en: { contains: q, mode: 'insensitive' } },
-          { title_vi: { contains: q, mode: 'insensitive' } },
+          { title_en: { contains: q } },
+          { title_vi: { contains: q } },
         ],
       }),
     };
@@ -734,7 +734,7 @@ export class CourseRepository {
 
     const users = await this.prisma.user.findMany({
       where: {
-        email: { in: emails, mode: 'insensitive' },
+        email: { in: emails },
         deleted_at: null,
       },
       select: { id: true, email: true },

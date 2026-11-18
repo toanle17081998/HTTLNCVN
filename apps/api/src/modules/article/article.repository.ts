@@ -26,8 +26,8 @@ export class ArticleRepository {
       ...(filters.category_id !== undefined && { category_id: filters.category_id }),
       ...(filters.q && {
         OR: [
-          { title_en: { contains: filters.q, mode: 'insensitive' } },
-          { title_vi: { contains: filters.q, mode: 'insensitive' } },
+          { title_en: { contains: filters.q } },
+          { title_vi: { contains: filters.q } },
         ],
       }),
     };

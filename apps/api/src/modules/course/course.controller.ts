@@ -116,6 +116,7 @@ export class CourseController {
   }
 
   @Get(':slug/lessons/:lessonId')
+  @Can('read', 'lesson')
   findLessonById(
     @Param('lessonId') lessonId: string,
     @Request() req: { user: JwtPayload },
@@ -175,6 +176,7 @@ export class CourseController {
   }
 
   @Get(':slug/test')
+  @Can('read', 'course')
   getCourseTestStatus(
     @Param('slug') slug: string,
     @Request() req: { user: JwtPayload },
@@ -183,6 +185,7 @@ export class CourseController {
   }
 
   @Post(':slug/test')
+  @Can('update', 'course')
   publishCourseTest(
     @Param('slug') slug: string,
     @Body() dto: PublishCourseTestDto,
@@ -192,6 +195,7 @@ export class CourseController {
   }
 
   @Patch('test-availabilities/:id/close')
+  @Can('update', 'course')
   @HttpCode(HttpStatus.NO_CONTENT)
   closeCourseTest(
     @Param('id') id: string,
@@ -201,6 +205,7 @@ export class CourseController {
   }
 
   @Post('test-availabilities/:id/start')
+  @Can('take', 'quiz')
   startCourseTest(
     @Param('id') id: string,
     @Request() req: { user: JwtPayload },

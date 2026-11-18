@@ -5,12 +5,14 @@ import { PrismaService } from '../../database/prisma.service';
 import { PERMISSIONS_KEY, type PermissionRequirement } from '../decorators/permissions.decorator';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import type { JwtPayload } from '../strategies/jwt.strategy';
+import { CacheService } from '../performance/cache.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -48,15 +50,17 @@ export class RolesGuard implements CanActivate {
     }
 
     if (requiredPermissions && requiredPermissions.length > 0) {
-      const permissions = await this.prisma.rolePermission.findMany({
-        select: {
-          action: { select: { name: true } },
-          resource: { select: { name: true } },
-        },
-        where: {
-          role: { name: user.role },
-        },
-      });
+      const permissions = await this.cache.getOrSet(`role:${user.role}`, 60_000, () =>
+        this.prisma.rolePermission.findMany({
+          select: {
+            action: { select: { name: true } },
+            resource: { select: { name: true } },
+          },
+          where: {
+            role: { name: user.role },
+          },
+        }),
+      );
       const permissionSet = new Set(
         permissions.map((permission) => `${permission.action.name}:${permission.resource.name}`),
       );

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 
-import { Can, Permissions } from '../../common/decorators/permissions.decorator';
+import { Can } from '../../common/decorators/permissions.decorator';
 import { MemberService } from './member.service';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
@@ -25,7 +25,7 @@ export class MemberController {
   }
 
   @Post()
-  @Permissions({ action: 'create', resource: 'member' }, { action: 'update', resource: 'member' })
+  @Can('create', 'member')
   create(@Body() dto: CreateMemberDto): Promise<MemberDto> {
     return this.memberService.create(dto);
   }

@@ -72,6 +72,14 @@ const EVENT_INCLUDE = {
   },
 } as const;
 
+const EVENT_PUBLIC_INCLUDE = {
+  ...EVENT_INCLUDE,
+  attendees: {
+    ...EVENT_INCLUDE.attendees,
+    take: 0,
+  },
+} as const;
+
 const RECURRING_OCCURRENCE_LIMIT = 60;
 
 function toMemberDto(member: {
@@ -355,9 +363,9 @@ export class EventRepository {
     if (filters.q) {
       and.push({
         OR: [
-          { title: { contains: filters.q, mode: Prisma.QueryMode.insensitive } },
-          { description: { contains: filters.q, mode: Prisma.QueryMode.insensitive } },
-          { location: { contains: filters.q, mode: Prisma.QueryMode.insensitive } },
+          { title: { contains: filters.q } },
+          { description: { contains: filters.q } },
+          { location: { contains: filters.q } },
         ],
       });
     }
@@ -366,7 +374,7 @@ export class EventRepository {
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.event.findMany({
-        include: EVENT_INCLUDE,
+        include: viewerId ? EVENT_INCLUDE : EVENT_PUBLIC_INCLUDE,
         orderBy: [{ starts_at: 'asc' }, { title: 'asc' }],
         skip,
         take,

@@ -31,4 +31,8 @@ apps/*/.env
 
 # sql dumps
 *.sql
+!apps/api/prisma/migrations/20261117170000_add_performance_indexes/migration.sql
+*.dump
+backups/
+apps/api/prisma/schema.mysql.prisma
 

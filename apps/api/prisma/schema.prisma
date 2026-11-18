@@ -74,6 +74,7 @@ model User {
   lesson_progress       UserLessonProgress[]
 
   @@index([faith_sharer_id])
+  @@index([status, deleted_at])
   @@map("users")
 }
 
@@ -164,6 +165,8 @@ model Course {
   church_units ChurchUnit[] @relation("ChurchUnitCourses")
   test_availabilities CourseTestAvailability[]
 
+  @@index([status, deleted_at, published_at])
+  @@index([category_id, status])
   @@map("courses")
 }
 
@@ -361,6 +364,7 @@ model CourseGrade {
   course Course @relation(fields: [course_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, course_id])
+  @@index([status])
   @@map("course_grades")
 }
 
@@ -373,6 +377,7 @@ model CourseAttendance {
   user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([course_id, user_id])
+  @@index([user_id])
   @@map("course_attendance")
 }
 
@@ -401,6 +406,8 @@ model AuditLog {
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([occurred_at])
+  @@index([user_id, occurred_at])
   @@map("audit_logs")
 }
 
@@ -566,6 +573,8 @@ model Event {
   @@index([category_id])
   @@index([created_by])
   @@index([series_id])
+  @@index([status, deleted_at, starts_at])
+  @@index([audience, status])
   @@map("events")
 }
 
@@ -590,6 +599,7 @@ model EventAttendance {
   user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([event_id, user_id])
+  @@index([user_id])
   @@map("event_attendance")
 }
 
@@ -628,6 +638,7 @@ model Prayer {
   @@index([visibility])
   @@index([status])
   @@index([category_id])
+  @@index([created_at])
   @@map("prayers")
 }
 
@@ -681,6 +692,7 @@ model Article {
 
   @@index([category_id])
   @@index([created_by])
+  @@index([status, deleted_at, published_at])
   @@map("articles")
 }
 
@@ -701,6 +713,8 @@ model Page {
   creator User? @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
   @@index([created_by])
+  @@index([route_path, status, deleted_at])
+  @@index([slug, deleted_at])
   @@map("pages")
 }
 
@@ -736,6 +750,7 @@ model NotificationRecipient {
   user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([notification_id, user_id])
+  @@index([user_id, is_read])
   @@map("notification_recipients")
 }
 
@@ -767,6 +782,7 @@ model HouseholdMember {
   user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([household_id, user_id])
+  @@index([user_id])
   @@map("household_members")
 }
 
@@ -786,5 +802,6 @@ model UserLessonProgress {
 
   @@id([user_id, lesson_id])
   @@index([lesson_id])
+  @@index([status])
   @@map("user_lesson_progress")
 }

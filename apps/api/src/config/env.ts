@@ -13,6 +13,11 @@ type EnvShape = {
     refreshSecret: string;
   };
   port: number;
+  rateLimit: {
+    maxRequests: number;
+    windowMs: number;
+  };
+  trustProxyHops: number;
 };
 
 let cachedEnv: EnvShape | null = null;
@@ -57,6 +62,16 @@ function parsePort(name: string, fallback: number): number {
   return parsedValue;
 }
 
+function parseNonNegativeInt(name: string, fallback: number): number {
+  const rawValue = process.env[name];
+  if (!rawValue) return fallback;
+  const parsedValue = Number.parseInt(rawValue, 10);
+  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+    throw new Error(`Invalid non-negative integer for ${name}: ${rawValue}`);
+  }
+  return parsedValue;
+}
+
 export function getEnv(): EnvShape {
   if (cachedEnv) {
     return cachedEnv;
@@ -74,6 +89,11 @@ export function getEnv(): EnvShape {
       refreshSecret: requireString('JWT_REFRESH_SECRET'),
     },
     port: parsePort('PORT', 3001),
+    rateLimit: {
+      maxRequests: parseNonNegativeInt('RATE_LIMIT_MAX_REQUESTS', 300),
+      windowMs: parseNonNegativeInt('RATE_LIMIT_WINDOW_MS', 60_000),
+    },
+    trustProxyHops: parseNonNegativeInt('TRUST_PROXY_HOPS', 1),
   };
 
   return cachedEnv;
