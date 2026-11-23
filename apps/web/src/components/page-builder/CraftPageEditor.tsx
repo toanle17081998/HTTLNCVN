@@ -1,7 +1,7 @@
 "use client";
 
 import { Text, Title, Button, Card, Select, cn } from "@/components/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Editor, Element, Frame, useEditor } from "@craftjs/core";
 import {
   Eye,
@@ -75,35 +75,40 @@ function LanguageSelector({
   );
 }
 
-function BuilderSaveButton({
+function BuilderAutoSave({
   onSave,
-  saving,
-  label,
 }: {
-  onSave: (content: string) => Promise<void>;
-  saving: boolean;
-  label: string;
+  onSave: (content: string, status?: "draft" | "published", silent?: boolean) => Promise<void>;
 }) {
-  const { query } = useEditor();
+  const { serialized } = useEditor((_state, query) => ({ serialized: query.serialize() }));
+  const lastSaved = useRef(serialized);
 
-  return (
-    <Button isLoading={saving} onClick={() => onSave(query.serialize())} size="sm">
-      <Save className="mr-2 h-4 w-4" />
-      {label}
-    </Button>
-  );
+  useEffect(() => {
+    if (serialized === lastSaved.current) return;
+
+    const timeout = window.setTimeout(() => {
+      lastSaved.current = serialized;
+      void onSave(serialized, undefined, true);
+    }, 60_000);
+
+    return () => window.clearTimeout(timeout);
+  }, [onSave, serialized]);
+
+  return null;
 }
 
 function BuilderHeaderActions({
   onSave,
   saving,
+  deleting,
   page,
   editLang,
   onLanguageChange,
   onDelete,
 }: {
-  onSave: (content: string, status?: "draft" | "published") => Promise<void>;
+  onSave: (content: string, status?: "draft" | "published", silent?: boolean) => Promise<void>;
   saving: boolean;
+  deleting: boolean;
   page: Page;
   editLang: "en" | "vi";
   onLanguageChange: (lang: "en" | "vi") => void;
@@ -123,11 +128,12 @@ function BuilderHeaderActions({
       </Link>
       <Button
         disabled={saving}
-        onClick={() => onSave(query.serialize(), "draft")}
+        onClick={() => onSave(query.serialize())}
         size="sm"
         variant="secondary"
       >
-        {t("action.saveDraft")}
+        <Save className="mr-2 h-4 w-4" />
+        {t("action.save")}
       </Button>
       <Button
         isLoading={saving}
@@ -138,7 +144,8 @@ function BuilderHeaderActions({
         {t("action.publish")}
       </Button>
       <Button
-        disabled={saving}
+        disabled={saving || deleting}
+        isLoading={deleting}
         onClick={onDelete}
         size="sm"
         variant="danger"
@@ -154,16 +161,16 @@ function BuilderShell({
   content,
   onSave,
   saving,
-  saveLabel,
+  deleting,
   page,
   editLang,
   onLanguageChange,
   onDelete,
 }: {
   content: string;
-  onSave: (content: string, status?: "draft" | "published") => Promise<void>;
+  onSave: (content: string, status?: "draft" | "published", silent?: boolean) => Promise<void>;
   saving: boolean;
-  saveLabel: string;
+  deleting: boolean;
   page: Page;
   editLang: "en" | "vi";
   onLanguageChange: (lang: "en" | "vi") => void;
@@ -183,6 +190,7 @@ function BuilderShell({
   return (
     <Editor enabled resolver={craftResolver}>
       <SectionBuilderProvider>
+        <BuilderAutoSave onSave={onSave} />
         <div
           className={cn(
             "grid gap-6",
@@ -208,6 +216,7 @@ function BuilderShell({
                   onSave={onSave}
                   page={page}
                   saving={saving}
+                  deleting={deleting}
                 />
               </div>
             </Card>
@@ -232,7 +241,6 @@ function BuilderShell({
                     >
                       {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </button>
-                    <BuilderSaveButton label={saveLabel} onSave={onSave} saving={saving} />
                   </div>
                 </div>
                 <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
@@ -283,7 +291,11 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
   const selectedPage = selectedPageQuery.data ?? null;
   const updatePage = useUpdatePageMutation(selectedPageSummary?.slug ?? "");
 
-  async function handleSave(content: string, newStatus?: "draft" | "published") {
+  async function handleSave(
+    content: string,
+    newStatus?: "draft" | "published",
+    silent = false,
+  ) {
     if (!selectedPage) return;
 
     try {
@@ -305,38 +317,21 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
           ...(newStatus ? { status: newStatus } : {}),
         });
       }
-      toast({
-        title: newStatus === "published"
-          ? t("toast.page.published")
-          : newStatus === "draft"
-            ? t("toast.page.draftSaved")
-            : t("toast.page.saved"),
-        variant: "success",
-      });
+      if (!silent) {
+        toast({
+          title: newStatus === "published"
+            ? t("toast.page.published")
+            : newStatus === "draft"
+              ? t("toast.page.draftSaved")
+              : t("toast.page.saved"),
+          variant: "success",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: pageKeys.all });
     } catch (error) {
       toast({
         description: error instanceof ApiError ? error.message : undefined,
         title: t("toast.page.saveFailed"),
-        variant: "error",
-      });
-    }
-  }
-
-  async function toggleStatus(status: "draft" | "published") {
-    if (!selectedPage) return;
-
-    try {
-      await updatePage.mutateAsync({ status });
-      toast({
-        title: status === "published" ? t("toast.page.published") : t("toast.page.draftSaved"),
-        variant: "success",
-      });
-      queryClient.invalidateQueries({ queryKey: pageKeys.all });
-    } catch (error) {
-      toast({
-        description: error instanceof ApiError ? error.message : undefined,
-        title: t("toast.page.statusFailed"),
         variant: "error",
       });
     }
@@ -501,7 +496,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
             )
           ) : selectedPage ? (
             <BuilderShell
-              key={`${selectedPage.id}-${editLang}-${selectedPage.updated_at}`}
+              key={`${selectedPage.id}-${editLang}`}
               content={ensureValidPageContent(
                 editLang === "en" ? selectedPage.content_en : selectedPage.content_vi,
                 editLang === "en" ? selectedPage.title_en : selectedPage.title_vi,
@@ -512,8 +507,8 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
               onLanguageChange={setEditLang}
               onSave={handleSave}
               page={selectedPage}
-              saveLabel={t("pageBuilder.saveLayout")}
               saving={updatePage.isPending}
+              deleting={deletePage.isPending}
             />
           ) : selectedPageSummary && selectedPageQuery.isLoading ? (
             <Card className="rounded-2xl p-8">

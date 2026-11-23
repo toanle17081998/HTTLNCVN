@@ -61,7 +61,7 @@ export function TextBlock(props: TextProps) {
     <NodeFrame>
       <Tag
         className={cn(
-          "page-builder-text outline-none",
+          "page-builder-text min-w-0 max-w-full whitespace-normal break-words outline-none",
           enabled && "cursor-text",
         )}
         contentEditable={enabled}

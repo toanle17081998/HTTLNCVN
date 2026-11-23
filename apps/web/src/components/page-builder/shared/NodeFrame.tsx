@@ -143,7 +143,7 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
   return (
     <div
       className={cn(
-        "group/section page-builder-node relative transition-shadow",
+        "group/section page-builder-node relative min-w-0 max-w-full transition-shadow",
         (parentId === null || parentId === "ROOT") && "w-full",
         isActive && "ring-2 ring-[var(--brand-primary)] ring-offset-2",
         parentId === "ROOT" && isHovered && "shadow-lg",

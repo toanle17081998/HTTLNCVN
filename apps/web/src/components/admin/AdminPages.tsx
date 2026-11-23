@@ -158,6 +158,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
                 </Link>
                 <Button
                   disabled={deletePage.isPending}
+                  isLoading={deletePage.isPending && deletePage.variables === page.slug}
                   onClick={() => handleDelete(page.slug, page.title_en)}
                   size="sm"
                   variant="danger"

@@ -141,7 +141,12 @@ export function useDeletePageMutation() {
 
   return useMutation({
     mutationFn: pageApi.remove,
-    onSuccess() {
+    onSuccess(_data, slug) {
+      queryClient.setQueryData<PageListResult>(pageKeys.list(), (current) =>
+        current
+          ? { items: current.items.filter((page) => page.slug !== slug) }
+          : current,
+      );
       queryClient.invalidateQueries({ queryKey: pageKeys.lists() });
     },
   });
