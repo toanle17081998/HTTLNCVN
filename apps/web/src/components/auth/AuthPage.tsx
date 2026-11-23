@@ -6,19 +6,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLoginMutation, useLogoutMutation } from "@/hooks/auth";
 
-const seededAccounts = [
-  { email: "member@htnc.local", label: "Church Member" },
-  { email: "editor@htnc.local", label: "Church Admin" },
-  { email: "admin@htnc.local", label: "System Admin" },
-];
-
 export function AuthPage() {
   const router = useRouter();
   const { isAuthenticated, role, user } = useAuth();
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
-  const [email, setEmail] = useState("editor@htnc.local");
-  const [password, setPassword] = useState("seed-password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,24 +87,6 @@ export function AuthPage() {
             ) : null}
           </form>
 
-          <div className="grid gap-2">
-            {seededAccounts.map((account) => (
-              <button
-                className="rounded-md border border-[var(--border-subtle)] px-3 py-2 text-left text-sm transition hover:bg-[var(--brand-muted)]"
-                key={account.email}
-                onClick={() => {
-                  setEmail(account.email);
-                  setPassword("seed-password");
-                }}
-                type="button"
-              >
-                <span className="block font-semibold text-[var(--text-primary)]">
-                  {account.label}
-                </span>
-                <span className="text-[var(--text-secondary)]">{account.email}</span>
-              </button>
-            ))}
-          </div>
         </Card>
 
         <Card className="h-max p-6">

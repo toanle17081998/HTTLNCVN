@@ -37,7 +37,7 @@ if (existsSync(rootEnvPath)) {
   }
 }
 
-const port = process.env.WEB_PORT || "5000";
+const port = process.env.WEB_PORT || process.env.PORT || "5000";
 
 if (!/^\d+$/.test(port)) {
   console.error(`WEB_PORT must be a number. Received: ${port}`);

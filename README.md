@@ -1,5 +1,7 @@
 # HTNC Platform
 
+See [docs/deploy-cpanel.md](docs/deploy-cpanel.md) for the two-application cPanel deployment process.
+
 Khoi tao cau truc ban dau cho nen tang hoc tap va sinh hoat voi huong kien truc:
 
 - Frontend: `Next.js`

@@ -196,17 +196,22 @@ if ($Target -in @("all", "backend")) {
     Copy-IfExists (Join-Path $backendRoot ".env.production") (Join-Path $apiRootStage ".env")
     Copy-IfExists (Join-Path $backendRoot ".env") (Join-Path $apiRootStage ".env")
 
-    Write-Stage "Installing backend production dependencies using npm install"
+    Write-Stage "Installing backend dependencies and generating Prisma client"
     Push-Location $apiRootStage
     try {
         Invoke-NativeOrThrow -FilePath npm -Arguments @(
             "install",
-            "--omit=dev",
             "--no-audit",
             "--no-fund"
         )
         Write-Host "Generating Prisma client for production..."
         Invoke-NativeOrThrow -FilePath npx -Arguments @("prisma", "generate", "--schema", "prisma/schema.prisma")
+        Invoke-NativeOrThrow -FilePath npm -Arguments @(
+            "prune",
+            "--omit=dev",
+            "--no-audit",
+            "--no-fund"
+        )
     } finally {
         Pop-Location
     }

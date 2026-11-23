@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredTokens } from "./auth";
+import { resolveMediaUrl } from "./media";
 import { pageApi, pageKeys } from "./page";
 
 export type HeaderNavItem = {
@@ -298,15 +299,15 @@ export function parseSiteNavigationConfig(rawString?: string): SiteNavigationCon
       ? [{
           durationSeconds: Number(parsed.intro.durationSeconds) || 3,
           id: "intro-legacy",
-          url: String(parsed.intro.imageUrl),
+          url: resolveMediaUrl(String(parsed.intro.imageUrl)),
         }]
       : [];
     const introImages = Array.isArray(parsed.intro?.images)
       ? parsed.intro.images.slice(0, 3).map((image: Partial<IntroImageConfig>, index: number) => ({
           durationSeconds: Math.min(30, Math.max(1, Number(image.durationSeconds) || 3)),
           id: String(image.id || `intro-${index}`),
-          mobileUrl: image.mobileUrl ? String(image.mobileUrl) : undefined,
-          url: String(image.url || ""),
+          mobileUrl: image.mobileUrl ? resolveMediaUrl(String(image.mobileUrl)) : undefined,
+          url: resolveMediaUrl(String(image.url || "")),
         })).filter((image: IntroImageConfig) => image.url)
       : legacyIntroImage;
     const footerDefaults = defaultSiteNavigationConfig.footer;
@@ -346,6 +347,7 @@ export function parseSiteNavigationConfig(rawString?: string): SiteNavigationCon
       pageHeroes[route] = {
         ...fallback,
         ...hero,
+        coverImage: resolveMediaUrl(String(hero?.coverImage || fallback.coverImage || "")),
         descriptionVi: fallbackCorruptedText(hero?.descriptionVi, fallback.descriptionVi),
         eyebrowVi: fallbackCorruptedText(hero?.eyebrowVi, fallback.eyebrowVi),
         titleVi: fallbackCorruptedText(hero?.titleVi, fallback.titleVi),

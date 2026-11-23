@@ -35,7 +35,8 @@
     "infra:ps": "docker compose -f infra/docker/docker-compose.local.yml ps",
     "infra:restart": "docker compose -f infra/docker/docker-compose.local.yml restart",
     "infra:reset": "docker compose -f infra/docker/docker-compose.local.yml down -v",
-    "build:prod": "powershell -ExecutionPolicy Bypass -File scripts/build-prod.ps1"
+    "build:prod": "powershell -ExecutionPolicy Bypass -File scripts/build-prod.ps1",
+    "build:cpanel": "powershell -ExecutionPolicy Bypass -File scripts/build-cpanel.ps1"
   },
   "devDependencies": {
     "husky": "^9.1.7"
