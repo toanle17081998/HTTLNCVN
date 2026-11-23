@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./client";
 import { getStoredTokens } from "./auth";
 
@@ -475,6 +475,7 @@ export const courseApi = {
 
 export function useCoursesQuery(params: CourseListParams = {}) {
   return useQuery({
+    placeholderData: keepPreviousData,
     queryFn: () => courseApi.list(params),
     queryKey: courseKeys.list(params),
   });

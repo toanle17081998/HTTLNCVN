@@ -88,7 +88,11 @@ export function PageHeader({
       <div
         className={cn(
           "grid items-start gap-8 lg:gap-12",
-          isCentered || !showHeroImage ? "max-w-3xl mx-auto text-center" : "lg:grid-cols-2",
+          isCentered
+            ? "mx-auto max-w-3xl text-center"
+            : showHeroImage
+              ? "lg:grid-cols-2"
+              : "max-w-3xl",
         )}
       >
         {/* Left Column: Eyebrow, Title, Description, Button Stack (Top to Bottom) */}

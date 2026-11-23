@@ -105,6 +105,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                 </div>
               </div>
               <div
+                data-selectable-content
                 className="mt-5 text-base leading-7 text-[var(--text-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_table]:w-full [&_table]:my-4 [&_table]:border-collapse [&_table]:border [&_table]:border-[var(--border-subtle)] [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:p-3 [&_th]:bg-[var(--brand-muted)] [&_th]:text-left [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:p-3"
                 dangerouslySetInnerHTML={{ __html: html }}
               />

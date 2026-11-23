@@ -10,6 +10,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { markdownToHtml, isRichTextHtml } from "@/components/article/articleEditorUtils";
 import { CourseTestPanel } from "@/components/course/CourseTestPanel";
+import { CourseDetailSkeleton } from "@/components/course/CourseDetailSkeleton";
 import {
   useCourseQuery,
   useDeleteCourseMutation,
@@ -39,6 +40,8 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
       ? rawDescription
       : markdownToHtml(rawDescription)
     : "";
+
+  if (courseQuery.isLoading) return <CourseDetailSkeleton />;
 
   return (
     <PageLayout
@@ -88,10 +91,6 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
       showHeroImage={Boolean(course?.cover_image_url)}
       title={localize(course, "title", t("nav.course.label"))}
     >
-      {courseQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
-      ) : null}
-
       {courseQuery.error ? (
         <Card className="p-6 text-sm font-medium text-[var(--status-danger)]">
           {courseQuery.error instanceof Error ? courseQuery.error.message : t("page.course.description")}
@@ -104,6 +103,7 @@ export function CourseDetailPage({ slug }: CourseDetailPageProps) {
             {descriptionHtml ? (
               <Card className="p-6">
                 <div
+                  data-selectable-content
                   className="text-sm leading-6 text-[var(--text-secondary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-1 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
                   dangerouslySetInnerHTML={{ __html: descriptionHtml }}
                 />
