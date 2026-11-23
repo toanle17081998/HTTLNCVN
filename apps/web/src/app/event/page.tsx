@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EventPage } from "@/components/event/EventPage";
 import { createPageMetadata } from "@/lib/site";
+import { FeatureFlagGate } from "@/components/FeatureFlagGate";
 
 export const metadata: Metadata = createPageMetadata(
   "Events",
@@ -9,5 +10,5 @@ export const metadata: Metadata = createPageMetadata(
 );
 
 export default function EventRoute() {
-  return <EventPage />;
+  return <FeatureFlagGate feature="event"><EventPage /></FeatureFlagGate>;
 }

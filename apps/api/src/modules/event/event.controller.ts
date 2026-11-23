@@ -15,6 +15,7 @@ import {
 
 import { Public } from '../../common/decorators/public.decorator';
 import { Can } from '../../common/decorators/permissions.decorator';
+import { FeatureFlag } from '../../common/decorators/feature-flag.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { EventService } from './event.service';
 import type {
@@ -28,6 +29,7 @@ import type {
   UpdateEventDto,
 } from './event.types';
 
+@FeatureFlag('event')
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}

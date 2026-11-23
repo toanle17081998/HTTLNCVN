@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { Can } from '../../common/decorators/permissions.decorator';
+import { FeatureFlag } from '../../common/decorators/feature-flag.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { PrayerJournalService } from './prayer-journal.service';
 import type {
@@ -24,6 +25,7 @@ import type {
   UpdatePrayerDto,
 } from './prayer-journal.types';
 
+@FeatureFlag('prayer-journal')
 @Controller('prayer-journal')
 export class PrayerJournalController {
   constructor(private readonly prayerJournalService: PrayerJournalService) {}

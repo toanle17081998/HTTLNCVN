@@ -32,6 +32,7 @@ apps/*/.env
 # sql dumps
 *.sql
 !apps/api/prisma/migrations/20261117170000_add_performance_indexes/migration.sql
+!apps/api/prisma/migrations/20261122160000_add_feature_flags/migration.sql
 *.dump
 backups/
 uploads/

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Button, cn, Text } from "@/components/ui";
+import { Button, cn, Skeleton, Text } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -25,6 +25,7 @@ import { defaultSiteNavigationConfig } from "@/domain/site-navigation";
 import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 import { resolveIcon } from "@/components/page-builder/shared/iconList";
 import { useScrollDirectionVisibility } from "./useScrollDirectionVisibility";
+import { useFeatureFlagsQuery } from "@/hooks/featureFlags";
 
 type HeaderProps = {
   pathname: string;
@@ -38,6 +39,7 @@ export function Header({ pathname }: HeaderProps) {
   const { canAny, isAuthenticated, logout, role, user } = useAuth();
 
   const siteNavQuery = useSiteNavigationQuery();
+  const featureFlagsQuery = useFeatureFlagsQuery();
   const siteNav = siteNavQuery.data ?? defaultSiteNavigationConfig;
   const headerConfig = siteNav.header;
 
@@ -46,6 +48,8 @@ export function Header({ pathname }: HeaderProps) {
     : headerConfig.items.filter(
         (item) =>
           item.visible !== false &&
+          (item.href !== "/event" || featureFlagsQuery.data?.event !== false) &&
+          (item.href !== "/prayer-journal" || featureFlagsQuery.data?.["prayer-journal"] !== false) &&
           (isAuthenticated ||
             (!authenticatedOnlyRoutes.has(item.href) && item.guestVisible !== false)),
       );
@@ -138,6 +142,7 @@ export function Header({ pathname }: HeaderProps) {
         />
         <div className="relative mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6 md:h-20 lg:px-8">
         <Link
+          data-header-logo
           aria-label={t("app.name")}
           className="flex shrink-0 items-center rounded-md transition-opacity hover:opacity-80"
           href="/"
@@ -152,7 +157,11 @@ export function Header({ pathname }: HeaderProps) {
           ref={navRef}
         >
           <div className="flex min-w-0 items-center gap-1 xl:gap-2">
-            {dynamicItems.map((item) => {
+            {siteNavQuery.isLoading || featureFlagsQuery.isLoading
+              ? Array.from({ length: 5 }, (_, index) => (
+                  <Skeleton className="h-8 w-20" key={index} />
+                ))
+              : dynamicItems.map((item) => {
               const IconComp = resolveIcon(item.icon);
               const label = localize(item, "label");
               const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -175,7 +184,7 @@ export function Header({ pathname }: HeaderProps) {
                   <span className="truncate">{label}</span>
                 </Link>
               );
-            })}
+                })}
           </div>
         </nav>
 
@@ -415,7 +424,13 @@ export function Header({ pathname }: HeaderProps) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
-          {dynamicItems.map((item) => {
+          {siteNavQuery.isLoading || featureFlagsQuery.isLoading
+            ? Array.from({ length: 5 }, (_, index) => (
+                <div className="flex min-w-0 flex-1 items-center justify-center" key={index}>
+                  <Skeleton className="h-10 w-10 rounded-xl" />
+                </div>
+              ))
+            : dynamicItems.map((item) => {
             const IconComp = resolveIcon(item.icon);
             const label = localize(item, "label");
             const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -449,7 +464,7 @@ export function Header({ pathname }: HeaderProps) {
                 ) : null}
               </Link>
             );
-          })}
+              })}
         </div>
       </nav>
     </>

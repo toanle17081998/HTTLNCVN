@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ChurchUnitModule } from './modules/church-unit/church-unit.module';
 import { CourseModule } from './modules/course/course.module';
 import { EventModule } from './modules/event/event.module';
+import { FeatureFlagModule } from './modules/feature-flag/feature-flag.module';
 import { HouseholdModule } from './modules/household/household.module';
 import { HealthModule } from './modules/health/health.module';
 import { MemberModule } from './modules/member/member.module';
@@ -36,6 +37,7 @@ import { ServingScheduleModule } from './modules/serving-schedule/serving-schedu
     AuditModule,
     CourseModule,
     EventModule,
+    FeatureFlagModule,
     HouseholdModule,
     HealthModule,
     NotificationModule,

@@ -1,5 +1,6 @@
 import { PrayerJournalPage } from "@/components/prayer-journal/PrayerJournalPage";
+import { FeatureFlagGate } from "@/components/FeatureFlagGate";
 
 export default function PrayerJournalRoute() {
-  return <PrayerJournalPage />;
+  return <FeatureFlagGate feature="prayer-journal"><PrayerJournalPage /></FeatureFlagGate>;
 }

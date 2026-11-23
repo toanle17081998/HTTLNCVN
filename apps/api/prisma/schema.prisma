@@ -805,3 +805,11 @@ model UserLessonProgress {
   @@index([status])
   @@map("user_lesson_progress")
 }
+
+model FeatureFlag {
+  key        String   @id @db.VarChar(50)
+  enabled    Boolean  @default(true)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("feature_flags")
+}
