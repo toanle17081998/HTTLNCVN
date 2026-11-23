@@ -71,7 +71,7 @@ export function AuthPage() {
             </FormField>
 
             <div className="flex flex-wrap gap-2">
-              <Button disabled={loginMutation.isPending} type="submit">
+              <Button isLoading={loginMutation.isPending} type="submit">
                 {loginMutation.isPending ? "Signing in..." : "Sign in"}
               </Button>
               <Button

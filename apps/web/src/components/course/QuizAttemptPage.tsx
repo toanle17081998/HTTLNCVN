@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { CheckCircle2, CircleX } from "lucide-react";
 import {
   useFinishAttemptMutation,
   useQuizAttemptQuery,
@@ -370,11 +371,11 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
           <div className="w-full max-w-md overflow-hidden rounded-2xl bg-[var(--bg-surface)] p-6 shadow-2xl border border-[var(--border-subtle)] text-center space-y-5">
             {attempt.total_score !== null && attempt.total_score >= (attempt.quiz?.passing_score ?? 70) ? (
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--status-success)_15%,transparent)] text-4xl text-[var(--status-success)]">
-                🎉
+                <CheckCircle2 aria-hidden="true" className="h-10 w-10" />
               </div>
             ) : (
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--status-danger)_15%,transparent)] text-4xl text-[var(--status-danger)]">
-                ❌
+                <CircleX aria-hidden="true" className="h-10 w-10" />
               </div>
             )}
 
