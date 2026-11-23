@@ -237,6 +237,22 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+body,
+body * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable='true'],
+[contenteditable='true'] *,
+[data-selectable-content],
+[data-selectable-content] * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 button,
 a,
 select,
@@ -725,3 +741,39 @@ summary,
 .church-logo-dark {
   display: none;
 }
+
+html {
+  scrollbar-gutter: stable;
+}
+
+.landing-intro-active {
+  overflow: hidden;
+}
+
+.landing-intro-active [data-header-logo] {
+  opacity: 0;
+}
+
+@keyframes landing-intro-diamond-exit {
+  from {
+    -webkit-mask-size: 0 0, 100% 100%;
+    mask-size: 0 0, 100% 100%;
+  }
+  to {
+    -webkit-mask-size: calc(100vw + 100vh) calc(100vw + 100vh), 100% 100%;
+    mask-size: calc(100vw + 100vh) calc(100vw + 100vh), 100% 100%;
+  }
+}
+
+.landing-intro-diamond-exit {
+  animation: landing-intro-diamond-exit 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  -webkit-mask-composite: xor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,0 100,50 50,100 0,50' fill='white'/%3E%3C/svg%3E"), linear-gradient(#000 0 0);
+  -webkit-mask-position: center, center;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-composite: exclude;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,0 100,50 50,100 0,50' fill='white'/%3E%3C/svg%3E"), linear-gradient(#000 0 0);
+  mask-position: center, center;
+  mask-repeat: no-repeat, no-repeat;
+}
+

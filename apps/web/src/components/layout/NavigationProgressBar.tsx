@@ -17,7 +17,7 @@ export function NavigationProgressBar() {
   if (!loading) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[9999] h-1 overflow-hidden bg-transparent">
+    <div data-navigation-progress className="fixed top-0 left-0 right-0 z-[9999] h-1 overflow-hidden bg-transparent">
       <div className="h-full w-full bg-gradient-to-r from-[var(--brand-primary)] via-[var(--accent-gold)] to-[var(--brand-primary)] animate-pulse" />
     </div>
   );

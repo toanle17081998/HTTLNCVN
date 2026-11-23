@@ -1,7 +1,8 @@
 "use client";
 
-import { Text, Title, Button, Card, Input, Textarea, cn, Label } from "@/components/ui";
+import { Text, Title, Button, Card, Input, Textarea, cn, Label, Switch } from "@/components/ui";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   ArrowDown,
   ArrowUp,
@@ -15,6 +16,7 @@ import {
   Plus,
   RefreshCcw,
   Save,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
@@ -31,6 +33,7 @@ import {
   type SiteNavigationConfig,
 } from "@/domain/site-navigation";
 import { useSiteNavigationQuery, useUpdateSiteNavigationMutation } from "@/hooks/siteNavigation";
+import { uploadMedia } from "@/api/media";
 
 const HERO_PAGES = [
   { key: "/article", labelKey: "nav.article.label" },
@@ -47,9 +50,10 @@ export function AdminNavigation() {
   const navQuery = useSiteNavigationQuery();
   const updateMutation = useUpdateSiteNavigationMutation();
 
-  const [activeTab, setActiveTab] = useState<"header" | "footer" | "heroes">("header");
+  const [activeTab, setActiveTab] = useState<"header" | "footer" | "heroes" | "intro">("header");
   const [selectedHeroPage, setSelectedHeroPage] = useState<string>("/article");
   const [config, setConfig] = useState<SiteNavigationConfig>(defaultSiteNavigationConfig);
+  const [isUploadingIntro, setIsUploadingIntro] = useState(false);
 
   useEffect(() => {
     if (navQuery.data) {
@@ -81,6 +85,52 @@ export function AdminNavigation() {
     });
     if (!ok) return;
     setConfig(defaultSiteNavigationConfig);
+  };
+
+  const handleIntroImageUpload = async (file?: File) => {
+    if (!file) return;
+    setIsUploadingIntro(true);
+    try {
+      const media = await uploadMedia(file);
+      setConfig((prev) => ({
+        ...prev,
+        intro: {
+          ...prev.intro,
+          enabled: true,
+          images: [
+            ...prev.intro.images,
+            { durationSeconds: 3, id: `intro-${Date.now()}`, url: media.url },
+          ].slice(0, 3),
+        },
+      }));
+      toast({ title: t("admin.navigation.introUploadSuccess"), variant: "success" });
+    } catch {
+      toast({ title: t("admin.navigation.introUploadError"), variant: "error" });
+    } finally {
+      setIsUploadingIntro(false);
+    }
+  };
+
+  const handleIntroMobileImageUpload = async (imageId: string, file?: File) => {
+    if (!file) return;
+    setIsUploadingIntro(true);
+    try {
+      const media = await uploadMedia(file);
+      setConfig((prev) => ({
+        ...prev,
+        intro: {
+          ...prev.intro,
+          images: prev.intro.images.map((image) =>
+            image.id === imageId ? { ...image, mobileUrl: media.url } : image,
+          ),
+        },
+      }));
+      toast({ title: t("admin.navigation.introUploadSuccess"), variant: "success" });
+    } catch {
+      toast({ title: t("admin.navigation.introUploadError"), variant: "error" });
+    } finally {
+      setIsUploadingIntro(false);
+    }
   };
 
   const handleAddNavItem = () => {
@@ -285,6 +335,19 @@ export function AdminNavigation() {
           <button
             className={cn(
               "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
+              activeTab === "intro"
+                ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
+                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            )}
+            onClick={() => setActiveTab("intro")}
+            type="button"
+          >
+            <Sparkles className="h-4 w-4" />
+            {t("admin.navigation.tabIntro")}
+          </button>
+          <button
+            className={cn(
+              "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
               activeTab === "header"
                 ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
                 : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -322,6 +385,97 @@ export function AdminNavigation() {
             {t("admin.navigation.tabFooter")}
           </button>
         </div>
+
+        {activeTab === "intro" ? (
+          <Card className="grid gap-6 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Title as="h2" variant="subsectionStrong">{t("admin.navigation.introTitle")}</Title>
+                <Text className="mt-1" variant="small">{t("admin.navigation.introDescription")}</Text>
+              </div>
+              <Switch
+                checked={config.intro.enabled}
+                onCheckedChange={(enabled) =>
+                  setConfig((prev) => ({ ...prev, intro: { ...prev.intro, enabled } }))
+                }
+              />
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block" variant="overline">{t("admin.navigation.introImage")}</Label>
+              <Input
+                accept="image/avif,image/jpeg,image/png,image/webp"
+                disabled={isUploadingIntro || config.intro.images.length >= 3}
+                onChange={(event) => void handleIntroImageUpload(event.target.files?.[0])}
+                type="file"
+              />
+              <Text className="mt-2" variant="small">
+                {isUploadingIntro
+                  ? t("admin.articles.loading")
+                  : t("admin.navigation.introImageLimit", { count: String(config.intro.images.length) })}
+              </Text>
+            </div>
+
+            {config.intro.images.length ? (
+              <div className="grid gap-4 lg:grid-cols-3">
+                {config.intro.images.map((image, index) => (
+                  <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]" key={image.id}>
+                    <div className="relative aspect-video bg-[var(--bg-base)]">
+                      <Image alt="" className="object-cover" fill sizes="(min-width: 1024px) 33vw, 100vw" src={image.url} unoptimized />
+                    </div>
+                    <div className="grid gap-3 p-4">
+                      <Label variant="overline">{t("admin.navigation.introImagePeriod", { number: String(index + 1) })}</Label>
+                      <Input
+                        max={30}
+                        min={1}
+                        onChange={(event) =>
+                          setConfig((prev) => ({
+                            ...prev,
+                            intro: {
+                              ...prev.intro,
+                              images: prev.intro.images.map((item) =>
+                                item.id === image.id
+                                  ? { ...item, durationSeconds: Math.min(30, Math.max(1, Number(event.target.value) || 1)) }
+                                  : item,
+                              ),
+                            },
+                          }))
+                        }
+                        type="number"
+                        value={image.durationSeconds}
+                      />
+                      <Label variant="overline">{t("admin.navigation.introMobileImage")}</Label>
+                      <Input
+                        accept="image/avif,image/jpeg,image/png,image/webp"
+                        disabled={isUploadingIntro}
+                        onChange={(event) => void handleIntroMobileImageUpload(image.id, event.target.files?.[0])}
+                        type="file"
+                      />
+                      <Button
+                        onClick={() =>
+                          setConfig((prev) => ({
+                            ...prev,
+                            intro: { ...prev.intro, images: prev.intro.images.filter((item) => item.id !== image.id) },
+                          }))
+                        }
+                        size="sm"
+                        type="button"
+                        variant="danger"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {t("action.delete")}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-[var(--border-subtle)] p-8 text-center text-sm text-[var(--text-secondary)]">
+                {t("admin.navigation.introImageEmpty")}
+              </div>
+            )}
+          </Card>
+        ) : null}
 
         {/* TAB 1: HEADER & NAVIGATION */}
         {activeTab === "header" ? (

@@ -50,6 +50,13 @@ export type PageHeroConfig = {
   titleVi?: string;
 };
 
+export type IntroImageConfig = {
+  durationSeconds: number;
+  id: string;
+  mobileUrl?: string;
+  url: string;
+};
+
 export type SiteNavigationConfig = {
   footer: {
     appName?: string;
@@ -68,10 +75,21 @@ export type SiteNavigationConfig = {
     items: HeaderNavItem[];
     tagline?: string;
   };
+  intro: {
+    enabled: boolean;
+    images: IntroImageConfig[];
+  };
   pageHeroes: Record<string, PageHeroConfig>;
 };
 
 export const SITE_NAVIGATION_SLUG = "site-navigation";
+const siteNavigationCacheVersion = "v5";
+
+function fallbackCorruptedText(value: unknown, fallback?: string): string | undefined {
+  if (typeof value !== "string") return fallback;
+  const questionMarks = value.match(/\?/g)?.length ?? 0;
+  return /�|Ã|Â|Ä|Æ|áº|á»|\p{L}\?\p{L}/u.test(value) || questionMarks > 1 ? fallback : value;
+}
 
 export const defaultPageHeroes: Record<string, PageHeroConfig> = {
   "/article": {
@@ -131,6 +149,10 @@ export const defaultPageHeroes: Record<string, PageHeroConfig> = {
 };
 
 export const defaultSiteNavigationConfig: SiteNavigationConfig = {
+  intro: {
+    enabled: false,
+    images: [],
+  },
   header: {
     brandName: "HTNC",
     tagline: "Hội Thánh Tin Lành",
@@ -272,32 +294,91 @@ export function parseSiteNavigationConfig(rawString?: string): SiteNavigationCon
   if (!rawString) return defaultSiteNavigationConfig;
   try {
     const parsed = JSON.parse(rawString);
+    const legacyIntroImage = parsed.intro?.imageUrl
+      ? [{
+          durationSeconds: Number(parsed.intro.durationSeconds) || 3,
+          id: "intro-legacy",
+          url: String(parsed.intro.imageUrl),
+        }]
+      : [];
+    const introImages = Array.isArray(parsed.intro?.images)
+      ? parsed.intro.images.slice(0, 3).map((image: Partial<IntroImageConfig>, index: number) => ({
+          durationSeconds: Math.min(30, Math.max(1, Number(image.durationSeconds) || 3)),
+          id: String(image.id || `intro-${index}`),
+          mobileUrl: image.mobileUrl ? String(image.mobileUrl) : undefined,
+          url: String(image.url || ""),
+        })).filter((image: IntroImageConfig) => image.url)
+      : legacyIntroImage;
+    const footerDefaults = defaultSiteNavigationConfig.footer;
+    const footerContacts = Array.isArray(parsed.footer?.contacts) && parsed.footer.contacts.length
+      ? parsed.footer.contacts.map((contact: FooterContactItem) => {
+          const fallback = footerDefaults.contacts.find((item) => item.id === contact.id);
+          return {
+            ...contact,
+            labelVi: fallbackCorruptedText(contact.labelVi, fallback?.labelVi),
+            valueVi: fallbackCorruptedText(contact.valueVi, fallback?.valueVi),
+          };
+        })
+      : footerDefaults.contacts;
+    const footerLinks = Array.isArray(parsed.footer?.links) && parsed.footer.links.length
+      ? parsed.footer.links.map((link: FooterLinkItem) => {
+          const fallback = footerDefaults.links.find((item) => item.id === link.id);
+          return {
+            ...link,
+            labelVi: fallbackCorruptedText(link.labelVi, fallback?.labelVi),
+          };
+        })
+      : footerDefaults.links;
+    const headerDefaults = defaultSiteNavigationConfig.header;
+    const headerItems = Array.isArray(parsed.header?.items)
+      ? parsed.header.items.map((item: HeaderNavItem) => {
+          const fallback = headerDefaults.items.find((defaultItem) => defaultItem.id === item.id);
+          return {
+            ...item,
+            descriptionVi: fallbackCorruptedText(item.descriptionVi, fallback?.descriptionVi),
+            labelVi: fallbackCorruptedText(item.labelVi, fallback?.labelVi),
+          };
+        })
+      : headerDefaults.items;
+    const pageHeroes: Record<string, PageHeroConfig> = { ...parsed.pageHeroes };
+    Object.entries(defaultPageHeroes).forEach(([route, fallback]) => {
+      const hero = parsed.pageHeroes?.[route];
+      pageHeroes[route] = {
+        ...fallback,
+        ...hero,
+        descriptionVi: fallbackCorruptedText(hero?.descriptionVi, fallback.descriptionVi),
+        eyebrowVi: fallbackCorruptedText(hero?.eyebrowVi, fallback.eyebrowVi),
+        titleVi: fallbackCorruptedText(hero?.titleVi, fallback.titleVi),
+      };
+    });
+
     return {
+      intro: {
+        enabled: parsed.intro?.enabled === true,
+        images: introImages,
+      },
       header: {
-        ...defaultSiteNavigationConfig.header,
+        ...headerDefaults,
         ...parsed.header,
         cta: {
-          ...defaultSiteNavigationConfig.header.cta,
+          ...headerDefaults.cta,
           ...parsed.header?.cta,
+          labelVi: fallbackCorruptedText(parsed.header?.cta?.labelVi, headerDefaults.cta.labelVi),
         },
-        items: Array.isArray(parsed.header?.items)
-          ? parsed.header.items
-          : defaultSiteNavigationConfig.header.items,
+        items: headerItems,
+        tagline: fallbackCorruptedText(parsed.header?.tagline, headerDefaults.tagline),
       },
       footer: {
-        ...defaultSiteNavigationConfig.footer,
+        ...footerDefaults,
         ...parsed.footer,
-        contacts: Array.isArray(parsed.footer?.contacts) && parsed.footer.contacts.length
-          ? parsed.footer.contacts
-          : defaultSiteNavigationConfig.footer.contacts,
-        links: Array.isArray(parsed.footer?.links) && parsed.footer.links.length
-          ? parsed.footer.links
-          : defaultSiteNavigationConfig.footer.links,
+        communityTitle: fallbackCorruptedText(parsed.footer?.communityTitle, footerDefaults.communityTitle),
+        contacts: footerContacts,
+        copyrightTextVi: fallbackCorruptedText(parsed.footer?.copyrightTextVi, footerDefaults.copyrightTextVi),
+        descriptionVi: fallbackCorruptedText(parsed.footer?.descriptionVi, footerDefaults.descriptionVi),
+        links: footerLinks,
+        tagline: fallbackCorruptedText(parsed.footer?.tagline, footerDefaults.tagline),
       },
-      pageHeroes: {
-        ...defaultPageHeroes,
-        ...parsed.pageHeroes,
-      },
+      pageHeroes,
     };
   } catch {
     return defaultSiteNavigationConfig;
@@ -320,7 +401,12 @@ export function useSiteNavigationQuery() {
         return defaultSiteNavigationConfig;
       }
     },
-    queryKey: [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config", isAuthenticated ? "member" : "guest"],
+    queryKey: [
+      ...pageKeys.detail(SITE_NAVIGATION_SLUG),
+      "site-config",
+      siteNavigationCacheVersion,
+      isAuthenticated ? "member" : "guest",
+    ],
   });
 }
 
@@ -354,7 +440,7 @@ export function useUpdateSiteNavigationMutation() {
     },
     onSuccess: (savedConfig) => {
       queryClient.setQueryData(
-        [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config", "member"],
+        [...pageKeys.detail(SITE_NAVIGATION_SLUG), "site-config", siteNavigationCacheVersion, "member"],
         savedConfig
       );
       queryClient.invalidateQueries({ queryKey: pageKeys.detail(SITE_NAVIGATION_SLUG) });

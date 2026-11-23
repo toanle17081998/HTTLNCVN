@@ -12,6 +12,7 @@ import { ensureValidPageContent } from "./defaultContent";
 import { useTranslation } from "@/providers/I18nProvider";
 import { getLocalizedField, type Locale } from "@/lib/i18n";
 import { PageBuilderSkeleton } from "./PageBuilderSkeleton";
+import { useEffect } from "react";
 
 export function CraftPageRenderer({
   path,
@@ -26,7 +27,23 @@ export function CraftPageRenderer({
   const canEdit = can(PERMISSIONS.manageArticle);
   const readerLang = previewLanguage ?? locale;
 
+  useEffect(() => {
+    if (path !== "/") return;
+    const root = document.documentElement;
+    if (!pageQuery.isLoading) {
+      root.dataset.landingPageReady = "true";
+      window.dispatchEvent(new Event("httlncvn:landing-page-ready"));
+    } else {
+      delete root.dataset.landingPageReady;
+    }
+
+    return () => {
+      delete root.dataset.landingPageReady;
+    };
+  }, [pageQuery.isLoading, path]);
+
   if (pageQuery.isLoading) {
+    if (path === "/") return null;
     return <PageBuilderSkeleton path={path} />;
   }
 

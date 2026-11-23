@@ -74,8 +74,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { let theme; try { theme = localStorage.getItem("httlncvn.theme"); } catch {} if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.dataset.theme = theme; })();`,
+          }}
+        />
         <link href={absoluteUrl("/.well-known/ard.json")} rel="ard" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
