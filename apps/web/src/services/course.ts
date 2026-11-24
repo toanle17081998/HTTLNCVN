@@ -233,7 +233,6 @@ export type CourseTestStatus = {
     name: string;
     members: Array<{ email: string; id: string; name: string }>;
   }>;
-  question_bank: QuestionTemplate[];
 };
 
 export type PublishCourseTestDto = {
@@ -291,6 +290,8 @@ export const courseKeys = {
   quiz: (id: string) => [...courseKeys.all, "quiz", id] as const,
   quizzes: (slug?: string) => [...courseKeys.all, "quizzes", slug ?? "all"] as const,
   test: (slug: string) => [...courseKeys.all, "test", slug] as const,
+  testStatus: (slug: string, churchUnitId?: string) => [...courseKeys.test(slug), "status", churchUnitId ?? "default"] as const,
+  testQuestions: (slug: string) => [...courseKeys.test(slug), "questions"] as const,
 };
 
 export const courseApi = {
@@ -433,8 +434,14 @@ export const courseApi = {
       },
     );
   },
-  testStatus(slug: string) {
-    return apiRequest<CourseTestStatus>(`/courses/${encodeURIComponent(slug)}/test`, {
+  testStatus(slug: string, churchUnitId?: string) {
+    const query = churchUnitId ? `?church_unit_id=${encodeURIComponent(churchUnitId)}` : "";
+    return apiRequest<CourseTestStatus>(`/courses/${encodeURIComponent(slug)}/test${query}`, {
+      token: getStoredTokens()?.accessToken,
+    });
+  },
+  testQuestions(slug: string) {
+    return apiRequest<QuestionTemplate[]>(`/courses/${encodeURIComponent(slug)}/test-questions`, {
       token: getStoredTokens()?.accessToken,
     });
   },
@@ -509,12 +516,20 @@ export function useCourseQuizzesQuery(courseSlug?: string) {
   });
 }
 
-export function useCourseTestQuery(courseSlug?: string) {
+export function useCourseTestQuery(courseSlug?: string, churchUnitId?: string) {
   return useQuery({
     enabled: Boolean(courseSlug && getStoredTokens()?.accessToken),
-    queryFn: () => courseApi.testStatus(courseSlug ?? ""),
-    queryKey: courseKeys.test(courseSlug ?? ""),
-    refetchInterval: 5_000,
+    queryFn: () => courseApi.testStatus(courseSlug ?? "", churchUnitId),
+    queryKey: courseKeys.testStatus(courseSlug ?? "", churchUnitId),
+    refetchInterval: (query) => query.state.data?.availability?.is_active ? 15_000 : false,
+  });
+}
+
+export function useCourseTestQuestionsQuery(courseSlug?: string, enabled = true) {
+  return useQuery({
+    enabled: Boolean(enabled && courseSlug && getStoredTokens()?.accessToken),
+    queryFn: () => courseApi.testQuestions(courseSlug ?? ""),
+    queryKey: courseKeys.testQuestions(courseSlug ?? ""),
   });
 }
 
@@ -694,6 +709,7 @@ export function usePublishCourseTestMutation(courseSlug: string) {
     mutationFn: (dto: PublishCourseTestDto) => courseApi.publishTest(courseSlug, dto),
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: courseKeys.test(courseSlug) });
+      queryClient.invalidateQueries({ queryKey: courseKeys.testQuestions(courseSlug) });
     },
   });
 }

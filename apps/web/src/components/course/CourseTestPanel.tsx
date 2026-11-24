@@ -8,6 +8,7 @@ import type { Course, PublishCourseTestDto } from "@/hooks/course";
 import {
   useCloseCourseTestMutation,
   useCourseTestQuery,
+  useCourseTestQuestionsQuery,
   usePublishCourseTestMutation,
   useStartCourseTestMutation,
 } from "@/hooks/course";
@@ -47,24 +48,25 @@ function isDraftComplete(question: DraftQuestion) {
 export function CourseTestPanel({ course }: { course: Course }) {
   const router = useRouter();
   const { t, locale, localize } = useTranslation();
-  const testQuery = useCourseTestQuery(course.slug);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const testQuery = useCourseTestQuery(course.slug, selectedClassId || undefined);
   const publishTest = usePublishCourseTestMutation(course.slug);
   const closeTest = useCloseCourseTestMutation(course.slug);
   const startTest = useStartCourseTestMutation();
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [selectedClassId, setSelectedClassId] = useState("");
   const [targetUserId, setTargetUserId] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const questionsQuery = useCourseTestQuestionsQuery(course.slug, isQuestionsModalOpen);
 
   const status = testQuery.data;
   const firstLessonId = course.lessons[0]?.id;
   const activeClassId = selectedClassId || status?.managed_classes[0]?.id || "";
   const activeClass = status?.managed_classes.find(({ id }) => id === activeClassId);
 
-  const filteredQuestions = (status?.question_bank || []).filter((question) => {
+  const filteredQuestions = (questionsQuery.data || []).filter((question) => {
     const term = searchQuery.toLowerCase().trim();
     if (!term) return true;
     return (
@@ -85,7 +87,11 @@ export function CourseTestPanel({ course }: { course: Course }) {
     setIsQuestionsModalOpen(true);
   };
 
-  if (testQuery.isLoading || testQuery.error || !status) return null;
+  if (testQuery.isLoading) return null;
+  if (testQuery.error) {
+    return <Card className="p-6 text-sm text-[var(--status-danger)]">{t("courseTest.loadError")}</Card>;
+  }
+  if (!status) return null;
   if (!status.can_manage && !status.availability) return null;
 
   async function handleStart() {
@@ -369,7 +375,15 @@ export function CourseTestPanel({ course }: { course: Course }) {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
-              {filteredQuestions.length > 0 ? (
+              {questionsQuery.isLoading ? (
+                <Text as="p" tone="inherit" variant="inherit" className="p-8 text-center text-sm text-[var(--text-tertiary)]">
+                  {t("courseTest.loadingQuestions")}
+                </Text>
+              ) : questionsQuery.error ? (
+                <Text as="p" tone="inherit" variant="inherit" className="p-8 text-center text-sm text-[var(--status-danger)]">
+                  {t("courseTest.loadError")}
+                </Text>
+              ) : filteredQuestions.length > 0 ? (
                 filteredQuestions.map((question) => {
                   const isChecked = selectedIds.includes(question.id);
                   return (

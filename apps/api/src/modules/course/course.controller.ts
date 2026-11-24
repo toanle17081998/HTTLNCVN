@@ -179,9 +179,19 @@ export class CourseController {
   @Can('read', 'course')
   getCourseTestStatus(
     @Param('slug') slug: string,
+    @Query('church_unit_id') churchUnitId: string | undefined,
     @Request() req: { user: JwtPayload },
   ): Promise<CourseTestStatusDto> {
-    return this.courseService.getCourseTestStatus(slug, req.user.sub, req.user.role);
+    return this.courseService.getCourseTestStatus(slug, req.user.sub, req.user.role, churchUnitId);
+  }
+
+  @Get(':slug/test-questions')
+  @Can('update', 'course')
+  getCourseTestQuestions(
+    @Param('slug') slug: string,
+    @Request() req: { user: JwtPayload },
+  ): Promise<QuestionTemplateDto[]> {
+    return this.courseService.getCourseTestQuestions(slug, req.user.sub, req.user.role);
   }
 
   @Post(':slug/test')

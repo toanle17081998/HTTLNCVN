@@ -123,10 +123,19 @@ export class CourseService {
     return this.courseRepository.deleteTemplate(templateId);
   }
 
-  async getCourseTestStatus(slug: string, userId: string, userRole?: string): Promise<CourseTestStatusDto> {
-    const status = await this.courseRepository.getCourseTestStatus(slug, userId, userRole);
+  async getCourseTestStatus(
+    slug: string,
+    userId: string,
+    userRole?: string,
+    churchUnitId?: string,
+  ): Promise<CourseTestStatusDto> {
+    const status = await this.courseRepository.getCourseTestStatus(slug, userId, userRole, churchUnitId);
     if (!status) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Course not found.' });
     return status;
+  }
+
+  getCourseTestQuestions(slug: string, userId: string, userRole?: string): Promise<QuestionTemplateDto[]> {
+    return this.courseRepository.getCourseTestQuestions(slug, userId, userRole);
   }
 
   publishCourseTest(

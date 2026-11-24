@@ -1015,7 +1015,12 @@ export class CourseRepository {
     await this.prisma.quiz.delete({ where: { id } });
   }
 
-  async getCourseTestStatus(slug: string, userId: string, userRole?: string): Promise<CourseTestStatusDto | null> {
+  async getCourseTestStatus(
+    slug: string,
+    userId: string,
+    userRole?: string,
+    churchUnitId?: string,
+  ): Promise<CourseTestStatusDto | null> {
     if (slug === 'isom-b-5') return null;
     const course = await this.prisma.course.findFirst({ where: { deleted_at: null, slug } });
     if (!course) return null;
@@ -1047,6 +1052,10 @@ export class CourseRepository {
       },
     });
     const canManage = privileged || managedClasses.length > 0;
+    const managedClassIds = managedClasses.map(({ id }) => id);
+    const selectedClassId = churchUnitId && managedClassIds.includes(churchUnitId)
+      ? churchUnitId
+      : managedClassIds[0];
     if (!canManage && !(await this.canAccessCourse(course.id, userId, userRole))) {
       throw new ForbiddenException('You are not authorized to access this course test.');
     }
@@ -1061,7 +1070,7 @@ export class CourseRepository {
       where: {
         course_id: course.id,
         ...(canManage
-          ? { church_unit_id: { in: managedClasses.map(({ id }) => id) } }
+          ? { church_unit_id: selectedClassId }
           : {
               is_active: true,
               church_unit: { members: { some: { user_id: userId } } },
@@ -1117,14 +1126,6 @@ export class CourseRepository {
         })
       : [];
 
-    const questionBank = canManage
-      ? await this.prisma.questionTemplate.findMany({
-          include: { lesson: true },
-          orderBy: { created_at: 'asc' },
-          where: { lesson: { course_id: course.id } },
-        })
-      : [];
-
     return {
       assigned_users: assignedUsers
         .map(({ user }) => {
@@ -1161,8 +1162,30 @@ export class CourseRepository {
           name: user.profile ? `${user.profile.first_name} ${user.profile.last_name}`.trim() : user.username,
         })),
       })),
-      question_bank: questionBank.map((template) => this.mapTemplate(template, true)),
     };
+  }
+
+  async getCourseTestQuestions(slug: string, userId: string, userRole?: string): Promise<QuestionTemplateDto[]> {
+    const course = await this.prisma.course.findFirst({ select: { id: true }, where: { deleted_at: null, slug } });
+    if (!course) throw new NotFoundException('Course not found.');
+
+    const privileged = userRole === 'system_admin' || userRole === 'church_admin';
+    const canManage = privileged || Boolean(await this.prisma.churchUnit.findFirst({
+      select: { id: true },
+      where: {
+        courses: { some: { id: course.id } },
+        members: { some: { role: { in: ['admin', 'admin_member'] }, user_id: userId } },
+        type: 'class',
+      },
+    }));
+    if (!canManage) throw new ForbiddenException('You are not authorized to manage this course test.');
+
+    const templates = await this.prisma.questionTemplate.findMany({
+      include: { lesson: true },
+      orderBy: { created_at: 'asc' },
+      where: { lesson: { course_id: course.id } },
+    });
+    return templates.map((template) => this.mapTemplate(template, true));
   }
 
   async publishCourseTest(

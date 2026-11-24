@@ -228,7 +228,6 @@ export type CourseTestStatusDto = {
     name: string;
     members: Array<{ email: string; id: string; name: string }>;
   }>;
-  question_bank: QuestionTemplateDto[];
 };
 
 export type PublishCourseTestDto = {

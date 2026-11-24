@@ -199,6 +199,7 @@ model Lesson {
   grades        LessonGrade[]
   user_progress UserLessonProgress[]
 
+  @@index([course_id])
   @@map("lessons")
 }
 
@@ -224,6 +225,7 @@ model QuestionTemplate {
   quiz_maps QuizTemplateMap[]
   snapshots QuestionSnapshot[]
 
+  @@index([lesson_id])
   @@map("question_templates")
 }
 
@@ -297,7 +299,8 @@ model CourseTestAvailability {
   target_user User?      @relation("CourseTestAvailabilityTarget", fields: [target_user_id], references: [id], onDelete: Cascade)
   attempts    QuizAttempt[]
 
-  @@index([course_id, church_unit_id, is_active])
+  @@index([course_id, church_unit_id, is_active, created_at])
+  @@index([course_id, is_active, created_at])
   @@index([target_user_id])
   @@map("course_test_availabilities")
 }
