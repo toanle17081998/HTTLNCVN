@@ -388,10 +388,10 @@ export function ContentEditorDialog() {
     if (!node) return;
 
     const rawName =
-      (node.data?.type as any)?.resolvedName ||
-      (node.data?.type as any)?.name ||
-      node.data?.displayName ||
       node.data?.name ||
+      (node.data?.type as any)?.resolvedName ||
+      node.data?.displayName ||
+      (node.data?.type as any)?.name ||
       "";
 
     const displayNameMap: Record<string, string> = {
