@@ -3,16 +3,17 @@ import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 
 import { getEnv } from '../../config/env';
+import { CacheService } from '../../common/performance/cache.service';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { AuthRepository } from './auth.repository';
 import type { AuthTokens, AuthUser, ChangePasswordDto, LoginDto, RefreshDto } from './auth.types';
-import type { UserWithRole } from './auth.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
+    private readonly cache: CacheService,
   ) {}
 
   async login(dto: LoginDto): Promise<AuthTokens> {
@@ -104,30 +105,28 @@ export class AuthService {
     };
   }
 
-  async me(userId: string): Promise<AuthUser> {
-    const user = await this.authRepository.findById(userId);
+  me(userId: string): Promise<AuthUser> {
+    return this.cache.getOrSet(`auth:me:${userId}`, 60_000, async () => {
+      const user = await this.authRepository.findMeById(userId);
 
-    if (!user) {
-      throw new UnauthorizedException({
-        code: 'USER_NOT_FOUND',
-        message: 'Authenticated user no longer exists.',
-      });
-    }
+      if (!user) {
+        throw new UnauthorizedException({
+          code: 'USER_NOT_FOUND',
+          message: 'Authenticated user no longer exists.',
+        });
+      }
 
-    return this.toAuthUser(user);
-  }
-
-  private toAuthUser(user: UserWithRole): AuthUser {
-    return {
-      email: user.email,
-      id: user.id,
-      permissions: user.role.permissions.map((permission) => ({
-        action: permission.action.name,
-        resource: permission.resource.name,
-      })),
-      role: user.role.name,
-      username: user.username,
-    };
+      return {
+        email: user.email,
+        id: user.id,
+        permissions: user.role.permissions.map((permission) => ({
+          action: permission.action.name,
+          resource: permission.resource.name,
+        })),
+        role: user.role.name,
+        username: user.username,
+      };
+    });
   }
 }
 

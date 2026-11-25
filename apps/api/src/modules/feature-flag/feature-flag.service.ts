@@ -1,28 +1,45 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
+import { CacheService } from '../../common/performance/cache.service';
 import { PrismaService } from '../../database/prisma.service';
 
 export const featureFlagKeys = ['event', 'prayer-journal'] as const;
 export type FeatureFlagKey = (typeof featureFlagKeys)[number];
 
+const FEATURE_FLAGS_CACHE_KEY = 'feature-flags:all';
+const FEATURE_FLAGS_TTL_MS = 60_000;
+
 @Injectable()
 export class FeatureFlagService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
-  async findAll(): Promise<Record<FeatureFlagKey, boolean>> {
-    const flags = await this.prisma.featureFlag.findMany({
-      where: { key: { in: [...featureFlagKeys] } },
+  findAll(): Promise<Record<FeatureFlagKey, boolean>> {
+    return this.cache.getOrSet(FEATURE_FLAGS_CACHE_KEY, FEATURE_FLAGS_TTL_MS, async () => {
+      const flags = await this.prisma.featureFlag.findMany({
+        select: { enabled: true, key: true },
+        where: { key: { in: [...featureFlagKeys] } },
+      });
+      const values = new Map(flags.map((flag) => [flag.key, flag.enabled]));
+
+      return {
+        event: values.get('event') ?? true,
+        'prayer-journal': values.get('prayer-journal') ?? true,
+      };
     });
-    const values = new Map(flags.map((flag) => [flag.key, flag.enabled]));
-
-    return {
-      event: values.get('event') ?? true,
-      'prayer-journal': values.get('prayer-journal') ?? true,
-    };
   }
 
   async isEnabled(key: string): Promise<boolean> {
-    const flag = await this.prisma.featureFlag.findUnique({ where: { key } });
+    const all = await this.findAll();
+    if (key in all) {
+      return all[key as FeatureFlagKey];
+    }
+    const flag = await this.prisma.featureFlag.findUnique({
+      select: { enabled: true },
+      where: { key },
+    });
     return flag?.enabled ?? true;
   }
 
@@ -40,6 +57,7 @@ export class FeatureFlagService {
       where: { key },
     });
 
+    this.cache.invalidate('feature-flags:');
     return this.findAll();
   }
 }

@@ -18,6 +18,16 @@ export class PageRepository {
 
   async findAll(status?: string): Promise<PageListResult> {
     const items = await this.prisma.page.findMany({
+      select: {
+        deleted_at: true,
+        id: true,
+        route_path: true,
+        slug: true,
+        status: true,
+        title_en: true,
+        title_vi: true,
+        updated_at: true,
+      },
       where: {
         ...(status === 'deleted'
           ? { deleted_at: { not: null } }

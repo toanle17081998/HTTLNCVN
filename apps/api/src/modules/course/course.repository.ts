@@ -753,23 +753,29 @@ export class CourseRepository {
   }
 
   async findLessonById(id: string, viewerId?: string, viewerRole?: string): Promise<LessonDto | null> {
+    const isAdmin = viewerRole === 'church_admin' || viewerRole === 'system_admin';
     const lesson = await this.prisma.lesson.findUnique({
       include: {
         course: {
-          include: {
-            attendees: true,
-            grades: viewerId ? { where: { user_id: viewerId } } : false,
+          select: {
+            _count: { select: { attendees: true } },
+            attendees: viewerId ? { select: { user_id: true }, where: { user_id: viewerId } } : false,
+            grades: viewerId ? { select: { id: true }, where: { user_id: viewerId } } : false,
+            id: true,
+            slug: true,
+            title_en: true,
+            title_vi: true,
           },
         },
         templates: {
           include: {
-            lesson: true,
+            lesson: { select: { id: true, order_index: true, title_en: true, title_vi: true } },
             quiz_maps: {
               include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
             },
           },
         },
-      },
+      } as any,
       where: { id },
     });
 
@@ -777,16 +783,17 @@ export class CourseRepository {
 
     if (viewerId) {
       // Admins can see all lessons
-      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
-        return this.mapLesson(lesson, true);
+      if (isAdmin) {
+        return this.mapLesson(lesson as unknown as LessonWithRelations, true);
       }
 
       // Check access
-      const isEnrolled = lesson.course.grades && lesson.course.grades.length > 0;
+      const courseAccess = (lesson as any).course;
+      const isEnrolled = Boolean(courseAccess.grades && courseAccess.grades.length > 0);
       let isAllowed = false;
 
-      if (lesson.course.attendees.length > 0) {
-        const isAttendee = lesson.course.attendees.some((a) => a.user_id === viewerId);
+      if (courseAccess._count.attendees > 0) {
+        const isAttendee = Boolean(courseAccess.attendees && courseAccess.attendees.length > 0);
         isAllowed = isAttendee && isEnrolled;
       } else {
         isAllowed = isEnrolled;
@@ -800,7 +807,7 @@ export class CourseRepository {
       }
     }
 
-    return this.mapLesson(lesson);
+    return this.mapLesson(lesson as unknown as LessonWithRelations);
   }
 
   async createLesson(courseSlug: string, dto: CreateLessonDto, creatorId: string): Promise<LessonDto | null> {

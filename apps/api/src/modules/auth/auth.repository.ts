@@ -40,6 +40,28 @@ export class AuthRepository {
     });
   }
 
+  findMeById(id: string) {
+    return this.prisma.user.findUnique({
+      select: {
+        email: true,
+        id: true,
+        role: {
+          select: {
+            name: true,
+            permissions: {
+              select: {
+                action: { select: { name: true } },
+                resource: { select: { name: true } },
+              },
+            },
+          },
+        },
+        username: true,
+      },
+      where: { id },
+    });
+  }
+
   updatePassword(id: string, passwordHash: string): Promise<UserWithRole> {
     return this.prisma.user.update({
       data: { password_hash: passwordHash },

@@ -6,7 +6,24 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
-const MEMBER_INCLUDE = { profile: true, role: true } as const;
+const MEMBER_SELECT = {
+  created_at: true,
+  email: true,
+  id: true,
+  profile: {
+    select: {
+      address: true,
+      date_of_birth: true,
+      first_name: true,
+      gender: true,
+      last_name: true,
+      phone: true,
+    },
+  },
+  role: { select: { name: true } },
+  status: true,
+  username: true,
+} as const;
 
 function toDto(u: {
   id: string;
@@ -68,7 +85,7 @@ export class MemberRepository {
     };
 
     const [items, total] = await Promise.all([
-      this.prisma.user.findMany({ include: MEMBER_INCLUDE, orderBy: { created_at: 'desc' }, skip, take, where }),
+      this.prisma.user.findMany({ select: MEMBER_SELECT, orderBy: { created_at: 'desc' }, skip, take, where }),
       this.prisma.user.count({ where }),
     ]);
 
@@ -77,7 +94,7 @@ export class MemberRepository {
 
   async findById(id: string): Promise<MemberDto | null> {
     const user = await this.prisma.user.findFirst({
-      include: MEMBER_INCLUDE,
+      select: MEMBER_SELECT,
       where: { deleted_at: null, id },
     });
 
@@ -108,7 +125,7 @@ export class MemberRepository {
           },
         }),
       },
-      include: MEMBER_INCLUDE,
+      select: MEMBER_SELECT,
     });
 
     return toDto(user);
@@ -149,7 +166,7 @@ export class MemberRepository {
           },
         }),
       },
-      include: MEMBER_INCLUDE,
+      select: MEMBER_SELECT,
       where: { id, deleted_at: null },
     });
 

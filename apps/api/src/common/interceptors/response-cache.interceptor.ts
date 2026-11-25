@@ -22,13 +22,13 @@ const MUTATION_INVALIDATION_RULES: Array<{ match: string; prefixes: string[] }> 
   { match: '/api/course-categories', prefixes: ['http:/api/course-categories', 'http:/api/courses'] },
   { match: '/api/courses', prefixes: ['http:/api/courses', 'report:'] },
   { match: '/api/events', prefixes: ['http:/api/events', 'report:'] },
-  { match: '/api/members', prefixes: ['report:', 'role:'] },
+  { match: '/api/members', prefixes: ['report:', 'role:', 'auth:me:'] },
   { match: '/api/church-units', prefixes: ['report:'] },
   { match: '/api/serving-schedules', prefixes: ['report:'] },
   { match: '/api/prayer-journal', prefixes: ['report:'] },
   { match: '/api/prayers', prefixes: ['report:'] },
-  { match: '/api/roles', prefixes: ['role:'] },
-  { match: '/api/permissions', prefixes: ['role:'] },
+  { match: '/api/roles', prefixes: ['role:', 'auth:me:'] },
+  { match: '/api/permissions', prefixes: ['role:', 'auth:me:'] },
 ];
 
 @Injectable()
