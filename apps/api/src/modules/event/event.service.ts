@@ -92,35 +92,49 @@ export class EventService {
     const bodyDate = new Date(event.starts_at).toLocaleDateString('vi-VN');
     const bodyLocation = event.location ?? 'N/A';
 
-    if (dto.audience === 'church_unit' && dto.church_unit_ids) {
-      for (const unitId of dto.church_unit_ids) {
-        await this.notificationService.create({
-          title: `${prefix}: ${event.title}`,
-          message: `Sự kiện "${event.title}" đã được ${isUpdate ? 'cập nhật' : 'lên lịch'} cho đơn vị của bạn vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
-          target_type: 'church_unit',
-          target_id: unitId,
-          type: 'event',
-          action_url: `/event`,
-        }, senderId).catch(err => console.error('Failed to send event notification to unit', err));
-      }
-    } else if (dto.audience === 'people' && dto.user_ids) {
-      for (const userId of dto.user_ids) {
-        await this.notificationService.create({
-          title: `${prefix}: ${event.title}`,
-          message: `Bạn được phân công tham gia sự kiện "${event.title}" vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
-          target_type: 'user',
-          target_id: userId,
-          type: 'event',
-          action_url: `/event`,
-        }, senderId).catch(err => console.error('Failed to send event notification to user', err));
-      }
+    if (dto.audience === 'church_unit' && dto.church_unit_ids?.length) {
+      await Promise.allSettled(
+        dto.church_unit_ids.map((unitId) =>
+          this.notificationService
+            .create(
+              {
+                title: `${prefix}: ${event.title}`,
+                message: `Sự kiện "${event.title}" đã được ${isUpdate ? 'cập nhật' : 'lên lịch'} cho đơn vị của bạn vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
+                target_type: 'church_unit',
+                target_id: unitId,
+                type: 'event',
+                action_url: `/event`,
+              },
+              senderId,
+            )
+            .catch((err) => console.error('Failed to send event notification to unit', err)),
+        ),
+      );
+    } else if (dto.audience === 'people' && dto.user_ids?.length) {
+      await Promise.allSettled(
+        dto.user_ids.map((userId) =>
+          this.notificationService
+            .create(
+              {
+                title: `${prefix}: ${event.title}`,
+                message: `Bạn được phân công tham gia sự kiện "${event.title}" vào ngày ${bodyDate}. Địa điểm: ${bodyLocation}.`,
+                target_type: 'user',
+                target_id: userId,
+                type: 'event',
+                action_url: `/event`,
+              },
+              senderId,
+            )
+            .catch((err) => console.error('Failed to send event notification to user', err)),
+        ),
+      );
     }
   }
 
   async create(dto: CreateEventDto, creatorId: string): Promise<EventDto> {
     await this.validateWrite(dto);
     const event = await this.eventRepository.create(dto, creatorId);
-    await this.sendNotifications(event, dto, creatorId, false);
+    void this.sendNotifications(event, dto, creatorId, false);
     return event;
   }
 
@@ -137,7 +151,7 @@ export class EventService {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Event not found.' });
     }
 
-    await this.sendNotifications(event, dto, event.creator.id, true);
+    void this.sendNotifications(event, dto, event.creator.id, true);
 
     return event;
   }
@@ -313,21 +327,23 @@ export class EventService {
         return;
       }
 
-      const allEvents: any[] = [];
-      for (const url of urls) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) {
-            console.error(`Failed to fetch iCal feed from ${url}: ${res.statusText}`);
-            continue;
+      const results = await Promise.all(
+        urls.map(async (url) => {
+          try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+            if (!res.ok) {
+              console.error(`Failed to fetch iCal feed from ${url}: ${res.statusText}`);
+              return [];
+            }
+            const text = await res.text();
+            return this.parseIcal(text);
+          } catch (err: any) {
+            console.error(`Error fetching/parsing iCal feed from ${url}:`, err);
+            return [];
           }
-          const text = await res.text();
-          const parsed = this.parseIcal(text);
-          allEvents.push(...parsed);
-        } catch (err: any) {
-          console.error(`Error fetching/parsing iCal feed from ${url}:`, err);
-        }
-      }
+        }),
+      );
+      const allEvents = results.flat();
 
       if (allEvents.length === 0) {
         return;

@@ -66,8 +66,10 @@ export class ServingScheduleService {
 
     const weeks = Number.isFinite(dto.weeks) ? Math.min(Math.max(Math.floor(dto.weeks), 1), 26) : 8;
     const startDate = startOfDate(dto.start_date);
-    const members = await this.repository.getMembersForUnit(dto.church_unit_id);
-    const history = await this.repository.getExistingSchedules(dto.church_unit_id, dto.type);
+    const [members, history] = await Promise.all([
+      this.repository.getMembersForUnit(dto.church_unit_id),
+      this.repository.getExistingSchedules(dto.church_unit_id, dto.type),
+    ]);
 
     const serviceDates = Array.from({ length: weeks }, (_, index) => addDays(startDate, index * 7));
     const assignmentsByDate = new Map<string, AssignmentSeed[]>();

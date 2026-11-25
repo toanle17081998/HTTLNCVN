@@ -118,13 +118,15 @@ export class PrayerJournalRepository {
         select: { id: true, name: true },
       }),
       this.prisma.user.findMany({
-        include: {
+        select: {
+          id: true,
           profile: {
             select: {
               first_name: true,
               last_name: true,
             },
           },
+          username: true,
         },
         orderBy: [{ username: 'asc' }],
         where: {

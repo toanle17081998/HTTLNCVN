@@ -246,13 +246,15 @@ export class EventRepository {
         },
       }),
       this.prisma.user.findMany({
-        include: {
+        select: {
+          id: true,
           profile: {
             select: {
               first_name: true,
               last_name: true,
             },
           },
+          username: true,
         },
         orderBy: [{ username: 'asc' }],
         where: {
@@ -695,29 +697,31 @@ export class EventRepository {
   }
 
   async upsertGoogleEvents(events: any[], creatorId: string): Promise<void> {
-    for (const ev of events) {
-      if (!ev.uid || !ev.starts_at) continue;
-      const slug = `gcal-${ev.uid.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase()}`.slice(0, 150);
-
-      const data = {
-        title: ev.title || 'Untitled Google Event',
-        description: ev.description || null,
-        starts_at: ev.starts_at,
-        ends_at: ev.ends_at || new Date(new Date(ev.starts_at).getTime() + 60 * 60 * 1000),
-        location: ev.location || null,
-        status: 'published',
-        audience: 'public',
-      };
-
-      await this.prisma.event.upsert({
-        where: { slug },
-        create: {
-          ...data,
-          slug,
-          created_by: creatorId,
-        },
-        update: data,
+    const validEvents = events.filter((ev) => ev.uid && ev.starts_at);
+    const chunkSize = 50;
+    for (let i = 0; i < validEvents.length; i += chunkSize) {
+      const batch = validEvents.slice(i, i + chunkSize).map((ev) => {
+        const slug = `gcal-${ev.uid.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase()}`.slice(0, 150);
+        const data = {
+          title: ev.title || 'Untitled Google Event',
+          description: ev.description || null,
+          starts_at: ev.starts_at,
+          ends_at: ev.ends_at || new Date(new Date(ev.starts_at).getTime() + 60 * 60 * 1000),
+          location: ev.location || null,
+          status: 'published',
+          audience: 'public',
+        };
+        return this.prisma.event.upsert({
+          where: { slug },
+          create: {
+            ...data,
+            slug,
+            created_by: creatorId,
+          },
+          update: data,
+        });
       });
+      await this.prisma.$transaction(batch);
     }
   }
 }

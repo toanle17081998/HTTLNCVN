@@ -243,13 +243,15 @@ export class ChurchUnitRepository {
   async getMeta(): Promise<ChurchUnitMetaDto> {
     const [members, units] = await this.prisma.$transaction([
       this.prisma.user.findMany({
-        include: {
+        select: {
+          id: true,
           profile: {
             select: {
               first_name: true,
               last_name: true,
             },
           },
+          username: true,
         },
         orderBy: [{ username: 'asc' }],
         where: {
@@ -666,53 +668,54 @@ export class ChurchUnitRepository {
     const memberIds = classUnit.members.map((m) => m.user_id);
     const courseIds = classUnit.courses.map((c) => c.id);
 
-    const courseGrades = await this.prisma.courseGrade.findMany({
-      where: {
-        user_id: { in: memberIds },
-        course_id: { in: courseIds },
-      },
-    });
-
-    const quizAttempts = await this.prisma.quizAttempt.findMany({
-      include: {
-        quiz: {
-          select: {
-            id: true,
-            title_en: true,
-            title_vi: true,
-            _count: {
-              select: {
-                quiz_maps: true,
+    const [courseGrades, quizAttempts] = await Promise.all([
+      this.prisma.courseGrade.findMany({
+        where: {
+          user_id: { in: memberIds },
+          course_id: { in: courseIds },
+        },
+      }),
+      this.prisma.quizAttempt.findMany({
+        include: {
+          quiz: {
+            select: {
+              id: true,
+              title_en: true,
+              title_vi: true,
+              _count: {
+                select: {
+                  quiz_maps: true,
+                },
               },
             },
           },
-        },
-        test_availability: {
-          select: {
-            course_id: true,
+          test_availability: {
+            select: {
+              course_id: true,
+            },
           },
         },
-      },
-      where: {
-        user_id: { in: memberIds },
-        OR: [
-          { test_availability: { course_id: { in: courseIds } } },
-          {
-            quiz: {
-              quiz_maps: {
-                some: {
-                  template: {
-                    lesson: {
-                      course_id: { in: courseIds },
+        where: {
+          user_id: { in: memberIds },
+          OR: [
+            { test_availability: { course_id: { in: courseIds } } },
+            {
+              quiz: {
+                quiz_maps: {
+                  some: {
+                    template: {
+                      lesson: {
+                        course_id: { in: courseIds },
+                      },
                     },
                   },
                 },
               },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      }),
+    ]);
 
     const results = classUnit.members.map((m) => {
       const user = m.user;
