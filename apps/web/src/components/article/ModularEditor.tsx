@@ -1,6 +1,8 @@
 "use client";
 
-import { Text, Title, cn } from "@/components/ui";
+import { Button, Text, Title, cn } from "@/components/ui";
+import { MediaPickerModal } from "@/components/media/MediaPickerModal";
+import { FolderOpen } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
   forwardRef,
@@ -56,6 +58,7 @@ export const ModularEditor = forwardRef(function ModularEditor(
 ) {
   const editorRef = useRef<DecoupledEditor | null>(null);
   const [contentHtml, setContentHtml] = useState(() => normalizeInitialValue(initialValue));
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const normalizedInitialValue = useMemo(() => normalizeInitialValue(initialValue), [initialValue]);
 
   useImperativeHandle(ref, () => ({
@@ -83,6 +86,16 @@ export const ModularEditor = forwardRef(function ModularEditor(
             {hasMeaningfulRichHtml(contentHtml) ? "Editing document content" : placeholder}
           </Text>
         </div>
+        <Button
+          onClick={() => setGalleryOpen(true)}
+          size="sm"
+          title="Insert image from gallery or upload"
+          type="button"
+          variant="secondary"
+        >
+          <FolderOpen className="mr-1.5 h-4 w-4" />
+          Insert from Gallery
+        </Button>
       </div>
 
       <CkDocumentEditor
@@ -95,6 +108,18 @@ export const ModularEditor = forwardRef(function ModularEditor(
           editorRef.current = editor;
         }}
         placeholder={placeholder}
+      />
+
+      <MediaPickerModal
+        onClose={() => setGalleryOpen(false)}
+        onSelect={(item) => {
+          const editor = editorRef.current;
+          if (!editor) return;
+          editor.execute("insertImage", { source: [item.url] });
+          editor.editing.view.focus();
+        }}
+        open={galleryOpen}
+        title="Insert image into editor"
       />
     </div>
   );

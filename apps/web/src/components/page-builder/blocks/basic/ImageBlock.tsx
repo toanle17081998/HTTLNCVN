@@ -2,6 +2,8 @@
 
 import { useNode } from "@craftjs/core";
 import { Input, cn } from "@/components/ui";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
+import { resolveMediaUrl } from "@/api/media";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, resolveStyleToken, toEmbedUrl, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -63,7 +65,7 @@ export function ImageBlock(props: ImageProps) {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="h-full w-full border-0"
-            src={finalUrl}
+            src={resolveMediaUrl(finalUrl)}
             title={alt}
           />
         ) : (
@@ -71,7 +73,7 @@ export function ImageBlock(props: ImageProps) {
           <img
             alt={alt}
             className="h-full w-full"
-            src={finalUrl}
+            src={resolveMediaUrl(finalUrl)}
             style={{ objectFit: fit }}
           />
         )}
@@ -128,10 +130,18 @@ function ImageBlockSettings() {
         </NativeSelect>
       </Field>
       <Field label={kind === "embed" ? "Video URL" : "Image URL"}>
-        <Input
-          onChange={(event) => setProp((props: any) => (props.url = event.target.value))}
-          value={url}
-        />
+        {kind === "embed" ? (
+          <Input
+            onChange={(event) => setProp((props: any) => (props.url = event.target.value))}
+            value={url}
+          />
+        ) : (
+          <ImagePickerField
+            compact
+            onChange={(nextUrl) => setProp((props: any) => (props.url = nextUrl))}
+            value={url ?? ""}
+          />
+        )}
       </Field>
       <Field label="Alt text">
         <Input

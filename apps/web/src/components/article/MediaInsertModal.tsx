@@ -1,6 +1,7 @@
 "use client";
 
 import { Text, Title, Button, FormField, Input, Textarea } from "@/components/ui";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import type { FormEvent } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { ImageFormState, ImageModalState } from "./articleEditorTypes";
@@ -44,18 +45,25 @@ export function MediaInsertModal({
         </div>
 
         <FormField htmlFor="media-url" label={isImage ? t("editor.media.imageUrl") : t("editor.media.videoUrl")}>
-          <Input
-            autoFocus
-            id="media-url"
-            onChange={(e) => onImageFormChange({ ...imageForm, url: e.target.value })}
-            placeholder={
-              isImage
-                ? t("editor.media.imageUrlPlaceholder")
-                : t("editor.media.videoUrlPlaceholder")
-            }
-            required
-            value={imageForm.url}
-          />
+          {isImage ? (
+            <ImagePickerField
+              autoFocus
+              id="media-url"
+              onChange={(url) => onImageFormChange({ ...imageForm, url })}
+              placeholder={t("editor.media.imageUrlPlaceholder")}
+              required
+              value={imageForm.url}
+            />
+          ) : (
+            <Input
+              autoFocus
+              id="media-url"
+              onChange={(e) => onImageFormChange({ ...imageForm, url: e.target.value })}
+              placeholder={t("editor.media.videoUrlPlaceholder")}
+              required
+              value={imageForm.url}
+            />
+          )}
         </FormField>
 
         <FormField htmlFor="media-alt" label={isImage ? t("editor.media.altText") : t("form.title")}>

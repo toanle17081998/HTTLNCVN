@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./client";
+import { resolveMediaUrl } from "./media";
 import { getStoredTokens } from "./auth";
 
 export type CourseStatus = "draft" | "published";
@@ -295,15 +296,26 @@ export const courseKeys = {
 };
 
 export const courseApi = {
-  list(params: CourseListParams = {}) {
-    return apiRequest<CourseListResult>(`/courses${courseListSearch(params)}`, {
+  async list(params: CourseListParams = {}) {
+    const res = await apiRequest<CourseListResult>(`/courses${courseListSearch(params)}`, {
       token: getStoredTokens()?.accessToken,
     });
+    return {
+      ...res,
+      items: res.items.map((item) => ({
+        ...item,
+        cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+      })),
+    };
   },
-  detail(slug: string) {
-    return apiRequest<Course>(`/courses/${encodeURIComponent(slug)}`, {
+  async detail(slug: string) {
+    const item = await apiRequest<Course>(`/courses/${encodeURIComponent(slug)}`, {
       token: getStoredTokens()?.accessToken,
     });
+    return {
+      ...item,
+      cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+    };
   },
   create(dto: CreateCourseDto) {
     return apiRequest<Course>("/courses", {

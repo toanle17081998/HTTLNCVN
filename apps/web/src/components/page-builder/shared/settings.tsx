@@ -3,6 +3,7 @@
 import { useContext, type ReactNode } from "react";
 import { useNode } from "@craftjs/core";
 import { Input, Label, Text } from "@/components/ui";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { EditorBreakpointContext } from "./NodeFrame";
 import type { BoxProps } from "./types";
 
@@ -217,8 +218,9 @@ export function BoxSettings({
             </NativeSelect>
           </Field>
           <Field label="Background image URL">
-            <Input
-              onChange={(event) => setBgImageValue(event.target.value)}
+            <ImagePickerField
+              compact
+              onChange={(url) => setBgImageValue(url)}
               placeholder="https://example.com/image.jpg"
               value={bgImageValue}
             />

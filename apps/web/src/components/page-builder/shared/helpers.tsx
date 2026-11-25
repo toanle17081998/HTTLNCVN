@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
+import { resolveMediaUrl } from "@/api/media";
 import type { BoxProps, FeedItem, SizeValue } from "./types";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "gold";
@@ -121,7 +122,7 @@ export function buildBoxStyle(props: BoxProps): CSSProperties {
   if (bgImage) {
     const formattedUrl = bgImage.startsWith("url(") || bgImage.startsWith("gradient") || bgImage.startsWith("linear-gradient")
       ? bgImage
-      : `url("${bgImage}")`;
+      : `url("${resolveMediaUrl(bgImage)}")`;
 
     if (rawBg && rawBg !== "transparent" && !rawBg.includes("url(")) {
       combinedBackground = `${rawBg}, ${formattedUrl}`;

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./client";
+import { resolveMediaUrl } from "./media";
 import { getStoredTokens } from "./auth";
 
 export type ArticleStatus = "draft" | "published";
@@ -79,11 +80,22 @@ export const articleKeys = {
 };
 
 export const articleApi = {
-  list(params: ArticleListParams = {}) {
-    return apiRequest<ArticleListResult>(`/articles${articleListSearch(params)}`);
+  async list(params: ArticleListParams = {}) {
+    const res = await apiRequest<ArticleListResult>(`/articles${articleListSearch(params)}`);
+    return {
+      ...res,
+      items: res.items.map((item) => ({
+        ...item,
+        cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+      })),
+    };
   },
-  detail(slug: string) {
-    return apiRequest<Article>(`/articles/${encodeURIComponent(slug)}`);
+  async detail(slug: string) {
+    const item = await apiRequest<Article>(`/articles/${encodeURIComponent(slug)}`);
+    return {
+      ...item,
+      cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+    };
   },
   create(dto: CreateArticleDto) {
     return apiRequest<Article>("/articles", {

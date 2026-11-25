@@ -1,6 +1,7 @@
 "use client";
 
 import { Title, Button, Card, FormField, Input, Select, Text } from "@/components/ui";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleCategoriesQuery } from "@/hooks/article";
 import type { SubmitState } from "./articleEditorTypes";
@@ -51,11 +52,11 @@ export function ArticleMetadataPanel({
       </FormField>
 
       <FormField htmlFor="article-cover-image-url" label={t("article.form.coverImageUrl")}>
-        <Input
+        <ImagePickerField
+          folder="articles"
           id="article-cover-image-url"
-          onChange={(e) => onCoverImageUrlChange(e.target.value)}
+          onChange={onCoverImageUrlChange}
           placeholder={t("article.form.coverImagePlaceholder")}
-          type="url"
           value={coverImageUrl}
         />
       </FormField>

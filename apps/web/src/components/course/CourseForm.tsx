@@ -5,6 +5,7 @@ import { Button, Card, FormField, Input, Textarea, Select, cn, Title } from "@/c
 import { useTranslation } from "@/providers/I18nProvider";
 import { CreateCourseDto, Course, useCourseCategoriesQuery } from "@/hooks/course";
 import { ModularEditor, type ModularEditorHandle } from "@/components/article/ModularEditor";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 type CourseFormProps = {
@@ -159,13 +160,14 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             </FormField>
 
             <FormField label={t("course.form.coverImage")} htmlFor="cover_image_url">
-              <Input
+              <ImagePickerField
+                className="bg-[var(--bg-base)]"
+                folder="courses"
                 id="cover_image_url"
                 name="cover_image_url"
-                value={formData.cover_image_url}
-                onChange={handleChange}
+                onChange={(url) => setFormData((prev) => ({ ...prev, cover_image_url: url }))}
                 placeholder="https://example.com/image.jpg"
-                className="bg-[var(--bg-base)]"
+                value={formData.cover_image_url}
               />
             </FormField>
 

@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredTokens } from "./auth";
 import { apiRequest } from "./client";
+import { resolveMediaUrl } from "./media";
 
 export type EventAudience = "public" | "church" | "church_unit" | "people";
 export type EventRepeat = "none" | "daily" | "weekly" | "monthly" | "weekdays";
@@ -129,15 +130,26 @@ export const eventKeys = {
 };
 
 export const eventApi = {
-  list(params: EventListParams = {}) {
-    return apiRequest<EventListResult>(`/events${eventListSearch(params)}`, {
+  async list(params: EventListParams = {}) {
+    const res = await apiRequest<EventListResult>(`/events${eventListSearch(params)}`, {
       token: getStoredTokens()?.accessToken,
     });
+    return {
+      ...res,
+      items: res.items.map((item) => ({
+        ...item,
+        cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+      })),
+    };
   },
-  detail(id: string) {
-    return apiRequest<EventItem>(`/events/${encodeURIComponent(id)}`, {
+  async detail(id: string) {
+    const item = await apiRequest<EventItem>(`/events/${encodeURIComponent(id)}`, {
       token: getStoredTokens()?.accessToken,
     });
+    return {
+      ...item,
+      cover_image_url: item.cover_image_url ? resolveMediaUrl(item.cover_image_url) : item.cover_image_url,
+    };
   },
   meta() {
     return apiRequest<EventMeta>("/events/meta", {

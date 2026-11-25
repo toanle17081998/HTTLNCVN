@@ -18,6 +18,7 @@ import {
   X,
   LogOut,
   LayoutGrid,
+  Image as ImageIcon,
   type LucideIcon,
 } from "lucide-react";
 import { Button, cn, Title, Text } from "@/components/ui";
@@ -45,6 +46,7 @@ type AdminNavItem = {
 
 const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/pages", labelKey: "admin.nav.pages", icon: FileStack },
+  { href: "/admin/media", labelKey: "admin.nav.media", icon: ImageIcon },
   { href: "/admin/navigation", labelKey: "admin.nav.navigation", icon: LayoutGrid },
   { href: "/admin/articles", labelKey: "nav.article.label", icon: BookOpen },
   { href: "/admin/courses", labelKey: "nav.course.label", icon: BarChart3 },

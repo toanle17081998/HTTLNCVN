@@ -34,6 +34,7 @@ import {
 } from "@/domain/site-navigation";
 import { useSiteNavigationQuery, useUpdateSiteNavigationMutation } from "@/hooks/siteNavigation";
 import { uploadMedia } from "@/api/media";
+import { MediaPickerModal } from "@/components/media/MediaPickerModal";
 
 const HERO_PAGES = [
   { key: "/article", labelKey: "nav.article.label" },
@@ -54,6 +55,7 @@ export function AdminNavigation() {
   const [selectedHeroPage, setSelectedHeroPage] = useState<string>("/article");
   const [config, setConfig] = useState<SiteNavigationConfig>(defaultSiteNavigationConfig);
   const [isUploadingIntro, setIsUploadingIntro] = useState(false);
+  const [introGalleryTarget, setIntroGalleryTarget] = useState<null | { kind: "add" } | { kind: "mobile"; imageId: string }>(null);
 
   useEffect(() => {
     if (navQuery.data) {
@@ -403,12 +405,24 @@ export function AdminNavigation() {
 
             <div>
               <Label className="mb-1.5 block" variant="overline">{t("admin.navigation.introImage")}</Label>
-              <Input
-                accept="image/avif,image/jpeg,image/png,image/webp"
-                disabled={isUploadingIntro || config.intro.images.length >= 3}
-                onChange={(event) => void handleIntroImageUpload(event.target.files?.[0])}
-                type="file"
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  accept="image/avif,image/jpeg,image/png,image/webp"
+                  className="min-w-0 flex-1"
+                  disabled={isUploadingIntro || config.intro.images.length >= 3}
+                  onChange={(event) => void handleIntroImageUpload(event.target.files?.[0])}
+                  type="file"
+                />
+                <Button
+                  disabled={config.intro.images.length >= 3}
+                  onClick={() => setIntroGalleryTarget({ kind: "add" })}
+                  size="sm"
+                  type="button"
+                  variant="secondary"
+                >
+                  Choose from Gallery
+                </Button>
+              </div>
               <Text className="mt-2" variant="small">
                 {isUploadingIntro
                   ? t("admin.articles.loading")
@@ -445,12 +459,23 @@ export function AdminNavigation() {
                         value={image.durationSeconds}
                       />
                       <Label variant="overline">{t("admin.navigation.introMobileImage")}</Label>
-                      <Input
-                        accept="image/avif,image/jpeg,image/png,image/webp"
-                        disabled={isUploadingIntro}
-                        onChange={(event) => void handleIntroMobileImageUpload(image.id, event.target.files?.[0])}
-                        type="file"
-                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          accept="image/avif,image/jpeg,image/png,image/webp"
+                          className="min-w-0 flex-1"
+                          disabled={isUploadingIntro}
+                          onChange={(event) => void handleIntroMobileImageUpload(image.id, event.target.files?.[0])}
+                          type="file"
+                        />
+                        <Button
+                          onClick={() => setIntroGalleryTarget({ imageId: image.id, kind: "mobile" })}
+                          size="sm"
+                          type="button"
+                          variant="secondary"
+                        >
+                          Gallery
+                        </Button>
+                      </div>
                       <Button
                         onClick={() =>
                           setConfig((prev) => ({
@@ -1135,6 +1160,43 @@ export function AdminNavigation() {
           </div>
         ) : null}
       </div>
+
+      <MediaPickerModal
+        onClose={() => setIntroGalleryTarget(null)}
+        onSelect={(item) => {
+          if (!introGalleryTarget) return;
+          if (introGalleryTarget.kind === "add") {
+            setConfig((prev) => ({
+              ...prev,
+              intro: {
+                ...prev.intro,
+                images: [
+                  ...prev.intro.images,
+                  {
+                    durationSeconds: 3,
+                    id: `intro-${Date.now()}`,
+                    url: item.url,
+                  },
+                ].slice(0, 3),
+              },
+            }));
+          } else {
+            setConfig((prev) => ({
+              ...prev,
+              intro: {
+                ...prev.intro,
+                images: prev.intro.images.map((img) =>
+                  img.id === introGalleryTarget.imageId
+                    ? { ...img, mobileUrl: item.url }
+                    : img,
+                ),
+              },
+            }));
+          }
+          setIntroGalleryTarget(null);
+        }}
+        open={Boolean(introGalleryTarget)}
+      />
     </PageLayout>
   );
 }

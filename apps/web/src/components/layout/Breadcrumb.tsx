@@ -19,6 +19,7 @@ function toTitle(segment: string) {
 const adminPathMap: Record<string, string> = {
   "/admin": "admin.common.admin",
   "/admin/pages": "admin.nav.pages",
+  "/admin/media": "admin.nav.media",
   "/admin/articles": "admin.articles.title",
   "/admin/articles/create": "admin.articles.create",
   "/admin/courses": "admin.courses.title",

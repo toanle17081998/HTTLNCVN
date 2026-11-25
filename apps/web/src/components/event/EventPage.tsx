@@ -1,6 +1,7 @@
 "use client";
 
 import { Text, Title, Button, Card, FormField, Input, Select, Textarea, cn, Label } from "@/components/ui";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
@@ -906,12 +907,13 @@ export function EventPage() {
                   />
                 </FormField>
                 <FormField htmlFor="event-cover-image" label={t("event.form.coverImage")}>
-                  <Input
+                  <ImagePickerField
+                    folder="events"
                     id="event-cover-image"
-                    onChange={(event) =>
+                    onChange={(url) =>
                       setForm((current) => ({
                         ...current,
-                        cover_image_url: event.target.value,
+                        cover_image_url: url,
                       }))
                     }
                     placeholder={t("event.form.coverImagePlaceholder")}
