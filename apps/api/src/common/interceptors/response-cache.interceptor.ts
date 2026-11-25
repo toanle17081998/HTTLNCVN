@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
-import { firstValueFrom, from, type Observable } from 'rxjs';
+import { firstValueFrom, from, tap, type Observable } from 'rxjs';
 
 import { CacheService } from '../performance/cache.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -15,6 +15,21 @@ const CACHE_RULES = [
   { prefix: '/api/events', ttlMs: 10_000 },
 ];
 
+const MUTATION_INVALIDATION_RULES: Array<{ match: string; prefixes: string[] }> = [
+  { match: '/api/pages', prefixes: ['http:/api/pages'] },
+  { match: '/api/articles', prefixes: ['http:/api/articles'] },
+  { match: '/api/course-categories', prefixes: ['http:/api/course-categories', 'http:/api/courses'] },
+  { match: '/api/courses', prefixes: ['http:/api/courses', 'report:'] },
+  { match: '/api/events', prefixes: ['http:/api/events', 'report:'] },
+  { match: '/api/members', prefixes: ['report:', 'role:'] },
+  { match: '/api/church-units', prefixes: ['report:'] },
+  { match: '/api/serving-schedules', prefixes: ['report:'] },
+  { match: '/api/prayer-journal', prefixes: ['report:'] },
+  { match: '/api/prayers', prefixes: ['report:'] },
+  { match: '/api/roles', prefixes: ['role:'] },
+  { match: '/api/permissions', prefixes: ['role:'] },
+];
+
 @Injectable()
 export class ResponseCacheInterceptor implements NestInterceptor {
   constructor(
@@ -22,15 +37,20 @@ export class ResponseCacheInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
   ) {}
 
+  private invalidateForMutation(url: string): void {
+    const matched = MUTATION_INVALIDATION_RULES.find(({ match }) => url.startsWith(match));
+    if (!matched) return;
+    for (const prefix of matched.prefixes) {
+      this.cache.invalidate(prefix);
+    }
+  }
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
     if (request.method !== 'GET') {
-      this.cache.invalidate('http:');
-      this.cache.invalidate('report:');
-      this.cache.invalidate('role:');
-      return next.handle();
+      return next.handle().pipe(tap(() => this.invalidateForMutation(request.originalUrl)));
     }
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
