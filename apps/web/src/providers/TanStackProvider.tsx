@@ -46,9 +46,9 @@ function persistSessionCache(queryClient: QueryClient) {
       isHydrationSafeQuery(query.queryKey) &&
       query.state.status === "success",
   });
-  const queries = [...dehydrated.queries].sort(
-    (left, right) => right.state.dataUpdatedAt - left.state.dataUpdatedAt,
-  );
+  let queries = [...dehydrated.queries]
+    .sort((left, right) => right.state.dataUpdatedAt - left.state.dataUpdatedAt)
+    .slice(0, 30);
 
   while (true) {
     try {
@@ -59,11 +59,11 @@ function persistSessionCache(queryClient: QueryClient) {
       window.sessionStorage.setItem(sessionQueryCacheKey, JSON.stringify(cache));
       return;
     } catch {
-      if (!queries.length) {
+      if (queries.length <= 1) {
         clearSessionQueryCache();
         return;
       }
-      queries.pop();
+      queries = queries.slice(0, Math.floor(queries.length / 2));
     }
   }
 }
@@ -74,14 +74,17 @@ export function TanStackProvider({ children }: { children: ReactNode }) {
     const client = new QueryClient({
       defaultOptions: {
         queries: {
-          gcTime: Infinity,
+          gcTime: 30 * 60 * 1000,
           refetchOnWindowFocus: false,
-          staleTime: Infinity,
+          staleTime: 60 * 1000,
           retry(failureCount, error) {
-            if (error instanceof ApiError && error.status === 404) {
-              return false;
-            }
-            if (error && typeof error === "object" && "status" in error && error.status === 404) {
+            const status =
+              error instanceof ApiError
+                ? error.status
+                : error && typeof error === "object" && "status" in error && typeof error.status === "number"
+                  ? error.status
+                  : undefined;
+            if (status !== undefined && status >= 400 && status < 500) {
               return false;
             }
             return failureCount < 3;
@@ -95,9 +98,10 @@ export function TanStackProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let saveTimer: ReturnType<typeof setTimeout> | undefined;
     const persist = () => persistSessionCache(queryClient);
-    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type !== "updated" || event.action.type !== "success") return;
       if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(persist, 150);
+      saveTimer = setTimeout(persist, 1000);
     });
     const restoreTimer = setTimeout(() => {
       restoreSessionCache(queryClient);

@@ -66,24 +66,34 @@ function clearStoredTokens() {
   window.dispatchEvent(new Event("httlncvn:auth-token-change"));
 }
 
+let refreshInFlight: Promise<string | null> | null = null;
+
 async function refreshAccessToken(): Promise<string | null> {
-  const tokens = readStoredTokens();
-  if (!tokens?.refreshToken) return null;
+  if (refreshInFlight) return refreshInFlight;
 
-  const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
-    body: JSON.stringify({ refreshToken: tokens.refreshToken }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
+  refreshInFlight = (async () => {
+    const tokens = readStoredTokens();
+    if (!tokens?.refreshToken) return null;
+
+    const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+      body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<StoredTokens> | null;
+
+    if (!response.ok || !payload?.success) {
+      clearStoredTokens();
+      return null;
+    }
+
+    writeStoredTokens(payload.data);
+    return payload.data.accessToken;
+  })().finally(() => {
+    refreshInFlight = null;
   });
-  const payload = (await response.json().catch(() => null)) as ApiEnvelope<StoredTokens> | null;
 
-  if (!response.ok || !payload?.success) {
-    clearStoredTokens();
-    return null;
-  }
-
-  writeStoredTokens(payload.data);
-  return payload.data.accessToken;
+  return refreshInFlight;
 }
 
 async function requestWithToken<T>(

@@ -493,8 +493,7 @@ export function useCourseQuery(slug?: string) {
     enabled: Boolean(slug),
     queryFn: () => courseApi.detail(slug ?? ""),
     queryKey: courseKeys.detail(slug ?? ""),
-    refetchOnMount: "always",
-    staleTime: 0,
+    staleTime: 30_000,
   });
 }
 
@@ -503,8 +502,7 @@ export function useLessonQuery(courseSlug?: string, lessonId?: string) {
     enabled: Boolean(courseSlug && lessonId),
     queryFn: () => courseApi.lesson(courseSlug ?? "", lessonId ?? ""),
     queryKey: courseKeys.lesson(lessonId ?? ""),
-    refetchOnMount: "always",
-    staleTime: 0,
+    staleTime: 30_000,
   });
 }
 
