@@ -63,13 +63,13 @@ export function createPageMetadata(
       siteName,
       type: "website",
       url: path,
-      images: [{ url: "/church-logo.png", alt: siteName }],
+      images: [{ url: "/church-logo.webp", alt: siteName }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/church-logo.png"],
+      images: ["/church-logo.webp"],
     },
   };
 }

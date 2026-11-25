@@ -11,7 +11,7 @@ import { craftResolver, PageCanvas } from "./craftNodes";
 import { ensureValidPageContent } from "./defaultContent";
 import { useTranslation } from "@/providers/I18nProvider";
 import { getLocalizedField, type Locale } from "@/lib/i18n";
-import { PageBuilderSkeleton } from "./PageBuilderSkeleton";
+import { PageBuilderSkeleton, rememberPageSkeletonVariants } from "./PageBuilderSkeleton";
 import { useEffect } from "react";
 
 export function CraftPageRenderer({
@@ -44,6 +44,27 @@ export function CraftPageRenderer({
     };
   }, [pageQuery.isLoading, path]);
 
+  const page = pageQuery.data;
+  const rawActive = page ? getLocalizedField(page, "content", readerLang) : "";
+  // If the active language content is empty or default template, use the non-empty content
+  const activeContent = page
+    ? rawActive && rawActive.trim() && rawActive !== "{}"
+      ? rawActive
+      : getLocalizedField(page, "content")
+    : "";
+  const validContent = page
+    ? ensureValidPageContent(
+        activeContent,
+        getLocalizedField(page, "title", readerLang),
+        page.route_path,
+      )
+    : "";
+
+  useEffect(() => {
+    if (!validContent) return;
+    rememberPageSkeletonVariants(path, validContent);
+  }, [path, validContent]);
+
   if (pageQuery.isLoading) {
     if (path === "/") return null;
     return <PageBuilderSkeleton path={path} />;
@@ -75,17 +96,7 @@ export function CraftPageRenderer({
     );
   }
 
-  const page = pageQuery.data;
   if (!page) return null;
-
-  const rawActive = getLocalizedField(page, "content", readerLang);
-  // If the active language content is empty or default template, use the non-empty content
-  const activeContent = rawActive && rawActive.trim() && rawActive !== "{}" ? rawActive : getLocalizedField(page, "content");
-  const validContent = ensureValidPageContent(
-    activeContent,
-    getLocalizedField(page, "title", readerLang),
-    page.route_path
-  );
 
   return (
     <div className="published-page-builder relative w-full">

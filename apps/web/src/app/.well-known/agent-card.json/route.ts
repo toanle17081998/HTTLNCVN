@@ -15,7 +15,7 @@ export function GET() {
       },
       description: `Browser-native WebMCP tools for exploring public articles, courses, and events on ${siteConfig.names.vi} (${siteConfig.shortNames.vi}) / ${siteConfig.names.en} (${siteConfig.shortNames.en}).`,
       documentationUrl: absoluteUrl("/llms.txt"),
-      iconUrl: absoluteUrl("/church-logo.png"),
+      iconUrl: absoluteUrl("/church-favicon.webp"),
       languages: ["vi", "en"],
       name: `${siteConfig.shortNames.vi} / ${siteConfig.shortNames.en} Web Assistant`,
       organization: `${siteConfig.names.vi} (${siteConfig.names.en})`,

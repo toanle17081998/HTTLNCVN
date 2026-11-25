@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: ArticleDetailRouteProps): Pro
   }
   const title = getLocalizedField(article, "title", locale);
   const description = summarizeText(getLocalizedField(article, "content_markdown", locale)) || title;
-  const image = article.cover_image_url || "/church-logo.png";
+  const image = article.cover_image_url || "/church-logo.webp";
   const path = `/article/${encodeURIComponent(article.slug)}`;
   return {
     title,
@@ -61,7 +61,7 @@ export default async function ArticleDetailRoute({ params }: ArticleDetailRouteP
               headline: title,
               description,
               inLanguage: locale,
-              image: article.cover_image_url ? [article.cover_image_url] : [absoluteUrl("/church-logo.png")],
+              image: article.cover_image_url ? [article.cover_image_url] : [absoluteUrl("/church-logo.webp")],
               datePublished: article.published_at ?? undefined,
               mainEntityOfPage: articleUrl,
               url: articleUrl,
@@ -71,7 +71,7 @@ export default async function ArticleDetailRoute({ params }: ArticleDetailRouteP
                 url: absoluteUrl("/"),
                 logo: {
                   "@type": "ImageObject",
-                  url: absoluteUrl("/church-logo.png"),
+                  url: absoluteUrl("/church-logo.webp"),
                 },
               },
             },

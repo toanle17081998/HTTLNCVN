@@ -64,12 +64,9 @@ export async function generateMetadata(): Promise<Metadata> {
       "Bible courses",
     ],
     icons: {
-      icon: [
-        { url: "/church-logo.svg", type: "image/svg+xml" },
-        { url: "/church-logo.png", type: "image/png" },
-      ],
-      shortcut: "/church-logo.png",
-      apple: "/church-logo.png",
+      icon: [{ url: "/church-favicon.webp", type: "image/webp" }],
+      shortcut: "/church-favicon.webp",
+      apple: "/church-favicon.webp",
     },
     alternates: {
       canonical: "/",
@@ -87,7 +84,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteName,
       type: "website",
       url: "/",
-      images: [{ url: "/church-logo.png", alt: siteName }],
+      images: [{ url: "/church-logo.webp", alt: siteName }],
     },
     robots: {
       follow: true,
@@ -103,7 +100,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       description,
-      images: ["/church-logo.png"],
+      images: ["/church-logo.webp"],
       title: siteName,
     },
     ...(googleSiteVerification ? { verification: { google: googleSiteVerification } } : {}),
@@ -119,7 +116,7 @@ export default async function RootLayout({
   const siteName = getSiteName(locale);
   const description = getSiteDescription(locale);
   const siteUrl = absoluteUrl("/");
-  const logoUrl = absoluteUrl("/church-logo.png");
+  const logoUrl = absoluteUrl("/church-logo.webp");
   const alternateNames = [
     siteConfig.names.vi,
     siteConfig.shortNames.vi,

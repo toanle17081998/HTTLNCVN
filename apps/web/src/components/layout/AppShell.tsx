@@ -48,13 +48,6 @@ export function AppShell({ children }: AppShellProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      window.dispatchEvent(new Event("httlncvn:page-appear"));
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname]);
-
   if (pathname === "/auth" || pathname.startsWith("/admin")) {
     return (
       <div className="min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">

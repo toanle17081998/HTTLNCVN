@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: CourseDetailRouteProps): Prom
   }
   const title = getLocalizedField(course, "title", locale);
   const description = getLocalizedField(course, "summary", locale) || title;
-  const image = course.cover_image_url || "/church-logo.png";
+  const image = course.cover_image_url || "/church-logo.webp";
   const path = `/course/${encodeURIComponent(course.slug)}`;
   return {
     title,
@@ -58,7 +58,7 @@ export default async function CourseDetailRoute({ params }: CourseDetailRoutePro
               description: getLocalizedField(course, "summary", locale),
               inLanguage: locale,
               url: courseUrl,
-              image: course.cover_image_url || absoluteUrl("/church-logo.png"),
+              image: course.cover_image_url || absoluteUrl("/church-logo.webp"),
               provider: {
                 "@type": "Organization",
                 name: getSiteName(locale),

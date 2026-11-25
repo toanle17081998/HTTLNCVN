@@ -1,7 +1,7 @@
 "use client";
 
 import { Input, Skeleton, Textarea, cn } from "@/components/ui";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useArticlesQuery } from "@/hooks/article";
@@ -85,6 +85,16 @@ function FeedCardSkeleton({ style }: { style: FeedCardStyle }) {
   );
 }
 
+const emptySubscribe = () => () => {};
+
+function useIsHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 export function FeedCarouselBlock(props: FeedProps) {
   const { localize } = useTranslation();
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
@@ -127,12 +137,16 @@ export function FeedCarouselBlock(props: FeedProps) {
   const itemsPerScreen = nodeItemsPerScreen ?? props.itemsPerScreen ?? 1;
   const selectedItemIds = nodeSelectedItemIds ?? props.selectedItemIds ?? [];
   const slideWidth = nodeSlideWidth ?? props.slideWidth ?? "56%";
+  const isHydrated = useIsHydrated();
   const isMobile = useIsMobile();
   const dragStartXRef = useRef<number | null>(null);
   const dragDeltaRef = useRef(0);
-  const articlesQuery = useArticlesQuery({ status: "published", take: 8 });
-  const coursesQuery = useCoursesQuery({ status: "published", take: 8 });
-  const eventsQuery = useEventsQuery({ audience: "public", status: "published", upcoming: true, take: 8 });
+  const articlesQuery = useArticlesQuery({ status: "published", take: 8 }, { enabled: feedType === "articles" });
+  const coursesQuery = useCoursesQuery({ status: "published", take: 8 }, { enabled: feedType === "courses" });
+  const eventsQuery = useEventsQuery(
+    { audience: "public", status: "published", upcoming: true, take: 8 },
+    feedType === "events",
+  );
 
   const articleItems = articlesQuery.data?.items ?? [];
   const courseItems = coursesQuery.data?.items ?? [];
@@ -176,13 +190,14 @@ export function FeedCarouselBlock(props: FeedProps) {
     : allItems;
 
   const isLoading =
-    feedType === "articles"
-      ? articlesQuery.isLoading
+    !isHydrated ||
+    (feedType === "articles"
+      ? articlesQuery.isPending
       : feedType === "courses"
-        ? coursesQuery.isLoading
+        ? coursesQuery.isPending
         : feedType === "events"
-          ? eventsQuery.isLoading
-          : false;
+          ? eventsQuery.isPending
+          : false);
 
   const slideInterval = Math.max(1000, parseNumberLike(intervalMs, 5000));
   const visibleItems = isMobile ? 1 : Math.min(4, Math.max(1, Math.floor(parseNumberLike(itemsPerScreen, 1))));

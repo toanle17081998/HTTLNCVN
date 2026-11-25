@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
+import { Badge, Button, Card, Input, Pagination, Select, Skeleton, Text, Title } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -138,7 +138,22 @@ export function ArticlePage() {
       </div>
 
       {/* Category filters */}
-      <div className="mb-8 flex flex-wrap gap-2">
+      <div className="mb-8 md:hidden">
+        <Select
+          aria-label={t("article.form.category")}
+          className="rounded-xl border-[var(--border-subtle)]"
+          onChange={(e) => handleCategoryChange(e.target.value ? Number(e.target.value) : undefined)}
+          value={selectedCategoryId !== undefined ? String(selectedCategoryId) : ""}
+        >
+          <option value="">{t("prayer.filter.all")}</option>
+          {categoriesQuery.data?.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {localize(cat, "name")}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="mb-8 hidden flex-wrap gap-2 md:flex">
         <Button
           size="sm"
           variant={selectedCategoryId === undefined ? "primary" : "secondary"}

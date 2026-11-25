@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
+import { Badge, Button, Card, Input, Pagination, Select, Skeleton, Text, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -126,7 +126,22 @@ export function CoursePage() {
       </div>
 
       {/* Category filters */}
-      <div className="mb-8 flex flex-wrap gap-2">
+      <div className="mb-8 md:hidden">
+        <Select
+          aria-label={t("course.form.category")}
+          className="rounded-xl border-[var(--border-subtle)]"
+          onChange={(e) => handleCategoryChange(e.target.value || undefined)}
+          value={selectedCategoryId ?? ""}
+        >
+          <option value="">{t("prayer.filter.all")}</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {localize(cat, "name")}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="mb-8 hidden flex-wrap gap-2 md:flex">
         <Button
           size="sm"
           variant={selectedCategoryId === undefined ? "primary" : "secondary"}

@@ -12,8 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#ffffff",
     theme_color: "#123252",
     icons: [
-      { src: "/church-logo.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/church-logo.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/church-favicon.webp", sizes: "512x512", type: "image/webp", purpose: "any" },
     ],
   };
 }

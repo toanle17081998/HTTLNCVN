@@ -18,12 +18,12 @@ export function ChurchLogo({ className }: ChurchLogoProps) {
       <img
         alt=""
         className="church-logo-light absolute inset-0 h-full w-full object-contain"
-        src="/church-logo.svg"
+        src="/church-logo.webp"
       />
       <img
         alt=""
         className="church-logo-dark absolute inset-0 h-full w-full object-contain"
-        src="/church-logo-dark.svg?v=2"
+        src="/church-logo-dark.webp"
       />
     </span>
   );

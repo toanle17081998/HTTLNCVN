@@ -6,9 +6,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 import { ChurchLogo } from "./ChurchLogo";
 
-type IntroPhase = "loading" | "logo" | "images" | "waiting" | "exiting" | "done";
+type IntroPhase = "loading" | "logo" | "images" | "waiting" | "exiting" | "fading" | "done";
 
+const minLogoDisplayMs = 500;
 const logoDurationMs = 600;
+const fadeOutDurationMs = 500;
 const exitDurationMs = 800;
 
 function IntroImage({ mobileUrl, priority, url }: { mobileUrl?: string; priority?: boolean; url: string }) {
@@ -53,6 +55,7 @@ function RevealingIntroImage({ mobileUrl, priority, url }: { mobileUrl?: string;
 export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
   const navigationQuery = useSiteNavigationQuery();
   const hasStarted = useRef(false);
+  const startedAtRef = useRef<number | null>(null);
   const shouldAnimatePage = useRef(false);
   const [activeImage, setActiveImage] = useState(0);
   const [isPageReady, setIsPageReady] = useState(false);
@@ -61,6 +64,7 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
   const images = useMemo(() => intro?.images ?? [], [intro?.images]);
 
   useEffect(() => {
+    startedAtRef.current = performance.now();
     document.documentElement.classList.add("landing-intro-active");
     return () => document.documentElement.classList.remove("landing-intro-active");
   }, []);
@@ -82,14 +86,23 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     if (
       navigationQuery.isLoading ||
-      !navigationQuery.data ||
+      (!navigationQuery.data && !navigationQuery.isError) ||
       hasStarted.current
     ) return;
-    hasStarted.current = true;
+
     if (!intro?.enabled || images.length === 0) {
-      const timer = window.setTimeout(() => setPhase("done"), 0);
-      return () => window.clearTimeout(timer);
+      if (!isPageReady) return;
+      hasStarted.current = true;
+      const elapsed = startedAtRef.current !== null ? performance.now() - startedAtRef.current : 0;
+      const remaining = Math.max(0, minLogoDisplayMs - elapsed);
+      const fadeTimer = window.setTimeout(() => setPhase("fading"), remaining);
+      return () => {
+        hasStarted.current = false;
+        window.clearTimeout(fadeTimer);
+      };
     }
+
+    hasStarted.current = true;
     shouldAnimatePage.current = true;
 
     images.forEach((image) => {
@@ -110,7 +123,7 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
       hasStarted.current = false;
       window.clearTimeout(logoTimer);
     };
-  }, [images, intro?.enabled, navigationQuery.data, navigationQuery.isLoading]);
+  }, [images, intro?.enabled, isPageReady, navigationQuery.data, navigationQuery.isError, navigationQuery.isLoading]);
 
   useEffect(() => {
     if (phase !== "images" || !images[activeImage]) return;
@@ -131,6 +144,12 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
     const timer = window.setTimeout(() => setPhase("exiting"), 0);
     return () => window.clearTimeout(timer);
   }, [isPageReady, phase]);
+
+  useEffect(() => {
+    if (phase !== "fading") return;
+    const timer = window.setTimeout(() => setPhase("done"), fadeOutDurationMs);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "exiting") return;
@@ -154,24 +173,25 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] overflow-hidden bg-[var(--bg-base)] ${phase === "exiting" ? "landing-intro-diamond-exit" : ""}`}
+      className={`fixed inset-0 z-[100] overflow-hidden bg-[var(--bg-base)] transition-opacity duration-500 ease-out ${phase === "fading" ? "pointer-events-none opacity-0" : "opacity-100"
+        } ${phase === "exiting" ? "landing-intro-diamond-exit" : ""}`}
     >
       {showImages
         ? images.map((image, index) =>
-            index <= activeImage ? (
-              <div
-                className="absolute inset-0"
-                key={image.id}
-                style={{ zIndex: index + 1 }}
-              >
-                {index === activeImage ? (
-                  <RevealingIntroImage mobileUrl={image.mobileUrl} priority={index === 0} url={image.url} />
-                ) : (
-                  <IntroImage mobileUrl={image.mobileUrl} url={image.url} />
-                )}
-              </div>
-            ) : null,
-          )
+          index <= activeImage ? (
+            <div
+              className="absolute inset-0"
+              key={image.id}
+              style={{ zIndex: index + 1 }}
+            >
+              {index === activeImage ? (
+                <RevealingIntroImage mobileUrl={image.mobileUrl} priority={index === 0} url={image.url} />
+              ) : (
+                <IntroImage mobileUrl={image.mobileUrl} url={image.url} />
+              )}
+            </div>
+          ) : null,
+        )
         : null}
 
       <div
