@@ -41,7 +41,9 @@ function navigate(path: string) {
 
 export function WebMcpBridge() {
   useEffect(() => {
-    const registry = (document as Document & { readonly modelContext?: WebMcpRegistry }).modelContext;
+    const navigatorWithMcp = navigator as Navigator & { readonly modelContext?: WebMcpRegistry };
+    const documentWithMcp = document as Document & { readonly modelContext?: WebMcpRegistry };
+    const registry = navigatorWithMcp.modelContext ?? documentWithMcp.modelContext;
     if (typeof registry?.registerTool !== "function") return;
 
     const lifecycle = new AbortController();
@@ -52,7 +54,8 @@ export function WebMcpBridge() {
     register({
       name: "get_page_context",
       title: "Get page context",
-      description: "Read the current HTNC page title, description, canonical URL, language, and path.",
+      description:
+        "Read the current Hội Thánh Tin Lành Nhân Cấp (HTTLNC) / Multiplying Evangelical Church (MEC) page title, description, canonical URL, language, and path.",
       annotations: { readOnlyHint: true },
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       execute() {
@@ -69,9 +72,67 @@ export function WebMcpBridge() {
     });
 
     register({
+      name: "list_public_links",
+      title: "List visible public links",
+      description:
+        "Extract public navigation and content links currently rendered on this HTTLNC / MEC page for agentic browsing.",
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
+      inputSchema: {
+        type: "object",
+        properties: { limit: { type: "integer", minimum: 1, maximum: 50 } },
+        additionalProperties: false,
+      },
+      execute(input) {
+        const rawLimit = input && typeof input === "object" ? (input as Record<string, unknown>).limit : undefined;
+        const limit = typeof rawLimit === "number" && Number.isFinite(rawLimit) ? Math.min(Math.max(1, rawLimit), 50) : 25;
+        const seen = new Set<string>();
+        const links: Array<{ href: string; text: string }> = [];
+        for (const anchor of document.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+          if (links.length >= limit) break;
+          let url: URL;
+          try {
+            url = new URL(anchor.href, window.location.origin);
+          } catch {
+            continue;
+          }
+          if (url.origin !== window.location.origin) continue;
+          if (/^\/(admin|auth|api|church|notification|prayer-journal|create-article)/.test(url.pathname)) continue;
+          const text = (anchor.textContent || "").replace(/\s+/g, " ").trim();
+          if (!text || seen.has(url.pathname + url.search)) continue;
+          seen.add(url.pathname + url.search);
+          links.push({ href: url.toString(), text: text.slice(0, 120) });
+        }
+        return { count: links.length, links };
+      },
+    });
+
+    register({
+      name: "search_public_content",
+      title: "Search HTTLNC / MEC articles or courses",
+      description:
+        "Open the Hội Thánh Tin Lành Nhân Cấp (HTTLNC) / Multiplying Evangelical Church (MEC) articles or courses catalog filtered by a search query.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          contentType: { type: "string", enum: ["article", "course"] },
+          query: { type: "string", minLength: 1, maxLength: 120 },
+        },
+        required: ["contentType", "query"],
+        additionalProperties: false,
+      },
+      execute(input) {
+        const contentType = readString(input, "contentType");
+        const query = readString(input, "query");
+        if (contentType !== "article" && contentType !== "course") throw new Error("Unsupported content type.");
+        return navigate(`/${contentType}?q=${encodeURIComponent(query)}`);
+      },
+    });
+
+    register({
       name: "open_public_page",
-      title: "Open a public HTNC page",
-      description: "Navigate to a public HTNC section such as articles, courses, events, about, or contact.",
+      title: "Open a public HTTLNC / MEC page",
+      description:
+        "Navigate to a public Hội Thánh Tin Lành Nhân Cấp (HTTLNC) / Multiplying Evangelical Church (MEC) section such as articles, courses, events, about, or contact.",
       inputSchema: {
         type: "object",
         properties: { destination: { type: "string", enum: Object.keys(publicDestinations) } },
@@ -89,7 +150,7 @@ export function WebMcpBridge() {
     register({
       name: "open_public_content",
       title: "Open an article or course",
-      description: "Navigate to a published HTNC article or course using its URL slug.",
+      description: "Navigate to a published HTTLNC / MEC article or course using its URL slug.",
       inputSchema: {
         type: "object",
         properties: {

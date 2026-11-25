@@ -33,6 +33,14 @@ type I18nProviderProps = {
   children: ReactNode;
 };
 
+function persistLocaleCookie(locale: Locale) {
+  try {
+    document.cookie = `${storageKey}=${encodeURIComponent(locale)}; path=/; max-age=31536000; samesite=lax`;
+  } catch {
+    // Ignore cookie persistence errors.
+  }
+}
+
 function getPreferredLocale() {
   try {
     const savedLocale = window.localStorage.getItem(storageKey);
@@ -94,6 +102,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
         } catch {
           // Keep the in-memory language change even if storage is unavailable.
         }
+        persistLocaleCookie(nextLocale);
         document.documentElement.lang = nextLocale;
       },
       t(key: TranslationKey, params?: Record<string, string>) {
@@ -116,6 +125,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    persistLocaleCookie(locale);
   }, [locale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

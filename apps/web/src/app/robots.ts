@@ -6,10 +6,12 @@ export default function robots(): MetadataRoute.Robots {
     host: getSiteUrl().origin,
     rules: {
       userAgent: "*",
-      allow: "/",
+      allow: ["/", "/llms.txt", "/.well-known/"],
       disallow: [
         "/admin/",
+        "/api/",
         "/auth",
+        "/church",
         "/create-article",
         "/notification",
         "/prayer-journal",
