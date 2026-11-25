@@ -110,8 +110,9 @@ export const articleApi = {
   },
 };
 
-export function useArticlesQuery(params: ArticleListParams = {}) {
+export function useArticlesQuery(params: ArticleListParams = {}, options?: { enabled?: boolean }) {
   return useQuery({
+    enabled: options?.enabled ?? true,
     queryFn: () => articleApi.list(params),
     queryKey: articleKeys.list(params),
   });
@@ -124,9 +125,10 @@ export function useArticleCategoriesQuery() {
   });
 }
 
-export function useArticleQuery(slug?: string) {
+export function useArticleQuery(slug?: string, initialData?: Article | null) {
   return useQuery({
     enabled: Boolean(slug),
+    initialData: initialData ?? undefined,
     queryFn: () => articleApi.detail(slug ?? ""),
     queryKey: articleKeys.detail(slug ?? ""),
   });

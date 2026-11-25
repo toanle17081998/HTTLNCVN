@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
@@ -10,6 +11,8 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import {
+  articleApi,
+  articleKeys,
   useArticlesQuery,
   useArticleCategoriesQuery,
   useDeleteArticleMutation,
@@ -18,7 +21,7 @@ import {
 const PAGE_SIZE_DEFAULT = 4;
 
 export function ArticlePage() {
-  const { can } = useAuth();
+  const { can, isLoading: authLoading } = useAuth();
   const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
@@ -26,21 +29,63 @@ export function ArticlePage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   const canManageArticle = can(PERMISSIONS.manageArticle);
 
   const categoriesQuery = useArticleCategoriesQuery();
-  const articlesQuery = useArticlesQuery({
-    take: pageSize,
-    skip: page * pageSize,
-    status: canManageArticle ? undefined : "published",
-    category_id: selectedCategoryId,
-    q: q || undefined,
-  });
+  const articlesQuery = useArticlesQuery(
+    {
+      take: pageSize,
+      skip: page * pageSize,
+      status: canManageArticle ? undefined : "published",
+      category_id: selectedCategoryId,
+      q: q || undefined,
+    },
+    { enabled: !authLoading },
+  );
 
   const deleteArticle = useDeleteArticleMutation();
 
   const total = articlesQuery.data?.total ?? 0;
+  const isListLoading = articlesQuery.isLoading || articlesQuery.isFetching;
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (authLoading || (page + 1) * pageSize >= total) return;
+    const nextParams = {
+      take: pageSize,
+      skip: (page + 1) * pageSize,
+      status: canManageArticle ? undefined : "published",
+      category_id: selectedCategoryId,
+      q: q || undefined,
+    };
+    void queryClient.prefetchQuery({
+      queryFn: () => articleApi.list(nextParams),
+      queryKey: articleKeys.list(nextParams),
+    });
+  }, [authLoading, canManageArticle, page, pageSize, q, queryClient, selectedCategoryId, total]);
+
+  const scrollToList = useCallback(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      setPage(nextPage);
+      scrollToList();
+    },
+    [scrollToList],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (nextSize: number) => {
+      setPageSize(nextSize);
+      setPage(0);
+      scrollToList();
+    },
+    [scrollToList],
+  );
 
   const handleSearch = useCallback(() => {
     setQ(searchInput.trim());
@@ -113,7 +158,9 @@ export function ArticlePage() {
         ))}
       </div>
 
-      {articlesQuery.isLoading ? (
+      <div ref={listTopRef} className="scroll-mt-24" />
+
+      {isListLoading ? (
         <div className="grid gap-6 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="overflow-hidden">
@@ -146,6 +193,7 @@ export function ArticlePage() {
         </Card>
       ) : null}
 
+      {!isListLoading ? (
       <div className="grid gap-6 md:grid-cols-2">
         {articlesQuery.data?.items.map((article) => (
           <Card className="overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg flex flex-col h-full" key={article.id}>
@@ -221,8 +269,9 @@ export function ArticlePage() {
           </Card>
         ))}
       </div>
+      ) : null}
 
-      {articlesQuery.data && articlesQuery.data.items.length === 0 ? (
+      {!isListLoading && articlesQuery.data && articlesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed rounded-2xl">
           <div className="text-4xl mb-4 opacity-20">📭</div>
           No articles found.
@@ -237,8 +286,8 @@ export function ArticlePage() {
           pageSize={pageSize}
           pageSizeOptions={[4, 8, 10, 20]}
           total={total}
-          onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       ) : null}
     </PageLayout>

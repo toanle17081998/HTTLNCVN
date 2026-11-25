@@ -5,13 +5,14 @@ import { useMemo } from "react";
 import { PageLayout } from "@/components/layout";
 import { Badge, Card, Skeleton, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
-import { useArticleQuery } from "@/hooks/article";
+import { useArticleQuery, type Article } from "@/hooks/article";
 import { markdownToHtml } from "./articleEditorUtils";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { getLocalizedField, type Locale } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 
 type ArticleDetailPageProps = {
+  initialArticle?: Article | null;
   slug: string;
 };
 
@@ -89,9 +90,9 @@ function renderArticleBody(value: string) {
   return { headings, html: htmlWithHeadingIds };
 }
 
-export function ArticleDetailPage({ slug }: ArticleDetailPageProps) {
+export function ArticleDetailPage({ initialArticle, slug }: ArticleDetailPageProps) {
   const { t, locale, localize } = useTranslation();
-  const articleQuery = useArticleQuery(slug);
+  const articleQuery = useArticleQuery(slug, initialArticle);
   const article = articleQuery.data;
 
   const [readerLang, setReaderLang] = useState<Locale>(locale);

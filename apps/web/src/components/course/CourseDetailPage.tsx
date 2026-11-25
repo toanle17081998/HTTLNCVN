@@ -15,20 +15,22 @@ import {
   useCourseQuery,
   useDeleteCourseMutation,
   useDeleteLessonMutation,
+  type Course,
 } from "@/hooks/course";
 import { useState } from "react";
 
 type CourseDetailPageProps = {
+  initialCourse?: Course | null;
   slug: string;
 };
 
 
-export function CourseDetailPage({ slug }: CourseDetailPageProps) {
+export function CourseDetailPage({ initialCourse, slug }: CourseDetailPageProps) {
   const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const router = useRouter();
   const { can } = useAuth();
-  const courseQuery = useCourseQuery(slug);
+  const courseQuery = useCourseQuery(slug, initialCourse);
   const deleteCourse = useDeleteCourseMutation();
   const deleteLesson = useDeleteLessonMutation(slug);
 

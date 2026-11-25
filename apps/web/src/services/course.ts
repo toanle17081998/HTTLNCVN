@@ -480,17 +480,19 @@ export const courseApi = {
   },
 };
 
-export function useCoursesQuery(params: CourseListParams = {}) {
+export function useCoursesQuery(params: CourseListParams = {}, options?: { enabled?: boolean }) {
   return useQuery({
+    enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
     queryFn: () => courseApi.list(params),
     queryKey: courseKeys.list(params),
   });
 }
 
-export function useCourseQuery(slug?: string) {
+export function useCourseQuery(slug?: string, placeholderData?: Course | null) {
   return useQuery({
     enabled: Boolean(slug),
+    placeholderData: placeholderData ?? undefined,
     queryFn: () => courseApi.detail(slug ?? ""),
     queryKey: courseKeys.detail(slug ?? ""),
     staleTime: 30_000,

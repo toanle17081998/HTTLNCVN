@@ -3,13 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Pagination, Skeleton, Text, Title, Input } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
-import { useCoursesQuery, useCourseCategoriesQuery } from "@/hooks/course";
+import { courseApi, courseKeys, useCoursesQuery, useCourseCategoriesQuery } from "@/hooks/course";
 
 const PAGE_SIZE_DEFAULT = 10;
 const statusLabelKeys = {
@@ -24,26 +25,68 @@ function getStatusLabelKey(status: string) {
 export function CoursePage() {
   const { t, localize } = useTranslation();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, isLoading: authLoading } = useAuth();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
   const [searchInput, setSearchInput] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   const canManageCourses = can(PERMISSIONS.manageCourses);
   const categoriesQuery = useCourseCategoriesQuery();
   const categories = categoriesQuery.data ?? [];
 
-  const coursesQuery = useCoursesQuery({
-    take: pageSize,
-    skip: page * pageSize,
-    status: canManageCourses ? undefined : "published",
-    category_id: selectedCategoryId,
-    q: q || undefined,
-  });
+  const coursesQuery = useCoursesQuery(
+    {
+      take: pageSize,
+      skip: page * pageSize,
+      status: canManageCourses ? undefined : "published",
+      category_id: selectedCategoryId,
+      q: q || undefined,
+    },
+    { enabled: !authLoading },
+  );
 
   const total = coursesQuery.data?.total ?? 0;
+  const isListLoading = coursesQuery.isLoading || (coursesQuery.isFetching && coursesQuery.isPlaceholderData);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (authLoading || (page + 1) * pageSize >= total) return;
+    const nextParams = {
+      take: pageSize,
+      skip: (page + 1) * pageSize,
+      status: canManageCourses ? undefined : ("published" as const),
+      category_id: selectedCategoryId,
+      q: q || undefined,
+    };
+    void queryClient.prefetchQuery({
+      queryFn: () => courseApi.list(nextParams),
+      queryKey: courseKeys.list(nextParams),
+    });
+  }, [authLoading, canManageCourses, page, pageSize, q, queryClient, selectedCategoryId, total]);
+
+  const scrollToList = useCallback(() => {
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      setPage(nextPage);
+      scrollToList();
+    },
+    [scrollToList],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (nextSize: number) => {
+      setPageSize(nextSize);
+      setPage(0);
+      scrollToList();
+    },
+    [scrollToList],
+  );
 
   const handleSearch = useCallback(() => {
     setQ(searchInput.trim());
@@ -103,7 +146,9 @@ export function CoursePage() {
         ))}
       </div>
 
-      {coursesQuery.isLoading ? (
+      <div ref={listTopRef} className="scroll-mt-24" />
+
+      {isListLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="overflow-hidden">
@@ -133,6 +178,7 @@ export function CoursePage() {
         </Card>
       ) : null}
 
+      {!isListLoading ? (
       <div className="grid gap-4 md:grid-cols-2">
         {coursesQuery.data?.items.map((course) => (
           <Link
@@ -188,8 +234,9 @@ export function CoursePage() {
 
         ))}
       </div>
+      ) : null}
 
-      {coursesQuery.data && coursesQuery.data.items.length === 0 ? (
+      {!isListLoading && coursesQuery.data && coursesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed">
           <div className="text-4xl mb-4">Empty</div>
           No courses found matching your criteria.
@@ -203,8 +250,8 @@ export function CoursePage() {
           page={page}
           pageSize={pageSize}
           total={total}
-          onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       ) : null}
     </PageLayout>

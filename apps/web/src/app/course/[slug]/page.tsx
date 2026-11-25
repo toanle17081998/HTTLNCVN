@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Metadata } from "next";
 import { CourseDetailPage } from "@/components/course/CourseDetailPage";
 import { courseApi } from "@/api/course";
@@ -8,36 +9,37 @@ type CourseDetailRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
+const getCourseBySlug = cache((slug: string) => courseApi.detail(slug).catch(() => null));
+
 export async function generateMetadata({ params }: CourseDetailRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  try {
-    const course = await courseApi.detail(slug);
-    const title = getLocalizedField(course, "title");
-    const description = getLocalizedField(course, "summary") || title;
-    return {
-      title,
-      description,
-      alternates: { canonical: `/course/${encodeURIComponent(course.slug)}` },
-      openGraph: {
-        title,
-        description,
-        images: course.cover_image_url ? [course.cover_image_url] : [],
-        type: "website",
-        url: `/course/${encodeURIComponent(course.slug)}`,
-      },
-      twitter: { title, description, images: course.cover_image_url ? [course.cover_image_url] : [] },
-    };
-  } catch {
+  const course = await getCourseBySlug(slug);
+  if (!course) {
     return {
       title: "Course",
       robots: { index: false },
     };
   }
+  const title = getLocalizedField(course, "title");
+  const description = getLocalizedField(course, "summary") || title;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/course/${encodeURIComponent(course.slug)}` },
+    openGraph: {
+      title,
+      description,
+      images: course.cover_image_url ? [course.cover_image_url] : [],
+      type: "website",
+      url: `/course/${encodeURIComponent(course.slug)}`,
+    },
+    twitter: { title, description, images: course.cover_image_url ? [course.cover_image_url] : [] },
+  };
 }
 
 export default async function CourseDetailRoute({ params }: CourseDetailRouteProps) {
   const { slug } = await params;
-  const course = await courseApi.detail(slug).catch(() => null);
+  const course = await getCourseBySlug(slug);
   const courseJsonLd = course ? {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -60,7 +62,7 @@ export default async function CourseDetailRoute({ params }: CourseDetailRoutePro
           type="application/ld+json"
         />
       ) : null}
-      <CourseDetailPage slug={slug} />
+      <CourseDetailPage initialCourse={course} slug={slug} />
     </>
   );
 }
