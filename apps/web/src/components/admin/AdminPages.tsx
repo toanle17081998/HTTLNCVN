@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Plus, ArrowLeft, Eye, RotateCcw } from "lucide-react";
+import { FileText, Plus, ArrowLeft, Eye, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Switch, Title } from "@/components/ui";
+import { Badge, Button, Card, Pagination, Switch, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { pageApi } from "@/api/page";
@@ -18,7 +18,13 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
   const { confirm, toast } = useFeedback();
   const [showDeleted, setShowDeleted] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const pagesQuery = usePagesQuery(showDeleted ? "deleted" : undefined);
+  const allPages = pagesQuery.data?.items ?? [];
+  const totalPagesCount = allPages.length;
+  const safePage = Math.min(page, Math.max(0, Math.ceil(totalPagesCount / pageSize) - 1));
+  const pagedPages = allPages.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const deletePage = useDeletePageMutation();
   const restorePage = useRestorePageMutation();
 
@@ -66,10 +72,10 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
   return (
     <PageLayout
       actions={
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button onClick={() => setShowDeleted((current) => !current)} variant="secondary">
             <RotateCcw className="mr-2 h-4 w-4" />
-            {showDeleted ? "Show active" : "Show deleted"}
+            {showDeleted ? t("admin.pages.showActive") : t("admin.pages.showDeleted")}
           </Button>
           <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -91,7 +97,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
           <Card className="p-5 text-sm text-[var(--text-secondary)]">{t("admin.articles.loading")}</Card>
         ) : null}
 
-        {pagesQuery.data?.items.map((page) => (
+        {pagedPages.map((page) => (
           <Card className="flex flex-col gap-4 p-5 transition-all duration-200 hover:shadow-md sm:flex-row sm:items-center" key={page.id}>
             <div className="flex flex-1 items-center gap-4 min-w-0">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
@@ -115,24 +121,27 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
             </div>
             
             {showDeleted ? (
-              <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
+              <div className="flex w-full items-center justify-between gap-3 sm:ml-auto sm:w-auto sm:justify-end">
                 {page.deleted_at ? (
                   <span className="text-xs text-[var(--text-tertiary)]">
                     {new Date(page.deleted_at).toLocaleString()}
                   </span>
                 ) : null}
                 <Button
+                  aria-label={t("admin.pages.restore")}
+                  className="w-9 !px-0 sm:w-auto sm:!px-3"
                   isLoading={restorePage.isPending}
                   onClick={() => handleRestore(page)}
                   size="sm"
+                  title={t("admin.pages.restore")}
                 >
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Restore
+                  <RotateCcw className="h-4 w-4 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{t("admin.pages.restore")}</span>
                 </Button>
               </div>
             ) : (
-            <div className="flex flex-wrap items-center gap-4 sm:ml-auto">
-              <div className="flex items-center gap-2 pr-2 border-r border-[var(--border-subtle)]">
+            <div className="flex w-full items-center justify-between gap-3 sm:ml-auto sm:w-auto sm:justify-end">
+              <div className="flex items-center gap-2 sm:border-r sm:border-[var(--border-subtle)] sm:pr-3">
                 <span className="text-xs font-medium text-[var(--text-secondary)]">
                   {page.status === 'published' ? t("action.publish") : t("action.saveDraft")}
                 </span>
@@ -142,29 +151,33 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <Button
+                  aria-label={t("admin.common.edit")}
+                  className="rounded-lg"
                   onClick={() => onEdit(page.slug)}
-                  size="sm"
+                  size="icon"
+                  title={t("admin.common.edit")}
                   variant="secondary"
-                  className="h-10 rounded-lg px-4 text-xs font-bold"
                 >
-                  {t("admin.common.edit")}
+                  <Pencil className="h-4 w-4" />
                 </Button>
-                <Link href={page.route_path} target="_blank">
-                  <Button size="sm" variant="secondary" className="h-10 w-10 p-0 rounded-lg">
+                <Link aria-label={t("admin.common.viewSite")} href={page.route_path} target="_blank" title={t("admin.common.viewSite")}>
+                  <Button size="icon" variant="secondary" className="rounded-lg">
                     <Eye className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Button
+                  aria-label={t("admin.common.delete")}
                   disabled={deletePage.isPending}
                   isLoading={deletePage.isPending && deletePage.variables === page.slug}
                   onClick={() => handleDelete(page.slug, page.title_en)}
-                  size="sm"
+                  size="icon"
+                  title={t("admin.common.delete")}
                   variant="danger"
-                  className="h-10 rounded-lg px-4 text-xs font-bold"
+                  className="rounded-lg"
                 >
-                  {t("admin.common.delete")}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -174,8 +187,26 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
 
         {pagesQuery.data?.items.length === 0 ? (
           <Card className="border-dashed p-8 text-center text-sm text-[var(--text-secondary)]">
-            {showDeleted ? "No deleted pages." : t("admin.articles.empty")}
+            {showDeleted ? t("admin.pages.noDeleted") : t("admin.articles.empty")}
           </Card>
+        ) : null}
+
+        {totalPagesCount > 0 ? (
+          <Pagination
+            className="mt-2"
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            page={safePage}
+            pageSize={pageSize}
+            total={totalPagesCount}
+          />
         ) : null}
       </div>
     </PageLayout>

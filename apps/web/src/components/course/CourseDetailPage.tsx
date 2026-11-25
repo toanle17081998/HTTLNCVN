@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Title, Button, Card, Text } from "@/components/ui";
+import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
@@ -136,54 +137,60 @@ export function CourseDetailPage({ initialCourse, slug }: CourseDetailPageProps)
                       className="block rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
                       href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
                     >
-                      <Card className="p-5 transition hover:border-[var(--brand-primary)]">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
+                      <Card className="p-4 transition hover:border-[var(--brand-primary)] sm:p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
                             <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                               {t("lesson.label")} {lesson.order_index ?? "-"}
                             </Text>
-                            <Title as="h3" className="mt-1" variant="label">
+                            <Title as="h3" className="mt-1 break-words" variant="label">
                               {localize(lesson, "title")}
                             </Title>
                           </div>
-                          <div className="flex items-center gap-3">
-                            {lesson.quiz_count ? (
-                              <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-                                {lesson.quiz_count} {t("quiz.practiceTitle").toLowerCase()}
-                              </span>
-                            ) : null}
-                            {can(PERMISSIONS.manageCourses) && (
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    router.push(`/admin/courses/${course.slug}/lessons/${lesson.id}/edit`);
-                                  }}
-                                >
-                                  {t("lesson.action.edit")}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
-                                  onClick={async (e) => {
-                                    e.preventDefault();
-                                    const ok = await confirm({
-                                      variant: "delete",
-                                      title: t("lesson.action.deleteConfirm"),
-                                    });
-                                    if (ok) {
-                                      await deleteLesson.mutateAsync(lesson.id);
-                                    }
-                                  }}
-                                >
-                                  {t("lesson.action.delete")}
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                          {(lesson.quiz_count || can(PERMISSIONS.manageCourses)) ? (
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              {lesson.quiz_count ? (
+                                <span className="rounded-md bg-[var(--bg-base)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
+                                  {lesson.quiz_count} {t("quiz.practiceTitle").toLowerCase()}
+                                </span>
+                              ) : null}
+                              {can(PERMISSIONS.manageCourses) && (
+                                <div className="flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+                                  <Button
+                                    aria-label={t("lesson.action.edit")}
+                                    size="iconSm"
+                                    title={t("lesson.action.edit")}
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      router.push(`/admin/courses/${course.slug}/lessons/${lesson.id}/edit`);
+                                    }}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    aria-label={t("lesson.action.delete")}
+                                    size="iconSm"
+                                    title={t("lesson.action.delete")}
+                                    variant="ghost"
+                                    className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                                    onClick={async (e) => {
+                                      e.preventDefault();
+                                      const ok = await confirm({
+                                        variant: "delete",
+                                        title: t("lesson.action.deleteConfirm"),
+                                      });
+                                      if (ok) {
+                                        await deleteLesson.mutateAsync(lesson.id);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
                         </div>
                       </Card>
                     </Link>

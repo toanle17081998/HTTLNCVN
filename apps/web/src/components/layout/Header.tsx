@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, cn, Skeleton, Text } from "@/components/ui";
 import { useAuth } from "@/providers/AuthProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
@@ -36,6 +37,7 @@ const authenticatedOnlyRoutes = new Set(["/church", "/prayer-journal"]);
 export function Header({ pathname }: HeaderProps) {
   const router = useRouter();
   const { t, localize } = useTranslation();
+  const { confirm } = useFeedback();
   const { canAny, isAuthenticated, logout, role, user } = useAuth();
 
   const siteNavQuery = useSiteNavigationQuery();
@@ -115,8 +117,15 @@ export function Header({ pathname }: HeaderProps) {
     };
   }, [settingsOpen, notificationOpen]);
 
-  function handleLogout() {
+  async function handleLogout() {
     setSettingsOpen(false);
+    const ok = await confirm({
+      confirmLabel: t("nav.logout"),
+      description: t("confirm.logout.description"),
+      title: t("confirm.logout.title"),
+      variant: "warning",
+    });
+    if (!ok) return;
     logout();
   }
 
@@ -355,7 +364,7 @@ export function Header({ pathname }: HeaderProps) {
                       ]) ? (
                         <Link
                           className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
-                          href="/admin"
+                          href="/admin/pages"
                           onClick={() => setSettingsOpen(false)}
                           role="menuitem"
                         >

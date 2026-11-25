@@ -17,12 +17,14 @@ import {
   ClipboardCheck,
   X,
   LogOut,
+  ExternalLink,
   LayoutGrid,
   Image as ImageIcon,
   type LucideIcon,
 } from "lucide-react";
 import { Button, cn, Title, Text } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
@@ -68,6 +70,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useTranslation();
+  const { confirm } = useFeedback();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -97,7 +100,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setIsFullscreen(false);
   }, [pathname]);
 
-  function handleLogout() {
+  async function handleLogout() {
+    const ok = await confirm({
+      confirmLabel: t("nav.logout"),
+      description: t("confirm.logout.description"),
+      title: t("confirm.logout.title"),
+      variant: "warning",
+    });
+    if (!ok) return;
     logout();
   }
 
@@ -212,35 +222,46 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="flex min-w-0 flex-1 flex-col">
             {!isFullscreen ? (
-              <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 sm:px-6">
-                <div className="flex items-center gap-4">
+              <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 sm:h-16 sm:px-6">
+                <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                   {canAccessAdmin && (
                     <button
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
+                      aria-label="Open navigation"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
                       onClick={() => setIsMobileMenuOpen(true)}
+                      type="button"
                     >
                       <Menu className="h-5 w-5" />
                     </button>
                   )}
-                  <div className="min-w-0 flex-1">
+                  <div className="hidden min-w-0 flex-1 overflow-hidden md:block">
                     <Breadcrumb pathname={pathname} />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
                   <Link
-                    className="hidden h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] sm:inline-flex"
+                    aria-label={t("admin.common.viewSite")}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] md:w-auto md:gap-1.5 md:px-3"
                     href="/"
+                    title={t("admin.common.viewSite")}
                   >
-                    {t("admin.common.viewSite")}
+                    <ExternalLink className="h-4 w-4 shrink-0" />
+                    <span className="hidden md:inline">{t("admin.common.viewSite")}</span>
                   </Link>
                   {isAuthenticated ? (
-                    <Button onClick={handleLogout} size="sm" variant="secondary" className="rounded-lg">
-                      {t("nav.logout")}
-                    </Button>
+                    <button
+                      aria-label={t("nav.logout")}
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
+                      onClick={handleLogout}
+                      title={t("nav.logout")}
+                      type="button"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
                   ) : (
                     <Link
-                      className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-4 text-sm font-semibold text-[var(--text-inverse)] transition hover:bg-[var(--brand-primary-strong)]"
+                      className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-3 text-sm font-semibold text-[var(--text-inverse)] transition hover:bg-[var(--brand-primary-strong)] sm:px-4"
                       href="/auth"
                     >
                       {t("nav.login")}
@@ -252,7 +273,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </header>
             ) : null}
 
-            <main className={cn("min-w-0 flex-1", isFullscreen ? "p-0" : "p-4 sm:p-6 lg:p-8")}>
+            <main className={cn("min-w-0 flex-1", isFullscreen ? "p-0" : "px-3 py-4 sm:px-5 sm:py-6 lg:px-6")}>
               <div className={cn("mx-auto w-full", isFullscreen ? "max-w-none" : "max-w-7xl")}>
                 {isLoading ? (
                   <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 shadow-sm">

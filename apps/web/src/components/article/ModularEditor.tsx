@@ -2,6 +2,7 @@
 
 import { Button, Text, Title, cn } from "@/components/ui";
 import { MediaPickerModal } from "@/components/media/MediaPickerModal";
+import { useTranslation } from "@/providers/I18nProvider";
 import { FolderOpen } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
@@ -56,6 +57,7 @@ export const ModularEditor = forwardRef(function ModularEditor(
   }: ModularEditorProps,
   ref: ForwardedRef<ModularEditorHandle>,
 ) {
+  const { t } = useTranslation();
   const editorRef = useRef<DecoupledEditor | null>(null);
   const [contentHtml, setContentHtml] = useState(() => normalizeInitialValue(initialValue));
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -89,12 +91,12 @@ export const ModularEditor = forwardRef(function ModularEditor(
         <Button
           onClick={() => setGalleryOpen(true)}
           size="sm"
-          title="Insert image from gallery or upload"
+          title={t("media.picker.insertFromGallery")}
           type="button"
           variant="secondary"
         >
           <FolderOpen className="mr-1.5 h-4 w-4" />
-          Insert from Gallery
+          {t("media.picker.insertFromGallery")}
         </Button>
       </div>
 
@@ -119,7 +121,7 @@ export const ModularEditor = forwardRef(function ModularEditor(
           editor.editing.view.focus();
         }}
         open={galleryOpen}
-        title="Insert image into editor"
+        title={t("media.picker.insertTitle")}
       />
     </div>
   );

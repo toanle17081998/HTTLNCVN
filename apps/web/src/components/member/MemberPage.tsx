@@ -255,8 +255,8 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                     })}
                 </Text>
               </div>
-              <div className="flex w-full items-center gap-3 sm:w-auto">
-                <div className="relative min-w-0 flex-1 sm:w-80">
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+                <div className="relative min-w-[180px] flex-1 sm:w-72">
                   <Search
                     aria-hidden="true"
                     className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
@@ -272,8 +272,10 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   />
                 </div>
                 <Button
-                  className="h-11 shrink-0 rounded-xl"
+                  aria-label="Search"
+                  className="h-11 w-11 shrink-0 rounded-xl"
                   onClick={() => { setQ(queryInput.trim()); setPage(0); }}
+                  size="icon"
                   variant="secondary"
                 >
                   <Search aria-hidden="true" className="h-4 w-4" />
@@ -289,7 +291,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                           ref={importInputRef}
                           type="file"
                         />
-                        <Button onClick={() => importInputRef.current?.click()} variant="secondary" className="h-11 shrink-0 rounded-xl">
+                        <Button aria-label="Import" onClick={() => importInputRef.current?.click()} size="icon" variant="secondary" className="h-11 w-11 shrink-0 rounded-xl">
                           <Upload aria-hidden="true" className="h-4 w-4" />
                         </Button>
                       </>
@@ -397,27 +399,27 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                 </div>
               ) : null}
             </div>
-
-            {/* Pagination */}
-            {total > 0 ? (
-              <Pagination
-                className="rounded-none border-x-0 border-b-0"
-                page={page}
-                pageSize={pageSize}
-                pageSizeOptions={[10, 20, 50]}
-                total={total}
-                onPageChange={(nextPage) => {
-                  setPage(nextPage);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
-                  setPage(0);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              />
-            ) : null}
           </Card>
+
+          {/* Pagination */}
+          {total > 0 ? (
+            <Pagination
+              className="mt-4"
+              page={page}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 20, 50]}
+              total={total}
+              onPageChange={(nextPage) => {
+                setPage(nextPage);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(0);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          ) : null}
         </div>
       )}
 

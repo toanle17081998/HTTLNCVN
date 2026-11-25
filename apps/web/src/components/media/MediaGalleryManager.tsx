@@ -13,7 +13,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { Button, Card, Input, Select, Skeleton, Text, Title, cn } from "@/components/ui";
+import { Button, Card, Input, Pagination, Select, Skeleton, Text, Title, cn } from "@/components/ui";
 import {
   mediaKeys,
   uploadMedia,
@@ -25,6 +25,7 @@ import {
   useRenameMediaFolderMutation,
   type MediaGalleryItem,
 } from "@/api/media";
+import { useTranslation } from "@/providers/I18nProvider";
 
 type MediaGalleryManagerProps = {
   mode?: "manager" | "picker";
@@ -43,6 +44,7 @@ export function MediaGalleryManager({
   selectedUrl,
   onSelect,
 }: MediaGalleryManagerProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeFolder, setActiveFolder] = useState<string>("__all__");
@@ -54,6 +56,8 @@ export function MediaGalleryManager({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(16);
 
   const galleryQuery = useMediaGalleryQuery({
     folder: activeFolder,
@@ -67,6 +71,8 @@ export function MediaGalleryManager({
 
   const folders = galleryQuery.data?.folders ?? [];
   const items = galleryQuery.data?.items ?? [];
+  const safePage = Math.min(page, Math.max(0, Math.ceil(items.length / pageSize) - 1));
+  const pagedItems = items.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const totalCount = galleryQuery.data?.totalCount ?? 0;
   const uncategorizedCount = galleryQuery.data?.uncategorizedCount ?? 0;
 
@@ -99,7 +105,7 @@ export function MediaGalleryManager({
         onSelect(uploaded[0]);
       }
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Upload failed.");
+      setUploadError(error instanceof Error ? error.message : t("media.gallery.uploadFailed"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -147,12 +153,13 @@ export function MediaGalleryManager({
       <Card className="flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between gap-2">
           <Title as="h3" variant="subsection">
-            Folders
+            {t("media.gallery.folders")}
           </Title>
           <Button
+            aria-label={t("media.gallery.newFolder")}
             onClick={() => setShowNewFolder((prev) => !prev)}
-            size="sm"
-            title="New folder"
+            size="iconSm"
+            title={t("media.gallery.newFolder")}
             type="button"
             variant="ghost"
           >
@@ -172,7 +179,7 @@ export function MediaGalleryManager({
                   void handleCreateFolder();
                 }
               }}
-              placeholder="Folder name..."
+              placeholder={t("media.gallery.folderPlaceholder")}
               value={newFolderName}
             />
             <Button
@@ -181,15 +188,15 @@ export function MediaGalleryManager({
               size="sm"
               type="button"
             >
-              Add
+              {t("media.gallery.add")}
             </Button>
           </div>
         ) : null}
 
-        <div className="grid gap-1">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 lg:grid lg:gap-1 lg:overflow-visible lg:pb-0">
           <button
             className={cn(
-              "flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition",
+              "flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition lg:w-full",
               activeFolder === "__all__"
                 ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]",
@@ -199,14 +206,14 @@ export function MediaGalleryManager({
           >
             <span className="flex items-center gap-2 truncate">
               <ImageIcon className="h-4 w-4 shrink-0" />
-              All images
+              {t("media.gallery.allImages")}
             </span>
             <span className="text-xs opacity-75">{totalCount}</span>
           </button>
 
           <button
             className={cn(
-              "flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition",
+              "flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition lg:w-full",
               activeFolder === "__uncategorized__"
                 ? "bg-[var(--brand-muted)] text-[var(--brand-primary)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]",
@@ -216,13 +223,13 @@ export function MediaGalleryManager({
           >
             <span className="flex items-center gap-2 truncate">
               <Folder className="h-4 w-4 shrink-0" />
-              Uncategorized
+              {t("media.gallery.uncategorized")}
             </span>
             <span className="text-xs opacity-75">{uncategorizedCount}</span>
           </button>
 
           {folders.map((folder) => (
-            <div className="group flex items-center gap-1" key={folder.name}>
+            <div className="group flex shrink-0 items-center gap-1 lg:w-full" key={folder.name}>
               {renamingFolder === folder.name ? (
                 <div className="flex flex-1 gap-1">
                   <Input
@@ -241,7 +248,7 @@ export function MediaGalleryManager({
                   />
                   <Button
                     onClick={() => void handleRenameFolder(folder.name)}
-                    size="sm"
+                    size="iconSm"
                     type="button"
                   >
                     <Check className="h-3.5 w-3.5" />
@@ -268,20 +275,22 @@ export function MediaGalleryManager({
                   {mode === "manager" ? (
                     <div className="flex shrink-0 items-center opacity-0 transition group-hover:opacity-100">
                       <button
+                        aria-label={t("media.gallery.renameFolder")}
                         className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
                         onClick={() => {
                           setRenamingFolder(folder.name);
                           setRenameValue(folder.name);
                         }}
-                        title="Rename folder"
+                        title={t("media.gallery.renameFolder")}
                         type="button"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
+                        aria-label={t("media.gallery.deleteFolder")}
                         className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--status-danger-muted)] hover:text-[var(--status-danger)]"
                         onClick={() => void handleDeleteFolder(folder.name)}
-                        title="Delete folder (keeps images)"
+                        title={t("media.gallery.deleteFolder")}
                         type="button"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -303,7 +312,7 @@ export function MediaGalleryManager({
             <Input
               className="pl-9"
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search images..."
+              placeholder={t("media.gallery.searchPlaceholder")}
               value={search}
             />
           </div>
@@ -317,16 +326,17 @@ export function MediaGalleryManager({
             type="file"
           />
           <Button
+            className="ml-auto"
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}
             type="button"
           >
             <Upload className="mr-2 h-4 w-4" />
             {uploading
-              ? "Uploading..."
+              ? t("media.gallery.uploading")
               : targetUploadFolder
-                ? `Upload to "${targetUploadFolder}"`
-                : "Upload from computer"}
+                ? t("media.gallery.uploadToFolder", { folder: targetUploadFolder })
+                : t("media.gallery.uploadFromComputer")}
           </Button>
         </div>
 
@@ -352,12 +362,13 @@ export function MediaGalleryManager({
           <Card className="flex flex-col items-center justify-center gap-2 border-dashed p-10 text-center">
             <ImageIcon className="h-8 w-8 text-[var(--text-tertiary)]" />
             <Text tone="secondary" variant="small">
-              No images in this folder yet. Upload from your computer to add some.
+              {t("media.gallery.empty")}
             </Text>
           </Card>
         ) : (
+          <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {items.map((item) => {
+            {pagedItems.map((item) => {
               const isSelected = Boolean(selectedUrl && selectedUrl === item.url);
               return (
                 <Card
@@ -402,7 +413,7 @@ export function MediaGalleryManager({
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Select
-                          aria-label="Move to folder"
+                          aria-label={t("media.gallery.moveToFolder")}
                           className="h-8 flex-1 px-2 text-xs"
                           onChange={(e) =>
                             void moveImages.mutateAsync({
@@ -412,7 +423,7 @@ export function MediaGalleryManager({
                           }
                           value={item.folder}
                         >
-                          <option value="">Uncategorized</option>
+                          <option value="">{t("media.gallery.uncategorized")}</option>
                           {folders.map((folder) => (
                             <option key={folder.name} value={folder.name}>
                               {folder.name}
@@ -421,9 +432,10 @@ export function MediaGalleryManager({
                         </Select>
 
                         <Button
+                          aria-label={t("media.gallery.copyUrl")}
                           onClick={() => void handleCopy(item.url)}
-                          size="sm"
-                          title="Copy image URL"
+                          size="iconSm"
+                          title={t("media.gallery.copyUrl")}
                           type="button"
                           variant="ghost"
                         >
@@ -434,10 +446,11 @@ export function MediaGalleryManager({
                           )}
                         </Button>
                         <Button
+                          aria-label={t("media.gallery.deleteImage")}
                           className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
                           onClick={() => void deleteImage.mutateAsync(item.filename)}
-                          size="sm"
-                          title="Delete image"
+                          size="iconSm"
+                          title={t("media.gallery.deleteImage")}
                           type="button"
                           variant="ghost"
                         >
@@ -450,6 +463,18 @@ export function MediaGalleryManager({
               );
             })}
           </div>
+          <Pagination
+            onPageChange={setPage}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+            }}
+            page={safePage}
+            pageSize={pageSize}
+            pageSizeOptions={[16, 24, 48]}
+            total={items.length}
+          />
+          </>
         )}
       </div>
     </div>

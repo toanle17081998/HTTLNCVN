@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Upload, X } from "lucide-react";
 import { Button, Input, cn } from "@/components/ui";
 import { mediaKeys, resolveMediaUrl, uploadMedia } from "@/api/media";
+import { useTranslation } from "@/providers/I18nProvider";
 import { MediaPickerModal } from "./MediaPickerModal";
 
 type ImagePickerFieldProps = {
@@ -32,6 +33,7 @@ export function ImagePickerField({
   autoFocus,
   folder,
 }: ImagePickerFieldProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -47,7 +49,7 @@ export function ImagePickerField({
       onChange(media.url);
       void queryClient.invalidateQueries({ queryKey: mediaKeys.all });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
+      setError(err instanceof Error ? err.message : t("media.gallery.uploadFailed"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -80,23 +82,23 @@ export function ImagePickerField({
           <Button
             onClick={() => setPickerOpen(true)}
             size="sm"
-            title="Choose from uploaded gallery"
+            title={t("media.picker.chooseFromGallery")}
             type="button"
             variant="secondary"
           >
             <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
-            Gallery
+            {t("media.picker.gallery")}
           </Button>
           <Button
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}
             size="sm"
-            title="Upload from computer"
+            title={t("media.gallery.uploadFromComputer")}
             type="button"
             variant="secondary"
           >
             <Upload className="mr-1.5 h-3.5 w-3.5" />
-            {uploading ? "..." : "Upload"}
+            {uploading ? "..." : t("media.picker.upload")}
           </Button>
         </div>
       </div>
@@ -108,9 +110,10 @@ export function ImagePickerField({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="Preview" className="aspect-[16/9] w-full object-cover" src={resolveMediaUrl(value)} />
           <button
+            aria-label={t("media.picker.clear")}
             className="absolute right-1.5 top-1.5 rounded-full bg-black/60 p-1 text-white transition hover:bg-black/80"
             onClick={() => onChange("")}
-            title="Clear image"
+            title={t("media.picker.clear")}
             type="button"
           >
             <X className="h-3 w-3" />

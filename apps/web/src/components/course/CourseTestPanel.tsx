@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Text, Title, Button, Card, Input, Label } from "@/components/ui";
+import { Badge, Text, Title, Button, Card, Input, Label, Pagination } from "@/components/ui";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
@@ -59,6 +59,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
   const [draftQuestions, setDraftQuestions] = useState<DraftQuestion[]>([]);
   const [isQuestionsModalOpen, setIsQuestionsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recordPage, setRecordPage] = useState(0);
+  const [recordPageSize, setRecordPageSize] = useState(10);
   const questionsQuery = useCourseTestQuestionsQuery(course.slug, isQuestionsModalOpen);
 
   const status = testQuery.data;
@@ -175,7 +177,8 @@ export function CourseTestPanel({ course }: { course: Course }) {
       ) : null}
 
       {status.can_manage && status.availability ? (
-        <div className="order-last mt-5 overflow-hidden rounded-lg border border-[var(--border-subtle)]">
+        <div className="order-last mt-5">
+          <div className="overflow-hidden rounded-lg border border-[var(--border-subtle)]">
           <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
             <Title as="h3" className="font-semibold" variant="inherit">
               {status.availability.is_active
@@ -197,7 +200,15 @@ export function CourseTestPanel({ course }: { course: Course }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">
-                {status.assigned_users.map((assignedUser) => {
+                {(() => {
+                  const totalRecords = status.assigned_users.length;
+                  const maxPage = Math.max(0, Math.ceil(totalRecords / recordPageSize) - 1);
+                  const safePage = Math.min(recordPage, maxPage);
+                  const pagedUsers = status.assigned_users.slice(
+                    safePage * recordPageSize,
+                    safePage * recordPageSize + recordPageSize,
+                  );
+                  return pagedUsers.map((assignedUser) => {
                   const timestamp = assignedUser.completed_at ?? assignedUser.started_at ?? status.availability!.created_at;
                   const statusLabel = assignedUser.status === "done"
                     ? t("quiz.status.completed")
@@ -221,10 +232,29 @@ export function CourseTestPanel({ course }: { course: Course }) {
                       </td>
                     </tr>
                   );
-                })}
+                  });
+                })()}
               </tbody>
             </table>
           </div>
+          </div>
+          {status.assigned_users.length > 0 ? (
+            <Pagination
+              className="mt-3"
+              onPageChange={setRecordPage}
+              onPageSizeChange={(nextSize) => {
+                setRecordPageSize(nextSize);
+                setRecordPage(0);
+              }}
+              page={Math.min(
+                recordPage,
+                Math.max(0, Math.ceil(status.assigned_users.length / recordPageSize) - 1),
+              )}
+              pageSize={recordPageSize}
+              pageSizeOptions={[10, 20, 50]}
+              total={status.assigned_users.length}
+            />
+          ) : null}
         </div>
       ) : null}
 

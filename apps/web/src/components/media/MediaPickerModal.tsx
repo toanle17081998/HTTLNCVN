@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { Button, Title } from "@/components/ui";
+import { useTranslation } from "@/providers/I18nProvider";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import type { MediaGalleryItem } from "@/api/media";
 
@@ -16,10 +17,12 @@ type MediaPickerModalProps = {
 export function MediaPickerModal({
   open,
   selectedUrl,
-  title = "Choose image from gallery",
+  title,
   onClose,
   onSelect,
 }: MediaPickerModalProps) {
+  const { t } = useTranslation();
+
   if (!open) return null;
 
   return (
@@ -34,9 +37,16 @@ export function MediaPickerModal({
       >
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-5 py-4">
           <Title as="h2" variant="subsection">
-            {title}
+            {title ?? t("media.picker.title")}
           </Title>
-          <Button onClick={onClose} size="sm" type="button" variant="ghost">
+          <Button
+            aria-label={t("media.picker.close")}
+            onClick={onClose}
+            size="iconSm"
+            title={t("media.picker.close")}
+            type="button"
+            variant="ghost"
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>

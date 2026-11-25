@@ -374,7 +374,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
               <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                Cell Groups
+                {t("admin.churchUnits.cellGroups")}
               </Text>
               <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{cellGroupCount}</Text>
             </div>
@@ -406,8 +406,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               </div>
             </div>
 
-            <div className="flex items-end gap-2 shrink-0">
-              <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-40 sm:flex-none">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="flex min-w-[130px] flex-1 flex-col gap-1 sm:w-40 sm:flex-none">
                 <Label variant="caption"  htmlFor="church-unit-type-filter">
                   {t("common.type")}
                 </Label>
@@ -427,7 +427,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </Select>
               </div>
 
-              <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
+              <div className="flex min-w-[130px] flex-1 flex-col gap-1 sm:w-36 sm:flex-none">
                 <Label variant="caption"  htmlFor="church-unit-status-filter">
                   {t("common.status")}
                 </Label>
@@ -444,29 +444,31 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </Select>
               </div>
 
-              <button
-                aria-label={t("admin.members.refresh")}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
-                onClick={() => {
-                  void unitsQuery.refetch();
-                  void metaQuery.refetch();
-                }}
-                type="button"
-              >
-                <RefreshCw
-                  aria-hidden="true"
-                  className={cn(
-                    "h-4 w-4",
-                    unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                  )}
-                />
-              </button>
-              {hideLayout && canCreateUnits ? (
-                <Button onClick={openCreateModal} size="sm">
-                  <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                  {t("admin.churchUnits.add")}
-                </Button>
-              ) : null}
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  aria-label={t("admin.members.refresh")}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
+                  onClick={() => {
+                    void unitsQuery.refetch();
+                    void metaQuery.refetch();
+                  }}
+                  type="button"
+                >
+                  <RefreshCw
+                    aria-hidden="true"
+                    className={cn(
+                      "h-4 w-4",
+                      unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
+                    )}
+                  />
+                </button>
+                {hideLayout && canCreateUnits ? (
+                  <Button onClick={openCreateModal} size="sm">
+                    <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+                    {t("admin.churchUnits.add")}
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -577,26 +579,26 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </div>
               ) : null}
             </div>
-
-            {/* Pagination */}
-            {(unitsQuery.data?.total ?? 0) > 0 ? (
-              <Pagination
-                className="rounded-none border-x-0 border-b-0"
-                page={page}
-                pageSize={pageSize}
-                total={unitsQuery.data?.total ?? 0}
-                onPageChange={(nextPage) => {
-                  setPage(nextPage);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                onPageSizeChange={(s) => {
-                  setPageSize(s);
-                  setPage(0);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              />
-            ) : null}
           </div>
+
+          {/* Pagination */}
+          {(unitsQuery.data?.total ?? 0) > 0 ? (
+            <Pagination
+              className="mt-4"
+              page={page}
+              pageSize={pageSize}
+              total={unitsQuery.data?.total ?? 0}
+              onPageChange={(nextPage) => {
+                setPage(nextPage);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onPageSizeChange={(s) => {
+                setPageSize(s);
+                setPage(0);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          ) : null}
         </div>
       )}
 

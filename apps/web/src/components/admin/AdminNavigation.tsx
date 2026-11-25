@@ -420,7 +420,7 @@ export function AdminNavigation() {
                   type="button"
                   variant="secondary"
                 >
-                  Choose from Gallery
+                  {t("media.picker.chooseFromGallery")}
                 </Button>
               </div>
               <Text className="mt-2" variant="small">
@@ -473,7 +473,7 @@ export function AdminNavigation() {
                           type="button"
                           variant="secondary"
                         >
-                          Gallery
+                          {t("media.picker.gallery")}
                         </Button>
                       </div>
                       <Button

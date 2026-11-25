@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Button, Card, Title, Label, Input } from "@/components/ui";
+import { Text, Button, Card, Title, Label, Input, Pagination } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, GraduationCap, Plus, Pencil, Trash2 } from "lucide-react";
@@ -23,7 +23,10 @@ import {
 export function AdminCourses() {
   const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
-  const coursesQuery = useCoursesQuery({ take: 100 });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const coursesQuery = useCoursesQuery({ skip: page * pageSize, take: pageSize });
+  const total = coursesQuery.data?.total ?? 0;
   const deleteCourse = useDeleteCourseMutation();
 
   async function handleDelete(slug: string) {
@@ -73,6 +76,24 @@ export function AdminCourses() {
           <Card className="border-dashed p-8 text-center text-sm text-[var(--text-secondary)]">
             {t("admin.courses.empty")}
           </Card>
+        ) : null}
+
+        {total > 0 ? (
+          <Pagination
+            className="mt-2"
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+          />
         ) : null}
       </div>
     </PageLayout>
@@ -277,33 +298,39 @@ function CoursePanel({
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <div className="flex shrink-0 items-center gap-1.5 sm:ml-auto">
             <Link
-              className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-xs font-bold text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+              aria-label={t("admin.courses.addLesson")}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs font-bold text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] sm:w-auto sm:px-3"
               href={`/admin/lessons/create?course=${encodeURIComponent(course.slug)}`}
               onClick={(event) => event.stopPropagation()}
+              title={t("admin.courses.addLesson")}
             >
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              {t("admin.courses.addLesson")}
+              <Plus className="h-4 w-4 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+              <span className="hidden sm:inline">{t("admin.courses.addLesson")}</span>
             </Link>
             <Link
-              className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-xs font-bold text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+              aria-label={t("admin.common.edit")}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
               href={`/admin/courses/${encodeURIComponent(course.slug)}/edit`}
               onClick={(event) => event.stopPropagation()}
+              title={t("admin.common.edit")}
             >
-              {t("admin.common.edit")}
+              <Pencil className="h-4 w-4" />
             </Link>
             <Button
+              aria-label={t("admin.common.delete")}
               disabled={isDeletingCourse}
               onClick={(event) => {
                 event.stopPropagation();
                 onDeleteCourse(course.slug);
               }}
-              size="sm"
+              size="icon"
+              title={t("admin.common.delete")}
               variant="danger"
-              className="h-9 rounded-lg px-3 text-xs font-bold"
+              className="rounded-lg"
             >
-              {t("admin.common.delete")}
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </summary>
@@ -344,27 +371,35 @@ function CoursePanel({
                     </Text>
                   </div>
                 </div>
-                <div className="flex gap-2 sm:ml-auto">
+                <div className="flex shrink-0 items-center gap-1.5 sm:ml-auto">
                   <Link
+                    aria-label={`Templates (${lesson.template_count ?? 0})`}
                     href={`/admin/courses/${encodeURIComponent(course.slug)}/lessons/${encodeURIComponent(lesson.id)}/template`}
-                    className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                    className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] sm:px-3"
+                    title={`Templates (${lesson.template_count ?? 0})`}
                   >
-                    Templates ({lesson.template_count ?? 0})
+                    <FileText className="h-3.5 w-3.5 sm:hidden" />
+                    <span className="hidden sm:inline">Templates</span>
+                    <span>({lesson.template_count ?? 0})</span>
                   </Link>
                   <Link
-                    className="inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                    aria-label={t("admin.common.edit")}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                     href={`/admin/courses/${encodeURIComponent(course.slug)}/lessons/${encodeURIComponent(lesson.id)}/edit`}
+                    title={t("admin.common.edit")}
                   >
-                    {t("admin.common.edit")}
+                    <Pencil className="h-3.5 w-3.5" />
                   </Link>
                   <Button
+                    aria-label={t("admin.common.delete")}
                     disabled={deleteLesson.isPending}
                     onClick={() => handleDeleteLesson(lesson.id)}
-                    size="sm"
+                    size="iconSm"
+                    title={t("admin.common.delete")}
                     variant="danger"
-                    className="h-8 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider"
+                    className="rounded-lg"
                   >
-                    {t("admin.common.delete")}
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>

@@ -3,29 +3,37 @@
 import { Card, Skeleton, Switch, Text, Title } from "@/components/ui";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
+import { useTranslation } from "@/providers/I18nProvider";
+import type { TranslationKey } from "@/lib/i18n";
 import {
   useFeatureFlagsQuery,
   useUpdateFeatureFlagMutation,
   type FeatureFlagKey,
 } from "@/hooks/featureFlags";
 
-const modules: Array<{ description: string; key: FeatureFlagKey; label: string }> = [
-  { description: "Public events, event details, and event management APIs.", key: "event", label: "Events" },
-  { description: "Personal prayer journal pages and prayer management APIs.", key: "prayer-journal", label: "Prayer journal" },
+const modules: Array<{ descKey: TranslationKey; key: FeatureFlagKey; labelKey: TranslationKey }> = [
+  { descKey: "admin.flags.eventDesc", key: "event", labelKey: "admin.flags.eventLabel" },
+  { descKey: "admin.flags.prayerDesc", key: "prayer-journal", labelKey: "admin.flags.prayerLabel" },
 ];
 
 export function AdminFeatureFlags() {
+  const { t } = useTranslation();
   const flagsQuery = useFeatureFlagsQuery();
   const updateMutation = useUpdateFeatureFlagMutation();
   const { toast } = useFeedback();
   const { can } = useAuth();
 
   async function updateFlag(key: FeatureFlagKey, enabled: boolean) {
+    const mod = modules.find((item) => item.key === key);
+    const label = mod ? t(mod.labelKey) : key;
     try {
       await updateMutation.mutateAsync({ enabled, key });
-      toast({ title: `${modules.find((item) => item.key === key)?.label} ${enabled ? "enabled" : "disabled"}.`, variant: "success" });
+      toast({
+        title: t(enabled ? "admin.flags.enabledToast" : "admin.flags.disabledToast", { label }),
+        variant: "success",
+      });
     } catch {
-      toast({ title: "Feature flag could not be updated.", variant: "error" });
+      toast({ title: t("admin.flags.updateError"), variant: "error" });
     }
   }
 
@@ -36,22 +44,22 @@ export function AdminFeatureFlags() {
   return (
     <div className="space-y-6">
       <div>
-        <Title as="h1" variant="pagePlain">Module settings</Title>
-        <Text className="mt-2" variant="small">Enable or disable modules for all users.</Text>
+        <Title as="h1" variant="pagePlain">{t("admin.flags.title")}</Title>
+        <Text className="mt-2" variant="small">{t("admin.flags.description")}</Text>
       </div>
 
       <Card className="divide-y divide-[var(--border-subtle)]">
         {modules.map((module) => (
           <div className="flex items-center justify-between gap-6 p-5" key={module.key}>
             <div>
-              <Title as="h2" variant="labelStrong">{module.label}</Title>
-              <Text className="mt-1" variant="small">{module.description}</Text>
+              <Title as="h2" variant="labelStrong">{t(module.labelKey)}</Title>
+              <Text className="mt-1" variant="small">{t(module.descKey)}</Text>
             </div>
             {flagsQuery.isLoading ? (
               <Skeleton className="h-5 w-9" />
             ) : (
               <Switch
-                aria-label={`Toggle ${module.label}`}
+                aria-label={t(module.labelKey)}
                 checked={flagsQuery.data?.[module.key] ?? true}
                 disabled={updateMutation.isPending}
                 onCheckedChange={(enabled) => void updateFlag(module.key, enabled)}

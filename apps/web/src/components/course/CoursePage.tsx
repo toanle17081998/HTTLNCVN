@@ -115,13 +115,13 @@ export function CoursePage() {
       <div className="mb-4 flex gap-2">
         <Input
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
-          placeholder="Search courses…"
+          placeholder={t("course.searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <Button size="sm" variant="primary" onClick={handleSearch}>
-          Search
+          {t("common.search")}
         </Button>
       </div>
 
@@ -239,7 +239,7 @@ export function CoursePage() {
       {!isListLoading && coursesQuery.data && coursesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed">
           <div className="text-4xl mb-4">Empty</div>
-          No courses found matching your criteria.
+          {t("course.empty")}
         </Card>
       ) : null}
 

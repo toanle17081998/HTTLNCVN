@@ -36,7 +36,7 @@ export function PageLayout({
       className={cn(
         "mx-auto grid w-full max-w-7xl min-w-0",
         isAdmin
-          ? "gap-6 px-4 py-4 sm:px-6 lg:px-8"
+          ? "gap-5 py-2 sm:gap-6 sm:py-3"
           : "gap-12 px-4 pt-20 pb-20 sm:px-6 sm:pt-24 sm:pb-24 lg:px-8 lg:pt-28 lg:pb-32",
       )}
     >

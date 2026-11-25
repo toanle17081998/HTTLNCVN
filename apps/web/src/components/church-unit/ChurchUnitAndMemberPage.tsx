@@ -52,7 +52,7 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
               )}
             >
               <Building2 className="h-4 w-4" />
-              Unit
+              {t("church.tab.unit")}
             </button>
             <button
               onClick={() => handleTabChange("member")}
@@ -64,7 +64,7 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
               )}
             >
               <Users className="h-4 w-4" />
-              Member
+              {t("church.tab.member")}
             </button>
           </div>
         </div>

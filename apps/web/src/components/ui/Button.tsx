@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg" | "icon" | "iconSm";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -27,6 +27,8 @@ const sizeClasses: Record<ButtonSize, string> = {
   sm: "h-9 px-4 text-sm",
   md: "h-10 px-5 text-sm",
   lg: "h-12 px-6 text-base",
+  icon: "h-9 w-9 p-0 shrink-0",
+  iconSm: "h-8 w-8 p-0 shrink-0",
 };
 
 export function Button({

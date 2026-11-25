@@ -127,13 +127,13 @@ export function ArticlePage() {
       <div className="mb-4 flex gap-2">
         <Input
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
-          placeholder="Search articles…"
+          placeholder={t("article.searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <Button size="sm" variant="primary" onClick={handleSearch}>
-          Search
+          {t("common.search")}
         </Button>
       </div>
 
@@ -274,7 +274,7 @@ export function ArticlePage() {
       {!isListLoading && articlesQuery.data && articlesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed rounded-2xl">
           <div className="text-4xl mb-4 opacity-20">📭</div>
-          No articles found.
+          {t("article.empty")}
         </Card>
       ) : null}
 

@@ -73,7 +73,7 @@ export function PageHeader({
             </Text>
           ) : null}
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-3 shrink-0">{actions}</div> : null}
+        {actions ? <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-3 md:w-auto">{actions}</div> : null}
       </div>
     );
   }

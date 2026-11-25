@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Title } from "@/components/ui";
+import { Badge, Button, Card, Pagination, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@/hooks/article";
@@ -11,7 +12,10 @@ import { useArticlesQuery, useDeleteArticleMutation } from "@/hooks/article";
 export function AdminArticles() {
   const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
-  const articlesQuery = useArticlesQuery({ take: 100 });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const articlesQuery = useArticlesQuery({ skip: page * pageSize, take: pageSize });
+  const total = articlesQuery.data?.total ?? 0;
   const deleteArticle = useDeleteArticleMutation();
 
   async function handleDelete(slug: string) {
@@ -45,16 +49,16 @@ export function AdminArticles() {
         ) : null}
 
         {articlesQuery.data?.items.map((article) => (
-          <Card className="flex flex-col gap-4 p-5 transition-all duration-200 hover:shadow-md sm:flex-row sm:items-center" key={article.id}>
-            <div className="flex flex-1 items-center gap-4 min-w-0">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
-                <FileText aria-hidden="true" className="h-6 w-6" />
+          <Card className="flex items-center justify-between gap-3 p-3.5 transition-all duration-200 hover:shadow-md sm:gap-4 sm:p-5" key={article.id}>
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand-muted)] text-[var(--brand-primary)] sm:h-12 sm:w-12">
+                <FileText aria-hidden="true" className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div className="min-w-0 flex-1">
                 <Title as="h2" className="truncate" variant="labelStrong">
                   {localize(article, "title")}
                 </Title>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
                   <Badge
                     size="xs"
                     variant={article.status === "published" ? "success" : "warning"}
@@ -69,26 +73,30 @@ export function AdminArticles() {
                       </span>
                     </>
                   ) : null}
-                  <span>•</span>
-                  <span>{article.slug}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="hidden truncate sm:inline">{article.slug}</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <div className="flex shrink-0 items-center gap-1.5">
               <Link
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 text-xs font-bold text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
+                aria-label={t("admin.common.edit")}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                 href={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
+                title={t("admin.common.edit")}
               >
-                {t("admin.common.edit")}
+                <Pencil className="h-4 w-4" />
               </Link>
               <Button
+                aria-label={t("admin.common.delete")}
                 disabled={deleteArticle.isPending}
                 onClick={() => handleDelete(article.slug)}
-                size="sm"
+                size="icon"
+                title={t("admin.common.delete")}
                 variant="danger"
-                className="h-10 rounded-lg px-4 text-xs font-bold"
+                className="rounded-lg"
               >
-                {t("admin.common.delete")}
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </Card>
@@ -98,6 +106,24 @@ export function AdminArticles() {
           <Card className="border-dashed p-8 text-center text-sm text-[var(--text-secondary)]">
             {t("admin.articles.empty")}
           </Card>
+        ) : null}
+
+        {total > 0 ? (
+          <Pagination
+            className="mt-2"
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+          />
         ) : null}
       </div>
     </PageLayout>
