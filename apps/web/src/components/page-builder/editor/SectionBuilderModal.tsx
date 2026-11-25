@@ -27,11 +27,12 @@ import { IconBoxBlock } from "../blocks/basic/IconBoxBlock";
 import { ContentEditorDialog } from "./ContentEditorDialog";
 import type { FeedCardStyle } from "../shared/types";
 
-export type SectionCategory = "Hero" | "Feature list" | "CTA" | "Gallery";
+export type SectionCategory = "Hero" | "Paragraph" | "Feature list" | "CTA" | "Gallery";
 export type SectionPreset = { category: SectionCategory; id: string; name: string; variant: number };
 
 export const sectionVariantNames: Record<SectionCategory, string[]> = {
   Hero: ["Split image slider", "Centered welcome", "Split feature image"],
+  Paragraph: ["1 Column", "2 Columns", "3 Columns"],
   "Feature list": ["Zig-zag cards", "Image card grid", "Tabbed ministries", "Community testimonials", "Centered icon grid", "Core values orbit"],
   CTA: ["Centered invitation", "Stay connected", "Split action", "Image-overlay action", "Accent invitation"],
   Gallery: ["Endless image loop", "Editorial feed", "Minimal feed", "Split-card feed", "Featured feed"],
@@ -92,6 +93,53 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
       </Element>
       <ImageBlock alt="Church community gathering" borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={defaultHeroSliderImages[0]} />
     </Element>;
+  }
+
+  if (preset.category === "Paragraph") {
+    const columnCount = Math.min(3, Math.max(1, preset.variant));
+    const headingTag = columnCount === 1 ? "h2" : "h3";
+    const headingSize = columnCount === 1 ? "var(--section-heading-size)" : "var(--section-card-title-size)";
+
+    return (
+      <Element
+        canvas
+        columns={columnCount}
+        gap="var(--section-space-lg)"
+        is={SectionBlock}
+        padding="var(--section-space-xl) var(--section-gutter)"
+        sectionName={preset.name}
+      >
+        {Array.from({ length: columnCount }).map((_, index) => (
+          <Element
+            alignItems="stretch"
+            allowTextInsert
+            canvas
+            gap="var(--section-space-sm)"
+            is={VerticalStackBlock}
+            key={index}
+          >
+            <TextBlock
+              align="left"
+              color="var(--text-primary)"
+              lineHeight="var(--section-heading-leading)"
+              size={headingSize}
+              tag={headingTag}
+              text={columnCount === 1 ? "Section heading" : `Column ${index + 1} heading`}
+              weight="var(--section-weight-bold)"
+            />
+            <TextBlock
+              align="left"
+              color="var(--text-secondary)"
+              lineHeight="var(--section-body-leading)"
+              size="var(--section-body-size)"
+              tag="p"
+              text="Write your paragraph content here. Use the buttons below to add more headers or paragraphs vertically."
+              weight="400"
+            />
+          </Element>
+        ))}
+      </Element>
+    );
   }
 
   if (preset.category === "Feature list") {
@@ -245,6 +293,36 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
           </div>
         </div>
         <div className="h-44 w-full overflow-hidden rounded-xl bg-cover bg-center border border-[var(--border-subtle)] shadow-sm" style={{ backgroundImage: `url(${defaultHeroSliderImages[0]})` }} />
+      </div>
+    );
+  }
+
+  if (preset.category === "Paragraph") {
+    const columnCount = Math.min(3, Math.max(1, preset.variant));
+    return (
+      <div className="grid min-h-72 content-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
+        <Text as="span" tone="gold" variant="eyebrow">Paragraph</Text>
+        <div
+          className={cn(
+            "grid gap-4",
+            columnCount === 1 ? "grid-cols-1" : columnCount === 2 ? "grid-cols-2" : "grid-cols-3",
+          )}
+        >
+          {Array.from({ length: columnCount }).map((_, index) => (
+            <div className={cn("grid content-start gap-2", index > 0 && "border-l border-[var(--border-subtle)] pl-4")} key={index}>
+              <span className="text-sm font-bold text-[var(--text-primary)]">
+                {columnCount === 1 ? "Section heading" : `Column ${index + 1}`}
+              </span>
+              <span className="text-xs leading-5 text-[var(--text-secondary)]">
+                Clean vertical text column with editable headers and paragraphs.
+              </span>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Header</span>
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Paragraph</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -612,15 +690,17 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
               </div>
               <div className="grid min-h-0 md:grid-cols-[18rem_minmax(0,1fr)]">
                 <div className="grid content-start gap-1 overflow-y-auto border-r border-[var(--border-subtle)] p-4">
-                  {(["Hero", "Feature list", "CTA", "Gallery"] as SectionCategory[]).map((item) => {
+                  {(["Hero", "Paragraph", "Feature list", "CTA", "Gallery"] as SectionCategory[]).map((item) => {
                     const label =
                       item === "Hero"
                         ? t("pageBuilder.categoryHero")
-                        : item === "Feature list"
-                          ? t("pageBuilder.categoryFeatureList")
-                          : item === "CTA"
-                            ? t("pageBuilder.categoryCta")
-                            : t("pageBuilder.categoryGallery");
+                        : item === "Paragraph"
+                          ? t("pageBuilder.categoryParagraph")
+                          : item === "Feature list"
+                            ? t("pageBuilder.categoryFeatureList")
+                            : item === "CTA"
+                              ? t("pageBuilder.categoryCta")
+                              : t("pageBuilder.categoryGallery");
                     return (
                       <button
                         className={cn(

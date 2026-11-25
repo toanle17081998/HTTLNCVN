@@ -1,18 +1,23 @@
 "use client";
 
-import { useNode } from "@craftjs/core";
+import { useEditor, useNode } from "@craftjs/core";
+import { Plus } from "lucide-react";
+import { useTranslation } from "@/providers/I18nProvider";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, capSpacing, mobileBoxOverrides, useIsMobile, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
+import { TextBlock } from "../basic/TextBlock";
 import type { BoxProps, SizeValue } from "../../shared/types";
 import type { CSSProperties, ReactNode } from "react";
 
 export type StackProps = BoxProps & {
   alignItems?: CSSProperties["alignItems"];
+  allowTextInsert?: boolean;
   children?: ReactNode;
   gap?: SizeValue;
   justifyContent?: CSSProperties["justifyContent"];
   mobileAlignItems?: CSSProperties["alignItems"];
+  showSeparator?: boolean;
   wrap?: boolean;
 };
 
@@ -118,11 +123,56 @@ RowBlock.craft = {
 };
 
 export function VerticalStackBlock({ children, ...props }: StackProps) {
+  const { t } = useTranslation();
+  const { actions, enabled, query } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const {
+    actions: { setProp },
+    id,
+    nodeAllowTextInsert,
+    nodeShowSeparator,
+  } = useNode((node) => ({
+    nodeAllowTextInsert: node.data.props.allowTextInsert,
+    nodeShowSeparator: node.data.props.showSeparator,
+  }));
   const isMobile = useIsMobile();
+  const allowTextInsert = Boolean(nodeAllowTextInsert ?? props.allowTextInsert);
+  const showSeparator = Boolean(nodeShowSeparator ?? props.showSeparator);
+
+  function appendTextBlock(kind: "header" | "paragraph") {
+    const element =
+      kind === "header" ? (
+        <TextBlock
+          align="left"
+          color="var(--text-primary)"
+          lineHeight="var(--section-heading-leading)"
+          size="var(--section-card-title-size)"
+          tag="h3"
+          text="Section heading"
+          weight="var(--section-weight-bold)"
+        />
+      ) : (
+        <TextBlock
+          align="left"
+          color="var(--text-secondary)"
+          lineHeight="var(--section-body-leading)"
+          size="var(--section-body-size)"
+          tag="p"
+          text="Write your paragraph content here..."
+          weight="400"
+        />
+      );
+    const tree = query.parseReactElement(element).toNodeTree();
+    actions.addNodeTree(tree, id);
+  }
+
   return (
     <NodeFrame>
       <div
-        className="page-builder-stack"
+        className={`page-builder-stack ${
+          showSeparator
+            ? "[&>*:not([data-stack-controls]):not(:first-child)]:border-t [&>*:not([data-stack-controls]):not(:first-child)]:border-[var(--border-subtle)] [&>*:not([data-stack-controls]):not(:first-child)]:pt-4"
+            : ""
+        }`}
         style={{
           ...buildBoxStyle(props),
           alignItems: isMobile && props.mobileAlignItems ? props.mobileAlignItems : props.alignItems ?? "flex-start",
@@ -134,6 +184,48 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
         }}
       >
         {children}
+        {enabled && allowTextInsert ? (
+          <div className="mt-2 flex flex-wrap gap-2 pt-1" data-stack-controls="true">
+            <button
+              className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+              onClick={(event) => {
+                event.stopPropagation();
+                appendTextBlock("header");
+              }}
+              type="button"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("pageBuilder.addHeader")}
+            </button>
+            <button
+              className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+              onClick={(event) => {
+                event.stopPropagation();
+                appendTextBlock("paragraph");
+              }}
+              type="button"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("pageBuilder.addParagraph")}
+            </button>
+            <button
+              className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                showSeparator
+                  ? "border-[var(--brand-primary)] bg-[var(--brand-soft)] text-[var(--brand-primary)]"
+                  : "border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                setProp((draft: any) => {
+                  draft.showSeparator = !showSeparator;
+                });
+              }}
+              type="button"
+            >
+              {t("pageBuilder.toggleSeparator")}
+            </button>
+          </div>
+        ) : null}
       </div>
     </NodeFrame>
   );
@@ -145,10 +237,12 @@ function VerticalStackBlockSettings() {
     alignItems,
     gap,
     justifyContent,
+    showSeparator,
   } = useNode((node) => ({
     alignItems: node.data.props.alignItems,
     gap: node.data.props.gap,
     justifyContent: node.data.props.justifyContent,
+    showSeparator: node.data.props.showSeparator,
   }));
 
   return (
@@ -185,6 +279,15 @@ function VerticalStackBlockSettings() {
           <option value="var(--section-space-sm)">Small (16px)</option>
           <option value="var(--section-space-md)">Medium (24px)</option>
           <option value="var(--section-space-lg)">Large (40px)</option>
+        </NativeSelect>
+      </Field>
+      <Field label="Separator">
+        <NativeSelect
+          onChange={(value) => setProp((props: any) => (props.showSeparator = value === "true"))}
+          value={String(Boolean(showSeparator))}
+        >
+          <option value="false">Off</option>
+          <option value="true">On</option>
         </NativeSelect>
       </Field>
       <BoxSettings />

@@ -57,6 +57,10 @@ export function TextBlock(props: TextProps) {
   const weight = nodeWeight ?? props.weight ?? "400";
   const Tag = (tag || "p") as ElementType;
 
+  if (!enabled && !String(text ?? "").trim()) {
+    return null;
+  }
+
   return (
     <NodeFrame>
       <Tag

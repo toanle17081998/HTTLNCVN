@@ -7,6 +7,9 @@ export type SectionVariantId =
   | "hero-1"
   | "hero-2"
   | "hero-3"
+  | "paragraph-1"
+  | "paragraph-2"
+  | "paragraph-3"
   | "feature-list-1"
   | "feature-list-2"
   | "feature-list-3"
@@ -429,10 +432,39 @@ function GalleryFeaturedFeedSkeleton() {
   );
 }
 
+// Paragraph 1/2/3 columns
+function ParagraphColumnsSkeleton({ columns }: { columns: 1 | 2 | 3 }) {
+  return (
+    <Section>
+      <div
+        className={
+          columns === 1
+            ? "mx-auto max-w-4xl space-y-6"
+            : columns === 2
+              ? "grid gap-8 md:grid-cols-2"
+              : "grid gap-8 md:grid-cols-3"
+        }
+      >
+        {Array.from({ length: columns }).map((_, index) => (
+          <div className="space-y-3" key={index}>
+            <Skeleton className={columns === 1 ? "h-9 w-1/2" : "h-7 w-2/3"} />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 export const sectionVariantSkeletons: Record<SectionVariantId, () => ReactNode> = {
   "hero-1": HeroSplitSliderSkeleton,
   "hero-2": HeroCenteredWelcomeSkeleton,
   "hero-3": HeroSplitFeatureSkeleton,
+  "paragraph-1": () => <ParagraphColumnsSkeleton columns={1} />,
+  "paragraph-2": () => <ParagraphColumnsSkeleton columns={2} />,
+  "paragraph-3": () => <ParagraphColumnsSkeleton columns={3} />,
   "feature-list-1": FeatureZigzagSkeleton,
   "feature-list-2": FeatureGridSkeleton,
   "feature-list-3": FeatureTabsSkeleton,
@@ -529,6 +561,11 @@ function inferSectionVariant(
   }
 
   if (typeNames.has("IconBoxBlock")) return "feature-list-5";
+  if (typeNames.has("TextBlock")) {
+    if (columns >= 3) return "paragraph-3";
+    if (columns === 2) return "paragraph-2";
+    return "paragraph-1";
+  }
   return "hero-2";
 }
 
