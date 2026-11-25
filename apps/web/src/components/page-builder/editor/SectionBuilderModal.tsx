@@ -21,6 +21,7 @@ import { CtaSimpleBlock } from "../blocks/cta/CtaSimpleBlock";
 import { SectionBlock } from "../blocks/layout/SectionBlock";
 import { RowBlock, VerticalStackBlock } from "../blocks/layout/StackBlocks";
 import { TextBlock } from "../blocks/basic/TextBlock";
+import { RichTextBlock } from "../blocks/basic/RichTextBlock";
 import { ButtonBlock } from "../blocks/basic/ButtonBlock";
 import { ImageBlock } from "../blocks/basic/ImageBlock";
 import { IconBoxBlock } from "../blocks/basic/IconBoxBlock";
@@ -32,7 +33,7 @@ export type SectionPreset = { category: SectionCategory; id: string; name: strin
 
 export const sectionVariantNames: Record<SectionCategory, string[]> = {
   Hero: ["Split image slider", "Centered welcome", "Split feature image"],
-  Paragraph: ["1 Column", "2 Columns", "3 Columns"],
+  Paragraph: ["1 Column", "2 Columns", "3 Columns", "Rich Text / Markdown"],
   "Feature list": ["Zig-zag cards", "Image card grid", "Tabbed ministries", "Community testimonials", "Centered icon grid", "Core values orbit"],
   CTA: ["Centered invitation", "Stay connected", "Split action", "Image-overlay action", "Accent invitation"],
   Gallery: ["Endless image loop", "Editorial feed", "Minimal feed", "Split-card feed", "Featured feed"],
@@ -96,6 +97,33 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
   }
 
   if (preset.category === "Paragraph") {
+    if (preset.variant === 4) {
+      return (
+        <Element
+          canvas
+          columns={1}
+          gap="var(--section-space-lg)"
+          is={SectionBlock}
+          padding="var(--section-space-xl) var(--section-gutter)"
+          sectionName={preset.name}
+        >
+          <Element
+            alignItems="stretch"
+            allowTextInsert
+            canvas
+            gap="var(--section-space-sm)"
+            is={VerticalStackBlock}
+          >
+            <RichTextBlock
+              align="left"
+              content={"## Section Title\n\nWrite **rich text** or paste *Markdown* content here.\n\n- Bullet point one\n- Bullet point two"}
+              removable
+            />
+          </Element>
+        </Element>
+      );
+    }
+
     const columnCount = Math.min(3, Math.max(1, preset.variant));
     const headingTag = columnCount === 1 ? "h2" : "h3";
     const headingSize = columnCount === 1 ? "var(--section-heading-size)" : "var(--section-card-title-size)";
@@ -122,6 +150,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
               align="left"
               color="var(--text-primary)"
               lineHeight="var(--section-heading-leading)"
+              removable
               size={headingSize}
               tag={headingTag}
               text={columnCount === 1 ? "Section heading" : `Column ${index + 1} heading`}
@@ -131,6 +160,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
               align="left"
               color="var(--text-secondary)"
               lineHeight="var(--section-body-leading)"
+              removable
               size="var(--section-body-size)"
               tag="p"
               text="Write your paragraph content here. Use the buttons below to add more headers or paragraphs vertically."
@@ -298,6 +328,24 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
   }
 
   if (preset.category === "Paragraph") {
+    if (preset.variant === 4) {
+      return (
+        <div className="grid min-h-72 content-center gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
+          <Text as="span" tone="gold" variant="eyebrow">Rich Text / Markdown</Text>
+          <div className="grid gap-2">
+            <span className="text-base font-bold text-[var(--text-primary)]">Section Title</span>
+            <span className="text-xs leading-5 text-[var(--text-secondary)]">
+              Supports Markdown headings, lists, links, quotes, tables, and rich HTML with a built-in toolbar and live preview.
+            </span>
+            <ul className="list-disc space-y-0.5 pl-4 text-xs text-[var(--text-secondary)]">
+              <li>Bullet point one</li>
+              <li>Bullet point two</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
     const columnCount = Math.min(3, Math.max(1, preset.variant));
     return (
       <div className="grid min-h-72 content-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
@@ -319,6 +367,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
               <div className="flex flex-wrap gap-1.5 pt-1">
                 <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Header</span>
                 <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Paragraph</span>
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Rich Text / Markdown</span>
               </div>
             </div>
           ))}

@@ -106,6 +106,16 @@ function EditableNodeFields({
         </Field>
       ) : null}
 
+      {nodeName === "RichTextBlock" ? (
+        <Field label="Rich Text / Markdown">
+          <Textarea
+            className="min-h-36 font-mono text-sm"
+            onChange={(event) => setValue(nodeId, "content", event.target.value)}
+            value={String(props.content ?? "")}
+          />
+        </Field>
+      ) : null}
+
       {nodeName === "ButtonBlock" ? (
         <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3">
           <Text tone="tertiary" variant="overline">Action Button</Text>
@@ -360,6 +370,7 @@ export function ContentEditorDialog() {
 
   const editableBlockNames = [
     "TextBlock",
+    "RichTextBlock",
     "ButtonBlock",
     "ImageBlock",
     "HeroImageSliderBlock",
@@ -396,6 +407,7 @@ export function ContentEditorDialog() {
 
     const displayNameMap: Record<string, string> = {
       "Text": "TextBlock",
+      "Rich Text": "RichTextBlock",
       "Button": "ButtonBlock",
       "Image / Video": "ImageBlock",
       "Hero image slider": "HeroImageSliderBlock",

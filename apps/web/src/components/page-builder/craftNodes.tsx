@@ -12,6 +12,7 @@ export * from "./blocks/layout/SectionBlock";
 export * from "./blocks/layout/ColumnsBlock";
 export * from "./blocks/layout/StackBlocks";
 export * from "./blocks/basic/TextBlock";
+export * from "./blocks/basic/RichTextBlock";
 export * from "./blocks/basic/ButtonBlock";
 export * from "./blocks/basic/ImageBlock";
 export * from "./blocks/basic/SeparatorBlock";

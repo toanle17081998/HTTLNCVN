@@ -349,6 +349,7 @@
   "pageBuilder.categoryParagraph": "Paragraph",
   "pageBuilder.addHeader": "Header",
   "pageBuilder.addParagraph": "Paragraph",
+  "pageBuilder.addRichText": "Rich Text / Markdown",
   "pageBuilder.toggleSeparator": "Separator",
   "pageBuilder.categoryFeatureList": "Feature list",
   "pageBuilder.categoryCta": "CTA",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor, useNode } from "@craftjs/core";
+import { Trash2 } from "lucide-react";
 import { Input, Textarea, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, resolveStyleToken, useIsMobile, withUnitFallback } from "../../shared/helpers";
@@ -14,6 +15,7 @@ type TextProps = BoxProps & {
   letterSpacing?: string;
   lineHeight?: SizeValue;
   mobileAlign?: Align;
+  removable?: boolean;
   size?: SizeValue;
   tag?: "p" | "h1" | "h2" | "h3" | "h4" | "span";
   tabletAlign?: Align;
@@ -22,28 +24,42 @@ type TextProps = BoxProps & {
 };
 
 export function TextBlock(props: TextProps) {
-  const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
+  const { actions: editorActions, enabled, parentAllowsInsert } = useEditor((state: any) => {
+    const enabledState = state.options.enabled;
+    return {
+      enabled: enabledState,
+      parentAllowsInsert: (parentId: string | null) =>
+        Boolean(parentId && state.nodes?.[parentId]?.data?.props?.allowTextInsert),
+    };
+  });
   const {
     actions: { setProp },
+    id,
+    isSelected,
     nodeAlign,
     nodeColor,
     nodeLetterSpacing,
     nodeLineHeight,
     nodeMobileAlign,
+    nodeRemovable,
     nodeSize,
     nodeTag,
     nodeText,
     nodeWeight,
+    parentId,
   } = useNode((node) => ({
+    isSelected: node.events.selected,
     nodeAlign: node.data.props.align,
     nodeColor: node.data.props.color,
     nodeLetterSpacing: node.data.props.letterSpacing,
     nodeLineHeight: node.data.props.lineHeight,
     nodeMobileAlign: node.data.props.mobileAlign,
+    nodeRemovable: node.data.props.removable,
     nodeSize: node.data.props.size,
     nodeTag: node.data.props.tag,
     nodeText: node.data.props.text,
     nodeWeight: node.data.props.weight,
+    parentId: node.data.parent,
   }));
   const isMobile = useIsMobile();
   const align = nodeAlign ?? props.align ?? "left";
@@ -55,6 +71,7 @@ export function TextBlock(props: TextProps) {
   const tag = nodeTag ?? props.tag ?? "p";
   const text = nodeText ?? props.text ?? "Add your text here...";
   const weight = nodeWeight ?? props.weight ?? "400";
+  const isRemovable = Boolean(nodeRemovable ?? props.removable ?? parentAllowsInsert(parentId));
   const Tag = (tag || "p") as ElementType;
 
   if (!enabled && !String(text ?? "").trim()) {
@@ -63,33 +80,52 @@ export function TextBlock(props: TextProps) {
 
   return (
     <NodeFrame>
-      <Tag
-        className={cn(
-          "page-builder-text min-w-0 max-w-full whitespace-normal break-words outline-none",
-          enabled && "cursor-text",
-        )}
-        contentEditable={enabled}
-        onBlur={(event: any) => {
-          if (!enabled) return;
-          const updated = event.currentTarget.innerText;
-          setProp((draftProps: any) => {
-            draftProps.text = updated;
-          });
-        }}
-        style={{
-          ...buildBoxStyle(props),
-          color: resolveStyleToken(color),
-          fontSize: withUnitFallback(size),
-          fontWeight: resolveStyleToken(weight) as CSSProperties["fontWeight"],
-          letterSpacing,
-          lineHeight: resolveStyleToken(lineHeight),
-          margin: props.margin ?? 0,
-          textAlign: isMobile && mobileAlign ? mobileAlign : align,
-        }}
-        suppressContentEditableWarning={enabled}
-      >
-        {text}
-      </Tag>
+      <div className="group/text relative w-full">
+        {enabled && isRemovable ? (
+          <button
+            aria-label="Delete text block"
+            className={cn(
+              "absolute -right-2 -top-2 z-20 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elevated)] text-[var(--status-danger)] shadow-sm transition hover:bg-[var(--status-danger)] hover:text-white cursor-pointer",
+              isSelected ? "opacity-100" : "opacity-0 group-hover/text:opacity-100 focus:opacity-100",
+            )}
+            onClick={(event) => {
+              event.stopPropagation();
+              editorActions.delete(id);
+            }}
+            title="Delete"
+            type="button"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+        <Tag
+          className={cn(
+            "page-builder-text min-w-0 max-w-full whitespace-normal break-words outline-none",
+            enabled && "cursor-text",
+          )}
+          contentEditable={enabled}
+          onBlur={(event: any) => {
+            if (!enabled) return;
+            const updated = event.currentTarget.innerText;
+            setProp((draftProps: any) => {
+              draftProps.text = updated;
+            });
+          }}
+          style={{
+            ...buildBoxStyle(props),
+            color: resolveStyleToken(color),
+            fontSize: withUnitFallback(size),
+            fontWeight: resolveStyleToken(weight) as CSSProperties["fontWeight"],
+            letterSpacing,
+            lineHeight: resolveStyleToken(lineHeight),
+            margin: props.margin ?? 0,
+            textAlign: isMobile && mobileAlign ? mobileAlign : align,
+          }}
+          suppressContentEditableWarning={enabled}
+        >
+          {text}
+        </Tag>
+      </div>
     </NodeFrame>
   );
 }

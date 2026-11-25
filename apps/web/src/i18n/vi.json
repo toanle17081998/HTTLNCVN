@@ -343,6 +343,7 @@
   "pageBuilder.categoryParagraph": "Đoạn văn",
   "pageBuilder.addHeader": "Tiêu đề",
   "pageBuilder.addParagraph": "Đoạn văn",
+  "pageBuilder.addRichText": "Văn bản định dạng / Markdown",
   "pageBuilder.toggleSeparator": "Đường phân cách",
   "pageBuilder.categoryFeatureList": "Danh sách tính năng",
   "pageBuilder.categoryCta": "Kêu gọi hành động (CTA)",

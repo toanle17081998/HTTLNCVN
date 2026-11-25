@@ -561,7 +561,7 @@ function inferSectionVariant(
   }
 
   if (typeNames.has("IconBoxBlock")) return "feature-list-5";
-  if (typeNames.has("TextBlock")) {
+  if (typeNames.has("TextBlock") || typeNames.has("RichTextBlock")) {
     if (columns >= 3) return "paragraph-3";
     if (columns === 2) return "paragraph-2";
     return "paragraph-1";

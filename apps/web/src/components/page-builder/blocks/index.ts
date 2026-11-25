@@ -3,6 +3,7 @@ export * from "./layout/SectionBlock";
 export * from "./layout/ColumnsBlock";
 export * from "./layout/StackBlocks";
 export * from "./basic/TextBlock";
+export * from "./basic/RichTextBlock";
 export * from "./basic/ButtonBlock";
 export * from "./basic/ImageBlock";
 export * from "./basic/SeparatorBlock";
@@ -27,6 +28,7 @@ import { SectionBlock } from "./layout/SectionBlock";
 import { ColumnsBlock } from "./layout/ColumnsBlock";
 import { RowBlock, VerticalStackBlock } from "./layout/StackBlocks";
 import { TextBlock } from "./basic/TextBlock";
+import { RichTextBlock } from "./basic/RichTextBlock";
 import { ButtonBlock } from "./basic/ButtonBlock";
 import { ImageBlock } from "./basic/ImageBlock";
 import { SeparatorBlock } from "./basic/SeparatorBlock";
@@ -64,6 +66,7 @@ export const craftResolver = {
   IconBoxBlock,
   ImageBlock,
   PageCanvas,
+  RichTextBlock,
   RowBlock,
   SectionBlock,
   SeparatorBlock,

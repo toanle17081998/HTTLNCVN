@@ -7,6 +7,7 @@ import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/
 import { buildBoxStyle, capSpacing, mobileBoxOverrides, useIsMobile, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
 import { TextBlock } from "../basic/TextBlock";
+import { RichTextBlock } from "../basic/RichTextBlock";
 import type { BoxProps, SizeValue } from "../../shared/types";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -138,23 +139,31 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
   const allowTextInsert = Boolean(nodeAllowTextInsert ?? props.allowTextInsert);
   const showSeparator = Boolean(nodeShowSeparator ?? props.showSeparator);
 
-  function appendTextBlock(kind: "header" | "paragraph") {
+  function appendTextBlock(kind: "header" | "paragraph" | "richText") {
     const element =
       kind === "header" ? (
         <TextBlock
           align="left"
           color="var(--text-primary)"
           lineHeight="var(--section-heading-leading)"
+          removable
           size="var(--section-card-title-size)"
           tag="h3"
           text="Section heading"
           weight="var(--section-weight-bold)"
+        />
+      ) : kind === "richText" ? (
+        <RichTextBlock
+          align="left"
+          content={"### Subheading\n\nWrite **rich text** or *Markdown* here:\n\n- Bullet item\n- Another item"}
+          removable
         />
       ) : (
         <TextBlock
           align="left"
           color="var(--text-secondary)"
           lineHeight="var(--section-body-leading)"
+          removable
           size="var(--section-body-size)"
           tag="p"
           text="Write your paragraph content here..."
@@ -207,6 +216,17 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
             >
               <Plus className="h-3.5 w-3.5" />
               {t("pageBuilder.addParagraph")}
+            </button>
+            <button
+              className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+              onClick={(event) => {
+                event.stopPropagation();
+                appendTextBlock("richText");
+              }}
+              type="button"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t("pageBuilder.addRichText")}
             </button>
             <button
               className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
