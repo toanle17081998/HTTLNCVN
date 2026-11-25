@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import {
+  AlertTriangle,
   BookOpen,
   BarChart3,
   FileStack,
@@ -30,6 +31,7 @@ import { useTranslation } from "@/providers/I18nProvider";
 import type { TranslationKey } from "@/lib/i18n";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageToggle, Breadcrumb } from "@/components/layout";
+import { useMediaStorageUsageQuery } from "@/api/media";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -91,6 +93,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     PERMISSIONS.updateChurchUnits,
     PERMISSIONS.updateChurchMembers,
   ]);
+  const storageUsageQuery = useMediaStorageUsageQuery(canAccessAdmin && isAuthenticated);
+  const storageUsage = storageUsageQuery.data;
+  const usedGb = storageUsage ? (storageUsage.totalBytes / (1024 * 1024 * 1024)).toFixed(2) : null;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -282,6 +287,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 ) : canAccessAdmin ? (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {storageUsage?.exceedsLimit && usedGb ? (
+                      <div
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-4 py-3 text-sm text-[var(--status-warning-text)]"
+                        role="alert"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--status-warning-text)]" />
+                          <div>
+                            <p className="font-semibold">{t("admin.storage.warningTitle")}</p>
+                            <p className="text-xs opacity-90">
+                              {t("admin.storage.warningDescription", { size: usedGb })}
+                            </p>
+                          </div>
+                        </div>
+                        <Link
+                          className="rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-3 py-1.5 text-xs font-semibold transition hover:brightness-95"
+                          href="/admin/media"
+                        >
+                          {t("admin.storage.manageMedia")}
+                        </Link>
+                      </div>
+                    ) : null}
                     <ErrorBoundary>
                       {children}
                     </ErrorBoundary>

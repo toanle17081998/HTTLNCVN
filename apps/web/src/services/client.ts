@@ -103,10 +103,11 @@ async function requestWithToken<T>(
 ): Promise<{ payload: ApiEnvelope<T> | ApiErrorEnvelope | null; response: Response }> {
   const { headers, token: _ignoredToken, ...init } = options;
   const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
+  const hasJsonBody = init.body !== undefined && !isFormData;
   const response = await fetch(`${apiBaseUrl}/api${path}`, {
     ...init,
     headers: {
-      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
+      ...(hasJsonBody ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },

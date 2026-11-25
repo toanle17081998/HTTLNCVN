@@ -13,16 +13,85 @@ const logoDurationMs = 600;
 const fadeOutDurationMs = 500;
 const exitDurationMs = 800;
 
-function IntroImage({ mobileUrl, priority, url }: { mobileUrl?: string; priority?: boolean; url: string }) {
+function isVideoUrl(url?: string) {
+  return Boolean(url && /\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(url));
+}
+
+function IntroImage({
+  mobileUrl,
+  paused = false,
+  priority,
+  url,
+}: {
+  mobileUrl?: string;
+  paused?: boolean;
+  priority?: boolean;
+  url: string;
+}) {
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+  const activeUrl = isMobile && mobileUrl ? mobileUrl : url;
+  const bgVideoRef = useRef<HTMLVideoElement>(null);
+  const fgVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (!paused) return;
+    bgVideoRef.current?.pause();
+    fgVideoRef.current?.pause();
+  }, [paused]);
+
+  if (isVideoUrl(activeUrl)) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-[var(--bg-base)]">
+        <video
+          aria-hidden="true"
+          autoPlay
+          className="absolute inset-0 h-full w-full scale-110 transform-gpu object-cover blur-2xl brightness-75"
+          muted
+          onEnded={(event) => event.currentTarget.pause()}
+          playsInline
+          preload="auto"
+          ref={bgVideoRef}
+          src={activeUrl}
+        />
+        <video
+          autoPlay
+          className="absolute inset-0 h-full w-full object-contain object-center"
+          muted
+          onEnded={(event) => event.currentTarget.pause()}
+          playsInline
+          preload="auto"
+          ref={fgVideoRef}
+          src={activeUrl}
+        />
+      </div>
+    );
+  }
+
   return (
-    <picture className="absolute inset-0 block">
-      {mobileUrl ? <source media="(max-width: 767px)" srcSet={mobileUrl} /> : null}
-      <Image alt="" className="object-cover" fill priority={priority} sizes="100vw" src={url} unoptimized />
-    </picture>
+    <div className="absolute inset-0 overflow-hidden bg-[var(--bg-base)]">
+      <picture aria-hidden="true" className="absolute inset-0 block scale-110 blur-2xl brightness-75">
+        {mobileUrl ? <source media="(max-width: 767px)" srcSet={mobileUrl} /> : null}
+        <Image alt="" className="object-cover" fill priority={priority} sizes="100vw" src={url} unoptimized />
+      </picture>
+      <picture className="absolute inset-0 block">
+        {mobileUrl ? <source media="(max-width: 767px)" srcSet={mobileUrl} /> : null}
+        <Image alt="" className="object-contain object-center" fill priority={priority} sizes="100vw" src={url} unoptimized />
+      </picture>
+    </div>
   );
 }
 
-function RevealingIntroImage({ mobileUrl, priority, url }: { mobileUrl?: string; priority: boolean; url: string }) {
+function RevealingIntroImage({
+  mobileUrl,
+  paused = false,
+  priority,
+  url,
+}: {
+  mobileUrl?: string;
+  paused?: boolean;
+  priority: boolean;
+  url: string;
+}) {
   const [isRevealed, setIsRevealed] = useState(false);
 
   useEffect(() => {
@@ -47,7 +116,7 @@ function RevealingIntroImage({ mobileUrl, priority, url }: { mobileUrl?: string;
         transition: "clip-path 800ms cubic-bezier(0.22, 1, 0.36, 1), transform 800ms ease",
       }}
     >
-      <IntroImage mobileUrl={mobileUrl} priority={priority} url={url} />
+      <IntroImage mobileUrl={mobileUrl} paused={paused} priority={priority} url={url} />
     </div>
   );
 }
@@ -106,12 +175,13 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
     shouldAnimatePage.current = true;
 
     images.forEach((image) => {
+      const targetUrl =
+        window.matchMedia("(max-width: 767px)").matches && image.mobileUrl ? image.mobileUrl : image.url;
+      if (isVideoUrl(targetUrl)) return;
       const preload = new window.Image();
       preload.decoding = "async";
       preload.fetchPriority = "high";
-      preload.src = window.matchMedia("(max-width: 767px)").matches && image.mobileUrl
-        ? image.mobileUrl
-        : image.url;
+      preload.src = targetUrl;
     });
     setPhase("logo");
     const logoTimer = window.setTimeout(() => {
@@ -184,11 +254,12 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
               key={image.id}
               style={{ zIndex: index + 1 }}
             >
-              {index === activeImage ? (
-                <RevealingIntroImage mobileUrl={image.mobileUrl} priority={index === 0} url={image.url} />
-              ) : (
-                <IntroImage mobileUrl={image.mobileUrl} url={image.url} />
-              )}
+              <RevealingIntroImage
+                mobileUrl={image.mobileUrl}
+                paused={index < activeImage || phase === "waiting" || phase === "exiting"}
+                priority={index === 0}
+                url={image.url}
+              />
             </div>
           ) : null,
         )

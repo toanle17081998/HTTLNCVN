@@ -9,7 +9,7 @@ export type MediaUploadDto = {
   filename?: string;
   folder?: string;
   height?: number;
-  mimeType: 'image/webp' | 'video/webm';
+  mimeType: 'image/webp' | 'video/webm' | 'video/mp4';
   originalName: string;
   size: number;
   url: string;
@@ -30,6 +30,12 @@ export type MediaGalleryItemDto = {
   updatedAt: string;
   url: string;
   width?: number;
+};
+
+export type MediaStorageUsageDto = {
+  exceedsLimit: boolean;
+  limitBytes: number;
+  totalBytes: number;
 };
 
 export type MediaGalleryResponseDto = {

@@ -14,7 +14,9 @@ import {
   Upload,
 } from "lucide-react";
 import { Button, Card, Input, Pagination, Select, Skeleton, Text, Title, cn } from "@/components/ui";
+import { ApiError } from "@/api/client";
 import {
+  importDriveMedia,
   mediaKeys,
   uploadMedia,
   useCreateMediaFolderMutation,
@@ -26,6 +28,7 @@ import {
   type MediaGalleryItem,
 } from "@/api/media";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useFeedback } from "@/providers/FeedbackProvider";
 
 type MediaGalleryManagerProps = {
   mode?: "manager" | "picker";
@@ -45,6 +48,7 @@ export function MediaGalleryManager({
   onSelect,
 }: MediaGalleryManagerProps) {
   const { t } = useTranslation();
+  const { confirm } = useFeedback();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeFolder, setActiveFolder] = useState<string>("__all__");
@@ -54,7 +58,13 @@ export function MediaGalleryManager({
   const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    fileName: string;
+    percent: number;
+    phase: "uploading" | "processing";
+  } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [driveUrl, setDriveUrl] = useState("");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(16);
@@ -86,7 +96,13 @@ export function MediaGalleryManager({
     try {
       const uploaded: MediaGalleryItem[] = [];
       for (const file of Array.from(files)) {
-        const res = await uploadMedia(file, undefined, targetUploadFolder);
+        if (file.size > 20 * 1024 * 1024) {
+          throw new Error(t("admin.navigation.introFileTooLarge", { limit: "20" }));
+        }
+        setUploadProgress({ fileName: file.name, percent: 1, phase: "uploading" });
+        const res = await uploadMedia(file, undefined, targetUploadFolder, (progress) => {
+          setUploadProgress({ fileName: file.name, ...progress });
+        });
         if (res.filename) {
           uploaded.push({
             filename: res.filename,
@@ -108,7 +124,38 @@ export function MediaGalleryManager({
       setUploadError(error instanceof Error ? error.message : t("media.gallery.uploadFailed"));
     } finally {
       setUploading(false);
+      setUploadProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleImportFromDrive() {
+    const trimmed = driveUrl.trim();
+    if (!trimmed) return;
+    setUploading(true);
+    setUploadError(null);
+    setUploadProgress({ fileName: "Google Drive", percent: 100, phase: "processing" });
+    try {
+      const res = await importDriveMedia(trimmed, targetUploadFolder);
+      setDriveUrl("");
+      await queryClient.invalidateQueries({ queryKey: mediaKeys.all });
+      if (mode === "picker" && res.filename && onSelect) {
+        onSelect({
+          filename: res.filename,
+          folder: res.folder ?? targetUploadFolder,
+          height: res.height,
+          originalName: res.originalName,
+          size: res.size,
+          updatedAt: new Date().toISOString(),
+          url: res.url,
+          width: res.width,
+        });
+      }
+    } catch {
+      setUploadError("Can not get the image/video");
+    } finally {
+      setUploading(false);
+      setUploadProgress(null);
     }
   }
 
@@ -135,6 +182,62 @@ export function MediaGalleryManager({
   async function handleDeleteFolder(name: string) {
     await deleteFolder.mutateAsync(name);
     if (activeFolder === name) setActiveFolder("__all__");
+  }
+
+  function formatUsageEntry(entry: string) {
+    const idx = entry.indexOf(":");
+    if (idx === -1) return entry;
+    const kind = entry.slice(0, idx);
+    const value = entry.slice(idx + 1);
+    switch (kind) {
+      case "navigation":
+        return `${t("media.gallery.usage.navigation")} (${value})`;
+      case "page":
+        return `${t("media.gallery.usage.page")}: ${value}`;
+      case "article":
+        return `${t("media.gallery.usage.article")}: ${value}`;
+      case "course":
+        return `${t("media.gallery.usage.course")}: ${value}`;
+      case "lesson":
+        return `${t("media.gallery.usage.lesson")}: ${value}`;
+      case "event":
+        return `${t("media.gallery.usage.event")}: ${value}`;
+      case "eventSeries":
+        return `${t("media.gallery.usage.eventSeries")}: ${value}`;
+      case "profile":
+        return `${t("media.gallery.usage.profile")}${value ? `: ${value}` : ""}`;
+      case "evidence":
+        return `${t("media.gallery.usage.evidence")} (${value})`;
+      default:
+        return entry;
+    }
+  }
+
+  async function handleDeleteAsset(item: MediaGalleryItem) {
+    const ok = await confirm({
+      confirmLabel: t("action.delete"),
+      description: t("media.gallery.deleteConfirmDesc", { name: item.originalName }),
+      title: t("media.gallery.deleteConfirmTitle"),
+      variant: "delete",
+    });
+    if (!ok) return;
+    setUploadError(null);
+    deleteImage.mutate(item.filename, {
+      onError: (err) => {
+        let message: string;
+        if (err instanceof ApiError && err.code === "MEDIA_IN_USE") {
+          const places = err.message
+            .split(" || ")
+            .filter(Boolean)
+            .map(formatUsageEntry)
+            .join(", ");
+          message = t("media.gallery.deleteInUse", { places });
+        } else {
+          message = err instanceof Error ? err.message : t("media.gallery.uploadFailed");
+        }
+        setUploadError(message);
+      },
+    });
   }
 
   async function handleCopy(url: string) {
@@ -318,7 +421,7 @@ export function MediaGalleryManager({
           </div>
 
           <input
-            accept="image/*"
+            accept=".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"
             className="hidden"
             multiple
             onChange={(e) => void handleUploadFiles(e.target.files)}
@@ -339,6 +442,60 @@ export function MediaGalleryManager({
                 : t("media.gallery.uploadFromComputer")}
           </Button>
         </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            className="min-w-[200px] flex-1"
+            disabled={uploading}
+            onChange={(e) => {
+              setDriveUrl(e.target.value);
+              if (uploadError) setUploadError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void handleImportFromDrive();
+              }
+            }}
+            placeholder={t("admin.navigation.introDrivePlaceholder")}
+            type="url"
+            value={driveUrl}
+          />
+          <Button
+            disabled={uploading || !driveUrl.trim()}
+            onClick={() => void handleImportFromDrive()}
+            size="sm"
+            type="button"
+            variant="secondary"
+          >
+            {t("admin.navigation.introDriveAdd")}
+          </Button>
+        </div>
+
+        {uploading && uploadProgress ? (
+          <Card className="space-y-1.5 p-3">
+            <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-secondary)]">
+              <span className="truncate font-medium">
+                {uploadProgress.phase === "processing"
+                  ? t("media.gallery.processing")
+                  : t("media.gallery.uploading")}{" "}
+                {uploadProgress.fileName}
+              </span>
+              {uploadProgress.phase === "uploading" ? (
+                <span className="shrink-0 font-semibold tabular-nums">{uploadProgress.percent}%</span>
+              ) : null}
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-muted)]">
+              <div
+                className={cn(
+                  "h-full rounded-full bg-[var(--brand-primary)] transition-all duration-200",
+                  uploadProgress.phase === "processing" && "animate-pulse",
+                )}
+                style={{ width: uploadProgress.phase === "processing" ? "100%" : `${uploadProgress.percent}%` }}
+              />
+            </div>
+          </Card>
+        ) : null}
 
         {uploadError ? (
           <Card className="border-[var(--status-danger)] p-3 text-sm text-[var(--status-danger)]">
@@ -381,13 +538,36 @@ export function MediaGalleryManager({
                   onClick={mode === "picker" && onSelect ? () => onSelect(item) : undefined}
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-base)]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      alt={item.originalName}
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      src={item.url}
-                    />
+                    {/\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(item.url) ? (
+                      <>
+                        <video
+                          className="h-full w-full object-cover"
+                          loop
+                          muted
+                          onMouseEnter={(e) => {
+                            void e.currentTarget.play().catch(() => undefined);
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.pause();
+                            e.currentTarget.currentTime = 0;
+                          }}
+                          playsInline
+                          preload="metadata"
+                          src={item.url}
+                        />
+                        <span className="absolute left-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+                          Video
+                        </span>
+                      </>
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        alt={item.originalName}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        src={item.url}
+                      />
+                    )}
                     {isSelected ? (
                       <span className="absolute right-2 top-2 rounded-full bg-[var(--brand-primary)] p-1 text-white shadow">
                         <Check className="h-3.5 w-3.5" />
@@ -448,7 +628,8 @@ export function MediaGalleryManager({
                         <Button
                           aria-label={t("media.gallery.deleteImage")}
                           className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
-                          onClick={() => void deleteImage.mutateAsync(item.filename)}
+                          disabled={deleteImage.isPending}
+                          onClick={() => void handleDeleteAsset(item)}
                           size="iconSm"
                           title={t("media.gallery.deleteImage")}
                           type="button"

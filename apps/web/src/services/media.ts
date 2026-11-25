@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiBaseUrl, apiRequest } from "./client";
+import { getStoredTokens } from "./auth";
+import { ApiError, apiBaseUrl, apiRequest, type ApiEnvelope, type ApiErrorEnvelope } from "./client";
+
+export type UploadProgress = {
+  percent: number;
+  phase: "uploading" | "processing";
+};
 
 export type UploadedMedia = {
   filename?: string;
   folder?: string;
   height?: number;
-  mimeType: "image/webp" | "video/webm";
+  mimeType: "image/webp" | "video/webm" | "video/mp4";
   originalName: string;
   size: number;
   url: string;
@@ -28,6 +34,12 @@ export type MediaGalleryItem = {
   width?: number;
 };
 
+export type MediaStorageUsage = {
+  exceedsLimit: boolean;
+  limitBytes: number;
+  totalBytes: number;
+};
+
 export type MediaGalleryResponse = {
   folders: MediaFolder[];
   items: MediaGalleryItem[];
@@ -47,7 +59,7 @@ export function resolveMediaUrl(url: string) {
   try {
     const parsed = new URL(url, apiBaseUrl);
     if (
-      parsed.pathname.startsWith("/uploads/") &&
+      (parsed.pathname.startsWith("/uploads/") || parsed.pathname.startsWith("/api/media/drive/")) &&
       (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1")
     ) {
       return new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, apiBaseUrl).toString();
@@ -58,22 +70,99 @@ export function resolveMediaUrl(url: string) {
   }
 }
 
-export async function uploadMedia(file: File, signal?: AbortSignal, folder?: string) {
+export async function uploadMedia(
+  file: File,
+  signal?: AbortSignal,
+  folder?: string,
+  onProgress?: (progress: UploadProgress) => void,
+) {
   const body = new FormData();
   body.append("file", file);
   if (folder) {
     body.append("folder", folder);
   }
 
-  const media = await apiRequest<UploadedMedia>("/media/upload", {
-    body,
+  if (!onProgress || typeof XMLHttpRequest === "undefined") {
+    const media = await apiRequest<UploadedMedia>("/media/upload", {
+      body,
+      method: "POST",
+      signal,
+    });
+    return { ...media, url: resolveMediaUrl(media.url) };
+  }
+
+  const media = await new Promise<UploadedMedia>((resolvePromise, rejectPromise) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${apiBaseUrl}/api/media/upload`);
+    const token = getStoredTokens()?.accessToken;
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
+
+    const onAbort = () => xhr.abort();
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      const percent = Math.min(90, Math.max(1, Math.round((event.loaded / event.total) * 90)));
+      onProgress({ percent, phase: "uploading" });
+    };
+    xhr.upload.onload = () => {
+      onProgress({ percent: 95, phase: "processing" });
+    };
+
+    xhr.onload = () => {
+      signal?.removeEventListener("abort", onAbort);
+      let payload: ApiEnvelope<UploadedMedia> | ApiErrorEnvelope | null = null;
+      try {
+        payload = JSON.parse(xhr.responseText) as ApiEnvelope<UploadedMedia> | ApiErrorEnvelope;
+      } catch {
+        payload = null;
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300 && payload && payload.success) {
+        onProgress({ percent: 100, phase: "processing" });
+        resolvePromise(payload.data);
+        return;
+      }
+
+      const errorMessage =
+        payload && !payload.success && payload.error?.message
+          ? payload.error.message
+          : `Upload failed with status ${xhr.status}`;
+      const errorCode = payload && !payload.success ? payload.error?.code : undefined;
+      rejectPromise(new ApiError(errorMessage, xhr.status, errorCode));
+    };
+
+    xhr.onerror = () => {
+      signal?.removeEventListener("abort", onAbort);
+      rejectPromise(new ApiError("Network error while uploading media.", 0));
+    };
+
+    xhr.onabort = () => {
+      signal?.removeEventListener("abort", onAbort);
+      rejectPromise(new DOMException("Upload aborted", "AbortError"));
+    };
+
+    onProgress({ percent: 1, phase: "uploading" });
+    xhr.send(body);
+  });
+
+  return { ...media, url: resolveMediaUrl(media.url) };
+}
+
+export async function importDriveMedia(url: string, folder?: string) {
+  const media = await apiRequest<UploadedMedia>("/media/import-drive", {
+    body: JSON.stringify({ folder, url }),
     method: "POST",
-    signal,
   });
   return { ...media, url: resolveMediaUrl(media.url) };
 }
 
 export const mediaApi = {
+  storageUsage() {
+    return apiRequest<MediaStorageUsage>("/media/storage");
+  },
   async listGallery(params: { folder?: string; q?: string } = {}): Promise<MediaGalleryResponse> {
     const search = new URLSearchParams();
     if (params.folder !== undefined) search.set("folder", params.folder);
@@ -162,5 +251,49 @@ export function useDeleteMediaImageMutation() {
   return useMutation({
     mutationFn: (filename: string) => mediaApi.deleteImage(filename),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: mediaKeys.all }),
+  });
+}
+
+const storageUsageSessionKey = "httlncvn.mediaStorageUsage";
+
+function readSessionStorageUsage(): MediaStorageUsage | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.sessionStorage.getItem(storageUsageSessionKey);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as Partial<MediaStorageUsage>;
+    if (
+      typeof parsed.totalBytes === "number" &&
+      typeof parsed.limitBytes === "number" &&
+      typeof parsed.exceedsLimit === "boolean"
+    ) {
+      return parsed as MediaStorageUsage;
+    }
+  } catch {
+    // Ignore storage read errors.
+  }
+  return undefined;
+}
+
+export function useMediaStorageUsageQuery(enabled = true) {
+  return useQuery({
+    enabled,
+    gcTime: Infinity,
+    initialData: readSessionStorageUsage,
+    queryFn: async () => {
+      const usage = await mediaApi.storageUsage();
+      try {
+        window.sessionStorage.setItem(storageUsageSessionKey, JSON.stringify(usage));
+      } catch {
+        // Ignore storage write errors.
+      }
+      return usage;
+    },
+    queryKey: ["media-storage-session"] as const,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    retry: false,
+    staleTime: Infinity,
   });
 }

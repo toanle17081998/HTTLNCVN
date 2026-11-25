@@ -32,9 +32,47 @@ import {
   type PageHeroConfig,
   type SiteNavigationConfig,
 } from "@/domain/site-navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSiteNavigationQuery, useUpdateSiteNavigationMutation } from "@/hooks/siteNavigation";
-import { uploadMedia } from "@/api/media";
+import { importDriveMedia, mediaKeys, uploadMedia } from "@/api/media";
 import { MediaPickerModal } from "@/components/media/MediaPickerModal";
+
+function isIntroVideoUrl(url?: string) {
+  return Boolean(url && /\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(url));
+}
+
+function detectVideoDurationSeconds(url: string): Promise<number | null> {
+  if (!isIntroVideoUrl(url) || typeof document === "undefined") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.muted = true;
+    const cleanup = () => {
+      video.onloadedmetadata = null;
+      video.onerror = null;
+      video.src = "";
+    };
+    const timer = window.setTimeout(() => {
+      cleanup();
+      resolve(null);
+    }, 5000);
+    video.onloadedmetadata = () => {
+      window.clearTimeout(timer);
+      const seconds =
+        Number.isFinite(video.duration) && video.duration > 0
+          ? Math.min(30, Math.max(1, Math.round(video.duration)))
+          : null;
+      cleanup();
+      resolve(seconds);
+    };
+    video.onerror = () => {
+      window.clearTimeout(timer);
+      cleanup();
+      resolve(null);
+    };
+    video.src = url;
+  });
+}
 
 const HERO_PAGES = [
   { key: "/article", labelKey: "nav.article.label" },
@@ -48,6 +86,7 @@ const HERO_PAGES = [
 export function AdminNavigation() {
   const { t, localize } = useTranslation();
   const { toast, confirm } = useFeedback();
+  const queryClient = useQueryClient();
   const navQuery = useSiteNavigationQuery();
   const updateMutation = useUpdateSiteNavigationMutation();
 
@@ -55,6 +94,10 @@ export function AdminNavigation() {
   const [selectedHeroPage, setSelectedHeroPage] = useState<string>("/article");
   const [config, setConfig] = useState<SiteNavigationConfig>(defaultSiteNavigationConfig);
   const [isUploadingIntro, setIsUploadingIntro] = useState(false);
+  const [introUploadProgress, setIntroUploadProgress] = useState<{ percent: number; phase: "uploading" | "processing" } | null>(null);
+  const [introDriveUrl, setIntroDriveUrl] = useState("");
+  const [introDriveError, setIntroDriveError] = useState<string | null>(null);
+  const [mobileDriveUrls, setMobileDriveUrls] = useState<Record<string, string>>({});
   const [introGalleryTarget, setIntroGalleryTarget] = useState<null | { kind: "add" } | { kind: "mobile"; imageId: string }>(null);
 
   useEffect(() => {
@@ -89,11 +132,25 @@ export function AdminNavigation() {
     setConfig(defaultSiteNavigationConfig);
   };
 
+  const validateIntroFileSize = (file: File) => {
+    const maxMb = 20;
+    if (file.size > maxMb * 1024 * 1024) {
+      toast({
+        title: t("admin.navigation.introFileTooLarge", { limit: String(maxMb) }),
+        variant: "error",
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleIntroImageUpload = async (file?: File) => {
-    if (!file) return;
+    if (!file || !validateIntroFileSize(file)) return;
     setIsUploadingIntro(true);
+    setIntroUploadProgress({ percent: 1, phase: "uploading" });
     try {
-      const media = await uploadMedia(file);
+      const media = await uploadMedia(file, undefined, undefined, setIntroUploadProgress);
+      const detectedDuration = (await detectVideoDurationSeconds(media.url)) ?? 3;
       setConfig((prev) => ({
         ...prev,
         intro: {
@@ -101,23 +158,29 @@ export function AdminNavigation() {
           enabled: true,
           images: [
             ...prev.intro.images,
-            { durationSeconds: 3, id: `intro-${Date.now()}`, url: media.url },
+            { durationSeconds: detectedDuration, id: `intro-${Date.now()}`, url: media.url },
           ].slice(0, 3),
         },
       }));
+      void queryClient.invalidateQueries({ queryKey: mediaKeys.all });
       toast({ title: t("admin.navigation.introUploadSuccess"), variant: "success" });
-    } catch {
-      toast({ title: t("admin.navigation.introUploadError"), variant: "error" });
+    } catch (error) {
+      toast({
+        title: error instanceof Error && error.message ? error.message : t("admin.navigation.introUploadError"),
+        variant: "error",
+      });
     } finally {
       setIsUploadingIntro(false);
+      setIntroUploadProgress(null);
     }
   };
 
   const handleIntroMobileImageUpload = async (imageId: string, file?: File) => {
-    if (!file) return;
+    if (!file || !validateIntroFileSize(file)) return;
     setIsUploadingIntro(true);
+    setIntroUploadProgress({ percent: 1, phase: "uploading" });
     try {
-      const media = await uploadMedia(file);
+      const media = await uploadMedia(file, undefined, undefined, setIntroUploadProgress);
       setConfig((prev) => ({
         ...prev,
         intro: {
@@ -127,11 +190,62 @@ export function AdminNavigation() {
           ),
         },
       }));
+      void queryClient.invalidateQueries({ queryKey: mediaKeys.all });
       toast({ title: t("admin.navigation.introUploadSuccess"), variant: "success" });
-    } catch {
-      toast({ title: t("admin.navigation.introUploadError"), variant: "error" });
+    } catch (error) {
+      toast({
+        title: error instanceof Error && error.message ? error.message : t("admin.navigation.introUploadError"),
+        variant: "error",
+      });
     } finally {
       setIsUploadingIntro(false);
+      setIntroUploadProgress(null);
+    }
+  };
+
+  const handleIntroDriveImport = async (rawUrl: string, mobileImageId?: string) => {
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return;
+    setIntroDriveError(null);
+    setIsUploadingIntro(true);
+    setIntroUploadProgress({ percent: 50, phase: "processing" });
+    try {
+      const media = await importDriveMedia(trimmed);
+      if (mobileImageId) {
+        setConfig((prev) => ({
+          ...prev,
+          intro: {
+            ...prev.intro,
+            images: prev.intro.images.map((image) =>
+              image.id === mobileImageId ? { ...image, mobileUrl: media.url } : image,
+            ),
+          },
+        }));
+        setMobileDriveUrls((prev) => ({ ...prev, [mobileImageId]: "" }));
+      } else {
+        const detectedDuration = (await detectVideoDurationSeconds(media.url)) ?? 3;
+        setConfig((prev) => ({
+          ...prev,
+          intro: {
+            ...prev.intro,
+            enabled: true,
+            images: [
+              ...prev.intro.images,
+              { durationSeconds: detectedDuration, id: `intro-${Date.now()}`, url: media.url },
+            ].slice(0, 3),
+          },
+        }));
+        setIntroDriveUrl("");
+      }
+      void queryClient.invalidateQueries({ queryKey: mediaKeys.all });
+      toast({ title: t("admin.navigation.introUploadSuccess"), variant: "success" });
+    } catch {
+      const message = "Can not get the image/video";
+      setIntroDriveError(message);
+      toast({ title: message, variant: "error" });
+    } finally {
+      setIsUploadingIntro(false);
+      setIntroUploadProgress(null);
     }
   };
 
@@ -407,7 +521,7 @@ export function AdminNavigation() {
               <Label className="mb-1.5 block" variant="overline">{t("admin.navigation.introImage")}</Label>
               <div className="flex flex-wrap items-center gap-2">
                 <Input
-                  accept="image/avif,image/jpeg,image/png,image/webp"
+                  accept=".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"
                   className="min-w-0 flex-1"
                   disabled={isUploadingIntro || config.intro.images.length >= 3}
                   onChange={(event) => void handleIntroImageUpload(event.target.files?.[0])}
@@ -423,19 +537,89 @@ export function AdminNavigation() {
                   {t("media.picker.chooseFromGallery")}
                 </Button>
               </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Input
+                  className="min-w-0 flex-1"
+                  disabled={isUploadingIntro || config.intro.images.length >= 3}
+                  onChange={(event) => {
+                    setIntroDriveUrl(event.target.value);
+                    if (introDriveError) setIntroDriveError(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleIntroDriveImport(introDriveUrl);
+                    }
+                  }}
+                  placeholder={t("admin.navigation.introDrivePlaceholder")}
+                  type="url"
+                  value={introDriveUrl}
+                />
+                <Button
+                  disabled={isUploadingIntro || !introDriveUrl.trim() || config.intro.images.length >= 3}
+                  onClick={() => void handleIntroDriveImport(introDriveUrl)}
+                  size="sm"
+                  type="button"
+                  variant="secondary"
+                >
+                  {t("admin.navigation.introDriveAdd")}
+                </Button>
+              </div>
+              {introDriveError ? (
+                <p className="mt-1.5 text-xs font-medium text-[var(--status-danger)]" role="alert">
+                  {introDriveError}
+                </p>
+              ) : null}
               <Text className="mt-2" variant="small">
                 {isUploadingIntro
                   ? t("admin.articles.loading")
                   : t("admin.navigation.introImageLimit", { count: String(config.intro.images.length) })}
               </Text>
+              <div className="mt-2 rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-3 py-2 text-xs text-[var(--status-warning-text)]">
+                {t("admin.navigation.introUploadHint")}
+              </div>
+              {isUploadingIntro && introUploadProgress ? (
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                    <span>
+                      {introUploadProgress.phase === "processing"
+                        ? t("media.gallery.processing")
+                        : t("media.gallery.uploading")}
+                    </span>
+                    {introUploadProgress.phase === "uploading" ? (
+                      <span className="font-medium tabular-nums">{introUploadProgress.percent}%</span>
+                    ) : null}
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-muted)]">
+                    <div
+                      className={`h-full rounded-full bg-[var(--brand-primary)] transition-all duration-200 ${
+                        introUploadProgress.phase === "processing" ? "animate-pulse" : ""
+                      }`}
+                      style={{
+                        width: introUploadProgress.phase === "processing" ? "100%" : `${introUploadProgress.percent}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {config.intro.images.length ? (
               <div className="grid gap-4 lg:grid-cols-3">
                 {config.intro.images.map((image, index) => (
                   <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]" key={image.id}>
-                    <div className="relative aspect-video bg-[var(--bg-base)]">
-                      <Image alt="" className="object-cover" fill sizes="(min-width: 1024px) 33vw, 100vw" src={image.url} unoptimized />
+                    <div className="relative aspect-video overflow-hidden bg-[var(--bg-base)]">
+                      {/\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(image.url) ? (
+                        <>
+                          <video aria-hidden="true" autoPlay className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl brightness-75" loop muted playsInline src={image.url} />
+                          <video autoPlay className="absolute inset-0 h-full w-full object-contain object-center" loop muted playsInline src={image.url} />
+                        </>
+                      ) : (
+                        <>
+                          <Image alt="" aria-hidden="true" className="scale-110 object-cover blur-2xl brightness-75" fill sizes="(min-width: 1024px) 33vw, 100vw" src={image.url} unoptimized />
+                          <Image alt="" className="object-contain object-center" fill sizes="(min-width: 1024px) 33vw, 100vw" src={image.url} unoptimized />
+                        </>
+                      )}
                     </div>
                     <div className="grid gap-3 p-4">
                       <Label variant="overline">{t("admin.navigation.introImagePeriod", { number: String(index + 1) })}</Label>
@@ -461,7 +645,7 @@ export function AdminNavigation() {
                       <Label variant="overline">{t("admin.navigation.introMobileImage")}</Label>
                       <div className="flex flex-wrap items-center gap-2">
                         <Input
-                          accept="image/avif,image/jpeg,image/png,image/webp"
+                          accept=".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"
                           className="min-w-0 flex-1"
                           disabled={isUploadingIntro}
                           onChange={(event) => void handleIntroMobileImageUpload(image.id, event.target.files?.[0])}
@@ -474,6 +658,29 @@ export function AdminNavigation() {
                           variant="secondary"
                         >
                           {t("media.picker.gallery")}
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          className="min-w-0 flex-1"
+                          disabled={isUploadingIntro}
+                          onChange={(event) => {
+                            const val = event.target.value;
+                            setMobileDriveUrls((prev) => ({ ...prev, [image.id]: val }));
+                            if (introDriveError) setIntroDriveError(null);
+                          }}
+                          placeholder={t("admin.navigation.introDrivePlaceholder")}
+                          type="url"
+                          value={mobileDriveUrls[image.id] ?? ""}
+                        />
+                        <Button
+                          disabled={isUploadingIntro || !(mobileDriveUrls[image.id] ?? "").trim()}
+                          onClick={() => void handleIntroDriveImport(mobileDriveUrls[image.id] ?? "", image.id)}
+                          size="sm"
+                          type="button"
+                          variant="secondary"
+                        >
+                          {t("admin.navigation.introDriveAdd")}
                         </Button>
                       </div>
                       <Button
@@ -1166,6 +1373,7 @@ export function AdminNavigation() {
         onSelect={(item) => {
           if (!introGalleryTarget) return;
           if (introGalleryTarget.kind === "add") {
+            const newId = `intro-${Date.now()}`;
             setConfig((prev) => ({
               ...prev,
               intro: {
@@ -1174,12 +1382,24 @@ export function AdminNavigation() {
                   ...prev.intro.images,
                   {
                     durationSeconds: 3,
-                    id: `intro-${Date.now()}`,
+                    id: newId,
                     url: item.url,
                   },
                 ].slice(0, 3),
               },
             }));
+            void detectVideoDurationSeconds(item.url).then((seconds) => {
+              if (!seconds) return;
+              setConfig((prev) => ({
+                ...prev,
+                intro: {
+                  ...prev.intro,
+                  images: prev.intro.images.map((img) =>
+                    img.id === newId ? { ...img, durationSeconds: seconds } : img,
+                  ),
+                },
+              }));
+            });
           } else {
             setConfig((prev) => ({
               ...prev,

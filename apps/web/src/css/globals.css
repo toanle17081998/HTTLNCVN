@@ -95,6 +95,8 @@
   --status-info-bg: color-mix(in srgb, var(--status-info) 12%, var(--bg-surface));
   --status-success-bg: color-mix(in srgb, var(--status-success) 12%, var(--bg-surface));
   --status-warning-bg: color-mix(in srgb, var(--status-warning) 14%, var(--bg-surface));
+  --status-warning-border: color-mix(in srgb, var(--status-warning) 35%, transparent);
+  --status-warning-text: #92400e;
   --status-danger-bg: color-mix(in srgb, var(--status-danger) 12%, var(--bg-surface));
 
   --border-subtle: #d8d6d1;
@@ -210,6 +212,8 @@
   --status-info-bg: color-mix(in srgb, var(--status-info) 18%, var(--bg-surface));
   --status-success-bg: color-mix(in srgb, var(--status-success) 18%, var(--bg-surface));
   --status-warning-bg: color-mix(in srgb, var(--status-warning) 20%, var(--bg-surface));
+  --status-warning-border: color-mix(in srgb, var(--status-warning) 40%, transparent);
+  --status-warning-text: #fcd34d;
   --status-danger-bg: color-mix(in srgb, var(--status-danger) 18%, var(--bg-surface));
   --hero-scrim-from: rgba(2 6 23 / 0.72);
   --hero-scrim-mid: rgba(6 16 28 / 0.42);

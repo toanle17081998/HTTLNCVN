@@ -4,6 +4,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 const remotePatterns: NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]> = [
   { hostname: "images.unsplash.com", protocol: "https" },
+  { hostname: "lh3.googleusercontent.com", protocol: "https" },
 ];
 
 const { hostname, port, protocol } = new URL(apiUrl);
