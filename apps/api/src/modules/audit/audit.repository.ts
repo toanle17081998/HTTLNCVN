@@ -7,7 +7,7 @@ export class AuditRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(skip: number, take: number) {
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         include: { user: { select: { email: true, id: true, username: true } } },
         orderBy: { occurred_at: 'desc' },

@@ -112,7 +112,7 @@ export class PrayerJournalRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getMeta(userId: string): Promise<PrayerJournalMetaDto> {
-    const [categories, members] = await this.prisma.$transaction([
+    const [categories, members] = await Promise.all([
       this.prisma.prayerCategory.findMany({
         orderBy: { name: 'asc' },
         select: { id: true, name: true },
@@ -155,7 +155,7 @@ export class PrayerJournalRepository {
       ],
     };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.prayer.findMany({
         include: PRAYER_INCLUDE,
         orderBy: { created_at: 'desc' },

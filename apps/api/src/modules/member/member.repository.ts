@@ -67,7 +67,7 @@ export class MemberRepository {
       }),
     };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.user.findMany({ include: MEMBER_INCLUDE, orderBy: { created_at: 'desc' }, skip, take, where }),
       this.prisma.user.count({ where }),
     ]);

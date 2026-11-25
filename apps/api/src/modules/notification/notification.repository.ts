@@ -10,7 +10,7 @@ export class NotificationRepository {
   async findForUser(userId: string, skip: number, take: number): Promise<NotificationListResult> {
     const where = { user_id: userId };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.notificationRecipient.findMany({
         include: { notification: true },
         orderBy: { notification: { created_at: 'desc' } },

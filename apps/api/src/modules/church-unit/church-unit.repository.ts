@@ -241,7 +241,7 @@ export class ChurchUnitRepository {
   }
 
   async getMeta(): Promise<ChurchUnitMetaDto> {
-    const [members, units] = await this.prisma.$transaction([
+    const [members, units] = await Promise.all([
       this.prisma.user.findMany({
         select: {
           id: true,
@@ -282,7 +282,7 @@ export class ChurchUnitRepository {
   }
 
   async findAll(skip: number, take: number): Promise<ChurchUnitListResult> {
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.churchUnit.findMany({
         include: CHURCH_UNIT_INCLUDE,
         orderBy: [{ sort_order: 'asc' }, { name: 'asc' }],

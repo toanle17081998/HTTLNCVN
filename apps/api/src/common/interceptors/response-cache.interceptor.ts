@@ -6,12 +6,13 @@ import { firstValueFrom, from, tap, type Observable } from 'rxjs';
 import { CacheService } from '../performance/cache.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
-const CACHE_RULES = [
-  { prefix: '/api/pages/resolve', ttlMs: 30_000 },
-  { prefix: '/api/pages/navigation', ttlMs: 30_000 },
-  { prefix: '/api/articles', ttlMs: 15_000 },
+const CACHE_RULES: Array<{ allowAuth?: boolean; exactOrQuery?: boolean; prefix: string; ttlMs: number }> = [
+  { allowAuth: true, prefix: '/api/pages/resolve', ttlMs: 30_000 },
+  { allowAuth: true, prefix: '/api/pages/navigation', ttlMs: 30_000 },
+  { allowAuth: true, prefix: '/api/articles', ttlMs: 15_000 },
+  { allowAuth: true, exactOrQuery: true, prefix: '/api/courses', ttlMs: 15_000 },
   { prefix: '/api/courses', ttlMs: 15_000 },
-  { prefix: '/api/course-categories', ttlMs: 60_000 },
+  { allowAuth: true, prefix: '/api/course-categories', ttlMs: 60_000 },
   { prefix: '/api/events', ttlMs: 10_000 },
 ];
 
@@ -57,12 +58,16 @@ export class ResponseCacheInterceptor implements NestInterceptor {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!isPublic || request.headers.authorization) return next.handle();
+    if (!isPublic) return next.handle();
 
-    const rule = CACHE_RULES.find(({ prefix }) => request.originalUrl.startsWith(prefix));
+    const url = request.originalUrl;
+    const rule = CACHE_RULES.find(({ exactOrQuery, prefix }) =>
+      exactOrQuery ? url === prefix || url.startsWith(`${prefix}?`) : url.startsWith(prefix),
+    );
     if (!rule) return next.handle();
+    if (request.headers.authorization && !rule.allowAuth) return next.handle();
 
-    const key = `http:${request.originalUrl}`;
+    const key = `http:${url}`;
     response.setHeader('Cache-Control', `public, max-age=5, s-maxage=${Math.floor(rule.ttlMs / 1000)}, stale-while-revalidate=30`);
     return from(this.cache.getOrSet(key, rule.ttlMs, () => firstValueFrom(next.handle())));
   }

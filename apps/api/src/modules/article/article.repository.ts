@@ -32,9 +32,19 @@ export class ArticleRepository {
       }),
     };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.article.findMany({
-        include: { category: true, creator: true },
+        select: {
+          category: { select: { id: true, name_en: true, name_vi: true } },
+          cover_image_url: true,
+          creator: { select: { id: true, username: true } },
+          id: true,
+          published_at: true,
+          slug: true,
+          status: true,
+          title_en: true,
+          title_vi: true,
+        },
         orderBy: [{ published_at: 'desc' }, { created_at: 'desc' }],
         skip,
         take,
@@ -63,7 +73,10 @@ export class ArticleRepository {
 
   async findBySlug(slug: string): Promise<ArticleDto | null> {
     const a = await this.prisma.article.findUnique({
-      include: { category: true, creator: true },
+      include: {
+        category: { select: { id: true, name_en: true, name_vi: true } },
+        creator: { select: { id: true, username: true } },
+      },
       where: { slug, deleted_at: null },
     });
 

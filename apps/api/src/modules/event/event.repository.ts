@@ -230,7 +230,7 @@ export class EventRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getMeta(): Promise<EventMetaDto> {
-    const [categories, churchUnits, members] = await this.prisma.$transaction([
+    const [categories, churchUnits, members] = await Promise.all([
       this.prisma.eventCategory.findMany({
         orderBy: [{ name: 'asc' }],
       }),
@@ -330,7 +330,7 @@ export class EventRepository {
 
     const where: Prisma.EventWhereInput = { AND: and };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.event.findMany({
         include: viewerId ? EVENT_INCLUDE : EVENT_PUBLIC_INCLUDE,
         orderBy: [{ starts_at: 'asc' }, { title: 'asc' }],

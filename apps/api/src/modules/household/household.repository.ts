@@ -48,7 +48,7 @@ export class HouseholdRepository {
     const where: Prisma.HouseholdWhereInput = q
       ? { OR: [{ name: { contains: q } }, { phone: { contains: q } }] }
       : {};
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.household.findMany({ include: HOUSEHOLD_INCLUDE, orderBy: { name: 'asc' }, skip, take, where }),
       this.prisma.household.count({ where }),
     ]);

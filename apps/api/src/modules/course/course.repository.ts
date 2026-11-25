@@ -381,9 +381,26 @@ export class CourseRepository {
       }),
     };
 
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.course.findMany({
-        include: { _count: { select: { lessons: true } }, creator: true, category: true },
+        select: {
+          _count: { select: { lessons: true } },
+          category: { select: { created_at: true, id: true, name_en: true, name_vi: true } },
+          category_id: true,
+          cover_image_url: true,
+          created_at: true,
+          creator: { select: { id: true, username: true } },
+          estimated_duration_minutes: true,
+          id: true,
+          published_at: true,
+          slug: true,
+          sort_order: true,
+          status: true,
+          summary_en: true,
+          summary_vi: true,
+          title_en: true,
+          title_vi: true,
+        },
         orderBy: [{ sort_order: 'asc' }, { published_at: 'desc' }],
         skip,
         take,
@@ -392,30 +409,48 @@ export class CourseRepository {
       this.prisma.course.count({ where }),
     ]);
 
-    return { items: items.map((c) => this.mapCourseList(c)), total };
+    return { items: items.map((c) => this.mapCourseList(c as unknown as CourseWithListRelations)), total };
   }
 
   async findBySlug(slug: string, viewerId?: string, viewerRole?: string): Promise<CourseDto | null> {
+    const isAdmin = viewerRole === 'church_admin' || viewerRole === 'system_admin';
     const c = await this.prisma.course.findFirst({
       include: {
-        _count: { select: { lessons: true } },
-        attendees: true,
-        creator: true,
+        _count: { select: { attendees: true, lessons: true } },
+        attendees: viewerId ? { select: { user_id: true }, where: { user_id: viewerId } } : false,
+        creator: { select: { id: true, username: true } },
         category: true,
-        grades: viewerId ? { where: { user_id: viewerId } } : false,
-        lessons: {
-          include: {
-            templates: {
-              include: {
-                lesson: true,
-                quiz_maps: {
-                  include: { quiz: { include: { _count: { select: { quiz_maps: true } } } } },
-                },
+        grades: viewerId ? { select: { id: true }, where: { user_id: viewerId } } : false,
+        lessons: viewerId
+          ? {
+              select: {
+                content_markdown_en: true,
+                content_markdown_vi: true,
+                id: true,
+                order_index: true,
+                templates: isAdmin
+                  ? {
+                      include: {
+                        lesson: { select: { id: true, order_index: true, title_en: true, title_vi: true } },
+                        quiz_maps: {
+                          select: { quiz: { select: { is_test: true } }, quiz_id: true },
+                        },
+                      },
+                    }
+                  : {
+                      select: {
+                        id: true,
+                        quiz_maps: {
+                          select: { quiz: { select: { is_test: true } }, quiz_id: true },
+                        },
+                      },
+                    },
+                title_en: true,
+                title_vi: true,
               },
-            },
-          },
-          orderBy: { order_index: 'asc' },
-        },
+              orderBy: { order_index: 'asc' },
+            }
+          : false,
       } as any,
       where: { slug, deleted_at: null },
     });
@@ -426,13 +461,13 @@ export class CourseRepository {
     let isAllowed = true;
 
     if (viewerId) {
-      if (viewerRole === 'church_admin' || viewerRole === 'system_admin') {
+      if (isAdmin) {
         isEnrolled = true;
         isAllowed = true;
       } else {
-        isEnrolled = c.grades && c.grades.length > 0;
-        if (c.attendees.length > 0) {
-          const isAttendee = c.attendees.some((a: any) => a.user_id === viewerId);
+        isEnrolled = Boolean((c as any).grades && (c as any).grades.length > 0);
+        if ((c as any)._count.attendees > 0) {
+          const isAttendee = Boolean((c as any).attendees && (c as any).attendees.length > 0);
           isAllowed = isAttendee && isEnrolled;
         } else {
           isAllowed = isEnrolled;
@@ -444,10 +479,10 @@ export class CourseRepository {
 
     // Cast needed because attendees and grades are dynamically added to the payload
     return this.mapCourseDetail(
-      c as unknown as CourseWithDetailRelations,
+      { ...c, lessons: c.lessons ?? [] } as unknown as CourseWithDetailRelations,
       isEnrolled,
       isAllowed,
-      viewerRole === 'church_admin' || viewerRole === 'system_admin',
+      isAdmin,
     );
   }
 
