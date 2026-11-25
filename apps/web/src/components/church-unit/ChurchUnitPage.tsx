@@ -585,8 +585,15 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 page={page}
                 pageSize={pageSize}
                 total={unitsQuery.data?.total ?? 0}
-                onPageChange={setPage}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(0);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
               />
             ) : null}
           </div>

@@ -202,10 +202,14 @@ export function NotificationPage() {
             pageSize={pageSize}
             pageSizeOptions={[10, 20, 50]}
             total={total}
-            onPageChange={setPage}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             onPageSizeChange={(s) => {
               setPageSize(s);
               setPage(0);
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
         )}

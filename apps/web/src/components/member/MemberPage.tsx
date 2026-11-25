@@ -406,8 +406,15 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                 pageSize={pageSize}
                 pageSizeOptions={[10, 20, 50]}
                 total={total}
-                onPageChange={setPage}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                onPageSizeChange={(s) => {
+                  setPageSize(s);
+                  setPage(0);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
               />
             ) : null}
           </Card>

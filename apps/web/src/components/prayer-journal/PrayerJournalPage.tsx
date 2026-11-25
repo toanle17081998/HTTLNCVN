@@ -365,8 +365,15 @@ export function PrayerJournalPage() {
                   page={page}
                   pageSize={pageSize}
                   total={prayersQuery.data?.total ?? 0}
-                  onPageChange={(p) => setPage(p)}
-                  onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                  onPageChange={(p) => {
+                    setPage(p);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  onPageSizeChange={(s) => {
+                    setPageSize(s);
+                    setPage(0);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 />
               ) : null}
             </div>

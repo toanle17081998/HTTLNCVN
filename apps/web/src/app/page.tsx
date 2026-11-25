@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageApi } from "@/api/page";
 import { CraftPageRenderer } from "@/components/page-builder/CraftPageRenderer";
 import { createPageMetadata, siteConfig } from "@/lib/site";
 
@@ -11,6 +12,7 @@ export default async function Home({
 }) {
   const { previewLanguage } = await searchParams;
   const language = previewLanguage === "en" || previewLanguage === "vi" ? previewLanguage : undefined;
+  const initialPage = await pageApi.resolve("/").catch(() => null);
 
-  return <CraftPageRenderer path="/" previewLanguage={language} />;
+  return <CraftPageRenderer initialPage={initialPage} path="/" previewLanguage={language} />;
 }

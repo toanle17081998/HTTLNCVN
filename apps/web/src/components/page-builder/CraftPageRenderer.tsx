@@ -4,7 +4,7 @@ import { Editor, Element, Frame } from "@craftjs/core";
 import { SquarePen } from "lucide-react";
 import Link from "next/link";
 import { ApiError } from "@/api/client";
-import { useResolvedPageQuery } from "@/hooks/page";
+import { useResolvedPageQuery, type Page } from "@/hooks/page";
 import { Button, ButtonLink, Card, Title, Text } from "@/components/ui";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";
@@ -15,13 +15,15 @@ import { PageBuilderSkeleton } from "./PageBuilderSkeleton";
 import { useEffect } from "react";
 
 export function CraftPageRenderer({
+  initialPage,
   path,
   previewLanguage,
 }: {
+  initialPage?: Page | null;
   path: string;
   previewLanguage?: Locale;
 }) {
-  const pageQuery = useResolvedPageQuery(path);
+  const pageQuery = useResolvedPageQuery(path, initialPage);
   const { can } = useAuth();
   const { locale } = useTranslation();
   const canEdit = can(PERMISSIONS.manageArticle);

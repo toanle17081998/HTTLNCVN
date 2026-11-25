@@ -103,8 +103,9 @@ export function usePageQuery(slug?: string) {
   });
 }
 
-export function useResolvedPageQuery(path: string) {
+export function useResolvedPageQuery(path: string, initialData?: Page | null) {
   return useQuery({
+    initialData: initialData ?? undefined,
     queryFn: () => pageApi.resolve(path),
     queryKey: pageKeys.resolve(path),
   });
