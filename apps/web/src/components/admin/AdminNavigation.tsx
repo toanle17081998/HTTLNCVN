@@ -432,7 +432,7 @@ export function AdminNavigation() {
           </Button>
           <Button
             className="cursor-pointer bg-[var(--brand-primary)] text-[var(--text-inverse)]"
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || isUploadingIntro}
             onClick={handleSave}
             type="button"
           >
@@ -643,6 +643,37 @@ export function AdminNavigation() {
                         value={image.durationSeconds}
                       />
                       <Label variant="overline">{t("admin.navigation.introMobileImage")}</Label>
+                      {image.mobileUrl ? (
+                        <div className="relative aspect-video max-w-xs overflow-hidden rounded-md bg-[var(--bg-base)]">
+                          {isIntroVideoUrl(image.mobileUrl) ? (
+                            <video className="h-full w-full object-contain" controls muted playsInline preload="metadata" src={image.mobileUrl} />
+                          ) : (
+                            <Image alt={t("admin.navigation.introMobileImage")} className="object-contain" fill sizes="320px" src={image.mobileUrl} unoptimized />
+                          )}
+                          <Button
+                            aria-label={t("admin.navigation.introRemoveMobileMedia")}
+                            className="absolute right-2 top-2 z-10"
+                            disabled={isUploadingIntro}
+                            onClick={() =>
+                              setConfig((prev) => ({
+                                ...prev,
+                                intro: {
+                                  ...prev.intro,
+                                  images: prev.intro.images.map((item) =>
+                                    item.id === image.id ? { ...item, mobileUrl: undefined } : item,
+                                  ),
+                                },
+                              }))
+                            }
+                            size="iconSm"
+                            title={t("admin.navigation.introRemoveMobileMedia")}
+                            type="button"
+                            variant="danger"
+                          >
+                            <Trash2 aria-hidden="true" className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : null}
                       <div className="flex flex-wrap items-center gap-2">
                         <Input
                           accept=".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"

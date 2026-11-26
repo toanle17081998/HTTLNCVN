@@ -12,7 +12,6 @@ const minLogoDisplayMs = 500;
 const logoDurationMs = 600;
 const fadeOutDurationMs = 500;
 const exitDurationMs = 800;
-const videoPlaybackTimeoutMs = 2_000;
 
 function isVideoUrl(url?: string) {
   return Boolean(url && /\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(url));
@@ -50,24 +49,21 @@ function IntroImage({
       return;
     }
 
-    let timer: number | undefined;
-    const clearTimer = () => window.clearTimeout(timer);
-    const startTimer = () => {
-      clearTimer();
-      timer = window.setTimeout(onVideoFailure, videoPlaybackTimeoutMs);
+    let cancelled = false;
+    const handleStalled = () => {
+      if (!video.ended && video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) onVideoFailure();
     };
-    if (!video.ended && (video.paused || video.currentTime === 0 || video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA)) {
-      startTimer();
-    }
-    video.addEventListener("playing", clearTimer);
-    video.addEventListener("waiting", startTimer);
-    video.addEventListener("ended", clearTimer);
+    video.addEventListener("stalled", handleStalled);
     video.addEventListener("error", onVideoFailure);
+    if (video.paused && !video.ended) {
+      video.muted = true;
+      void video.play().catch(() => {
+        if (!cancelled) onVideoFailure();
+      });
+    }
     return () => {
-      clearTimer();
-      video.removeEventListener("playing", clearTimer);
-      video.removeEventListener("waiting", startTimer);
-      video.removeEventListener("ended", clearTimer);
+      cancelled = true;
+      video.removeEventListener("stalled", handleStalled);
       video.removeEventListener("error", onVideoFailure);
     };
   }, [activeUrl, onVideoFailure, paused]);
