@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSiteNavigationQuery } from "@/hooks/siteNavigation";
 import { ChurchLogo } from "./ChurchLogo";
@@ -12,6 +12,7 @@ const minLogoDisplayMs = 500;
 const logoDurationMs = 600;
 const fadeOutDurationMs = 500;
 const exitDurationMs = 800;
+const videoPlaybackTimeoutMs = 2_000;
 
 function isVideoUrl(url?: string) {
   return Boolean(url && /\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(url));
@@ -19,11 +20,13 @@ function isVideoUrl(url?: string) {
 
 function IntroImage({
   mobileUrl,
+  onVideoFailure,
   paused = false,
   priority,
   url,
 }: {
   mobileUrl?: string;
+  onVideoFailure?: () => void;
   paused?: boolean;
   priority?: boolean;
   url: string;
@@ -38,6 +41,36 @@ function IntroImage({
     bgVideoRef.current?.pause();
     fgVideoRef.current?.pause();
   }, [paused]);
+
+  useEffect(() => {
+    const video = fgVideoRef.current;
+    if (!video || !onVideoFailure || paused) return;
+    if (video.error) {
+      onVideoFailure();
+      return;
+    }
+
+    let timer: number | undefined;
+    const clearTimer = () => window.clearTimeout(timer);
+    const startTimer = () => {
+      clearTimer();
+      timer = window.setTimeout(onVideoFailure, videoPlaybackTimeoutMs);
+    };
+    if (!video.ended && (video.paused || video.currentTime === 0 || video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA)) {
+      startTimer();
+    }
+    video.addEventListener("playing", clearTimer);
+    video.addEventListener("waiting", startTimer);
+    video.addEventListener("ended", clearTimer);
+    video.addEventListener("error", onVideoFailure);
+    return () => {
+      clearTimer();
+      video.removeEventListener("playing", clearTimer);
+      video.removeEventListener("waiting", startTimer);
+      video.removeEventListener("ended", clearTimer);
+      video.removeEventListener("error", onVideoFailure);
+    };
+  }, [activeUrl, onVideoFailure, paused]);
 
   if (isVideoUrl(activeUrl)) {
     return (
@@ -83,11 +116,13 @@ function IntroImage({
 
 function RevealingIntroImage({
   mobileUrl,
+  onVideoFailure,
   paused = false,
   priority,
   url,
 }: {
   mobileUrl?: string;
+  onVideoFailure?: () => void;
   paused?: boolean;
   priority: boolean;
   url: string;
@@ -116,7 +151,7 @@ function RevealingIntroImage({
         transition: "clip-path 800ms cubic-bezier(0.22, 1, 0.36, 1), transform 800ms ease",
       }}
     >
-      <IntroImage mobileUrl={mobileUrl} paused={paused} priority={priority} url={url} />
+      <IntroImage mobileUrl={mobileUrl} onVideoFailure={onVideoFailure} paused={paused} priority={priority} url={url} />
     </div>
   );
 }
@@ -127,10 +162,28 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
   const startedAtRef = useRef<number | null>(null);
   const shouldAnimatePage = useRef(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
   const [isPageReady, setIsPageReady] = useState(false);
   const [phase, setPhase] = useState<IntroPhase>("loading");
   const intro = navigationQuery.data?.intro;
   const images = useMemo(() => intro?.images ?? [], [intro?.images]);
+  const hasIntro = Boolean(intro?.enabled && images.length);
+  const canStart = hasIntro || isPageReady;
+
+  const advanceIntro = useCallback(() => {
+    if (activeImage < images.length - 1) {
+      setActiveImage((current) => current === activeImage ? current + 1 : current);
+    } else {
+      setPhase((current) => current === "images" ? "waiting" : current);
+    }
+  }, [activeImage, images.length]);
+
+  const skipVideo = useCallback(() => {
+    const image = images[activeImage];
+    if (!image) return;
+    setFailedImages((current) => current.includes(image.id) ? current : [...current, image.id]);
+    advanceIntro();
+  }, [activeImage, advanceIntro, images]);
 
   useEffect(() => {
     startedAtRef.current = performance.now();
@@ -156,11 +209,11 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
     if (
       navigationQuery.isLoading ||
       (!navigationQuery.data && !navigationQuery.isError) ||
+      !canStart ||
       hasStarted.current
     ) return;
 
-    if (!intro?.enabled || images.length === 0) {
-      if (!isPageReady) return;
+    if (!hasIntro) {
       hasStarted.current = true;
       const elapsed = startedAtRef.current !== null ? performance.now() - startedAtRef.current : 0;
       const remaining = Math.max(0, minLogoDisplayMs - elapsed);
@@ -193,21 +246,15 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
       hasStarted.current = false;
       window.clearTimeout(logoTimer);
     };
-  }, [images, intro?.enabled, isPageReady, navigationQuery.data, navigationQuery.isError, navigationQuery.isLoading]);
+  }, [canStart, hasIntro, images, navigationQuery.data, navigationQuery.isError, navigationQuery.isLoading]);
 
   useEffect(() => {
     if (phase !== "images" || !images[activeImage]) return;
     const durationMs = Math.min(30, Math.max(1, images[activeImage].durationSeconds)) * 1000;
-    const timer = window.setTimeout(() => {
-      if (activeImage < images.length - 1) {
-        setActiveImage((current) => current + 1);
-      } else {
-        setPhase("waiting");
-      }
-    }, durationMs);
+    const timer = window.setTimeout(advanceIntro, durationMs);
 
     return () => window.clearTimeout(timer);
-  }, [activeImage, images, phase]);
+  }, [activeImage, advanceIntro, images, phase]);
 
   useEffect(() => {
     if (phase !== "waiting" || !isPageReady) return;
@@ -248,7 +295,7 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
     >
       {showImages
         ? images.map((image, index) =>
-          index <= activeImage ? (
+          index <= activeImage && !failedImages.includes(image.id) ? (
             <div
               className="absolute inset-0"
               key={image.id}
@@ -256,6 +303,7 @@ export function LandingIntro({ onComplete }: { onComplete?: () => void }) {
             >
               <RevealingIntroImage
                 mobileUrl={image.mobileUrl}
+                onVideoFailure={index === activeImage && phase === "images" ? skipVideo : undefined}
                 paused={index < activeImage || phase === "waiting" || phase === "exiting"}
                 priority={index === 0}
                 url={image.url}

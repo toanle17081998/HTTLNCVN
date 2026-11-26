@@ -710,7 +710,7 @@ export class MediaService {
     const binaryPath = ffmpegPath;
     await chmod(binaryPath, 0o755).catch(() => undefined);
 
-    const filename = `${randomUUID()}.webm`;
+    const filename = `${randomUUID()}.mp4`;
     const outputPath = resolve(videoDirectory, filename);
 
     try {
@@ -722,14 +722,15 @@ export class MediaService {
             '-map_metadata', '-1',
             '-vf', 'scale=min(1920\\,iw):min(1080\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2',
             '-pix_fmt', 'yuv420p',
-            '-c:v', 'libvpx-vp9',
-            '-crf', '32',
-            '-b:v', '0',
-            '-deadline', 'good',
-            '-cpu-used', '4',
+            '-c:v', 'libx264',
+            '-preset', 'medium',
+            '-crf', '26',
+            '-profile:v', 'main',
+            '-level', '4.0',
             '-threads', '2',
-            '-c:a', 'libopus',
-            '-b:a', '96k',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-movflags', '+faststart',
             '-y', outputPath,
           ],
           { stdio: ['ignore', 'ignore', 'pipe'] },
@@ -750,7 +751,7 @@ export class MediaService {
       return {
         filename,
         folder,
-        mimeType: 'video/webm',
+        mimeType: 'video/mp4',
         originalName: file.originalname,
         size: (await stat(outputPath)).size,
         url: `/uploads/videos/${filename}`,

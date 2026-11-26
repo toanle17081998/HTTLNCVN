@@ -106,7 +106,7 @@ Matches are allowed only inside the corresponding shared primitive implementatio
 - Import feature-specific styles inside the feature entry point so public routes do not download editor or admin CSS.
 - Give generic link copy such as “Read more” a destination-specific accessible name.
 - Never place focusable controls inside an `aria-hidden` subtree; use `inert` when hiding interactive regions.
-- Send user media through `/api/media/upload`; do not embed Base64 media in persisted content. The API normalizes images to WebP (maximum 1920×1920) and videos to WebM (maximum 1080p), and returns the stored URL.
+- Send user media through `/api/media/upload`; do not embed Base64 media in persisted content. The API normalizes images to WebP (maximum 1920×1920) and videos to MP4 (maximum 1080p), and returns the stored URL.
 # Layer boundaries
 
 Frontend code follows `Page -> Component -> Hook -> API Client`. Use `mappers/` for response-to-view-model conversion and `domain/` only for justified business rules. UI code must not import `services/` directly. See [layering-architecture.md](./layering-architecture.md).
