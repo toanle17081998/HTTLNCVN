@@ -257,6 +257,13 @@ textarea,
   -webkit-user-select: text;
 }
 
+/* Apply text-base to native fields and keep per-field utilities from shrinking it. */
+input:is(:not([type]), [type="text"], [type="search"], [type="email"], [type="password"], [type="tel"], [type="url"], [type="number"], [type="date"], [type="datetime-local"], [type="month"], [type="time"], [type="week"]),
+select,
+textarea {
+  font-size: var(--text-base, 1rem);
+}
+
 button,
 a,
 select,

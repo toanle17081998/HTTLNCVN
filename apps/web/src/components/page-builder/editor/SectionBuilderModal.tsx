@@ -4,6 +4,7 @@ import { Text, Title, cn } from "@/components/ui";
 import { useState, type ReactElement, type ReactNode } from "react";
 import { Element, useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
+import type { Locale } from "@/lib/i18n";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ContentEditContext, SectionInsertContext } from "../shared/NodeFrame";
 import { getButtonVariantClass } from "../shared/helpers";
@@ -26,29 +27,14 @@ import { ButtonBlock } from "../blocks/basic/ButtonBlock";
 import { ImageBlock } from "../blocks/basic/ImageBlock";
 import { IconBoxBlock } from "../blocks/basic/IconBoxBlock";
 import { ContentEditorDialog } from "./ContentEditorDialog";
+import { localizeSectionExampleProps, sectionExampleCopy } from "./sectionExampleCopy";
+import { sectionCategories, sectionCategoryKeys, sectionPresetNameKey, sectionPresets, type SectionCategory, type SectionPreset } from "./sectionPresets";
 import type { FeedCardStyle } from "../shared/types";
-
-export type SectionCategory = "Hero" | "Paragraph" | "Feature list" | "CTA" | "Gallery";
-export type SectionPreset = { category: SectionCategory; id: string; name: string; variant: number };
-
-export const sectionVariantNames: Record<SectionCategory, string[]> = {
-  Hero: ["Split image slider", "Centered welcome", "Split feature image"],
-  Paragraph: ["1 Column", "2 Columns", "3 Columns", "Rich Text / Markdown"],
-  "Feature list": ["Zig-zag cards", "Image card grid", "Tabbed ministries", "Community testimonials", "Centered icon grid", "Core values orbit"],
-  CTA: ["Centered invitation", "Stay connected", "Split action", "Image-overlay action", "Accent invitation"],
-  Gallery: ["Endless image loop", "Editorial feed", "Minimal feed", "Split-card feed", "Featured feed"],
-};
-
-export const sectionPresets: SectionPreset[] = (Object.entries(sectionVariantNames) as Array<[SectionCategory, string[]]>).flatMap(([category, names]) => names.map((name, index) => ({
-  category,
-  id: `${category.toLowerCase().replace(" ", "-")}-${index + 1}`,
-  name,
-  variant: index + 1,
-})));
 
 const sampleImage = "https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=1400&q=85";
 
-export function createSectionPreset(preset: SectionPreset): ReactElement {
+export function createSectionPreset(preset: SectionPreset, contentLocale: Locale): ReactElement {
+  const copy = (text: string) => sectionExampleCopy(contentLocale, text);
   const centered = preset.variant % 2 === 1;
 
   if (preset.category === "Hero") {
@@ -56,12 +42,12 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
       return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
         <Element canvas is={VerticalStackBlock} justifyContent="space-between" gap="var(--section-space-md)" minHeight="var(--section-hero-slider-height)" mobileAlignItems="center">
           <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
-            <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Discover a place made for you" weight="var(--section-weight-bold)" />
-            <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Find meaningful community, grow in faith, and take your next step with us." />
+            <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text={copy("Discover a place made for you")} weight="var(--section-weight-bold)" />
+            <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text={copy("Find meaningful community, grow in faith, and take your next step with us.")} />
           </Element>
           <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" mobileAlignItems="center">
-            <ButtonBlock href="/contact" label="Plan a visit" mobileAlign="center" />
-            <ButtonBlock href="/about" label="Learn more" mobileAlign="center" variant="ghost" />
+            <ButtonBlock href="/contact" label={copy("Plan a visit")} mobileAlign="center" />
+            <ButtonBlock href="/about" label={copy("Learn more")} mobileAlign="center" variant="ghost" />
           </Element>
         </Element>
         <HeroImageSliderBlock />
@@ -71,28 +57,28 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
     if (preset.variant === 2) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} gap="var(--section-space-lg)" minHeight="var(--section-hero-min-height)" padding="var(--section-hero-padding)">
         <Element canvas is={VerticalStackBlock} alignItems="center" gap="var(--section-space-md)" justifyContent="center" mobileAlignItems="center">
-          <TextBlock align="center" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="Recovery and support" weight="var(--section-weight-bold)" />
-          <TextBlock align="center" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="People and resources for every season of life." />
+          <TextBlock align="center" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text={copy("Recovery and support")} weight="var(--section-weight-bold)" />
+          <TextBlock align="center" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text={copy("People and resources for every season of life.")} />
           <Element canvas is={RowBlock} alignItems="center" gap="var(--section-space-sm)" justifyContent="center" mobileAlignItems="center">
-            <ButtonBlock href="/contact" label="Get resources" mobileAlign="center" />
-            <ButtonBlock href="/about" label="Stay connected" mobileAlign="center" variant="secondary" />
+            <ButtonBlock href="/contact" label={copy("Get resources")} mobileAlign="center" />
+            <ButtonBlock href="/about" label={copy("Stay connected")} mobileAlign="center" variant="secondary" />
           </Element>
         </Element>
-        <ImageBlock alt="Community gathering" borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={sampleImage} />
+        <ImageBlock alt={copy("Community gathering")} borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={sampleImage} />
       </Element>;
     }
 
     return <Element canvas is={SectionBlock} sectionName={preset.name} columns={2} gap="var(--section-space-lg)" padding="var(--section-hero-padding)">
       <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" justifyContent="space-between" minHeight="var(--section-media-height)" mobileAlignItems="center">
         <Element canvas is={VerticalStackBlock} gap="var(--section-space-md)" mobileAlignItems="center">
-          <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text="A church for the whole family" weight="var(--section-weight-bold)" />
-          <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text="Experience inspiring worship, biblical teaching, and meaningful connections for people of all ages and backgrounds." />
+          <TextBlock align="left" color="var(--page-builder-hero-title)" lineHeight="var(--section-title-line-height)" mobileAlign="center" size="var(--section-title-size)" tag="h1" text={copy("A church for the whole family")} weight="var(--section-weight-bold)" />
+          <TextBlock align="left" color="var(--text-secondary)" mobileAlign="center" size="var(--section-body-size)" text={copy("Experience inspiring worship, biblical teaching, and meaningful connections for people of all ages and backgrounds.")} />
         </Element>
         <Element canvas is={RowBlock} gap="var(--section-space-sm)" mobileAlignItems="center">
-          <ButtonBlock href="/contact" label="Plan a visit" mobileAlign="center" />
+          <ButtonBlock href="/contact" label={copy("Plan a visit")} mobileAlign="center" />
         </Element>
       </Element>
-      <ImageBlock alt="Church community gathering" borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={defaultHeroSliderImages[0]} />
+      <ImageBlock alt={copy("Church community gathering")} borderRadius="var(--section-radius-card)" height="var(--section-media-height)" kind="image" url={defaultHeroSliderImages[0]} />
     </Element>;
   }
 
@@ -116,7 +102,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
           >
             <RichTextBlock
               align="left"
-              content={"## Section Title\n\nWrite **rich text** or paste *Markdown* content here.\n\n- Bullet point one\n- Bullet point two"}
+              content={copy("## Section Title\n\nWrite **rich text** or paste *Markdown* content here.\n\n- Bullet point one\n- Bullet point two")}
               removable
             />
           </Element>
@@ -153,7 +139,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
               removable
               size={headingSize}
               tag={headingTag}
-              text={columnCount === 1 ? "Section heading" : `Column ${index + 1} heading`}
+              text={columnCount === 1 ? copy("Section heading") : copy("Column {number} heading").replace("{number}", String(index + 1))}
               weight="var(--section-weight-bold)"
             />
             <TextBlock
@@ -163,7 +149,7 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
               removable
               size="var(--section-body-size)"
               tag="p"
-              text="Write your paragraph content here. Use the buttons below to add more headers or paragraphs vertically."
+              text={copy("Write your paragraph content here. Use the buttons below to add more headers or paragraphs vertically.")}
               weight="400"
             />
           </Element>
@@ -175,91 +161,92 @@ export function createSectionPreset(preset: SectionPreset): ReactElement {
   if (preset.category === "Feature list") {
     if (preset.variant === 1) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <Element canvas is={FeatureZigzagListBlock}>
-          <FeatureZigzagCardBlock description="Create a welcoming digital home that helps people connect and take their next step." imageAlt="People gathering together" imageUrl={defaultHeroSliderImages[2]} title="A place to belong" />
-          <FeatureZigzagCardBlock description="Share resources, events, and opportunities with your community wherever they are." imageAlt="Community resources" imageUrl={defaultHeroSliderImages[1]} title="Stay connected" />
+        <Element canvas is={FeatureZigzagListBlock} {...localizeSectionExampleProps(FeatureZigzagListBlock.craft.props, contentLocale)}>
+          <FeatureZigzagCardBlock buttonLabel={copy("Learn more")} description={copy("Create a welcoming digital home that helps people connect and take their next step.")} imageAlt={copy("People gathering together")} imageUrl={defaultHeroSliderImages[2]} title={copy("A place to belong")} />
+          <FeatureZigzagCardBlock buttonLabel={copy("Learn more")} description={copy("Share resources, events, and opportunities with your community wherever they are.")} imageAlt={copy("Community resources")} imageUrl={defaultHeroSliderImages[1]} title={copy("Stay connected")} />
         </Element>
       </Element>;
     }
 
     if (preset.variant === 2) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <Element canvas is={FeatureGridListBlock}>
-          <FeatureZigzagCardBlock description="Discover engaging programs and caring environments where children learn and grow." imageAlt="Kids ministry" imageUrl={defaultHeroSliderImages[0]} layout="vertical" title="Kids & Family" />
-          <FeatureZigzagCardBlock description="Connect with peers, build meaningful friendships, and navigate life together." imageAlt="Youth gathering" imageUrl={defaultHeroSliderImages[1]} layout="vertical" title="Youth & Students" />
-          <FeatureZigzagCardBlock description="Find support, encouragement, and practical care for every stage of your journey." imageAlt="Community support" imageUrl={defaultHeroSliderImages[2]} layout="vertical" title="Care & Support" />
+        <Element canvas is={FeatureGridListBlock} {...localizeSectionExampleProps(FeatureGridListBlock.craft.props, contentLocale)}>
+          <FeatureZigzagCardBlock buttonLabel={copy("Learn more")} description={copy("Discover engaging programs and caring environments where children learn and grow.")} imageAlt={copy("Kids ministry")} imageUrl={defaultHeroSliderImages[0]} layout="vertical" title={copy("Kids & Family")} />
+          <FeatureZigzagCardBlock buttonLabel={copy("Learn more")} description={copy("Connect with peers, build meaningful friendships, and navigate life together.")} imageAlt={copy("Youth gathering")} imageUrl={defaultHeroSliderImages[1]} layout="vertical" title={copy("Youth & Students")} />
+          <FeatureZigzagCardBlock buttonLabel={copy("Learn more")} description={copy("Find support, encouragement, and practical care for every stage of your journey.")} imageAlt={copy("Community support")} imageUrl={defaultHeroSliderImages[2]} layout="vertical" title={copy("Care & Support")} />
         </Element>
       </Element>;
     }
 
     if (preset.variant === 3) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <FeatureTabbedListBlock />
+        <FeatureTabbedListBlock {...localizeSectionExampleProps(FeatureTabbedListBlock.craft.props, contentLocale)} />
       </Element>;
     }
 
     if (preset.variant === 4) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <FeatureTestimonialListBlock />
+        <FeatureTestimonialListBlock {...localizeSectionExampleProps(FeatureTestimonialListBlock.craft.props, contentLocale)} />
       </Element>;
     }
 
     if (preset.variant === 5) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <Element canvas is={FeatureIconListBlock}>
-          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="handHeart" padding="var(--section-space-none)" removable title="Compassion" />
-          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="users" padding="var(--section-space-none)" removable title="Community" />
-          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="shield" padding="var(--section-space-none)" removable title="Discipleship" />
+        <Element canvas is={FeatureIconListBlock} {...localizeSectionExampleProps(FeatureIconListBlock.craft.props, contentLocale)}>
+          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="handHeart" padding="var(--section-space-none)" removable title={copy("Compassion")} />
+          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="users" padding="var(--section-space-none)" removable title={copy("Community")} />
+          <IconBoxBlock alignItems="center" background="transparent" borderWidth="var(--section-space-none)" icon="shield" padding="var(--section-space-none)" removable title={copy("Discipleship")} />
         </Element>
       </Element>;
     }
 
     return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-      <FeatureOrbitListBlock />
+      <FeatureOrbitListBlock {...localizeSectionExampleProps(FeatureOrbitListBlock.craft.props, contentLocale)} />
     </Element>;
   }
 
   if (preset.category === "CTA") {
     if (preset.variant === 1) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
-        <CtaInvitationBlock />
+        <CtaInvitationBlock {...localizeSectionExampleProps(CtaInvitationBlock.craft.props, contentLocale)} />
       </Element>;
     }
 
     if (preset.variant === 2) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
-        <CtaSimpleBlock layout="split" title="Stay connected with our community" />
+        <CtaSimpleBlock {...localizeSectionExampleProps(CtaSimpleBlock.craft.props, contentLocale)} layout="split" title={copy("Stay connected with our community")} />
       </Element>;
     }
 
     if (preset.variant === 3) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
-        <CtaSimpleBlock layout="center" title="Ready to take your next step?" />
+        <CtaSimpleBlock {...localizeSectionExampleProps(CtaSimpleBlock.craft.props, contentLocale)} layout="center" title={copy("Ready to take your next step?")} />
       </Element>;
     }
 
     if (preset.variant === 4) {
       return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--brand-primary)" backgroundImage={sampleImage} padding="var(--section-space-none)">
-        <CtaSimpleBlock background="rgba(0,0,0,0.6)" layout="center" title="Experience worship this Sunday" />
+        <CtaSimpleBlock {...localizeSectionExampleProps(CtaSimpleBlock.craft.props, contentLocale)} background="rgba(0,0,0,0.6)" layout="center" title={copy("Experience worship this Sunday")} />
       </Element>;
     }
 
     return <Element canvas is={SectionBlock} sectionName={preset.name} background="var(--page-builder-cta-bg)" padding="var(--section-space-none)">
-      <CtaSimpleBlock background="var(--page-builder-cta-bg)" layout="split" title="Ready to take your next step?" />
+      <CtaSimpleBlock {...localizeSectionExampleProps(CtaSimpleBlock.craft.props, contentLocale)} background="var(--page-builder-cta-bg)" layout="split" title={copy("Ready to take your next step?")} />
     </Element>;
   }
 
   if (preset.category === "Gallery") {
     if (preset.variant === 1) {
+      const { images, subtitle, title } = GalleryMarqueeBlock.craft.props;
       return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-        <GalleryMarqueeBlock />
+        <GalleryMarqueeBlock {...localizeSectionExampleProps({ images, subtitle, title }, contentLocale)} />
       </Element>;
     }
     const cardStyles: FeedCardStyle[] = ["cinematic", "editorial", "minimal", "split", "cinematic"];
     return <Element canvas is={SectionBlock} sectionName={preset.name} padding="var(--section-space-xl) var(--section-gutter)">
-      <TextBlock align={centered ? "center" : "left"} size="var(--section-heading-size)" tag="h2" text="Explore our latest content" weight="var(--section-weight-bold)" />
-      <TextBlock align={centered ? "center" : "left"} color="var(--text-secondary)" text="Choose articles, courses, or events to feature in this gallery." />
-      <FeedCarouselBlock cardStyle={cardStyles[preset.variant - 1]} feedType="articles" itemsPerScreen={preset.variant === 4 ? 2 : preset.variant === 5 ? 1 : 3} selectedItemIds={[]} slideWidth={preset.variant === 5 ? "var(--section-gallery-feature-width)" : "var(--section-gallery-standard-width)"} />
+      <TextBlock align={centered ? "center" : "left"} size="var(--section-heading-size)" tag="h2" text={copy("Explore our latest content")} weight="var(--section-weight-bold)" />
+      <TextBlock align={centered ? "center" : "left"} color="var(--text-secondary)" text={copy("Choose articles, courses, or events to feature in this gallery.")} />
+      <FeedCarouselBlock cardStyle={cardStyles[preset.variant - 1]} emptyMessage={copy(FeedCarouselBlock.craft.props.emptyMessage)} feedType="articles" itemsPerScreen={preset.variant === 4 ? 2 : preset.variant === 5 ? 1 : 3} selectedItemIds={[]} slideWidth={preset.variant === 5 ? "var(--section-gallery-feature-width)" : "var(--section-gallery-standard-width)"} />
     </Element>;
   }
 
@@ -272,18 +259,21 @@ export function createPresetNodeTree(element: ReactElement, query: any) {
   return query.parseReactElement(element).toNodeTree();
 }
 
-export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
+export function SectionPresetPreview({ contentLocale, preset }: { contentLocale: Locale; preset: SectionPreset }) {
+  const { t } = useTranslation();
+  const copy = (text: string) => sectionExampleCopy(contentLocale, text);
+
   if (preset.category === "Hero") {
     if (preset.variant === 1) {
       return (
         <div className="grid min-h-72 grid-cols-2 items-center gap-6 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid gap-3">
-            <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
-            <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">Discover a place made for you</span>
-            <span className="text-xs text-[var(--text-secondary)]">Find meaningful community, grow in faith, and take your next step with us.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{copy("Discover a place made for you")}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{copy("Find meaningful community, grow in faith, and take your next step with us.")}</span>
             <div className="flex gap-2 pt-2">
-              <span className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">Plan a visit</span>
-              <span className="rounded-lg border border-[var(--brand-primary)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--brand-primary)]">Learn more</span>
+              <span className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">{copy("Plan a visit")}</span>
+              <span className="rounded-lg border border-[var(--brand-primary)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--brand-primary)]">{copy("Learn more")}</span>
             </div>
           </div>
           <div className="grid grid-cols-3 items-center gap-2 h-44">
@@ -299,12 +289,12 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-2 text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
-            <span className="text-2xl font-bold text-[var(--text-primary)]">Recovery and support</span>
-            <span className="max-w-md text-xs text-[var(--text-secondary)]">People and resources for every season of life.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-bold text-[var(--text-primary)]">{copy("Recovery and support")}</span>
+            <span className="max-w-md text-xs text-[var(--text-secondary)]">{copy("People and resources for every season of life.")}</span>
             <div className="flex gap-2 pt-1">
-              <span className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">Get resources</span>
-              <span className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)]">Stay connected</span>
+              <span className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">{copy("Get resources")}</span>
+              <span className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)]">{copy("Stay connected")}</span>
             </div>
           </div>
           <div className="h-24 w-full overflow-hidden rounded-lg bg-cover bg-center border border-[var(--border-subtle)]" style={{ backgroundImage: `url(${sampleImage})` }} />
@@ -315,11 +305,11 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 grid-cols-2 items-center gap-6 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="grid gap-3">
-          <Text as="span" tone="gold" variant="eyebrow">Hero</Text>
-          <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">A church for the whole family</span>
-          <span className="text-xs text-[var(--text-secondary)]">Experience inspiring worship, biblical teaching, and meaningful connections.</span>
+          <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+          <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">{copy("A church for the whole family")}</span>
+          <span className="text-xs text-[var(--text-secondary)]">{copy("Experience inspiring worship, biblical teaching, and meaningful connections.")}</span>
           <div className="pt-2">
-            <span className="inline-block rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">Plan a visit</span>
+            <span className="inline-block rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-inverse)]">{copy("Plan a visit")}</span>
           </div>
         </div>
         <div className="h-44 w-full overflow-hidden rounded-xl bg-cover bg-center border border-[var(--border-subtle)] shadow-sm" style={{ backgroundImage: `url(${defaultHeroSliderImages[0]})` }} />
@@ -331,15 +321,15 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     if (preset.variant === 4) {
       return (
         <div className="grid min-h-72 content-center gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
-          <Text as="span" tone="gold" variant="eyebrow">Rich Text / Markdown</Text>
+          <Text as="span" tone="gold" variant="eyebrow">{t("pageBuilder.preset.paragraph-4")}</Text>
           <div className="grid gap-2">
-            <span className="text-base font-bold text-[var(--text-primary)]">Section Title</span>
+            <span className="text-base font-bold text-[var(--text-primary)]">{copy("Section Title")}</span>
             <span className="text-xs leading-5 text-[var(--text-secondary)]">
-              Supports Markdown headings, lists, links, quotes, tables, and rich HTML with a built-in toolbar and live preview.
+              {copy("Supports Markdown headings, lists, links, quotes, tables, and rich HTML with a built-in toolbar and live preview.")}
             </span>
             <ul className="list-disc space-y-0.5 pl-4 text-xs text-[var(--text-secondary)]">
-              <li>Bullet point one</li>
-              <li>Bullet point two</li>
+              <li>{copy("Bullet point one")}</li>
+              <li>{copy("Bullet point two")}</li>
             </ul>
           </div>
         </div>
@@ -349,7 +339,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     const columnCount = Math.min(3, Math.max(1, preset.variant));
     return (
       <div className="grid min-h-72 content-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
-        <Text as="span" tone="gold" variant="eyebrow">Paragraph</Text>
+        <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
         <div
           className={cn(
             "grid gap-4",
@@ -359,15 +349,15 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
           {Array.from({ length: columnCount }).map((_, index) => (
             <div className={cn("grid content-start gap-2", index > 0 && "border-l border-[var(--border-subtle)] pl-4")} key={index}>
               <span className="text-sm font-bold text-[var(--text-primary)]">
-                {columnCount === 1 ? "Section heading" : `Column ${index + 1}`}
+                {columnCount === 1 ? copy("Section heading") : copy("Column {number}").replace("{number}", String(index + 1))}
               </span>
               <span className="text-xs leading-5 text-[var(--text-secondary)]">
-                Clean vertical text column with editable headers and paragraphs.
+                {copy("Clean vertical text column with editable headers and paragraphs.")}
               </span>
               <div className="flex flex-wrap gap-1.5 pt-1">
-                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Header</span>
-                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Paragraph</span>
-                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">+ Rich Text / Markdown</span>
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">{copy("+ Header")}</span>
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">{copy("+ Paragraph")}</span>
+                <span className="rounded border border-dashed border-[var(--border-strong)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]">{copy("+ Rich Text / Markdown")}</span>
               </div>
             </div>
           ))}
@@ -381,23 +371,23 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-            <Title as="span" variant="card">Ways to grow together</Title>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <Title as="span" variant="card">{copy("Ways to grow together")}</Title>
           </div>
           <div className="grid gap-2">
             <div className="grid grid-cols-[0.8fr_1.2fr] items-center gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2.5">
               <div className="h-16 w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${defaultHeroSliderImages[2]})` }} />
               <div className="grid gap-1">
-                <span className="text-xs font-bold text-[var(--text-primary)]">A place to belong</span>
-                <span className="line-clamp-2 text-[10px] leading-3 text-[var(--text-secondary)]">Create a welcoming home that helps people connect.</span>
-                <span className="text-[10px] font-semibold text-[var(--brand-primary)]">Learn more →</span>
+                <span className="text-xs font-bold text-[var(--text-primary)]">{copy("A place to belong")}</span>
+                <span className="line-clamp-2 text-[10px] leading-3 text-[var(--text-secondary)]">{copy("Create a welcoming home that helps people connect.")}</span>
+                <span className="text-[10px] font-semibold text-[var(--brand-primary)]">{copy("Learn more →")}</span>
               </div>
             </div>
             <div className="grid grid-cols-[1.2fr_0.8fr] items-center gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2.5">
               <div className="grid gap-1">
-                <span className="text-xs font-bold text-[var(--text-primary)]">Stay connected</span>
-                <span className="line-clamp-2 text-[10px] leading-3 text-[var(--text-secondary)]">Share resources, events, and opportunities.</span>
-                <span className="text-[10px] font-semibold text-[var(--brand-primary)]">Learn more →</span>
+                <span className="text-xs font-bold text-[var(--text-primary)]">{copy("Stay connected")}</span>
+                <span className="line-clamp-2 text-[10px] leading-3 text-[var(--text-secondary)]">{copy("Share resources, events, and opportunities.")}</span>
+                <span className="text-[10px] font-semibold text-[var(--brand-primary)]">{copy("Learn more →")}</span>
               </div>
               <div className="h-16 w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${defaultHeroSliderImages[1]})` }} />
             </div>
@@ -410,14 +400,14 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid justify-items-center text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-            <Title as="span" variant="card">Everyone has a next step</Title>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <Title as="span" variant="card">{copy("Everyone has a next step")}</Title>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { img: defaultHeroSliderImages[0], title: "Kids & Family" },
-              { img: defaultHeroSliderImages[1], title: "Youth & Students" },
-              { img: defaultHeroSliderImages[2], title: "Care & Support" },
+              { img: defaultHeroSliderImages[0], title: copy("Kids & Family") },
+              { img: defaultHeroSliderImages[1], title: copy("Youth & Students") },
+              { img: defaultHeroSliderImages[2], title: copy("Care & Support") },
             ].map((item, index) => (
               <div className="flex flex-col overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-sm" key={index}>
                 <div className="h-16 w-full bg-cover bg-center" style={{ backgroundImage: `url(${item.img})` }} />
@@ -435,12 +425,12 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-            <Title as="span" variant="card">Find your place to grow</Title>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <Title as="span" variant="card">{copy("Find your place to grow")}</Title>
           </div>
           <div className="grid grid-cols-2 items-center gap-3">
             <div className="grid gap-1">
-              {["Kids and families", "Groups and community", "Care and support"].map((title, index) => (
+              {[copy("Kids and families"), copy("Groups and community"), copy("Care and support")].map((title, index) => (
                 <div className={cn("rounded-md px-3 py-1.5 text-xs font-semibold", index === 0 ? "bg-[var(--bg-card)] text-[var(--brand-primary)]" : "text-[var(--text-secondary)]")} key={index}>
                   {title}
                 </div>
@@ -456,22 +446,22 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid gap-0.5">
-            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-            <Title as="span" variant="card">Lives changed through community</Title>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <Title as="span" variant="card">{copy("Lives changed through community")}</Title>
           </div>
           <div className="rounded-lg border border-[var(--border-subtle)] p-3">
-            <blockquote className="text-xs italic text-[var(--text-primary)]">“This church helped our family find real community and grow closer to Jesus together.”</blockquote>
+            <blockquote className="text-xs italic text-[var(--text-primary)]">{copy("“This church helped our family find real community and grow closer to Jesus together.”")}</blockquote>
             <div className="mt-2 flex items-center justify-between text-[11px]">
               <div>
                 <strong className="block text-[var(--text-primary)]">Jordan Lee</strong>
-                <span className="text-[var(--text-secondary)]">Community member</span>
+                <span className="text-[var(--text-secondary)]">{copy("Community member")}</span>
               </div>
-              <span className="rounded bg-[var(--brand-soft)] px-2 py-0.5 font-bold text-[var(--brand-primary)]">Fellowship family</span>
+              <span className="rounded bg-[var(--brand-soft)] px-2 py-0.5 font-bold text-[var(--brand-primary)]">{copy("Fellowship family")}</span>
             </div>
           </div>
           <div className="flex border-t border-[var(--border-subtle)] pt-1 text-[11px] text-[var(--text-secondary)] gap-3">
-            <span className="font-bold text-[var(--brand-primary)]">Fellowship family</span>
-            <span>Local outreach</span>
+            <span className="font-bold text-[var(--brand-primary)]">{copy("Fellowship family")}</span>
+            <span>{copy("Local outreach")}</span>
           </div>
         </div>
       );
@@ -481,14 +471,14 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
           <div className="grid justify-items-center text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-            <Title as="span" variant="card">Serve in a fellowship ministry</Title>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <Title as="span" variant="card">{copy("Serve in a fellowship ministry")}</Title>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
-              { icon: "❤️", title: "Compassion" },
-              { icon: "👥", title: "Community" },
-              { icon: "🛡️", title: "Discipleship" },
+              { icon: "❤️", title: copy("Compassion") },
+              { icon: "👥", title: copy("Community") },
+              { icon: "🛡️", title: copy("Discipleship") },
             ].map((item, index) => (
               <div className="grid justify-items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] p-3" key={index}>
                 <span className="text-xl">{item.icon}</span>
@@ -503,20 +493,20 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 content-between gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
         <div className="grid justify-items-center text-center">
-          <Text as="span" tone="gold" variant="eyebrow">Feature list</Text>
-          <Title as="span" variant="card">Values that shape our church</Title>
+          <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+          <Title as="span" variant="card">{copy("Values that shape our church")}</Title>
         </div>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="grid gap-2 text-center">
-            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">Faith first</span></div>
-            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">Serve with love</span></div>
+            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">{copy("Faith first")}</span></div>
+            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">{copy("Serve with love")}</span></div>
           </div>
           <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[var(--brand-secondary)] to-[var(--brand-primary)] flex items-center justify-center text-white font-bold text-xs shadow-md">
-            Values
+            {copy("Values")}
           </div>
           <div className="grid gap-2 text-center">
-            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">Grow together</span></div>
-            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">Live generously</span></div>
+            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">{copy("Grow together")}</span></div>
+            <div className="rounded border border-[var(--border-subtle)] p-1.5"><span className="text-xs font-bold">{copy("Live generously")}</span></div>
           </div>
         </div>
       </div>
@@ -525,10 +515,10 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
 
   if (preset.category === "CTA" && preset.variant === 1) {
     return <div className="grid min-h-56 content-between justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
-      <span className="text-3xl font-semibold">You belong here</span>
-      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Join us this Sunday in person or online. We would love to welcome you and your family.</span>
+      <span className="text-3xl font-semibold">{copy("You belong here")}</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">{copy("Join us this Sunday in person or online. We would love to welcome you and your family.")}</span>
       <div className="grid w-full grid-cols-3 gap-2">
-        {[{ time: "08:00 AM", title: "Early Gathering" }, { time: "10:00 AM", title: "Main Service" }, { time: "06:00 PM", title: "Youth" }].map((item, index) => <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-left" key={index}><span className="block text-[10px] font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.time}</span><span className="block text-xs font-semibold text-[var(--text-inverse)]">{item.title}</span></div>)}
+        {[{ time: "08:00 AM", title: copy("Early Gathering") }, { time: "10:00 AM", title: copy("Main Service") }, { time: "06:00 PM", title: copy("Youth") }].map((item, index) => <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-left" key={index}><span className="block text-[10px] font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.time}</span><span className="block text-xs font-semibold text-[var(--text-inverse)]">{item.title}</span></div>)}
       </div>
       <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
@@ -536,16 +526,16 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
 
   if (preset.category === "CTA" && preset.variant === 2) {
     return <div className="grid min-h-56 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
-      <span className="text-3xl font-semibold">Stay connected</span>
-      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Receive church news, stories, and upcoming gathering details.</span>
+      <span className="text-3xl font-semibold">{copy("Stay connected")}</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">{copy("Receive church news, stories, and upcoming gathering details.")}</span>
       <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
   }
 
   if (preset.category === "CTA") {
     return <div className="grid min-h-56 content-center justify-items-center gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--page-builder-cta-bg)] p-6 text-center text-[var(--page-builder-cta-text)]">
-      <span className="text-3xl font-semibold">{preset.name}</span>
-      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">Editable title, subtitle, and action button.</span>
+      <span className="text-3xl font-semibold">{t(sectionPresetNameKey(preset))}</span>
+      <span className="max-w-md text-sm text-[var(--page-builder-cta-muted)]">{copy("Editable title, subtitle, and action button.")}</span>
       <span className="h-9 w-32 rounded-lg bg-[var(--page-builder-cta-button-bg)]" />
     </div>;
   }
@@ -555,9 +545,9 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
-            <span className="text-2xl font-semibold text-[var(--text-primary)]">Endless image loop</span>
-            <span className="text-xs text-[var(--text-secondary)]">Continuous horizontal scrolling photo marquee.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-semibold text-[var(--text-primary)]">{copy("Endless image loop")}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{copy("Continuous horizontal scrolling photo marquee.")}</span>
           </div>
           <div className="flex gap-2 overflow-hidden py-1">
             {defaultGalleryImages.slice(0, 4).map((img, index) => (
@@ -576,15 +566,15 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
-            <span className="text-2xl font-semibold text-[var(--text-primary)]">Editorial feed</span>
-            <span className="text-xs text-[var(--text-secondary)]">Equal-height multi-column cards with top cover images and structured typography.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-semibold text-[var(--text-primary)]">{copy("Editorial feed")}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{copy("Equal-height multi-column cards with top cover images and structured typography.")}</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { cat: "ARTICLE", desc: "Discover how we serve our neighborhood through weekly programs.", title: "Faith in action" },
-              { cat: "SERMON", desc: "Walking through timeless scripture to guide our modern journeys.", title: "Living with purpose" },
-              { cat: "COMMUNITY", desc: "Connect with small groups gathering throughout the week.", title: "Life together" },
+              { cat: copy("ARTICLE"), desc: copy("Discover how we serve our neighborhood through weekly programs."), title: copy("Faith in action") },
+              { cat: copy("SERMON"), desc: copy("Walking through timeless scripture to guide our modern journeys."), title: copy("Living with purpose") },
+              { cat: copy("COMMUNITY"), desc: copy("Connect with small groups gathering throughout the week."), title: copy("Life together") },
             ].map((item, index) => (
               <div className="flex flex-col overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-sm" key={index}>
                 <div
@@ -607,15 +597,15 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
-            <span className="text-2xl font-semibold text-[var(--text-primary)]">Minimal feed</span>
-            <span className="text-xs text-[var(--text-secondary)]">Clean editorial text feed with refined typography and top/bottom borders.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-semibold text-[var(--text-primary)]">{copy("Minimal feed")}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{copy("Clean editorial text feed with refined typography and top/bottom borders.")}</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { cat: "STORIES", desc: "Reflections and testimonies from our congregation.", title: "Walking in faith" },
-              { cat: "TEACHING", desc: "Key takeaways from our current Sunday sermon series.", title: "Grace upon grace" },
-              { cat: "OUTREACH", desc: "Serving our local community with hands of hope.", title: "Love in action" },
+              { cat: copy("STORIES"), desc: copy("Reflections and testimonies from our congregation."), title: copy("Walking in faith") },
+              { cat: copy("TEACHING"), desc: copy("Key takeaways from our current Sunday sermon series."), title: copy("Grace upon grace") },
+              { cat: copy("OUTREACH"), desc: copy("Serving our local community with hands of hope."), title: copy("Love in action") },
             ].map((item, index) => (
               <div className="flex flex-col justify-between border-y border-[var(--border-strong)] bg-transparent p-3" key={index}>
                 <div className="grid gap-1">
@@ -626,7 +616,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
                   <span className="text-xs font-semibold text-[var(--text-primary)]">{item.title}</span>
                   <span className="text-[11px] leading-4 text-[var(--text-secondary)]">{item.desc}</span>
                 </div>
-                <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">Read more →</span>
+                <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">{copy("Read more →")}</span>
               </div>
             ))}
           </div>
@@ -638,14 +628,14 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
       return (
         <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
           <div className="grid justify-items-center gap-1 text-center">
-            <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
-            <span className="text-2xl font-semibold text-[var(--text-primary)]">Split-card feed</span>
-            <span className="text-xs text-[var(--text-secondary)]">Horizontal dual-pane cards featuring prominent photography alongside story details.</span>
+            <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+            <span className="text-2xl font-semibold text-[var(--text-primary)]">{copy("Split-card feed")}</span>
+            <span className="text-xs text-[var(--text-secondary)]">{copy("Horizontal dual-pane cards featuring prominent photography alongside story details.")}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { cat: "HIGHLIGHT", desc: "Experience our vibrant Sunday worship and community fellowship.", title: "Worship gathering" },
-              { cat: "MINISTRY", desc: "Empowering the next generation to grow in knowledge and truth.", title: "Youth fellowship" },
+              { cat: copy("HIGHLIGHT"), desc: copy("Experience our vibrant Sunday worship and community fellowship."), title: copy("Worship gathering") },
+              { cat: copy("MINISTRY"), desc: copy("Empowering the next generation to grow in knowledge and truth."), title: copy("Youth fellowship") },
             ].map((item, index) => (
               <div className="grid grid-cols-[0.8fr_1.2fr] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-sm" key={index}>
                 <div
@@ -656,7 +646,7 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-gold)]">{item.cat}</span>
                   <span className="text-xs font-semibold leading-tight text-[var(--text-primary)]">{item.title}</span>
                   <span className="line-clamp-2 text-[11px] leading-4 text-[var(--text-secondary)]">{item.desc}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">View details</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-primary)]">{copy("View details")}</span>
                 </div>
               </div>
             ))}
@@ -669,9 +659,9 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
     return (
       <div className="grid min-h-72 content-between gap-4 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6">
         <div className="grid justify-items-center gap-1 text-center">
-          <Text as="span" tone="gold" variant="eyebrow">Gallery</Text>
-          <span className="text-2xl font-semibold text-[var(--text-primary)]">Featured feed</span>
-          <span className="text-xs text-[var(--text-secondary)]">Heroic cinematic showcase highlighting our marquee story or upcoming series.</span>
+          <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+          <span className="text-2xl font-semibold text-[var(--text-primary)]">{copy("Featured feed")}</span>
+          <span className="text-xs text-[var(--text-secondary)]">{copy("Heroic cinematic showcase highlighting our marquee story or upcoming series.")}</span>
         </div>
         <div
           className="relative flex h-36 items-end overflow-hidden rounded-xl bg-cover bg-center p-4 text-[var(--text-inverse)] shadow-md"
@@ -680,10 +670,10 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           <div className="relative grid gap-1">
             <span className="inline-flex w-fit rounded-full bg-[var(--accent-gold)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">
-              FEATURED STORY
+              {copy("FEATURED STORY")}
             </span>
-            <span className="text-base font-semibold text-white">Join us for special worship & community night</span>
-            <span className="text-xs text-white/80">Every Sunday at 10:00 AM • Main Sanctuary</span>
+            <span className="text-base font-semibold text-white">{copy("Join us for special worship & community night")}</span>
+            <span className="text-xs text-white/80">{copy("Every Sunday at 10:00 AM • Main Sanctuary")}</span>
           </div>
         </div>
       </div>
@@ -692,14 +682,14 @@ export function SectionPresetPreview({ preset }: { preset: SectionPreset }) {
 
   return (
     <div className="grid min-h-72 content-center justify-items-center gap-3 overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 text-center">
-      <Text as="span" tone="gold" variant="eyebrow">{preset.category}</Text>
-      <span className="text-2xl font-semibold text-[var(--text-primary)]">{preset.name}</span>
-      <span className="text-xs text-[var(--text-secondary)]">Editable title, subtitle, description, images, and links.</span>
+      <Text as="span" tone="gold" variant="eyebrow">{t(sectionCategoryKeys[preset.category])}</Text>
+      <span className="text-2xl font-semibold text-[var(--text-primary)]">{t(sectionPresetNameKey(preset))}</span>
+      <span className="text-xs text-[var(--text-secondary)]">{t("pageBuilder.presetPreviewDescription")}</span>
     </div>
   );
 }
 
-export function SectionBuilderProvider({ children }: { children: ReactNode }) {
+export function SectionBuilderProvider({ children, contentLocale }: { children: ReactNode; contentLocale: Locale }) {
   const { actions, query } = useEditor();
   const { t } = useTranslation();
   const [insertIndex, setInsertIndex] = useState<number | null>(null);
@@ -716,7 +706,7 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
 
   function insertSection() {
     if (insertIndex === null || !selectedPreset) return;
-    actions.addNodeTree(createPresetNodeTree(createSectionPreset(selectedPreset), query), "ROOT", insertIndex);
+    actions.addNodeTree(createPresetNodeTree(createSectionPreset(selectedPreset, contentLocale), query), "ROOT", insertIndex);
     setInsertIndex(null);
   }
 
@@ -733,37 +723,25 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
                   <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionLibrary")}</Text>
                   <Title as="h3" tone="inherit" variant="cardSoft">{t("pageBuilder.addSection")}</Title>
                 </div>
-                <button aria-label="Close" className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
+                <button aria-label={t("action.close")} className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
                   <X className="h-4 w-4" />
                 </button>
               </div>
               <div className="grid min-h-0 md:grid-cols-[18rem_minmax(0,1fr)]">
                 <div className="grid content-start gap-1 overflow-y-auto border-r border-[var(--border-subtle)] p-4">
-                  {(["Hero", "Paragraph", "Feature list", "CTA", "Gallery"] as SectionCategory[]).map((item) => {
-                    const label =
-                      item === "Hero"
-                        ? t("pageBuilder.categoryHero")
-                        : item === "Paragraph"
-                          ? t("pageBuilder.categoryParagraph")
-                          : item === "Feature list"
-                            ? t("pageBuilder.categoryFeatureList")
-                            : item === "CTA"
-                              ? t("pageBuilder.categoryCta")
-                              : t("pageBuilder.categoryGallery");
-                    return (
-                      <button
-                        className={cn(
-                          "rounded-lg px-4 py-3 text-left text-sm font-medium",
-                          category === item ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]" : "hover:bg-[var(--brand-soft)]",
-                        )}
-                        key={item}
-                        onClick={() => chooseCategory(item)}
-                        type="button"
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
+                  {sectionCategories.map((item) => (
+                    <button
+                      className={cn(
+                        "rounded-lg px-4 py-3 text-left text-sm font-medium",
+                        category === item ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]" : "hover:bg-[var(--brand-soft)]",
+                      )}
+                      key={item}
+                      onClick={() => chooseCategory(item)}
+                      type="button"
+                    >
+                      {t(sectionCategoryKeys[item])}
+                    </button>
+                  ))}
                 </div>
                 <div className="grid min-h-0 gap-5 overflow-y-auto p-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
                   <div className="grid content-start gap-2">
@@ -777,7 +755,7 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
                         onClick={() => setSelectedId(preset.id)}
                         type="button"
                       >
-                        <span className="block text-sm font-semibold">{preset.name}</span>
+                        <span className="block text-sm font-semibold">{t(sectionPresetNameKey(preset))}</span>
                         <span className="mt-1 block text-xs text-[var(--text-tertiary)]">
                           {t("pageBuilder.styleVariant", { variant: String(preset.variant) })}
                         </span>
@@ -785,7 +763,7 @@ export function SectionBuilderProvider({ children }: { children: ReactNode }) {
                     ))}
                   </div>
                   <div className="grid content-start gap-4">
-                    {selectedPreset ? <SectionPresetPreview preset={selectedPreset} /> : null}
+                    {selectedPreset ? <SectionPresetPreview contentLocale={contentLocale} preset={selectedPreset} /> : null}
                     <button
                       className={cn(
                         "justify-self-end rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-300",

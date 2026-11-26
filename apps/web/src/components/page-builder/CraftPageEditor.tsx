@@ -189,7 +189,7 @@ function BuilderShell({
 
   return (
     <Editor enabled resolver={craftResolver}>
-      <SectionBuilderProvider>
+      <SectionBuilderProvider contentLocale={editLang}>
         <BuilderAutoSave onSave={onSave} />
         <div
           className={cn(

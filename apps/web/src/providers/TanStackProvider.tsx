@@ -16,7 +16,7 @@ type StoredQueryCache = {
   version: 2;
 };
 
-const hydrationSensitiveQueryKeys = new Set(["course-categories", "courses", "pages"]);
+const hydrationSensitiveQueryKeys = new Set(["articles", "course-categories", "courses", "pages"]);
 
 function isHydrationSafeQuery(queryKey: readonly unknown[]) {
   return !hydrationSensitiveQueryKeys.has(String(queryKey[0]));

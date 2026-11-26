@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { findSectionPreset, sectionPresetNameKey } from "./sectionPresets";
 import { Field, NativeSelect } from "../shared/settings";
 import { getButtonVariantClass } from "../shared/helpers";
 import { IconPicker, featureIconMap } from "../shared/iconList";
@@ -448,11 +449,13 @@ export function ContentEditorDialog() {
   traverse(editingId);
 
   const rootNode = stateNodes[editingId];
-  const sectionTitle =
+  const sectionPreset = findSectionPreset(rootNode?.data?.props?.sectionName);
+  const sectionTitle = sectionPreset ? t(sectionPresetNameKey(sectionPreset)) : (
     (rootNode?.data?.props?.sectionName as string) ||
     (rootNode?.data?.props?.sectionTitle as string) ||
     (rootNode?.data?.displayName as string) ||
-    "Section";
+    t("pageBuilder.section")
+  );
 
   function setValue(nodeId: string, key: string, value: unknown) {
     actions.setProp(nodeId, (draft: Record<string, unknown>) => {

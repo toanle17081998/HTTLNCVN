@@ -68,7 +68,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
       {lesson ? (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
           <article className="grid min-w-0 gap-5">
-            <Card className="p-6">
+            <Card className="border-0 p-6 shadow-none">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                   {t("lesson.label")} {lesson.order_index ?? "-"}

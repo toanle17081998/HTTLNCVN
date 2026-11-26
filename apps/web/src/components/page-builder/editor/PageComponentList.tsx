@@ -4,7 +4,9 @@ import { Text } from "@/components/ui";
 import { useContext, useMemo } from "react";
 import { useEditor } from "@craftjs/core";
 import { Layers3, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "@/providers/I18nProvider";
 import { SectionInsertContext } from "../shared/NodeFrame";
+import { findSectionPreset, sectionPresetNameKey } from "./sectionPresets";
 
 type PageComponentNode = {
   data: {
@@ -16,22 +18,27 @@ type PageComponentNode = {
 };
 
 export function PageComponentList() {
+  const { t } = useTranslation();
   const openSectionPicker = useContext(SectionInsertContext);
   const { actions, nodes } = useEditor((state: any) => ({
     nodes: state.nodes as Record<string, PageComponentNode>,
   }));
 
-  const components = useMemo(() => (nodes.ROOT?.data.nodes ?? []).map((id, index) => ({
-    id,
-    label: String(nodes[id]?.data.props?.sectionName ?? `Section ${index + 1}`),
-  })), [nodes]);
+  const components = useMemo(() => (nodes.ROOT?.data.nodes ?? []).map((id, index) => {
+    const name = nodes[id]?.data.props?.sectionName;
+    const preset = findSectionPreset(name);
+    return {
+      id,
+      label: preset ? t(sectionPresetNameKey(preset)) : String(name ?? t("pageBuilder.sectionNumber", { number: String(index + 1) })),
+    };
+  }), [nodes, t]);
 
   return (
     <div className="grid gap-2 border-t border-[var(--border-subtle)] pt-3">
       <div className="flex items-center justify-between px-2">
         <Text as="p" tone="inherit" variant="inherit" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">
           <Layers3 className="h-3.5 w-3.5" />
-          Sections
+          {t("pageBuilder.sections")}
         </Text>
         {openSectionPicker ? (
           <button
@@ -40,7 +47,7 @@ export function PageComponentList() {
             type="button"
           >
             <Plus className="h-3 w-3" />
-            Add
+            {t("pageBuilder.addSectionShort")}
           </button>
         ) : null}
       </div>
@@ -49,10 +56,10 @@ export function PageComponentList() {
           <div className="flex min-h-9 items-center gap-1 px-2 text-xs text-[var(--text-secondary)]" key={component.id}>
             <span className="min-w-0 flex-1 truncate">{component.label}</span>
             <button
-              aria-label={`Remove ${component.label}`}
+              aria-label={t("pageBuilder.removeSection", { name: component.label })}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--text-tertiary)] hover:bg-[var(--status-danger-soft)] hover:text-[var(--status-danger)] cursor-pointer"
               onClick={() => actions.delete(component.id)}
-              title={`Remove ${component.label}`}
+              title={t("pageBuilder.removeSection", { name: component.label })}
               type="button"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -66,7 +73,7 @@ export function PageComponentList() {
             type="button"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add first section
+            {t("pageBuilder.addFirstSection")}
           </button>
         ) : null}
       </div>

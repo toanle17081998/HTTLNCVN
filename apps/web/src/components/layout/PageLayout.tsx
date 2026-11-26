@@ -37,7 +37,7 @@ export function PageLayout({
         "mx-auto grid w-full max-w-7xl min-w-0",
         isAdmin
           ? "gap-5 py-2 sm:gap-6 sm:py-3"
-          : "gap-12 px-4 pt-20 pb-20 sm:px-6 sm:pt-24 sm:pb-24 lg:px-8 lg:pt-28 lg:pb-32",
+          : "gap-12 px-4 pt-[calc(var(--section-space-xl)_-_var(--section-space-md))] pb-20 sm:px-6 sm:pb-24 md:pt-24 lg:px-8 lg:pt-28 lg:pb-32",
       )}
     >
       <PageHeader
