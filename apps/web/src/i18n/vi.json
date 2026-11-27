@@ -781,6 +781,7 @@
   "editor.heading.heading": "Tiêu đề",
   "editor.heading.subheading": "Tiêu đề phụ",
   "editor.heading.small": "Tiêu đề nhỏ",
+  "editor.heading.minor": "Mục nhỏ",
   "editor.toolbar.formatBlock.blockquote": "Trích dẫn",
   "editor.toolbar.bold.default": "Đậm",
   "editor.toolbar.italic.default": "Nghiêng",

@@ -726,6 +726,7 @@
   "editor.heading.heading": "Heading",
   "editor.heading.subheading": "Subheading",
   "editor.heading.small": "Small heading",
+  "editor.heading.minor": "Minor heading",
   "editor.toolbar.formatBlock.blockquote": "Quote",
   "editor.toolbar.bold.default": "Bold",
   "editor.toolbar.italic.default": "Italic",

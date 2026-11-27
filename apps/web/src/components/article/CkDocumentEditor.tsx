@@ -230,6 +230,7 @@ export default function CkDocumentEditor({
           { model: "heading2", view: "h2", title: t("editor.heading.heading"), class: "ck-heading_heading2" },
           { model: "heading3", view: "h3", title: t("editor.heading.subheading"), class: "ck-heading_heading3" },
           { model: "heading4", view: "h4", title: t("editor.heading.small"), class: "ck-heading_heading4" },
+          { model: "heading5", view: "h5", title: t("editor.heading.minor"), class: "ck-heading_heading5" },
         ],
       },
       fontFamily: {

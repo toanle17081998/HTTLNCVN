@@ -108,6 +108,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
             <ModularEditor
               label={t("lesson.form.content_en")}
               initialValue={formData.content_markdown_en}
+              lessonOutline
               onChange={(val) => handleEditorChange("content_markdown_en", val)}
               placeholder="Write lesson content in English..."
               ref={contentEnRef}
@@ -119,6 +120,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
             <ModularEditor
               label={t("lesson.form.content_vi")}
               initialValue={formData.content_markdown_vi}
+              lessonOutline
               onChange={(val) => handleEditorChange("content_markdown_vi", val)}
               placeholder="Viết nội dung bài học bằng tiếng Việt..."
               ref={contentViRef}

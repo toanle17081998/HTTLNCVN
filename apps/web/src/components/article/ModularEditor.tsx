@@ -35,6 +35,7 @@ type ModularEditorProps = {
   label?: string;
   placeholder?: string;
   className?: string;
+  lessonOutline?: boolean;
 };
 
 export type ModularEditorHandle = {
@@ -42,9 +43,9 @@ export type ModularEditorHandle = {
   setData: (value: string) => void;
 };
 
-function normalizeInitialValue(value: string) {
+function normalizeInitialValue(value: string, lessonOutline = false) {
   if (!value.trim()) return "";
-  return isRichTextHtml(value) ? value : markdownToHtml(value);
+  return isRichTextHtml(value) ? value : markdownToHtml(value, { lessonOutline });
 }
 
 export const ModularEditor = forwardRef(function ModularEditor(
@@ -54,19 +55,25 @@ export const ModularEditor = forwardRef(function ModularEditor(
     label = "Content",
     placeholder = "Write something...",
     className,
+    lessonOutline = false,
   }: ModularEditorProps,
   ref: ForwardedRef<ModularEditorHandle>,
 ) {
   const { t } = useTranslation();
   const editorRef = useRef<DecoupledEditor | null>(null);
-  const [contentHtml, setContentHtml] = useState(() => normalizeInitialValue(initialValue));
+  const [contentHtml, setContentHtml] = useState(() =>
+    normalizeInitialValue(initialValue, lessonOutline),
+  );
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const normalizedInitialValue = useMemo(() => normalizeInitialValue(initialValue), [initialValue]);
+  const normalizedInitialValue = useMemo(
+    () => normalizeInitialValue(initialValue, lessonOutline),
+    [initialValue, lessonOutline],
+  );
 
   useImperativeHandle(ref, () => ({
     getCleanedValue: () => editorRef.current?.getData() ?? contentHtml,
     setData: (value: string) => {
-      const normalized = normalizeInitialValue(value);
+      const normalized = normalizeInitialValue(value, lessonOutline);
       setContentHtml(normalized);
       if (editorRef.current) {
         editorRef.current.setData(normalized);
