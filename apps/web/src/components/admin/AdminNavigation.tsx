@@ -431,6 +431,7 @@ export function AdminNavigation() {
             {t("action.tryAgain") || "Reset"}
           </Button>
           <Button
+            variant="primary"
             className="cursor-pointer bg-[var(--brand-primary)] text-[var(--text-inverse)]"
             disabled={updateMutation.isPending || isUploadingIntro}
             onClick={handleSave}
@@ -448,7 +449,8 @@ export function AdminNavigation() {
       <div className="grid gap-6">
         {/* Navigation Tabs */}
         <div className="flex border-b border-[var(--border-subtle)] overflow-x-auto">
-          <button
+          <Button
+            variant="unstyled"
             className={cn(
               "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
               activeTab === "intro"
@@ -460,8 +462,9 @@ export function AdminNavigation() {
           >
             <Sparkles className="h-4 w-4" />
             {t("admin.navigation.tabIntro")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="unstyled"
             className={cn(
               "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
               activeTab === "header"
@@ -473,8 +476,9 @@ export function AdminNavigation() {
           >
             <MenuIcon className="h-4 w-4" />
             {t("admin.navigation.tabHeader")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="unstyled"
             className={cn(
               "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
               activeTab === "heroes"
@@ -486,8 +490,9 @@ export function AdminNavigation() {
           >
             <ImageIcon className="h-4 w-4" />
             {t("admin.navigation.tabHeroes")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="unstyled"
             className={cn(
               "flex cursor-pointer items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors shrink-0",
               activeTab === "footer"
@@ -499,7 +504,7 @@ export function AdminNavigation() {
           >
             <LayoutTemplate className="h-4 w-4" />
             {t("admin.navigation.tabFooter")}
-          </button>
+          </Button>
         </div>
 
         {activeTab === "intro" ? (
@@ -787,6 +792,7 @@ export function AdminNavigation() {
                   {t("admin.navigation.menuItems")}
                 </Title>
                 <Button
+                  variant="primary"
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddNavItem}
                   size="sm"
@@ -824,7 +830,8 @@ export function AdminNavigation() {
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <button
+                          <Button
+                            variant="unstyled"
                             aria-label="Move Up"
                             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] disabled:opacity-30"
                             disabled={index === 0}
@@ -832,8 +839,9 @@ export function AdminNavigation() {
                             type="button"
                           >
                             <ArrowUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="unstyled"
                             aria-label="Move Down"
                             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] disabled:opacity-30"
                             disabled={index === config.header.items.length - 1}
@@ -841,8 +849,9 @@ export function AdminNavigation() {
                             type="button"
                           >
                             <ArrowDown className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="unstyled"
                             aria-label="Toggle Visibility"
                             className={cn(
                               "flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] transition-colors",
@@ -854,8 +863,9 @@ export function AdminNavigation() {
                             type="button"
                           >
                             {item.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="unstyled"
                             aria-label="Toggle Guest Access"
                             className={cn(
                               "flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] transition-colors",
@@ -868,15 +878,16 @@ export function AdminNavigation() {
                             type="button"
                           >
                             {item.guestVisible !== false ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="unstyled"
                             aria-label="Delete Menu Item"
                             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-subtle)] text-[var(--status-danger)] hover:bg-[var(--brand-soft)]"
                             onClick={() => handleDeleteNavItem(index)}
                             type="button"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
 
@@ -1024,7 +1035,8 @@ export function AdminNavigation() {
               {/* Page Selector Tabs */}
               <div className="flex flex-wrap gap-2 border-b border-[var(--border-subtle)] pb-4 mb-6">
                 {HERO_PAGES.map((page) => (
-                  <button
+                  <Button
+                    variant="unstyled"
                     key={page.key}
                     onClick={() => setSelectedHeroPage(page.key)}
                     type="button"
@@ -1037,7 +1049,7 @@ export function AdminNavigation() {
                   >
                     <span>{t(page.labelKey as any)}</span>
                     <span className="text-[10px] opacity-70 font-mono">({page.key})</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -1253,6 +1265,7 @@ export function AdminNavigation() {
                   {t("admin.navigation.footerContacts")}
                 </Title>
                 <Button
+                  variant="primary"
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddContact}
                   size="sm"
@@ -1273,13 +1286,14 @@ export function AdminNavigation() {
                       <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
                         #{index + 1}
                       </span>
-                      <button
+                      <Button
+                        variant="unstyled"
                         className="cursor-pointer text-xs font-semibold text-[var(--status-danger)] hover:underline"
                         onClick={() => handleDeleteContact(index)}
                         type="button"
                       >
                         {t("action.delete")}
-                      </button>
+                      </Button>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -1345,6 +1359,7 @@ export function AdminNavigation() {
                   {t("admin.navigation.footerLinks")}
                 </Title>
                 <Button
+                  variant="primary"
                   className="cursor-pointer gap-1.5"
                   onClick={handleAddFooterLink}
                   size="sm"
@@ -1365,13 +1380,14 @@ export function AdminNavigation() {
                       <span className="text-xs font-bold text-[var(--brand-primary)]">
                         #{index + 1}
                       </span>
-                      <button
+                      <Button
+                        variant="unstyled"
                         className="cursor-pointer text-xs font-semibold text-[var(--status-danger)] hover:underline"
                         onClick={() => handleDeleteFooterLink(index)}
                         type="button"
                       >
                         {t("action.delete")}
-                      </button>
+                      </Button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">

@@ -204,7 +204,7 @@ export function Header({ pathname }: HeaderProps) {
               className="hidden lg:inline-flex"
               href={headerConfig.cta.href}
             >
-              <Button size="sm" className="rounded-lg font-semibold">
+              <Button variant="primary" size="sm" className="rounded-lg font-semibold">
                 {localize(headerConfig.cta, "label")}
               </Button>
             </Link>
@@ -213,7 +213,8 @@ export function Header({ pathname }: HeaderProps) {
           {/* Notification Bell Button & Dropdown */}
           {showNotification && (
             <div className="relative" ref={notificationRef}>
-              <button
+              <Button
+                variant="unstyled"
                 onClick={() => {
                   setNotificationOpen((open) => !open);
                   setSettingsOpen(false);
@@ -234,7 +235,7 @@ export function Header({ pathname }: HeaderProps) {
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--status-danger)]" />
                   </span>
                 )}
-              </button>
+              </Button>
 
               {notificationOpen && (
                 <div
@@ -254,7 +255,9 @@ export function Header({ pathname }: HeaderProps) {
 
                   <div className="max-h-72 overflow-y-auto py-1 divide-y divide-[var(--border-subtle)]">
                     {notifications.map((n) => (
-                      <button
+                      <Button
+                        variant="unstyled"
+                        type="submit"
                         key={n.id}
                         onClick={() => handleNotificationClick(n)}
                         className={cn(
@@ -269,7 +272,7 @@ export function Header({ pathname }: HeaderProps) {
                           </span>
                         </div>
                         <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-secondary)] line-clamp-2">{n.message}</Text>
-                      </button>
+                      </Button>
                     ))}
                     {notifications.length === 0 && (
                       <div className="p-6 text-center text-xs text-[var(--text-secondary)]">
@@ -294,7 +297,8 @@ export function Header({ pathname }: HeaderProps) {
 
           {/* User Settings Dropdown */}
           <div className="relative" ref={settingsRef}>
-            <button
+            <Button
+              variant="unstyled"
               aria-expanded={settingsOpen}
               aria-haspopup="menu"
               aria-label={t("nav.userMenu")}
@@ -317,7 +321,7 @@ export function Header({ pathname }: HeaderProps) {
                   settingsOpen && "rotate-180",
                 )}
               />
-            </button>
+            </Button>
 
             {settingsOpen && (
               <div
@@ -372,7 +376,8 @@ export function Header({ pathname }: HeaderProps) {
                           {t("nav.adminPortal") || "Trang quản trị"}
                         </Link>
                       ) : null}
-                      <button
+                      <Button
+                        variant="unstyled"
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] cursor-pointer"
                         onClick={() => {
                           setSettingsOpen(false);
@@ -383,8 +388,9 @@ export function Header({ pathname }: HeaderProps) {
                       >
                         <Shield className="h-4 w-4" />
                         {t("nav.changePassword") || t("settings.changePassword")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="unstyled"
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--status-danger)] transition hover:bg-[var(--status-danger-bg)] cursor-pointer"
                         onClick={handleLogout}
                         role="menuitem"
@@ -392,7 +398,7 @@ export function Header({ pathname }: HeaderProps) {
                       >
                         <LogOut className="h-4 w-4" />
                         {t("nav.logout")}
-                      </button>
+                      </Button>
                     </>
                   ) : (
                     <Link

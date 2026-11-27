@@ -1,16 +1,17 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ComponentPropsWithRef } from "react";
 import { cn } from "./cn";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link" | "unstyled";
+type StyledButtonVariant = Exclude<ButtonVariant, "unstyled">;
 type ButtonSize = "sm" | "md" | "lg" | "icon" | "iconSm";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
+type ButtonProps = ComponentPropsWithRef<"button"> & {
+  variant: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
 };
 
-const variantClasses: Record<ButtonVariant, string> = {
+const variantClasses: Record<StyledButtonVariant, string> = {
   primary:
     "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] shadow-sm hover:brightness-95",
   secondary:
@@ -34,7 +35,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 export function Button({
   className,
   type = "button",
-  variant = "primary",
+  variant,
   size = "md",
   isLoading,
   children,
@@ -42,7 +43,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
+      className={variant === "unstyled" ? className : cn(
         "inline-flex items-center rounded-md border font-semibold transition hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] disabled:pointer-events-none disabled:opacity-55",
         variantClasses[variant],
         variant === "link" ? "justify-start" : cn("justify-center", sizeClasses[size]),
@@ -61,7 +62,7 @@ export function Button({
 }
 
 type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
-  variant?: ButtonVariant;
+  variant?: StyledButtonVariant;
 };
 
 export function ButtonLink({

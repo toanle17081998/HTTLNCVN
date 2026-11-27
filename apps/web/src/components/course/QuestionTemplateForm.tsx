@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, FormField, Input, Textarea, Select, cn, Title, Label } from "@/components/ui";
+import { Button, Card, FormField, Input, Textarea, Dropdown, cn, Title, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { QuestionTemplate } from "@/hooks/course";
 
@@ -108,7 +108,8 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
         </Title>
         <div className="inline-flex rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1">
           {(["en", "vi"] as const).map((lang) => (
-            <button
+            <Button
+              variant="unstyled"
               key={lang}
               type="button"
               onClick={() => setEditLang(lang)}
@@ -120,14 +121,14 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
               )}
             >
               {lang === "en" ? t("common.language.english") : t("common.language.vietnamese")}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField label={t("questionTemplate.type")} htmlFor="template_type">
-            <Select
+            <Dropdown
               id="template_type"
               name="template_type"
               value={formData.template_type}
@@ -136,11 +137,11 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
             >
               <option value="multiple_choices">{t("questionTemplate.type.multiple_choices")}</option>
               <option value="true_false">{t("questionTemplate.type.true_false")}</option>
-            </Select>
+            </Dropdown>
           </FormField>
 
           <FormField label={t("questionTemplate.difficulty")} htmlFor="difficulty">
-            <Select
+            <Dropdown
               id="difficulty"
               name="difficulty"
               value={formData.difficulty}
@@ -150,7 +151,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
               <option value="easy">{t("questionTemplate.difficulty.easy")}</option>
               <option value="medium">{t("questionTemplate.difficulty.medium")}</option>
               <option value="hard">{t("questionTemplate.difficulty.hard")}</option>
-            </Select>
+            </Dropdown>
           </FormField>
         </div>
 
@@ -191,7 +192,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
             label={t("questionTemplate.answerFormula")}
             htmlFor="answer_formula"
           >
-            <Select
+            <Dropdown
               id="answer_formula"
               name="answer_formula"
               value={formData.answer_formula || "true"}
@@ -200,7 +201,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
             >
               <option value="true">True / Đúng</option>
               <option value="false">False / Sai</option>
-            </Select>
+            </Dropdown>
           </FormField>
         ) : formData.template_type === "multiple_choices" ? (
           <div className="space-y-6 border-t border-[var(--border-subtle)] pt-6">
@@ -219,24 +220,26 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
                       required
                     />
                     {correctAnswers.length > 1 && (
-                      <button
+                      <Button
+                        variant="unstyled"
                         type="button"
                         onClick={() => removeCorrectAnswer(idx)}
                         className="p-2 text-[var(--status-danger)] hover:bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] rounded-md transition text-sm font-semibold"
                       >
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={addCorrectAnswer}
                 className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-primary)] hover:underline"
               >
                 + Add Correct Answer
-              </button>
+              </Button>
             </div>
 
             <div>
@@ -254,24 +257,26 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
                       required
                     />
                     {incorrectAnswers.length > 1 && (
-                      <button
+                      <Button
+                        variant="unstyled"
                         type="button"
                         onClick={() => removeIncorrectAnswer(idx)}
                         className="p-2 text-[var(--status-danger)] hover:bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] rounded-md transition text-sm font-semibold"
                       >
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={addIncorrectAnswer}
                 className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-primary)] hover:underline"
               >
                 + Add Incorrect Answer
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -365,7 +370,7 @@ export function QuestionTemplateForm({ initialData, onSubmit, isLoading, title }
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" isLoading={isLoading} className="px-8">
+          <Button variant="primary" type="submit" isLoading={isLoading} className="px-8">
             {initialData ? t("course.action.update") : t("course.action.create")}
           </Button>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Button, Card, FormField, Input, Select, cn } from "@/components/ui";
+import { Text, Button, Card, FormField, Input, Dropdown, cn } from "@/components/ui";
 import { useMemo, useState } from "react";
 import { CalendarDays, Music4, RefreshCw, Sparkles, Trash2, Users } from "lucide-react";
 import { PageLayout } from "@/components/layout";
@@ -218,7 +218,7 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {slots.map((slot) => (
             <FormField key={`${slot.role}-${slot.slotIndex}`} label={slot.label}>
-              <Select
+              <Dropdown
                 onChange={(event) =>
                   updateAssignment(schedule.id, slot.role, slot.slotIndex, event.target.value, planner)
                 }
@@ -230,7 +230,7 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
                     {member.display_name}
                   </option>
                 ))}
-              </Select>
+              </Dropdown>
             </FormField>
           ))}
         </div>
@@ -258,14 +258,14 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
           <Card className="p-5">
             <div className="grid gap-4 md:grid-cols-4">
               <FormField label={t("serving.schedule.form.churchUnit")}>
-                <Select onChange={(event) => setChurchUnitId(event.target.value)} value={churchUnitId}>
+                <Dropdown onChange={(event) => setChurchUnitId(event.target.value)} value={churchUnitId}>
                   <option value="">{t("serving.schedule.form.selectTeam")}</option>
                   {teamUnits.map((unit: ChurchUnit) => (
                     <option key={unit.id} value={unit.id}>
                       {unit.name}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
               <FormField label={t("serving.schedule.form.startDate")}>
                 <Input onChange={(event) => setStartDate(event.target.value)} type="date" value={startDate} />
@@ -274,7 +274,7 @@ export function ServingSchedulePage({ type }: ServingSchedulePageProps) {
                 <Input onChange={(event) => setWeeks(event.target.value)} type="number" value={weeks} />
               </FormField>
               <div className="flex items-end gap-2">
-                <Button className="flex-1" onClick={handleGenerate}>
+                <Button variant="primary" className="flex-1" onClick={handleGenerate}>
                   <Sparkles className="mr-2 h-4 w-4" />
                   {t("serving.schedule.form.generate")}
                 </Button>

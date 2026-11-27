@@ -137,7 +137,7 @@ export function CourseDetailPage({ initialCourse, slug }: CourseDetailPageProps)
                       className="block rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
                       href={`/course/${encodeURIComponent(course.slug)}/lesson/${encodeURIComponent(lesson.id)}`}
                     >
-                      <Card className="p-4 transition hover:border-[var(--brand-primary)] sm:p-5">
+                      <Card className="border-0! p-4 transition hover:bg-[var(--bg-muted)] sm:p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--text-tertiary)]">

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Input, Pagination, Select, Skeleton, Text, Title } from "@/components/ui";
+import { Badge, Button, Card, Input, Pagination, Dropdown, Skeleton, Text, Title } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -87,10 +87,15 @@ export function ArticlePage() {
     [scrollToList],
   );
 
-  const handleSearch = useCallback(() => {
-    setQ(searchInput.trim());
-    setPage(0);
-  }, [searchInput]);
+  useEffect(() => {
+    const nextQuery = searchInput.trim();
+    if (nextQuery === q) return;
+    const timer = window.setTimeout(() => {
+      setQ(nextQuery);
+      setPage(0);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [q, searchInput]);
 
   const handleCategoryChange = (id: number | undefined) => {
     setSelectedCategoryId(id);
@@ -126,20 +131,18 @@ export function ArticlePage() {
       {/* Search bar */}
       <div className="mb-4 flex gap-2">
         <Input
+          aria-label={t("article.searchPlaceholder")}
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
           placeholder={t("article.searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          type="search"
         />
-        <Button size="sm" variant="primary" onClick={handleSearch}>
-          {t("common.search")}
-        </Button>
       </div>
 
       {/* Category filters */}
       <div className="mb-8 md:hidden">
-        <Select
+        <Dropdown
           aria-label={t("article.form.category")}
           className="rounded-xl border-[var(--border-subtle)]"
           onChange={(e) => handleCategoryChange(e.target.value ? Number(e.target.value) : undefined)}
@@ -151,7 +154,7 @@ export function ArticlePage() {
               {localize(cat, "name")}
             </option>
           ))}
-        </Select>
+        </Dropdown>
       </div>
       <div className="mb-8 hidden flex-wrap gap-2 md:flex">
         <Button
@@ -211,7 +214,7 @@ export function ArticlePage() {
       {!isListLoading ? (
       <div className="grid gap-6 md:grid-cols-2">
         {articlesQuery.data?.items.map((article) => (
-          <Card className="overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg flex flex-col h-full" key={article.id}>
+          <Card className="group overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg flex flex-col h-full" key={article.id}>
             <Link
               className="block flex-1 focus:outline-none"
               href={`/article/${encodeURIComponent(article.slug)}`}
@@ -220,7 +223,7 @@ export function ArticlePage() {
                 <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)]">
                   <Image
                     alt={localize(article, "title")}
-                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105"
                     fill
                     sizes="(min-width: 768px) 50vw, 100vw"
                     src={article.cover_image_url}
@@ -228,7 +231,7 @@ export function ArticlePage() {
                 </div>
               ) : (
                 <div className="aspect-[16/9] w-full flex items-center justify-center bg-[var(--bg-base)] border-b border-[var(--border-subtle)]">
-                  <div className="h-12 w-12 rounded-full bg-[var(--brand-muted)] flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full bg-[var(--brand-muted)] flex items-center justify-center motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105">
                     <span className="text-xl">📖</span>
                   </div>
                 </div>

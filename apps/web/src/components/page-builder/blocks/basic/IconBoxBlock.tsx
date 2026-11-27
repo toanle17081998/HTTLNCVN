@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import { Trash2 } from "lucide-react";
-import { Input, Textarea, Title, Text } from "@/components/ui";
+import { Button, Input, Textarea, Title, Text } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, resolveStyleToken, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -100,7 +100,8 @@ export function IconBoxBlock(props: IconBoxProps) {
           <Text as="p" tone="inherit" variant="inherit" style={{ color: "var(--text-secondary)", fontSize: "var(--section-body-size)", lineHeight: "var(--section-body-line-height)", margin: 0 }}>{description}</Text>
         ) : null}
         {enabled ? (
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Remove feature"
             className="absolute right-0 top-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-[var(--status-danger)] text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer"
             onClick={(event) => {
@@ -126,7 +127,7 @@ export function IconBoxBlock(props: IconBoxProps) {
             type="button"
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         ) : null}
       </div>
     </NodeFrame>

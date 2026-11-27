@@ -57,7 +57,7 @@ import {
   Volume2,
   Zap,
 } from "lucide-react";
-import { cn, Input } from "@/components/ui";
+import { Button, cn, Input } from "@/components/ui";
 
 export type IconOption = {
   category: "Community" | "Faith" | "Ministry" | "Media" | "Events" | "General";
@@ -257,7 +257,8 @@ export function IconPicker({
 
       <div className="flex flex-wrap gap-1">
         {categories.map((cat) => (
-          <button
+          <Button
+            variant="unstyled"
             className={cn(
               "cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium transition-colors",
               selectedCategory === cat
@@ -269,7 +270,7 @@ export function IconPicker({
             type="button"
           >
             {cat}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -281,7 +282,8 @@ export function IconPicker({
             normalizedValue === item.id.toLowerCase().replace(/[^a-z0-9]/g, "");
 
           return (
-            <button
+            <Button
+              variant="unstyled"
               aria-label={item.label}
               className={cn(
                 "group relative flex h-10 w-full cursor-pointer flex-col items-center justify-center rounded-md border p-1 transition-all",
@@ -295,7 +297,7 @@ export function IconPicker({
               type="button"
             >
               <IconComp className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
-            </button>
+            </Button>
           );
         })}
       </div>

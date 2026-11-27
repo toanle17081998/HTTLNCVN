@@ -1,20 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
 import { CourseTestPanel } from "@/components/course/CourseTestPanel";
 import { PageLayout } from "@/components/layout";
-import { Card, Input, Select, Label } from "@/components/ui";
+import { Input, Dropdown, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useCourseQuery, useCoursesQuery } from "@/hooks/course";
+
+const courseLimit = 100;
 
 export function AdminTests() {
   const { localize, t } = useTranslation();
   const [search, setSearch] = useState("");
-  const coursesQuery = useCoursesQuery({ q: search.trim() || undefined, take: 100 });
+  const coursesQuery = useCoursesQuery({ q: search.trim() || undefined, take: courseLimit });
   const [selectedSlug, setSelectedSlug] = useState("");
   const courses = (coursesQuery.data?.items || []).filter((c) => c.slug !== "isom-b-5");
-  const activeSlug = selectedSlug || courses[0]?.slug || "";
+  const coursesLoading = coursesQuery.isLoading || coursesQuery.isPlaceholderData;
+  const showSearch = Boolean(search) || coursesQuery.isPlaceholderData || (coursesQuery.data?.total ?? 0) > courseLimit;
+  const activeSlug = coursesLoading ? "" : selectedSlug || courses[0]?.slug || "";
   const courseQuery = useCourseQuery(activeSlug);
+  const loadingTest = (
+    <p className="flex items-center gap-2 py-3 text-sm text-[var(--text-secondary)]" role="status">
+      <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+      {t("admin.tests.loading")}
+    </p>
+  );
 
   return (
     <PageLayout
@@ -23,37 +34,57 @@ export function AdminTests() {
       title={t("admin.tests.title")}
     >
       <div className="grid gap-5">
-      <Card className="p-5">
-        <Input
-          className="mb-3"
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setSelectedSlug("");
-          }}
-          placeholder={t("admin.tests.searchCourse")}
-          value={search}
-        />
-        <Label variant="field" className="mb-2 block" htmlFor="test-course">
-          {t("admin.tests.selectCourse")}
-        </Label>
-        <Select
-          disabled={coursesQuery.isLoading || !courses.length}
-          id="test-course"
-          onChange={(event) => setSelectedSlug(event.target.value)}
-          value={activeSlug}
-        >
-          {courses.map((course) => (
-            <option key={course.id} value={course.slug}>
-              {localize(course, "title")}
-            </option>
-          ))}
-        </Select>
-      </Card>
+        <section className="grid gap-2">
+          {showSearch ? (
+            <Input
+              aria-label={t("admin.tests.searchCourse")}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setSelectedSlug("");
+              }}
+              placeholder={t("admin.tests.searchCourse")}
+              type="search"
+              value={search}
+            />
+          ) : null}
+          <Label variant="field" htmlFor="test-course">
+            {t("admin.tests.selectCourse")}
+          </Label>
+          <Dropdown
+            aria-busy={coursesLoading}
+            disabled={coursesLoading || !courses.length}
+            id="test-course"
+            onChange={(event) => setSelectedSlug(event.target.value)}
+            value={activeSlug}
+          >
+            {!activeSlug ? (
+              <option value="">{t(coursesLoading ? "admin.courses.loading" : coursesQuery.isError ? "admin.tests.courseLoadError" : "course.empty")}</option>
+            ) : null}
+            {courses.map((course) => (
+              <option key={course.id} value={course.slug}>
+                {localize(course, "title")}
+              </option>
+            ))}
+          </Dropdown>
+          {coursesLoading ? (
+            <p className="flex items-center gap-2 text-sm text-[var(--text-secondary)]" role="status">
+              <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+              {t("admin.courses.loading")}
+            </p>
+          ) : null}
+        </section>
 
-      {courseQuery.data ? <CourseTestPanel course={courseQuery.data} /> : null}
-      {courseQuery.isLoading ? (
-        <Card className="p-5 text-sm text-[var(--text-secondary)]">{t("admin.tests.loading")}</Card>
-      ) : null}
+        {activeSlug && courseQuery.isLoading ? loadingTest : null}
+        {activeSlug && courseQuery.isError && !courseQuery.data ? (
+          <p className="text-sm text-[var(--status-danger)]" role="alert">{t("admin.tests.courseLoadError")}</p>
+        ) : null}
+        {activeSlug && courseQuery.data ? (
+          <CourseTestPanel
+            className="border-0! shadow-none!"
+            course={courseQuery.data}
+            loadingFallback={loadingTest}
+          />
+        ) : null}
       </div>
     </PageLayout>
   );

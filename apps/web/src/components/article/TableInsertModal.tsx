@@ -65,7 +65,7 @@ export function TableInsertModal({
           <Button onClick={onClose} type="button" variant="secondary">
             {t("common.cancel")}
           </Button>
-          <Button type="submit">{t("editor.table.insert")}</Button>
+          <Button variant="primary" type="submit">{t("editor.table.insert")}</Button>
         </div>
       </form>
     </div>

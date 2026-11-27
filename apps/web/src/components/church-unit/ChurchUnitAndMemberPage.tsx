@@ -6,7 +6,7 @@ import { PageLayout } from "@/components/layout";
 import { useTranslation } from "@/providers/I18nProvider";
 import { ChurchUnitPage } from "./ChurchUnitPage";
 import { MemberPage } from "@/components/member/MemberPage";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { Suspense } from "react";
 
 type ChurchUnitAndMemberPageProps = {
@@ -42,7 +42,9 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
         {/* Tabs Header */}
         <div className="border-b border-[var(--border-subtle)]">
           <div className="flex gap-6">
-            <button
+            <Button
+              variant="unstyled"
+              type="submit"
               onClick={() => handleTabChange("unit")}
               className={cn(
                 "flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
@@ -53,8 +55,10 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
             >
               <Building2 className="h-4 w-4" />
               {t("church.tab.unit")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="unstyled"
+              type="submit"
               onClick={() => handleTabChange("member")}
               className={cn(
                 "flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
@@ -65,7 +69,7 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
             >
               <Users className="h-4 w-4" />
               {t("church.tab.member")}
-            </button>
+            </Button>
           </div>
         </div>
 

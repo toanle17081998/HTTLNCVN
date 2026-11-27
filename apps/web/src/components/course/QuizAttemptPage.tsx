@@ -242,7 +242,8 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                 .map((s: string) => s.trim())
                                 .includes(choice);
                               return (
-                                <button
+                                <Button
+                                  variant="unstyled"
                                   key={choice}
                                   type="button"
                                   onClick={() => toggleMultipleChoice(snapshot.id, choice, snapshot.student_answer || "")}
@@ -260,14 +261,15 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                     className="h-4 w-4 rounded text-[var(--brand-primary)] border-[var(--border-strong)]"
                                   />
                                   <span>{choice}</span>
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
                         ) : (
                           <div className="grid gap-2">
                             {choices.map((choice) => (
-                              <button
+                              <Button
+                                variant="unstyled"
                                 key={choice}
                                 type="button"
                                 onClick={() => {
@@ -281,14 +283,15 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                                 )}
                               >
                                 {choice}
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         )
                       ) : isTrueFalse ? (
                         <div className="grid grid-cols-2 gap-3">
                           {(choices.length ? choices : ["true", "false"]).map((val) => (
-                            <button
+                            <Button
+                              variant="unstyled"
                               key={val}
                               type="button"
                               onClick={() => {
@@ -302,7 +305,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                               )}
                             >
                               {val === "true" ? t("quiz.answer.true") : t("quiz.answer.false")}
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       ) : (
@@ -348,6 +351,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                 </div>
               ) : (
                 <Button
+                  variant="primary"
                   className="mt-4 w-full"
                   disabled={finishAttempt.isPending || submitAnswer.isPending || remainingSeconds === 0}
                   onClick={handleFinish}
@@ -414,6 +418,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
                 {t("quiz.modal.backToCourse")}
               </Link>
               <Button
+                variant="primary"
                 className="w-full rounded-xl"
                 onClick={() => setShowResultModal(false)}
               >

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -195,7 +196,8 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
         {children}
         {enabled && allowTextInsert ? (
           <div className="mt-2 flex flex-wrap gap-2 pt-1" data-stack-controls="true">
-            <button
+            <Button
+              variant="unstyled"
               className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
               onClick={(event) => {
                 event.stopPropagation();
@@ -205,8 +207,9 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
             >
               <Plus className="h-3.5 w-3.5" />
               {t("pageBuilder.addHeader")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="unstyled"
               className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
               onClick={(event) => {
                 event.stopPropagation();
@@ -216,8 +219,9 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
             >
               <Plus className="h-3.5 w-3.5" />
               {t("pageBuilder.addParagraph")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="unstyled"
               className="inline-flex items-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
               onClick={(event) => {
                 event.stopPropagation();
@@ -227,8 +231,9 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
             >
               <Plus className="h-3.5 w-3.5" />
               {t("pageBuilder.addRichText")}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="unstyled"
               className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                 showSeparator
                   ? "border-[var(--brand-primary)] bg-[var(--brand-soft)] text-[var(--brand-primary)]"
@@ -243,7 +248,7 @@ export function VerticalStackBlock({ children, ...props }: StackProps) {
               type="button"
             >
               {t("pageBuilder.toggleSeparator")}
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>

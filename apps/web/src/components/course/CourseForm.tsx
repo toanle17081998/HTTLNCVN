@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button, Card, FormField, Input, Textarea, Select, cn, Title } from "@/components/ui";
+import { Button, Card, FormField, Input, Textarea, Dropdown, cn, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { CreateCourseDto, Course, useCourseCategoriesQuery } from "@/hooks/course";
 import { ModularEditor, type ModularEditorHandle } from "@/components/article/ModularEditor";
@@ -128,7 +128,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-6 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-base)] p-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
             <FormField label={t("course.form.slug")} htmlFor="slug" hint={t("course.form.slugHint")}>
               <Input
                 id="slug"
@@ -143,7 +143,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             </FormField>
 
             <FormField label={t("course.form.category")} htmlFor="category_id">
-              <Select
+              <Dropdown
                 id="category_id"
                 name="category_id"
                 value={formData.category_id}
@@ -156,17 +156,19 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
                     {localize(cat, "name")}
                   </option>
                 ))}
-              </Select>
+              </Dropdown>
             </FormField>
 
             <FormField label={t("course.form.coverImage")} htmlFor="cover_image_url">
               <ImagePickerField
                 className="bg-[var(--bg-base)]"
+                compact
                 folder="courses"
                 id="cover_image_url"
                 name="cover_image_url"
                 onChange={(url) => setFormData((prev) => ({ ...prev, cover_image_url: url }))}
                 placeholder="https://example.com/image.jpg"
+                showPreview
                 value={formData.cover_image_url}
               />
             </FormField>
@@ -194,7 +196,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
             </FormField>
 
             <FormField label={t("course.form.status")} htmlFor="status">
-              <Select
+              <Dropdown
                 id="status"
                 name="status"
                 value={formData.status}
@@ -203,7 +205,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
               >
                 <option value="draft">{t("course.form.status.draft")}</option>
                 <option value="published">{t("course.form.status.published")}</option>
-              </Select>
+              </Dropdown>
             </FormField>
         </div>
 
@@ -230,6 +232,7 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
 
         <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border-subtle)]">
           <Button
+            title={t("course.form.cancelTooltip")}
             type="button"
             variant="ghost"
             onClick={() => window.history.back()}
@@ -237,7 +240,13 @@ export function CourseForm({ initialData, onSubmit, isLoading, title }: CourseFo
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
+          <Button
+            variant="primary"
+            className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]"
+            isLoading={isLoading}
+            title={t(initialData ? "course.action.update" : "course.action.create")}
+            type="submit"
+          >
             {initialData ? t("course.action.update") : t("course.action.create")}
           </Button>
         </div>

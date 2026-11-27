@@ -95,7 +95,7 @@ export default function TemplatesPage() {
           <Button variant="secondary" onClick={() => router.push(`/course/${slug}/lesson/${lessonId}`)}>
             Back to Lesson
           </Button>
-          <Button onClick={handleOpenAdd}>
+          <Button variant="primary" onClick={handleOpenAdd}>
             + Add Template
           </Button>
         </div>
@@ -154,7 +154,9 @@ export default function TemplatesPage() {
               <Title as="h2" variant="card">
                 {editingTemplate ? "Edit Question Template" : "Create Question Template"}
               </Title>
-              <button
+              <Button
+                variant="unstyled"
+                type="submit"
                 onClick={() => {
                   setShowModal(false);
                   setEditingTemplate(null);
@@ -162,7 +164,7 @@ export default function TemplatesPage() {
                 className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-base)] transition text-lg"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-1">

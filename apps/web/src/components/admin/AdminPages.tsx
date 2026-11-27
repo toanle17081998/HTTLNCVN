@@ -77,7 +77,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
             <RotateCcw className="mr-2 h-4 w-4" />
             {showDeleted ? t("admin.pages.showActive") : t("admin.pages.showDeleted")}
           </Button>
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
+          <Button variant="primary" onClick={() => setIsCreateOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             {t("pageBuilder.newPage")}
           </Button>
@@ -128,6 +128,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
                   </span>
                 ) : null}
                 <Button
+                  variant="primary"
                   aria-label={t("admin.pages.restore")}
                   className="w-9 !px-0 sm:w-auto sm:!px-3"
                   isLoading={restorePage.isPending}

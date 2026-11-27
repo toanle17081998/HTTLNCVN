@@ -1,6 +1,6 @@
 "use client";
 
-import { Select, Label } from "@/components/ui";
+import { Dropdown, Label } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { StatusFilter, VisibilityFilter } from "./prayerJournalTypes";
 
@@ -25,7 +25,7 @@ export function PrayerFilterBar({
         <Label variant="caption"  htmlFor="prayer-status-filter">
           {t("common.status")}
         </Label>
-        <Select
+        <Dropdown
           id="prayer-status-filter"
           aria-label={t("common.status")}
           className="h-9 text-sm"
@@ -35,14 +35,14 @@ export function PrayerFilterBar({
           <option value="all">{t("prayer.filter.all")}</option>
           <option value="open">{t("prayer.filter.open")}</option>
           <option value="closed">{t("prayer.filter.closed")}</option>
-        </Select>
+        </Dropdown>
       </div>
 
       <div className="flex flex-col gap-1 min-w-0 flex-1 sm:w-36 sm:flex-none">
         <Label variant="caption"  htmlFor="prayer-visibility-filter">
           {t("common.visibility")}
         </Label>
-        <Select
+        <Dropdown
           id="prayer-visibility-filter"
           aria-label={t("common.visibility")}
           className="h-9 text-sm"
@@ -53,7 +53,7 @@ export function PrayerFilterBar({
           <option value="public">{t("prayer.filter.public")}</option>
           <option value="shared">{t("prayer.filter.shared")}</option>
           <option value="private">{t("prayer.filter.private")}</option>
-        </Select>
+        </Dropdown>
       </div>
     </div>
   );

@@ -33,7 +33,8 @@ export function PrayerCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <button
+        <Button
+          variant="unstyled"
           aria-label={isClosed ? t("prayer.action.reopen") : t("prayer.action.close")}
           className={cn(
             "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[var(--brand-primary)] transition",
@@ -48,9 +49,10 @@ export function PrayerCard({
           ) : (
             <Circle aria-hidden="true" className="h-5 w-5" />
           )}
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="unstyled"
           className="min-w-0 flex-1 text-left"
           onClick={() => onView(prayer)}
           type="button"
@@ -99,7 +101,7 @@ export function PrayerCard({
               {prayer.close_reason}
             </Text>
           ) : null}
-        </button>
+        </Button>
 
         <div className="flex shrink-0 items-center gap-2">
           <Button onClick={() => onView(prayer)} size="sm" variant="ghost">

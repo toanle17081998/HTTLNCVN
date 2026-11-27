@@ -14,7 +14,7 @@ type ImageProps = BoxProps & {
   aspectRatio?: string;
   caption?: string;
   fit?: "cover" | "contain" | "fill";
-  kind?: "image" | "embed";
+  kind?: "image" | "embed" | "video";
   overlayColor?: string;
   overlayOpacity?: number | string;
   url?: string;
@@ -48,7 +48,7 @@ export function ImageBlock(props: ImageProps) {
   const overlayColor = nodeOverlayColor ?? props.overlayColor ?? "transparent";
   const overlayOpacity = nodeOverlayOpacity ?? props.overlayOpacity ?? 0;
   const url = nodeUrl ?? props.url ?? "https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&w=1400&q=85";
-  const finalUrl = toEmbedUrl(url, kind);
+  const finalUrl = resolveMediaUrl(toEmbedUrl(url, kind === "embed" ? "embed" : "image"));
 
   return (
     <NodeFrame>
@@ -65,15 +65,25 @@ export function ImageBlock(props: ImageProps) {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="h-full w-full border-0"
-            src={resolveMediaUrl(finalUrl)}
+            src={finalUrl}
             title={alt}
+          />
+        ) : kind === "video" ? (
+          <video
+            aria-label={alt}
+            className="h-full w-full"
+            controls
+            playsInline
+            preload="metadata"
+            src={finalUrl}
+            style={{ objectFit: fit }}
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             alt={alt}
             className="h-full w-full"
-            src={resolveMediaUrl(finalUrl)}
+            src={finalUrl}
             style={{ objectFit: fit }}
           />
         )}
@@ -126,22 +136,23 @@ function ImageBlockSettings() {
           value={kind ?? "image"}
         >
           <option value="image">Standard Image</option>
+          <option value="video">Video File</option>
           <option value="embed">Video Embed (YouTube / Vimeo)</option>
         </NativeSelect>
       </Field>
-      <Field label={kind === "embed" ? "Video URL" : "Image URL"}>
-        {kind === "embed" ? (
-          <Input
-            onChange={(event) => setProp((props: any) => (props.url = event.target.value))}
-            value={url}
-          />
-        ) : (
-          <ImagePickerField
-            compact
-            onChange={(nextUrl) => setProp((props: any) => (props.url = nextUrl))}
-            value={url ?? ""}
-          />
-        )}
+      <Field label={kind === "embed" || kind === "video" ? "Video URL" : "Image URL"}>
+        <ImagePickerField
+          allowVideo
+          compact
+          onChange={(nextUrl, assetKind) =>
+            setProp((props: ImageProps) => {
+              props.url = nextUrl;
+              if (assetKind) props.kind = assetKind;
+            })
+          }
+          placeholder="https://..."
+          value={url ?? ""}
+        />
       </Field>
       <Field label="Alt text">
         <Input

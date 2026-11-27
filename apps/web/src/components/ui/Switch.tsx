@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import * as React from "react";
 import { cn } from "./cn";
 
@@ -11,7 +12,8 @@ export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
   ({ className, onCheckedChange, checked, ...props }, ref) => {
     return (
-      <button
+      <Button
+        variant="unstyled"
         ref={ref}
         type="button"
         role="switch"
@@ -30,7 +32,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
             checked ? "translate-x-4" : "translate-x-0"
           )}
         />
-      </button>
+      </Button>
     );
   }
 );

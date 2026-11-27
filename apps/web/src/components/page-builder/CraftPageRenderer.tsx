@@ -84,7 +84,7 @@ export function CraftPageRenderer({
           {canEdit ? (
             <div className="mt-6">
               <Link href={`/admin/pages?route=${encodeURIComponent(path)}`}>
-                <Button>
+                <Button variant="primary">
                   <SquarePen className="mr-2 h-4 w-4" />
                   Open page builder
                 </Button>

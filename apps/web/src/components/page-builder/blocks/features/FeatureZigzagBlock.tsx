@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus, Trash2 } from "lucide-react";
-import { cn, Text } from "@/components/ui";
+import { Button, cn, Text } from "@/components/ui";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
 import { NodeFrame } from "../../shared/NodeFrame";
 import { getButtonVariantClass } from "../../shared/helpers";
@@ -109,7 +109,8 @@ export function FeatureZigzagCardBlock({
           ) : null}
         </div>
         {enabled ? (
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Remove feature card"
             className="absolute right-3 top-3 z-30 grid h-9 w-9 place-items-center rounded-full bg-[var(--status-danger)] text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer"
             onClick={(event) => {
@@ -135,7 +136,7 @@ export function FeatureZigzagCardBlock({
             type="button"
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         ) : null}
       </article>
     </NodeFrame>
@@ -233,7 +234,8 @@ export function FeatureZigzagListBlock({
         <div className="feature-zigzag-cards grid" style={{ gap: "var(--section-space-md)" }}>
           {children}
           {enabled ? (
-            <button
+            <Button
+              variant="unstyled"
               className="flex items-center justify-center border-2 border-dashed border-[var(--border-strong)] text-sm font-semibold text-[var(--brand-primary)] cursor-pointer"
               onClick={(event) => {
                 event.stopPropagation();
@@ -250,7 +252,7 @@ export function FeatureZigzagListBlock({
               type="button"
             >
               <Plus className="mr-2 h-4 w-4" />Add feature card
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useNode } from "@craftjs/core";
-import { Textarea } from "@/components/ui";
+import { Button, Textarea } from "@/components/ui";
 import { Field, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, parsePairs } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -35,14 +35,15 @@ export function AccordionBlock({
       <div className="grid gap-3" style={buildBoxStyle({ ...props, background, borderColor, borderRadius, borderWidth, paddingBottom, paddingLeft, paddingRight, paddingTop })}>
         {entries.map((item, index) => (
           <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)]" key={`${item.title}-${index}`}>
-            <button
+            <Button
+              variant="unstyled"
               className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[var(--text-primary)]"
               onClick={() => setOpenIndex(index)}
               type="button"
             >
               <span>{item.title}</span>
               <span>{openIndex === index ? "-" : "+"}</span>
-            </button>
+            </Button>
             {openIndex === index ? (
               <div className="px-4 pb-4 text-sm leading-6 text-[var(--text-secondary)]">{item.content}</div>
             ) : null}

@@ -103,13 +103,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               </Text>
             </div>
           </div>
-          <button
+          <Button
+            variant="unstyled"
             type="button"
             onClick={handleClose}
             className="rounded-lg p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -139,13 +140,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 className="pr-10"
               />
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </FormField>
 
@@ -160,13 +162,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 className="pr-10"
               />
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </FormField>
 
@@ -181,13 +184,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 className="pr-10"
               />
-              <button
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </FormField>
 
@@ -196,7 +200,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <Button type="button" variant="secondary" onClick={handleClose}>
               {t("action.cancel")}
             </Button>
-            <Button type="submit" isLoading={changePasswordMutation.isPending}>
+            <Button variant="primary" type="submit" isLoading={changePasswordMutation.isPending}>
               {t("settings.savePassword")}
             </Button>
           </div>

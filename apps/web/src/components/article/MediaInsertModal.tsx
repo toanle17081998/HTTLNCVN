@@ -89,7 +89,7 @@ export function MediaInsertModal({
           <Button onClick={onClose} type="button" variant="secondary">
             {t("common.cancel")}
           </Button>
-          <Button type="submit">
+          <Button variant="primary" type="submit">
             {isImage ? t("editor.media.insertImage") : t("editor.media.insertVideo")}
           </Button>
         </div>

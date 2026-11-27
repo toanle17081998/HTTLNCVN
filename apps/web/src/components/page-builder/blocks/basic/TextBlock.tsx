@@ -2,7 +2,7 @@
 
 import { useEditor, useNode } from "@craftjs/core";
 import { Trash2 } from "lucide-react";
-import { Input, Textarea, cn } from "@/components/ui";
+import { Button, Input, Textarea, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, resolveStyleToken, useIsMobile, withUnitFallback } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -82,7 +82,8 @@ export function TextBlock(props: TextProps) {
     <NodeFrame>
       <div className="group/text relative w-full">
         {enabled && isRemovable ? (
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Delete text block"
             className={cn(
               "absolute -right-2 -top-2 z-20 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elevated)] text-[var(--status-danger)] shadow-sm transition hover:bg-[var(--status-danger)] hover:text-white cursor-pointer",
@@ -96,7 +97,7 @@ export function TextBlock(props: TextProps) {
             type="button"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         ) : null}
         <Tag
           className={cn(

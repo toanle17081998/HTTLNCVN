@@ -264,6 +264,39 @@ textarea {
   font-size: var(--text-base, 1rem);
 }
 
+.ui-dropdown {
+  --dropdown-chevron-inset: .5rem;
+  appearance: none;
+  padding-inline-end: calc(var(--dropdown-chevron-inset) + 1.5rem);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23394758' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right var(--dropdown-chevron-inset) center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
+
+[data-theme='dark'] .ui-dropdown {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23d1d4df' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.ui-dropdown:dir(rtl) {
+  background-position: left var(--dropdown-chevron-inset) center;
+}
+
+@media (forced-colors: active) {
+  .ui-dropdown {
+    appearance: auto;
+  }
+
+  .ui-dropdown,
+  [data-theme='dark'] .ui-dropdown {
+    background-image: none;
+  }
+
+  .ui-dropdown:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}
+
 button,
 a,
 select,
@@ -335,6 +368,44 @@ summary,
 
 :focus-visible {
   outline-color: var(--accent-gold);
+}
+
+[data-lesson-content] {
+  --lesson-indent-step: clamp(0.75rem, 2.5vw, 1.5rem);
+}
+
+[data-lesson-content] [data-lesson-section] {
+  border-inline-start: 3px solid var(--brand-primary);
+  padding-inline-start: 0.75rem;
+  margin-block: 1.5rem 0.75rem;
+  font-family: var(--font-lora), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+[data-lesson-content] h4,
+[data-lesson-content] h5,
+[data-lesson-content] [data-lesson-outline] {
+  margin-block: 1rem 0.5rem;
+  font-weight: 700;
+}
+
+[data-lesson-content] h4,
+[data-lesson-content] [data-lesson-outline="part"] {
+  font-size: 1.125rem;
+}
+
+[data-lesson-content] [data-lesson-indent="1"] {
+  margin-inline-start: var(--lesson-indent-step);
+}
+
+[data-lesson-content] [data-lesson-indent="2"] {
+  margin-inline-start: calc(var(--lesson-indent-step) * 2);
+}
+
+[data-lesson-content] hr {
+  margin-block: 1rem;
+  border-color: var(--border-subtle);
 }
 
 .published-page-builder {

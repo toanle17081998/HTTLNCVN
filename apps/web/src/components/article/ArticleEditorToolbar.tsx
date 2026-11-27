@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import {
   getToolbarItemKey,
@@ -46,7 +46,8 @@ export function ArticleEditorToolbar({
           {group.map((item) => {
             const isActive = activeToolbarKeys.includes(getToolbarItemKey(item));
             return (
-              <button
+              <Button
+                variant="unstyled"
                 aria-label={getToolbarLabel(item.command, item.value, item.label)}
                 aria-pressed={isActive}
                 className={cn(
@@ -61,7 +62,7 @@ export function ArticleEditorToolbar({
                 type="button"
               >
                 <ToolbarIcon name={item.icon} />
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -78,7 +79,8 @@ export function ArticleEditorToolbar({
             { key: "action:table", label: t("editor.action.table"), icon: "table", onClick: onAddTable },
           ] as const
         ).map(({ key, label, icon, onClick }) => (
-          <button
+          <Button
+            variant="unstyled"
             key={key}
             aria-pressed={activeToolbarKeys.includes(key as ToolbarItemKey)}
             className={cn(
@@ -91,7 +93,7 @@ export function ArticleEditorToolbar({
           >
             <ToolbarIcon name={icon} />
             {label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

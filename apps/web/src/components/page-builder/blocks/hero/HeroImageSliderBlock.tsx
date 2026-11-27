@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import Image from "next/image";
+import { MediaLibraryButton } from "@/components/media/MediaPickerModal";
 import { Input, Textarea, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle } from "../../shared/helpers";
@@ -102,6 +103,24 @@ function HeroImageSliderBlockSettings() {
           value={imageString}
         />
       </Field>
+      <div className="grid gap-2">
+        {defaultHeroSliderImages.map((fallback, index) => (
+          <MediaLibraryButton
+            key={fallback}
+            label={`Choose image ${index + 1} from library`}
+            mediaKind="image"
+            onSelect={(item) =>
+              setProp((props: HeroSliderProps) => {
+                const current = props.images ?? [];
+                props.images = defaultHeroSliderImages.map((url, slot) =>
+                  slot === index ? item.url : current[slot] || url,
+                ).concat(current.slice(defaultHeroSliderImages.length));
+              })
+            }
+            selectedUrl={images?.[index] || fallback}
+          />
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Auto play">
           <NativeSelect

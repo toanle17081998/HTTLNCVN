@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Text } from "@/components/ui";
+import { Button, Title, Text } from "@/components/ui";
 import { useState } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -51,7 +51,8 @@ export function FeatureTestimonialListBlock({
   const activeItems = (Array.isArray(nodeItems) && nodeItems.length ? nodeItems : items) || defaultTestimonials;
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeItem = activeItems[Math.min(activeIndex, Math.max(activeItems.length - 1, 0))];
+  const selectedIndex = Math.min(activeIndex, Math.max(activeItems.length - 1, 0));
+  const activeItem = activeItems[selectedIndex];
   const { enabled } = useEditor((state: any) => ({ enabled: state.options.enabled }));
 
   return (
@@ -68,7 +69,7 @@ export function FeatureTestimonialListBlock({
           ) : null}
         </div>
         {activeItem ? (
-          <div className="overflow-hidden border border-[var(--border-subtle)]" style={{ borderRadius: "var(--section-radius-card)" }}>
+          <div className="overflow-hidden shadow-[var(--shadow-lg)]" style={{ borderRadius: "var(--section-radius-card)" }}>
             <div className="feature-testimonial-layout grid items-center" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", padding: "var(--section-space-lg)" }}>
               <div className="feature-testimonial-image relative flex items-center justify-center bg-[var(--bg-card)] overflow-hidden w-full" style={{ borderRadius: "var(--section-radius)", height: "30rem" }}>
                 {activeItem.imageUrl || activeItem.logoUrl ? (
@@ -102,19 +103,20 @@ export function FeatureTestimonialListBlock({
             </div>
             <div className="feature-testimonial-tabs grid border-t border-[var(--border-subtle)]" style={{ gridTemplateColumns: `repeat(${activeItems.length}, minmax(0, 1fr))` }}>
               {activeItems.map((item, index) => (
-                <button
-                  className="border-r border-[var(--border-subtle)]"
+                <Button
+                  variant="unstyled"
+                  aria-pressed={index === selectedIndex}
+                  className="border-r border-[var(--border-subtle)] aria-pressed:bg-[var(--bg-card)]"
                   key={`${item.organization}-${index}`}
                   onClick={() => setActiveIndex(index)}
                   style={{
-                    background: index === activeIndex ? "var(--bg-card)" : "transparent",
                     fontWeight: "var(--section-weight-bold)",
                     padding: "var(--section-space-md)",
                   }}
                   type="button"
                 >
                   {item.organization}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

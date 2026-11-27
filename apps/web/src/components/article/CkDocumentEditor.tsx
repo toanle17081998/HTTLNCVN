@@ -1,8 +1,9 @@
 "use client";
 
 import { CKEditor } from "@ckeditor/ckeditor5-react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import "ckeditor5/ckeditor5.css";
+import vietnamese from "ckeditor5/translations/vi.js";
 import {
   Alignment,
   Autoformat,
@@ -67,6 +68,7 @@ import {
   type UploadAdapter,
 } from "ckeditor5";
 import { uploadMedia } from "@/api/media";
+import { useTranslation } from "@/providers/I18nProvider";
 
 class ServerUploadAdapter implements UploadAdapter {
   private readonly abortController = new AbortController();
@@ -104,12 +106,17 @@ export default function CkDocumentEditor({
   onReady,
   placeholder,
 }: CkDocumentEditorProps) {
+  const { locale, t } = useTranslation();
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const [draft, setDraft] = useState<{ initialValue: string; html: string } | null>(null);
+  const editorData = draft?.initialValue === initialValue ? draft.html : initialValue;
 
   const editorConfig = useMemo<EditorConfig>(
     () => ({
       licenseKey: "GPL",
+      language: locale,
       placeholder,
+      translations: locale === "vi" ? [vietnamese] : [],
       extraPlugins: [ServerUploadAdapterPlugin],
       plugins: [
         Alignment,
@@ -218,11 +225,11 @@ export default function CkDocumentEditor({
       },
       heading: {
         options: [
-          { model: "paragraph", title: "Normal text", class: "ck-heading_paragraph" },
-          { model: "heading1", view: "h1", title: "Title", class: "ck-heading_heading1" },
-          { model: "heading2", view: "h2", title: "Heading", class: "ck-heading_heading2" },
-          { model: "heading3", view: "h3", title: "Subheading", class: "ck-heading_heading3" },
-          { model: "heading4", view: "h4", title: "Small heading", class: "ck-heading_heading4" },
+          { model: "paragraph", title: t("editor.heading.normal"), class: "ck-heading_paragraph" },
+          { model: "heading1", view: "h1", title: t("editor.heading.title"), class: "ck-heading_heading1" },
+          { model: "heading2", view: "h2", title: t("editor.heading.heading"), class: "ck-heading_heading2" },
+          { model: "heading3", view: "h3", title: t("editor.heading.subheading"), class: "ck-heading_heading3" },
+          { model: "heading4", view: "h4", title: t("editor.heading.small"), class: "ck-heading_heading4" },
         ],
       },
       fontFamily: {
@@ -293,7 +300,7 @@ export default function CkDocumentEditor({
         ],
       },
     }),
-    [placeholder],
+    [locale, placeholder, t],
   );
 
   return (
@@ -305,14 +312,19 @@ export default function CkDocumentEditor({
       <div className="ckeditor-document-scroll min-h-[36rem] overflow-auto px-4 py-6">
         <CKEditor
           config={editorConfig}
-          data={initialValue}
+          data={editorData}
           disableWatchdog
           editor={DecoupledEditor}
+          id={locale}
           onAfterDestroy={() => {
             if (toolbarRef.current) toolbarRef.current.innerHTML = "";
             onReady(null);
           }}
-          onChange={(_, editor) => onChange(editor.getData())}
+          onChange={(_, editor) => {
+            const html = editor.getData();
+            setDraft({ initialValue, html });
+            onChange(html);
+          }}
           onReady={(editor) => {
             const toolbarElement = editor.ui.view.toolbar.element;
             if (toolbarRef.current && toolbarElement) {

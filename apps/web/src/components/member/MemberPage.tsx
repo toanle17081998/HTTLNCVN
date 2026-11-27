@@ -1,7 +1,7 @@
 "use client";
 
-import { Text, Button, Card, FormField, Input, Pagination, Select, cn, Title } from "@/components/ui";
-import { useRef, useState, type FormEvent } from "react";
+import { Text, Button, Card, FormField, Input, Modal, ModalBody, ModalFooter, ModalHeader, Pagination, Dropdown, cn, Title } from "@/components/ui";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Edit3, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { PERMISSIONS } from "@/lib/rbac";
@@ -101,6 +101,16 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
   const [queryInput, setQueryInput] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    const nextQuery = queryInput.trim();
+    if (nextQuery === q) return;
+    const timer = window.setTimeout(() => {
+      setQ(nextQuery);
+      setPage(0);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [q, queryInput]);
 
   const membersQuery = useMembersQuery(
     { take: pageSize, skip: page * pageSize, q: q || undefined },
@@ -262,24 +272,14 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                     className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
                   />
                   <Input
+                    aria-label={t("admin.members.search")}
                     className="h-11 rounded-xl pl-11 shadow-sm"
                     onChange={(event) => setQueryInput(event.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") { setQ(queryInput.trim()); setPage(0); }
-                    }}
                     placeholder={t("admin.members.search")}
+                    type="search"
                     value={queryInput}
                   />
                 </div>
-                <Button
-                  aria-label="Search"
-                  className="h-11 w-11 shrink-0 rounded-xl"
-                  onClick={() => { setQ(queryInput.trim()); setPage(0); }}
-                  size="icon"
-                  variant="secondary"
-                >
-                  <Search aria-hidden="true" className="h-4 w-4" />
-                </Button>
                 {hideLayout && (
                   <>
                     {admin ? (
@@ -297,7 +297,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                       </>
                     ) : null}
                     {canCreateMembers ? (
-                      <Button onClick={openCreateModal} className="h-11 shrink-0 rounded-xl">
+                      <Button variant="primary" onClick={openCreateModal} className="h-11 shrink-0 rounded-xl">
                         <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
                         {t("action.inviteMember")}
                       </Button>
@@ -358,17 +358,19 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
 
                     <div className="flex gap-2">
                       {canUpdateMembers ? (
-                        <button
+                        <Button
+                          variant="unstyled"
                           aria-label={t("admin.members.editNamed", { name: displayName(member) })}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                           onClick={() => openEditModal(member)}
                           type="button"
                         >
                           <Edit3 aria-hidden="true" className="h-4 w-4" />
-                        </button>
+                        </Button>
                       ) : null}
                       {canDeleteMembers ? (
-                        <button
+                        <Button
+                          variant="unstyled"
                           aria-label={t("admin.members.deleteNamed", { name: displayName(member) })}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--status-danger)] transition-all hover:bg-[var(--status-danger-bg)]"
                           onClick={async () => {
@@ -383,7 +385,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                           type="button"
                         >
                           <Trash2 aria-hidden="true" className="h-4 w-4" />
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                   </div>
@@ -424,37 +426,37 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
       )}
 
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
-          <form
-            className="grid max-h-[calc(100vh-3rem)] w-full max-w-3xl gap-5 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl"
+          <Modal
+            className="max-w-3xl"
+            labelledBy="member-modal-title"
             onSubmit={submitMember}
           >
-            <div className="flex items-start justify-between gap-4">
+            <ModalHeader className="flex items-start justify-between gap-4">
               <div>
                 <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
                   {t("admin.members.rbac")}
                 </Text>
-                <Title as="h2" variant="cardSoft">
+                <Title as="h2" id="member-modal-title" variant="cardSoft">
                   {editingMember ? t("admin.members.edit") : t("admin.members.add")}
                 </Title>
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 aria-label={t("action.close")}
                 className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
                 onClick={closeModal}
                 type="button"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
-              </button>
-            </div>
+              </Button>
+            </ModalHeader>
 
-            {mutationError ? (
-              <div className="rounded-md border border-[var(--status-danger)]/30 bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--status-danger)]">
-                {mutationErrorMessage(mutationError)}
-              </div>
-            ) : null}
-
-            <div className="grid gap-4 sm:grid-cols-2">
+            <ModalBody className="grid content-start gap-4 sm:grid-cols-2">
+              {mutationError ? (
+                <div className="rounded-md border border-[var(--status-danger)]/30 bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--status-danger)] sm:col-span-2">
+                  {mutationErrorMessage(mutationError)}
+                </div>
+              ) : null}
               <FormField htmlFor="member-first-name" label={t("admin.members.firstName")}>
                 <Input
                   id="member-first-name"
@@ -506,7 +508,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                 />
               </FormField>
               <FormField htmlFor="member-role" label={t("admin.members.role")}>
-                <Select
+                <Dropdown
                   id="member-role"
                   onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
                   value={form.role}
@@ -516,10 +518,10 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                       {roleLabel(role)}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
               <FormField htmlFor="member-status" label={t("course.form.status")}>
-                <Select
+                <Dropdown
                   id="member-status"
                   onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
                   value={form.status}
@@ -529,10 +531,10 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                       {status}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
               <FormField htmlFor="member-gender" label={t("admin.members.gender")}>
-                <Select
+                <Dropdown
                   id="member-gender"
                   onChange={(event) => setForm((current) => ({ ...current, gender: event.target.value }))}
                   value={form.gender}
@@ -540,7 +542,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   <option value="">{t("admin.members.genderUnspecified")}</option>
                   <option value="female">{t("admin.members.genderFemale")}</option>
                   <option value="male">{t("admin.members.genderMale")}</option>
-                </Select>
+                </Dropdown>
               </FormField>
               <FormField htmlFor="member-date-of-birth" label={t("admin.members.dateOfBirth")}>
                 <Input
@@ -557,9 +559,9 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   value={form.address}
                 />
               </FormField>
-            </div>
+            </ModalBody>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <ModalFooter className="flex flex-wrap items-center justify-between gap-3">
               {editingMember && canDeleteMembers ? (
                 <Button
                   isLoading={deleteMemberMutation.isPending}
@@ -577,13 +579,12 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                 <Button onClick={closeModal} type="button" variant="secondary">
                   {t("common.cancel")}
                 </Button>
-                <Button isLoading={isSaving} type="submit">
+                <Button variant="primary" isLoading={isSaving} type="submit">
                   {editingMember ? t("admin.members.saveChanges") : t("admin.members.create")}
                 </Button>
               </div>
-            </div>
-          </form>
-        </div>
+            </ModalFooter>
+          </Modal>
       ) : null}
     </>
   );
@@ -612,7 +613,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
             </>
           ) : null}
           {canCreateMembers ? (
-            <Button onClick={openCreateModal}>
+            <Button variant="primary" onClick={openCreateModal}>
               <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
               {t("action.inviteMember")}
             </Button>

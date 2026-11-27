@@ -1,13 +1,15 @@
 "use client";
 
-import { Text, Title, Input, Textarea, cn, Label } from "@/components/ui";
+import { Button, Text, Title, Input, Textarea, cn, Label } from "@/components/ui";
 import { useContext } from "react";
 import { useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
+import { isVideoMediaUrl } from "@/api/media";
+import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useTranslation } from "@/providers/I18nProvider";
 import { findSectionPreset, sectionPresetNameKey } from "./sectionPresets";
 import { Field, NativeSelect } from "../shared/settings";
-import { getButtonVariantClass } from "../shared/helpers";
+import { getButtonVariantClass, toEmbedUrl } from "../shared/helpers";
 import { IconPicker, featureIconMap } from "../shared/iconList";
 import { ContentEditContext } from "../shared/NodeFrame";
 import { defaultHeroSliderImages } from "../blocks/hero/HeroImageSliderBlock";
@@ -69,7 +71,7 @@ function GalleryBindingFields({
       </Field>
     </div>
     <div className="grid gap-2">
-      <div className="flex items-center justify-between"><span className="text-sm font-medium">{t("pageBuilder.specificItems")}</span><button className="text-xs font-semibold text-[var(--brand-primary)]" onClick={() => setValue("selectedItemIds", [])} type="button">{t("pageBuilder.showAll")}</button></div>
+      <div className="flex items-center justify-between"><span className="text-sm font-medium">{t("pageBuilder.specificItems")}</span><Button variant="unstyled" className="text-xs font-semibold text-[var(--brand-primary)]" onClick={() => setValue("selectedItemIds", [])} type="button">{t("pageBuilder.showAll")}</Button></div>
       <div className="grid max-h-52 gap-1 overflow-y-auto rounded-lg border border-[var(--border-subtle)] p-2">
         {items.map((item) => <Label variant="inherit" className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-[var(--brand-soft)]" key={item.id}>
           <Input checked={selectedItemIds.includes(item.id)} onChange={() => toggleItem(item.id)} type="checkbox" />
@@ -91,7 +93,7 @@ function EditableNodeFields({
   nodeId: string;
   nodeName: string;
   props: Record<string, unknown>;
-  setValue: (nodeId: string, key: string, value: unknown) => void;
+  setValue: (nodeId: string, key: string | Record<string, unknown>, value?: unknown) => void;
 }) {
   const isHeading = nodeName === "TextBlock" && ["h1", "h2", "h3", "h4"].includes(String(props.tag ?? "p"));
 
@@ -130,7 +132,22 @@ function EditableNodeFields({
       {nodeName === "ImageBlock" ? (
         <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3">
           <Text tone="tertiary" variant="overline">Image / Media</Text>
-          <Field label="Image URL"><Input onChange={(event) => setValue(nodeId, "url", event.target.value)} value={String(props.url ?? "")} /></Field>
+          <Field label="Image / Video URL">
+            <ImagePickerField
+              allowVideo
+              compact
+              onChange={(url, assetKind) => {
+                const kind = assetKind ?? (isVideoMediaUrl(url)
+                  ? "video"
+                  : toEmbedUrl(url, "embed") !== url || /^https?:\/\/player\.vimeo\.com\/video\//i.test(url)
+                    ? "embed"
+                    : "image");
+                setValue(nodeId, { kind, url });
+              }}
+              placeholder="https://..."
+              value={String(props.url ?? "")}
+            />
+          </Field>
           <Field label="Alternative text"><Input onChange={(event) => setValue(nodeId, "alt", event.target.value)} value={String(props.alt ?? "")} /></Field>
         </div>
       ) : null}
@@ -143,7 +160,7 @@ function EditableNodeFields({
             const alts = Array.isArray(props.alts) ? (props.alts as string[]) : [];
             return (
               <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3" key={index}>
-                <Field label={`Image ${index + 1} URL`}><Input onChange={(event) => { const next = [...images]; next[index] = event.target.value; setValue(nodeId, "images", next); }} value={images[index] ?? ""} /></Field>
+                <Field label={`Image ${index + 1} URL`}><ImagePickerField compact onChange={(url) => { const next = [...images]; next[index] = url; setValue(nodeId, "images", next); }} value={images[index] ?? ""} /></Field>
                 <Field label={`Image ${index + 1} alternative text`}><Input onChange={(event) => { const next = [...alts]; next[index] = event.target.value; setValue(nodeId, "alts", next); }} value={alts[index] ?? ""} /></Field>
               </div>
             );
@@ -152,11 +169,11 @@ function EditableNodeFields({
       ) : null}
 
       {nodeName === "FeatureZigzagCardBlock" ? (
-        <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3">
+        <div className="grid gap-3 p-3">
           <Text tone="tertiary" variant="overline">Feature Card</Text>
           <Field label="Card title"><Input onChange={(event) => setValue(nodeId, "title", event.target.value)} value={String(props.title ?? "")} /></Field>
           <Field label="Card description"><Textarea className="min-h-20" onChange={(event) => setValue(nodeId, "description", event.target.value)} value={String(props.description ?? "")} /></Field>
-          <Field label="Image URL"><Input onChange={(event) => setValue(nodeId, "imageUrl", event.target.value)} value={String(props.imageUrl ?? "")} /></Field>
+          <Field label="Image URL"><ImagePickerField compact onChange={(url) => setValue(nodeId, "imageUrl", url)} value={String(props.imageUrl ?? "")} /></Field>
           <Field label="Image alternative text"><Input onChange={(event) => setValue(nodeId, "imageAlt", event.target.value)} value={String(props.imageAlt ?? "")} /></Field>
           <Label variant="inherit" className="flex items-center gap-2 text-sm"><Input checked={props.showButton !== false} onChange={(event) => setValue(nodeId, "showButton", event.target.checked)} type="checkbox" />Show action button</Label>
           {props.showButton !== false ? (
@@ -178,7 +195,7 @@ function EditableNodeFields({
 
       {nodeName === "FeatureOrbitListBlock" ? (
         <div className="grid gap-3">
-          <Field label="Center transparent image URL (optional)"><Input onChange={(event) => setValue(nodeId, "centerImageUrl", event.target.value)} placeholder="PNG, WebP, or SVG URL" value={String(props.centerImageUrl ?? "")} /></Field>
+          <Field label="Center transparent image URL (optional)"><ImagePickerField compact onChange={(url) => setValue(nodeId, "centerImageUrl", url)} placeholder="PNG, WebP, or SVG URL" value={String(props.centerImageUrl ?? "")} /></Field>
           <Field label="Center image alternative text"><Input onChange={(event) => setValue(nodeId, "centerImageAlt", event.target.value)} value={String(props.centerImageAlt ?? "")} /></Field>
           <Text tone="tertiary" variant="overline">Core values (4)</Text>
           {(Array.isArray(props.items) && props.items.length ? (props.items as CoreValueItem[]) : defaultCoreValues).slice(0, 4).map((item: CoreValueItem, index: number, items: CoreValueItem[]) => (
@@ -198,7 +215,7 @@ function EditableNodeFields({
             <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3" key={index}>
               <Field label={`Item ${index + 1} title`}><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, title: event.target.value }; setValue(nodeId, "items", next); }} value={item.title} /></Field>
               <Field label="Description"><Textarea onChange={(event) => { const next = [...items]; next[index] = { ...item, description: event.target.value }; setValue(nodeId, "items", next); }} value={item.description} /></Field>
-              <Field label="Image URL"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, imageUrl: event.target.value }; setValue(nodeId, "items", next); }} value={item.imageUrl} /></Field>
+              <Field label="Image URL"><ImagePickerField compact onChange={(url) => { const next = [...items]; next[index] = { ...item, imageUrl: url }; setValue(nodeId, "items", next); }} value={item.imageUrl ?? ""} /></Field>
               <Field label="Image alternative text"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, imageAlt: event.target.value }; setValue(nodeId, "items", next); }} value={item.imageAlt} /></Field>
               <Label variant="inherit" className="flex items-center gap-2 text-sm"><Input checked={item.showButton} onChange={(event) => { const next = [...items]; next[index] = { ...item, showButton: event.target.checked }; setValue(nodeId, "items", next); }} type="checkbox" />Show button</Label>
               {item.showButton ? (
@@ -207,13 +224,13 @@ function EditableNodeFields({
                   <Field label="Button URL"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, buttonHref: event.target.value }; setValue(nodeId, "items", next); }} value={item.buttonHref} /></Field>
                 </div>
               ) : null}
-              <button className="justify-self-start text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", items.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove item</button>
+              <Button variant="unstyled" className="justify-self-start text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", items.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove item</Button>
             </div>
           ))}
-          <button className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
+          <Button variant="unstyled" className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
             const currentList = Array.isArray(props.items) && props.items.length ? (props.items as FeatureTabItem[]) : defaultFeatureTabs;
             setValue(nodeId, "items", [...currentList, { ...defaultFeatureTabs[0], title: "New ministry" }]);
-          }} type="button">+ Add ministry</button>
+          }} type="button">+ Add ministry</Button>
         </div>
       ) : null}
 
@@ -223,19 +240,19 @@ function EditableNodeFields({
           {(Array.isArray(props.items) && props.items.length ? (props.items as TestimonialItem[]) : defaultTestimonials).map((item: TestimonialItem, index: number, items: TestimonialItem[]) => (
             <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3" key={index}>
               <Field label={`Group or Ministry ${index + 1}`}><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, organization: event.target.value }; setValue(nodeId, "items", next); }} value={item.organization} /></Field>
-              <Field label="Photo / Image URL"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, imageUrl: event.target.value, logoUrl: event.target.value }; setValue(nodeId, "items", next); }} placeholder="https://..." value={item.imageUrl || item.logoUrl || ""} /></Field>
+              <Field label="Photo / Image URL"><ImagePickerField compact onChange={(url) => { const next = [...items]; next[index] = { ...item, imageUrl: url, logoUrl: url }; setValue(nodeId, "items", next); }} placeholder="https://..." value={item.imageUrl || item.logoUrl || ""} /></Field>
               <Field label="Quote"><Textarea onChange={(event) => { const next = [...items]; next[index] = { ...item, quote: event.target.value }; setValue(nodeId, "items", next); }} value={item.quote} /></Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Name"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, name: event.target.value }; setValue(nodeId, "items", next); }} value={item.name} /></Field>
                 <Field label="Role"><Input onChange={(event) => { const next = [...items]; next[index] = { ...item, role: event.target.value }; setValue(nodeId, "items", next); }} value={item.role} /></Field>
               </div>
-              <button className="justify-self-start text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", items.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove testimonial</button>
+              <Button variant="unstyled" className="justify-self-start text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", items.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove testimonial</Button>
             </div>
           ))}
-          <button className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
+          <Button variant="unstyled" className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
             const currentList = Array.isArray(props.items) && props.items.length ? (props.items as TestimonialItem[]) : defaultTestimonials;
             setValue(nodeId, "items", [...currentList, { ...defaultTestimonials[0], name: "New member" }]);
-          }} type="button">+ Add testimonial</button>
+          }} type="button">+ Add testimonial</Button>
         </div>
       ) : null}
 
@@ -266,7 +283,7 @@ function EditableNodeFields({
               <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3" key={index}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[var(--accent-gold)]">Item {index + 1}</span>
-                  <button className="text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", currentItems.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove item</button>
+                  <Button variant="unstyled" className="text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "items", currentItems.filter((_, itemIndex: number) => itemIndex !== index))} type="button">Remove item</Button>
                 </div>
                 <Field label="Number / Tag"><Input onChange={(event) => { const next = [...currentItems]; next[index] = { ...item, number: event.target.value }; setValue(nodeId, "items", next); }} value={item.number} /></Field>
                 <Field label="Title"><Input onChange={(event) => { const next = [...currentItems]; next[index] = { ...item, title: event.target.value }; setValue(nodeId, "items", next); }} value={item.title} /></Field>
@@ -274,12 +291,12 @@ function EditableNodeFields({
               </div>
             ))}
             {(Array.isArray(props.items) ? (props.items as CtaScheduleItem[]).length : defaultCtaScheduleItems.length) < 4 ? (
-              <button className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
+              <Button variant="unstyled" className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
                 const current = Array.isArray(props.items) ? (props.items as Array<CtaScheduleItem & { number?: string }>) : defaultCtaScheduleItems;
                 if (current.length < 4) {
                   setValue(nodeId, "items", [...current, { description: "11:00 AM", number: `0${current.length + 1}`, time: "11:00 AM", title: "New service" }].slice(0, 4));
                 }
-              }} type="button">+ Add item</button>
+              }} type="button">+ Add item</Button>
             ) : null}
           </div>
         </div>
@@ -325,16 +342,16 @@ function EditableNodeFields({
               <div className="grid gap-3 rounded-lg border border-[var(--border-subtle)] p-3" key={index}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[var(--accent-gold)]">Image {index + 1}</span>
-                  <button className="text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "images", currentImages.filter((_, imgIndex: number) => imgIndex !== index))} type="button">Remove image</button>
+                  <Button variant="unstyled" className="text-xs font-semibold text-[var(--status-danger)]" onClick={() => setValue(nodeId, "images", currentImages.filter((_, imgIndex: number) => imgIndex !== index))} type="button">Remove image</Button>
                 </div>
-                <Field label="Image URL"><Input onChange={(event) => { const next = [...currentImages]; next[index] = { ...img, url: event.target.value }; setValue(nodeId, "images", next); }} value={img.url} /></Field>
+                <Field label="Image URL"><ImagePickerField compact onChange={(url) => { const next = [...currentImages]; next[index] = { ...img, url }; setValue(nodeId, "images", next); }} value={img.url} /></Field>
                 <Field label="Alternative text (optional)"><Input onChange={(event) => { const next = [...currentImages]; next[index] = { ...img, alt: event.target.value }; setValue(nodeId, "images", next); }} value={img.alt ?? ""} /></Field>
               </div>
             ))}
-            <button className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
+            <Button variant="unstyled" className="justify-self-start text-sm font-semibold text-[var(--brand-primary)]" onClick={() => {
               const current = Array.isArray(props.images) && props.images.length ? (props.images as GalleryImageItem[]) : defaultGalleryImages;
               setValue(nodeId, "images", [...current, { alt: "New gallery image", url: defaultGalleryImages[0].url }]);
-            }} type="button">+ Add image</button>
+            }} type="button">+ Add image</Button>
           </div>
         </div>
       ) : null}
@@ -457,9 +474,9 @@ export function ContentEditorDialog() {
     t("pageBuilder.section")
   );
 
-  function setValue(nodeId: string, key: string, value: unknown) {
+  function setValue(nodeId: string, key: string | Record<string, unknown>, value?: unknown) {
     actions.setProp(nodeId, (draft: Record<string, unknown>) => {
-      draft[key] = value;
+      Object.assign(draft, typeof key === "string" ? { [key]: value } : key);
     });
   }
 
@@ -478,9 +495,9 @@ export function ContentEditorDialog() {
             <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionCms")}</Text>
             <Title as="h3" variant="subsection">{t("pageBuilder.editSection", { name: sectionTitle })}</Title>
           </div>
-          <button aria-label="Close editor" className="rounded-lg border border-[var(--border-subtle)] p-2 hover:bg-[var(--bg-surface)] cursor-pointer" onClick={handleClose} type="button">
+          <Button variant="unstyled" aria-label="Close editor" className="rounded-lg border border-[var(--border-subtle)] p-2 hover:bg-[var(--bg-surface)] cursor-pointer" onClick={handleClose} type="button">
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
         <div className="grid min-h-0 gap-6 overflow-y-auto overscroll-contain p-6">
           {editableNodes.length > 0 ? (
@@ -498,7 +515,8 @@ export function ContentEditorDialog() {
               {t("pageBuilder.noEditableFields")}
             </div>
           )}
-          <button
+          <Button
+            variant="unstyled"
             className={cn(
               "justify-self-end rounded-lg px-6 py-2.5 text-sm font-semibold transition-all duration-300 cursor-pointer",
               getButtonVariantClass("primary"),
@@ -507,7 +525,7 @@ export function ContentEditorDialog() {
             type="button"
           >
             {t("pageBuilder.done")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

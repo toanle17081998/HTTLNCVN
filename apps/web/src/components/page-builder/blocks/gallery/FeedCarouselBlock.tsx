@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Skeleton, Textarea, cn } from "@/components/ui";
+import { Button, Input, Skeleton, Textarea, cn } from "@/components/ui";
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -331,17 +331,19 @@ export function FeedCarouselBlock(props: FeedProps) {
             </div>
             {lastStartIndex > 0 ? (
               <div className="flex items-center justify-center gap-3">
-                <button
+                <Button
+                  variant="unstyled"
                   aria-label="Previous slide"
                   className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95"
                   onClick={() => goToSlide(safeActiveIndex - 1)}
                   type="button"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                </button>
+                </Button>
                 <div className="flex items-center gap-2">
                   {Array.from({ length: lastStartIndex + 1 }).map((_, index) => (
-                    <button
+                    <Button
+                      variant="unstyled"
                       aria-label={`Go to slide ${index + 1}`}
                       className={cn(
                         "rounded-full transition-all duration-300",
@@ -355,14 +357,15 @@ export function FeedCarouselBlock(props: FeedProps) {
                     />
                   ))}
                 </div>
-                <button
+                <Button
+                  variant="unstyled"
                   aria-label="Next slide"
                   className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95"
                   onClick={() => goToSlide(safeActiveIndex + 1)}
                   type="button"
                 >
                   <ChevronRight className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             ) : null}
           </div>

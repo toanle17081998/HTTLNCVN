@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Title, Button, Card, FormField, Input, Pagination, Select, Textarea, cn, Label } from "@/components/ui";
+import { Text, Title, Button, Card, FormField, Input, Modal, ModalBody, ModalFooter, ModalHeader, Pagination, Dropdown, Textarea, cn, Label } from "@/components/ui";
 import { useMemo, useState, type FormEvent } from "react";
 import {
   Building2,
@@ -411,7 +411,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 <Label variant="caption"  htmlFor="church-unit-type-filter">
                   {t("common.type")}
                 </Label>
-                <Select
+                <Dropdown
                   id="church-unit-type-filter"
                   aria-label={t("admin.churchUnits.type")}
                   className="h-9 text-sm"
@@ -424,14 +424,14 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                       {typeLabel(type)}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </div>
 
               <div className="flex min-w-[130px] flex-1 flex-col gap-1 sm:w-36 sm:flex-none">
                 <Label variant="caption"  htmlFor="church-unit-status-filter">
                   {t("common.status")}
                 </Label>
-                <Select
+                <Dropdown
                   id="church-unit-status-filter"
                   aria-label={t("course.form.status")}
                   className="h-9 text-sm"
@@ -441,11 +441,12 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                   <option value="all">{t("prayer.filter.all")}</option>
                   <option value="active">{t("admin.churchUnits.status.active")}</option>
                   <option value="inactive">{t("admin.churchUnits.status.inactive")}</option>
-                </Select>
+                </Dropdown>
               </div>
 
               <div className="ml-auto flex items-center gap-2">
-                <button
+                <Button
+                  variant="unstyled"
                   aria-label={t("admin.members.refresh")}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
                   onClick={() => {
@@ -461,9 +462,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                       unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
                     )}
                   />
-                </button>
+                </Button>
                 {hideLayout && canCreateUnits ? (
-                  <Button onClick={openCreateModal} size="sm">
+                  <Button variant="primary" onClick={openCreateModal} size="sm">
                     <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
                     {t("admin.churchUnits.add")}
                   </Button>
@@ -546,24 +547,26 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                     </div>
                     <div className="flex gap-2">
                       {canUpdateUnits ? (
-                        <button
+                        <Button
+                          variant="unstyled"
                           aria-label={t("admin.churchUnits.editNamed", { name: unit.name })}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
                           onClick={() => openEditModal(unit)}
                           type="button"
                         >
                           <Edit3 aria-hidden="true" className="h-4 w-4" />
-                        </button>
+                        </Button>
                       ) : null}
                       {canDeleteUnits ? (
-                        <button
+                        <Button
+                          variant="unstyled"
                           aria-label={t("admin.churchUnits.deleteNamed", { name: unit.name })}
                           className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--status-danger)] transition-all hover:bg-[var(--status-danger-bg)]"
                           onClick={() => void handleDelete(unit)}
                           type="button"
                         >
                           <Trash2 aria-hidden="true" className="h-4 w-4" />
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                   </div>
@@ -604,37 +607,37 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
       {/* Creation and Edit Modal */}
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
-          <form
-            className="grid max-h-[calc(100vh-3rem)] w-full max-w-4xl gap-5 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5 shadow-xl animate-in fade-in duration-200"
+          <Modal
+            className="max-w-4xl animate-in fade-in duration-200"
+            labelledBy="church-unit-modal-title"
             onSubmit={submitChurchUnit}
           >
-            <div className="flex items-start justify-between gap-4">
+            <ModalHeader className="flex items-start justify-between gap-4">
               <div>
                 <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
                   {t("admin.churchUnits.eyebrow")}
                 </Text>
-                <Title as="h2" variant="cardSoft">
+                <Title as="h2" id="church-unit-modal-title" variant="cardSoft">
                   {editingUnit ? t("admin.churchUnits.edit") : t("admin.churchUnits.add")}
                 </Title>
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 aria-label={t("action.close")}
                 className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
                 onClick={closeModal}
                 type="button"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
-              </button>
-            </div>
+              </Button>
+            </ModalHeader>
 
-            {mutationError ? (
-              <div className="rounded-md border border-[var(--status-danger)]/30 bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--status-danger)]">
-                {mutationErrorMessage(mutationError)}
-              </div>
-            ) : null}
-
-            <div className="grid gap-4 sm:grid-cols-2">
+            <ModalBody className="grid content-start gap-4 sm:grid-cols-2">
+              {mutationError ? (
+                <div className="rounded-md border border-[var(--status-danger)]/30 bg-[color-mix(in_srgb,var(--status-danger)_10%,transparent)] px-3 py-2 text-sm text-[var(--status-danger)] sm:col-span-2">
+                  {mutationErrorMessage(mutationError)}
+                </div>
+              ) : null}
               <FormField htmlFor="church-unit-name" label={t("admin.churchUnits.name")}>
                 <Input
                   id="church-unit-name"
@@ -645,7 +648,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               </FormField>
 
               <FormField htmlFor="church-unit-type" label={t("admin.churchUnits.type")}>
-                <Select
+                <Dropdown
                   id="church-unit-type"
                   onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
                   value={form.type}
@@ -655,11 +658,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                       {typeLabel(type)}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
 
               <FormField htmlFor="church-unit-parent" label={t("admin.churchUnits.parent")}>
-                <Select
+                <Dropdown
                   id="church-unit-parent"
                   onChange={(event) => setForm((current) => ({ ...current, parent_id: event.target.value }))}
                   value={form.parent_id}
@@ -670,7 +673,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                       {unit.name}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
 
               <FormField htmlFor="church-unit-sort-order" label={t("admin.churchUnits.sortOrder")}>
@@ -683,7 +686,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               </FormField>
 
               <FormField htmlFor="church-unit-status" label={t("course.form.status")}>
-                <Select
+                <Dropdown
                   id="church-unit-status"
                   onChange={(event) =>
                     setForm((current) => ({ ...current, is_active: event.target.value === "active" }))
@@ -692,7 +695,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 >
                   <option value="active">{t("admin.churchUnits.status.active")}</option>
                   <option value="inactive">{t("admin.churchUnits.status.inactive")}</option>
-                </Select>
+                </Dropdown>
               </FormField>
 
               <FormField className="sm:col-span-2" htmlFor="church-unit-description" label={t("admin.churchUnits.descriptionField")}>
@@ -710,7 +713,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               {form.type === "cell_group" && (
                 <>
                   <FormField htmlFor="church-unit-leader" label={t("admin.churchUnits.leader")}>
-                    <Select
+                    <Dropdown
                       id="church-unit-leader"
                       onChange={(event) => setForm((current) => ({ ...current, leader_id: event.target.value }))}
                       value={form.leader_id}
@@ -721,7 +724,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                           {member.display_name}
                         </option>
                       ))}
-                    </Select>
+                    </Dropdown>
                   </FormField>
 
                   <FormField htmlFor="church-unit-leader-position" label="Leader Position">
@@ -737,10 +740,10 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
               {/* CLASS FLOW: Class Admins, Class Members, Courses list */}
               {form.type === "class" && (
-                <div className="sm:col-span-2 space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/30 p-4">
-                  <Title as="h3" tone="brand" variant="micro">Class Room Configuration</Title>
+                <div className="space-y-4 sm:col-span-2">
+                  <Title as="h3" tone="brand" variant="micro">{t("admin.churchUnits.classConfiguration")}</Title>
 
-                  <FormField htmlFor="class-assigned-courses" label="Assign Courses">
+                  <FormField htmlFor="class-assigned-courses" label={t("admin.churchUnits.assignCourses")}>
                     <div className="grid max-h-40 gap-2 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2">
                       {courses.map((course) => {
                         const checked = form.assigned_course_ids.includes(course.id);
@@ -764,13 +767,13 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                         );
                       })}
                       {courses.length === 0 && (
-                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] p-2">No courses available.</Text>
+                        <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-tertiary)] p-2">{t("admin.churchUnits.noCourses")}</Text>
                       )}
                     </div>
                   </FormField>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField htmlFor="class-admins-select" label="Class Admins">
+                    <FormField htmlFor="class-admins-select" label={t("admin.churchUnits.classAdmins")}>
                       <div className="grid max-h-40 gap-2 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2">
                         {(meta?.members ?? []).map((member) => {
                           const checked = form.class_admin_ids.includes(member.id);
@@ -796,7 +799,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                       </div>
                     </FormField>
 
-                    <FormField htmlFor="class-members-select" label="Class Members">
+                    <FormField htmlFor="class-members-select" label={t("admin.churchUnits.classMembers")}>
                       <div className="grid max-h-40 gap-2 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-2">
                         {(meta?.members ?? []).map((member) => {
                           const checked = form.class_member_ids.includes(member.id);
@@ -916,7 +919,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               {form.type === "event_organizer" && (
                 <>
                   <FormField htmlFor="church-unit-leader" label={t("admin.churchUnits.leader")}>
-                    <Select
+                    <Dropdown
                       id="church-unit-leader"
                       onChange={(event) => setForm((current) => ({ ...current, leader_id: event.target.value }))}
                       value={form.leader_id}
@@ -927,13 +930,14 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                           {member.display_name}
                         </option>
                       ))}
-                    </Select>
+                    </Dropdown>
                   </FormField>
 
                   <div className="sm:col-span-2 space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/30 p-4">
                     <div className="flex justify-between items-center">
                       <Title as="h3" tone="brand" variant="micro">Service Teams Configuration</Title>
                       <Button
+                        variant="primary"
                         type="button"
                         size="sm"
                         onClick={() => {
@@ -953,7 +957,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                     <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
                       {form.service_teams.map((team, index) => (
                         <div key={index} className="relative p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3">
-                          <button
+                          <Button
+                            variant="unstyled"
                             type="button"
                             className="absolute top-2 right-2 text-[var(--status-danger)] p-1 rounded hover:bg-[var(--status-danger-bg)]"
                             onClick={() => {
@@ -964,7 +969,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </Button>
 
                           <FormField label="Service Team Name">
                             <Input
@@ -983,7 +988,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
                           <div className="grid gap-3 sm:grid-cols-2">
                             <FormField label="Team Leader">
-                              <Select
+                              <Dropdown
                                 value={team.leader_id}
                                 onChange={(e) => {
                                   const val = e.target.value;
@@ -1000,7 +1005,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                                     {m.display_name}
                                   </option>
                                 ))}
-                              </Select>
+                              </Dropdown>
                             </FormField>
 
                             <FormField label="Team Members">
@@ -1083,9 +1088,9 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                   </div>
                 </FormField>
               )}
-            </div>
+            </ModalBody>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <ModalFooter className="flex flex-wrap items-center justify-between gap-3">
               {editingUnit && canDeleteUnits ? (
                 <Button
                   isLoading={deleteMutation.isPending}
@@ -1103,13 +1108,12 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 <Button onClick={closeModal} type="button" variant="secondary">
                   {t("common.cancel")}
                 </Button>
-                <Button isLoading={isSaving} type="submit">
+                <Button variant="primary" isLoading={isSaving} type="submit">
                   {editingUnit ? t("admin.churchUnits.saveChanges") : t("admin.churchUnits.create")}
                 </Button>
               </div>
-            </div>
-          </form>
-        </div>
+            </ModalFooter>
+          </Modal>
       ) : null}
 
       {/* Class Member Test Scores Modal */}
@@ -1130,7 +1134,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
     <PageLayout
       actions={
         canCreateUnits ? (
-          <Button onClick={openCreateModal}>
+          <Button variant="primary" onClick={openCreateModal}>
             <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
             {t("admin.churchUnits.add")}
           </Button>
@@ -1176,26 +1180,29 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
   }, [activeCourse, scores]);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
-      <div className="flex flex-col max-h-[calc(100vh-3rem)] w-full max-w-5xl rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="flex items-start justify-between border-b border-[var(--border-subtle)] pb-4">
+      <Modal className="max-w-5xl animate-in fade-in zoom-in duration-200" labelledBy="class-scores-modal-title">
+        <ModalHeader className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
               <GraduationCap className="h-6 w-6" />
             </div>
             <div>
-              <Title as="h2" variant="card">{t("admin.churchUnits.scores.title")}</Title>
+              <Title as="h2" id="class-scores-modal-title" variant="card">{t("admin.churchUnits.scores.title")}</Title>
               <Text as="p" tone="inherit" variant="inherit" className="text-sm font-medium text-[var(--text-secondary)]">{unit.name}</Text>
             </div>
           </div>
-          <button
+          <Button
+            variant="unstyled"
+            aria-label={t("action.close")}
             onClick={onClose}
             className="rounded-xl p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] transition-all"
+            type="button"
           >
             <X className="h-5 w-5" />
-          </button>
-        </div>
+          </Button>
+        </ModalHeader>
 
+        <ModalBody>
         {unit.courses && unit.courses.length > 0 ? (
           unit.courses.length > 5 ? (
             <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--bg-base)]/50 p-3 rounded-xl border border-[var(--border-subtle)]">
@@ -1204,7 +1211,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                 <span>{t("admin.churchUnits.scores.selectCourse", { count: String(unit.courses.length) })}</span>
               </div>
               <div className="flex-1 max-w-lg">
-                <Select
+                <Dropdown
                   value={selectedCourseId || (unit.courses[0]?.id ?? "")}
                   onChange={(e) => setSelectedCourseId(e.target.value)}
                   className="w-full text-sm font-semibold"
@@ -1214,13 +1221,15 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                       {localize(course, "title")}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </div>
             </div>
           ) : (
             <div className="mt-4 flex flex-wrap gap-2">
               {unit.courses.map((course) => (
-                <button
+                <Button
+                  variant="unstyled"
+                  type="submit"
                   key={course.id}
                   onClick={() => setSelectedCourseId(course.id)}
                   className={cn(
@@ -1231,7 +1240,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
                   )}
                 >
                   {localize(course, "title")}
-                </button>
+                </Button>
               ))}
             </div>
           )
@@ -1253,7 +1262,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
             {mutationErrorMessage(error)}
           </div>
         ) : activeCourse ? (
-          <div className="flex-1 mt-6 overflow-y-auto border border-[var(--border-subtle)] rounded-xl shadow-sm">
+          <div className="mt-6 overflow-x-auto border border-[var(--border-subtle)] rounded-xl shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[var(--bg-base)]/50 border-b border-[var(--border-subtle)]">
@@ -1344,12 +1353,13 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
           </div>
         ) : null}
 
-        <div className="mt-6 flex justify-end">
+        </ModalBody>
+
+        <ModalFooter className="flex justify-end">
           <Button onClick={onClose} variant="secondary">
             {t("common.close")}
           </Button>
-        </div>
-      </div>
-    </div>
+        </ModalFooter>
+      </Modal>
   );
 }

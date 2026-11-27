@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, Title, Text } from "@/components/ui";
+import { Button, Card, FormField, Input, Dropdown, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { articleApi } from "@/api/article";
 import {
@@ -223,14 +223,14 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
             </FormField>
 
             <FormField htmlFor="article-status" label={t("course.form.status")}>
-              <Select
+              <Dropdown
                 id="article-status"
                 onChange={(event) => setStatus(event.target.value === "published" ? "published" : "draft")}
                 value={status}
               >
                 <option value="draft">{t("course.form.status.draft")}</option>
                 <option value="published">{t("course.form.status.published")}</option>
-              </Select>
+              </Dropdown>
             </FormField>
           </div>
 
@@ -267,7 +267,7 @@ function ArticleEditorPage({ afterSaveHref, editSlug, initialArticle }: ArticleE
               >
                 {t("common.cancel")}
               </Button>
-              <Button isLoading={isSubmitting} type="submit">
+              <Button variant="primary" isLoading={isSubmitting} type="submit">
                 {isSubmitting ? t("article.create.submitting") : t("action.submit")}
               </Button>
             </div>

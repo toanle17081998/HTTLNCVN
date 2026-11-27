@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { Badge, Card, Skeleton, Text, Title, cn } from "@/components/ui";
+import { Button, Badge, Card, Skeleton, Text, Title, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { usePageQuery } from "@/hooks/page";
 import { useArticlesQuery, type ArticleListItem } from "@/hooks/article";
@@ -334,7 +334,8 @@ function CourseCardSkeleton({ className }: { className?: string }) {
             </div>
             <div className="flex justify-center gap-2.5">
               {items.map((_, i) => (
-                <button
+                <Button
+                  variant="unstyled"
                   aria-label={`Go to slide ${i + 1}`}
                   className={cn(
                     "h-2.5 rounded-full transition-all duration-300",

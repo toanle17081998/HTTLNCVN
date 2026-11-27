@@ -13,10 +13,11 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { Button, Card, Input, Pagination, Select, Skeleton, Text, Title, cn } from "@/components/ui";
+import { Button, Card, Input, Pagination, Dropdown, Skeleton, Text, Title, cn } from "@/components/ui";
 import { ApiError } from "@/api/client";
 import {
   importDriveMedia,
+  isVideoMediaUrl,
   mediaKeys,
   uploadMedia,
   useCreateMediaFolderMutation,
@@ -26,11 +27,13 @@ import {
   useMoveMediaImagesMutation,
   useRenameMediaFolderMutation,
   type MediaGalleryItem,
+  type MediaKind,
 } from "@/api/media";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 
 type MediaGalleryManagerProps = {
+  mediaKind?: MediaKind;
   mode?: "manager" | "picker";
   selectedUrl?: string;
   onSelect?: (item: MediaGalleryItem) => void;
@@ -43,6 +46,7 @@ function formatBytes(bytes: number) {
 }
 
 export function MediaGalleryManager({
+  mediaKind,
   mode = "manager",
   selectedUrl,
   onSelect,
@@ -80,7 +84,11 @@ export function MediaGalleryManager({
   const deleteImage = useDeleteMediaImageMutation();
 
   const folders = galleryQuery.data?.folders ?? [];
-  const items = galleryQuery.data?.items ?? [];
+  function matchesKind(item: MediaGalleryItem) {
+    return !mediaKind || (isVideoMediaUrl(item.filename) || isVideoMediaUrl(item.url)) === (mediaKind === "video");
+  }
+
+  const items = (galleryQuery.data?.items ?? []).filter(matchesKind);
   const safePage = Math.min(page, Math.max(0, Math.ceil(items.length / pageSize) - 1));
   const pagedItems = items.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const totalCount = galleryQuery.data?.totalCount ?? 0;
@@ -88,6 +96,9 @@ export function MediaGalleryManager({
 
   const targetUploadFolder =
     activeFolder === "__all__" || activeFolder === "__uncategorized__" ? "" : activeFolder;
+  const uploadLabel = targetUploadFolder
+    ? t("media.gallery.uploadToFolder", { folder: targetUploadFolder })
+    : t("media.gallery.uploadFromComputer");
 
   async function handleUploadFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -117,7 +128,7 @@ export function MediaGalleryManager({
         }
       }
       await queryClient.invalidateQueries({ queryKey: mediaKeys.all });
-      if (mode === "picker" && uploaded.length === 1 && onSelect) {
+      if (mode === "picker" && uploaded.length === 1 && matchesKind(uploaded[0]) && onSelect) {
         onSelect(uploaded[0]);
       }
     } catch (error) {
@@ -140,7 +151,7 @@ export function MediaGalleryManager({
       setDriveUrl("");
       await queryClient.invalidateQueries({ queryKey: mediaKeys.all });
       if (mode === "picker" && res.filename && onSelect) {
-        onSelect({
+        const item = {
           filename: res.filename,
           folder: res.folder ?? targetUploadFolder,
           height: res.height,
@@ -149,7 +160,8 @@ export function MediaGalleryManager({
           updatedAt: new Date().toISOString(),
           url: res.url,
           width: res.width,
-        });
+        };
+        if (matchesKind(item)) onSelect(item);
       }
     } catch {
       setUploadError("Can not get the image/video");
@@ -286,9 +298,11 @@ export function MediaGalleryManager({
               value={newFolderName}
             />
             <Button
+              variant="primary"
               disabled={createFolder.isPending || !newFolderName.trim()}
               onClick={() => void handleCreateFolder()}
               size="sm"
+              title={t("media.gallery.newFolder")}
               type="button"
             >
               {t("media.gallery.add")}
@@ -297,7 +311,7 @@ export function MediaGalleryManager({
         ) : null}
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 lg:grid lg:gap-1 lg:overflow-visible lg:pb-0">
-          <button
+          <Button
             className={cn(
               "flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition lg:w-full",
               activeFolder === "__all__"
@@ -305,16 +319,18 @@ export function MediaGalleryManager({
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]",
             )}
             onClick={() => setActiveFolder("__all__")}
+            title={t("media.gallery.allImages")}
             type="button"
+            variant="unstyled"
           >
             <span className="flex items-center gap-2 truncate">
               <ImageIcon className="h-4 w-4 shrink-0" />
               {t("media.gallery.allImages")}
             </span>
             <span className="text-xs opacity-75">{totalCount}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             className={cn(
               "flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition lg:w-full",
               activeFolder === "__uncategorized__"
@@ -322,14 +338,16 @@ export function MediaGalleryManager({
                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]",
             )}
             onClick={() => setActiveFolder("__uncategorized__")}
+            title={t("media.gallery.uncategorized")}
             type="button"
+            variant="unstyled"
           >
             <span className="flex items-center gap-2 truncate">
               <Folder className="h-4 w-4 shrink-0" />
               {t("media.gallery.uncategorized")}
             </span>
             <span className="text-xs opacity-75">{uncategorizedCount}</span>
-          </button>
+          </Button>
 
           {folders.map((folder) => (
             <div className="group flex shrink-0 items-center gap-1 lg:w-full" key={folder.name}>
@@ -350,8 +368,11 @@ export function MediaGalleryManager({
                     value={renameValue}
                   />
                   <Button
+                    variant="primary"
+                    aria-label={t("media.gallery.saveFolderName")}
                     onClick={() => void handleRenameFolder(folder.name)}
                     size="iconSm"
+                    title={t("media.gallery.saveFolderName")}
                     type="button"
                   >
                     <Check className="h-3.5 w-3.5" />
@@ -359,7 +380,7 @@ export function MediaGalleryManager({
                 </div>
               ) : (
                 <>
-                  <button
+                  <Button
                     className={cn(
                       "flex min-w-0 flex-1 items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition",
                       activeFolder === folder.name
@@ -367,17 +388,19 @@ export function MediaGalleryManager({
                         : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]",
                     )}
                     onClick={() => setActiveFolder(folder.name)}
+                    title={t("media.gallery.openFolder", { folder: folder.name })}
                     type="button"
+                    variant="unstyled"
                   >
                     <span className="flex min-w-0 items-center gap-2 truncate">
                       <Folder className="h-4 w-4 shrink-0" />
                       <span className="truncate">{folder.name}</span>
                     </span>
                     <span className="ml-2 text-xs opacity-75">{folder.count}</span>
-                  </button>
+                  </Button>
                   {mode === "manager" ? (
                     <div className="flex shrink-0 items-center opacity-0 transition group-hover:opacity-100">
-                      <button
+                      <Button
                         aria-label={t("media.gallery.renameFolder")}
                         className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
                         onClick={() => {
@@ -386,18 +409,20 @@ export function MediaGalleryManager({
                         }}
                         title={t("media.gallery.renameFolder")}
                         type="button"
+                        variant="unstyled"
                       >
                         <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         aria-label={t("media.gallery.deleteFolder")}
                         className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--status-danger-muted)] hover:text-[var(--status-danger)]"
                         onClick={() => void handleDeleteFolder(folder.name)}
                         title={t("media.gallery.deleteFolder")}
                         type="button"
+                        variant="unstyled"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   ) : null}
                 </>
@@ -421,7 +446,7 @@ export function MediaGalleryManager({
           </div>
 
           <input
-            accept=".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"
+            accept={mediaKind === "video" ? ".mp4,.webm,.mov" : mediaKind === "image" ? ".jpg,.jpeg,.png,.webp,.avif" : ".mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.avif"}
             className="hidden"
             multiple
             onChange={(e) => void handleUploadFiles(e.target.files)}
@@ -429,17 +454,15 @@ export function MediaGalleryManager({
             type="file"
           />
           <Button
+            variant="primary"
             className="ml-auto"
             disabled={uploading}
             onClick={() => fileInputRef.current?.click()}
+            title={uploadLabel}
             type="button"
           >
             <Upload className="mr-2 h-4 w-4" />
-            {uploading
-              ? t("media.gallery.uploading")
-              : targetUploadFolder
-                ? t("media.gallery.uploadToFolder", { folder: targetUploadFolder })
-                : t("media.gallery.uploadFromComputer")}
+            {uploading ? t("media.gallery.uploading") : uploadLabel}
           </Button>
         </div>
 
@@ -465,6 +488,7 @@ export function MediaGalleryManager({
             disabled={uploading || !driveUrl.trim()}
             onClick={() => void handleImportFromDrive()}
             size="sm"
+            title={t("admin.navigation.introDriveAdd")}
             type="button"
             variant="secondary"
           >
@@ -527,18 +551,30 @@ export function MediaGalleryManager({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {pagedItems.map((item) => {
               const isSelected = Boolean(selectedUrl && selectedUrl === item.url);
+              const selectItem = mode === "picker" && onSelect ? () => onSelect(item) : undefined;
+              const selectLabel = selectItem ? t("media.gallery.selectAsset", { name: item.originalName }) : undefined;
               return (
                 <Card
+                  aria-label={selectLabel}
                   className={cn(
                     "group flex flex-col overflow-hidden transition",
                     mode === "picker" && "cursor-pointer hover:border-[var(--brand-primary)]",
                     isSelected && "border-[var(--brand-primary)] ring-2 ring-[var(--brand-primary)]",
                   )}
                   key={item.filename}
-                  onClick={mode === "picker" && onSelect ? () => onSelect(item) : undefined}
+                  onClick={selectItem}
+                  onKeyDown={selectItem ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      selectItem();
+                    }
+                  } : undefined}
+                  role={selectItem ? "button" : undefined}
+                  tabIndex={selectItem ? 0 : undefined}
+                  title={selectLabel}
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-base)]">
-                    {/\.(webm|mp4|mov|m4v)(\?.*)?$/i.test(item.url) ? (
+                    {isVideoMediaUrl(item.url) ? (
                       <>
                         <video
                           className="h-full w-full object-cover"
@@ -592,7 +628,7 @@ export function MediaGalleryManager({
                         className="mt-auto flex items-center gap-1 pt-1"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <Select
+                        <Dropdown
                           aria-label={t("media.gallery.moveToFolder")}
                           className="h-8 flex-1 px-2 text-xs"
                           onChange={(e) =>
@@ -609,7 +645,7 @@ export function MediaGalleryManager({
                               {folder.name}
                             </option>
                           ))}
-                        </Select>
+                        </Dropdown>
 
                         <Button
                           aria-label={t("media.gallery.copyUrl")}

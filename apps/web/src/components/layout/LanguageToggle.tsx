@@ -1,6 +1,6 @@
 import { localeLabels, locales } from "@/lib/i18n";
 import { useTranslation } from "@/providers/I18nProvider";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 
 export function LanguageToggle() {
   const { locale, setLocale } = useTranslation();
@@ -15,7 +15,8 @@ export function LanguageToggle() {
         const isActive = item === locale;
 
         return (
-          <button
+          <Button
+            variant="unstyled"
             aria-pressed={isActive}
             className={cn(
               "h-7 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider transition-all duration-200",
@@ -29,7 +30,7 @@ export function LanguageToggle() {
             type="button"
           >
             {item}
-          </button>
+          </Button>
         );
       })}
     </div>

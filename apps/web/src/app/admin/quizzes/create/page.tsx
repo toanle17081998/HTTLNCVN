@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Button, Card, FormField, Input, Select, Title, Label, Text } from "@/components/ui";
+import { Button, Card, FormField, Input, Dropdown, Title, Label, Text } from "@/components/ui";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -91,7 +91,7 @@ export default function AdminCreateQuizRoute() {
       <form className="grid gap-5 py-6" onSubmit={handleSubmit}>
         <Card className="grid gap-5 p-5 lg:grid-cols-2">
           <FormField label={t("nav.course.label")} htmlFor="courseSlug">
-            <Select
+            <Dropdown
               disabled={coursesQuery.isLoading || courses.length === 0}
               id="courseSlug"
               name="courseSlug"
@@ -107,11 +107,11 @@ export default function AdminCreateQuizRoute() {
                   {localize(course, "title", course.slug)}
                 </option>
               ))}
-            </Select>
+            </Dropdown>
           </FormField>
 
           <FormField label={t("lesson.label")} htmlFor="lessonId">
-            <Select
+            <Dropdown
               disabled={courseQuery.isLoading || lessons.length === 0}
               id="lessonId"
               name="lessonId"
@@ -126,7 +126,7 @@ export default function AdminCreateQuizRoute() {
                   {localize(lesson, "title", lesson.id)}
                 </option>
               ))}
-            </Select>
+            </Dropdown>
           </FormField>
         </Card>
 
@@ -216,7 +216,7 @@ export default function AdminCreateQuizRoute() {
           <Button disabled={createQuiz.isPending} onClick={() => router.back()} type="button" variant="ghost">
             {t("common.cancel")}
           </Button>
-          <Button isLoading={createQuiz.isPending} type="submit">
+          <Button variant="primary" isLoading={createQuiz.isPending} type="submit">
             {t("admin.quizzes.create")}
           </Button>
         </div>

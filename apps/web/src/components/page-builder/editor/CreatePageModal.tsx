@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Button, Input, Select, Label, Text } from "@/components/ui";
+import { Title, Button, Input, Dropdown, Label, Text } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -113,14 +113,15 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
               {t("pageBuilder.newPage")}
             </Title>
           </div>
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Close"
             className="rounded-lg border border-[var(--border-subtle)] p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             onClick={onClose}
             type="button"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleCreate} className="space-y-4 p-6">
@@ -145,7 +146,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
 
           <Label variant="control" className="grid gap-1.5">
             <span>{t("pageBuilder.starterLayout")}</span>
-            <Select
+            <Dropdown
               onChange={(e) => setTemplateId(e.target.value as PageLayoutTemplateId)}
               value={templateId}
             >
@@ -158,7 +159,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
                   </option>
                 );
               })}
-            </Select>
+            </Dropdown>
           </Label>
 
           <div className="flex items-center justify-end gap-3 pt-2">
@@ -166,6 +167,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
               {t("action.cancel")}
             </Button>
             <Button
+              variant="primary"
               isLoading={createPage.isPending || (templateId === "welcome" && homePageQuery.isLoading)}
               type="submit"
             >

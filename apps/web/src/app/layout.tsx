@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
-import Script from "next/script";
 import { AppShell } from "@/components/layout";
 import { WebMcpBridge } from "@/components/seo/WebMcpBridge";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -170,15 +169,17 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(() => { let theme; try { theme = localStorage.getItem("httlncvn.theme"); } catch {} if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.dataset.theme = theme; })();`,
+          }}
+        />
         <link href={absoluteUrl("/.well-known/ard.json")} rel="ard" />
         <link href={absoluteUrl("/.well-known/agent-card.json")} rel="agent-card" type="application/json" />
         <link href={absoluteUrl("/llms.txt")} rel="llms-txt" type="text/plain" />
         <link href={absoluteUrl("/sitemap.xml")} rel="sitemap" type="application/xml" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
-        <Script id="theme-init" strategy="afterInteractive">
-          {`(() => { let theme; try { theme = localStorage.getItem("httlncvn.theme"); } catch {} if (theme !== "light" && theme !== "dark") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.dataset.theme = theme; })();`}
-        </Script>
         <script
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
           type="application/ld+json"

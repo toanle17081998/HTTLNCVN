@@ -1,6 +1,6 @@
 "use client";
 
-import { Text } from "@/components/ui";
+import { Button, Text } from "@/components/ui";
 import { useContext, useMemo } from "react";
 import { useEditor } from "@craftjs/core";
 import { Layers3, Plus, Trash2 } from "lucide-react";
@@ -41,21 +41,23 @@ export function PageComponentList() {
           {t("pageBuilder.sections")}
         </Text>
         {openSectionPicker ? (
-          <button
+          <Button
+            variant="unstyled"
             className="inline-flex items-center gap-1 rounded-md bg-[var(--brand-muted)] px-2 py-0.5 text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--brand-soft)] cursor-pointer"
             onClick={() => openSectionPicker((nodes.ROOT?.data.nodes ?? []).length)}
             type="button"
           >
             <Plus className="h-3 w-3" />
             {t("pageBuilder.addSectionShort")}
-          </button>
+          </Button>
         ) : null}
       </div>
       <div className="grid gap-0.5">
         {components.map((component) => (
           <div className="flex min-h-9 items-center gap-1 px-2 text-xs text-[var(--text-secondary)]" key={component.id}>
             <span className="min-w-0 flex-1 truncate">{component.label}</span>
-            <button
+            <Button
+              variant="unstyled"
               aria-label={t("pageBuilder.removeSection", { name: component.label })}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--text-tertiary)] hover:bg-[var(--status-danger-soft)] hover:text-[var(--status-danger)] cursor-pointer"
               onClick={() => actions.delete(component.id)}
@@ -63,18 +65,19 @@ export function PageComponentList() {
               type="button"
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
         ))}
         {components.length === 0 && openSectionPicker ? (
-          <button
+          <Button
+            variant="unstyled"
             className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border-strong)] p-3 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] cursor-pointer"
             onClick={() => openSectionPicker(0)}
             type="button"
           >
             <Plus className="h-3.5 w-3.5" />
             {t("pageBuilder.addFirstSection")}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

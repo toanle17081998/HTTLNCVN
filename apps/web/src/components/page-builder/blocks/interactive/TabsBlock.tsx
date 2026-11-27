@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useNode } from "@craftjs/core";
-import { Textarea, cn } from "@/components/ui";
+import { Button, Textarea, cn } from "@/components/ui";
 import { Field, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, parsePairs } from "../../shared/helpers";
 import { NodeFrame } from "../../shared/NodeFrame";
@@ -35,7 +35,8 @@ export function TabsBlock({
       <div className="grid gap-4" style={buildBoxStyle({ ...props, background, borderColor, borderRadius, borderWidth, paddingBottom, paddingLeft, paddingRight, paddingTop })}>
         <div className="flex flex-wrap gap-2">
           {entries.map((item, index) => (
-            <button
+            <Button
+              variant="unstyled"
               className={cn(
                 "rounded-full px-4 py-2 text-sm font-medium transition",
                 activeIndex === index
@@ -47,7 +48,7 @@ export function TabsBlock({
               type="button"
             >
               {item.title}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="rounded-2xl bg-[var(--bg-base)] px-4 py-5 text-sm leading-6 text-[var(--text-secondary)]">

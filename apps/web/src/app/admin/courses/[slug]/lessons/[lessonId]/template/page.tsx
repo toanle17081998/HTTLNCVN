@@ -95,7 +95,7 @@ export default function AdminTemplatesPage() {
           <Button variant="secondary" onClick={() => router.push("/admin/courses")}>
             {t("admin.templates.backToCourses")}
           </Button>
-          <Button onClick={handleOpenAdd}>
+          <Button variant="primary" onClick={handleOpenAdd}>
             {t("admin.templates.add")}
           </Button>
         </div>
@@ -154,7 +154,9 @@ export default function AdminTemplatesPage() {
               <Title as="h2" variant="card">
                 {editingTemplate ? t("admin.templates.modalEditTitle") : t("admin.templates.modalCreateTitle")}
               </Title>
-              <button
+              <Button
+                variant="unstyled"
+                type="submit"
                 onClick={() => {
                   setShowModal(false);
                   setEditingTemplate(null);
@@ -162,7 +164,7 @@ export default function AdminTemplatesPage() {
                 className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-base)] transition text-lg"
               >
                 ✕
-              </button>
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-1">

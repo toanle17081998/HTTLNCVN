@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Button, FormField, Input, Select, Textarea, Title, Label } from "@/components/ui";
+import { Text, Button, FormField, Input, Dropdown, Textarea, Title, Label } from "@/components/ui";
 import type { FormEvent } from "react";
 import { CheckCircle2, Edit3, Globe, Lock, Tag, Users, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -78,14 +78,15 @@ export function PrayerModal({
                     : activePrayer?.title ?? t("prayer.config.title.view")}
             </Title>
           </div>
-          <button
+          <Button
+            variant="unstyled"
             aria-label={t("action.close")}
             className="rounded-full p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
             onClick={onClose}
             type="button"
           >
             <X aria-hidden="true" className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         {modalMode === "view" && activePrayer ? (
@@ -118,7 +119,7 @@ export function PrayerModal({
               <Button onClick={onClose} type="button" variant="secondary">
                 {t("common.cancel")}
               </Button>
-              <Button isLoading={isSaving} type="submit">
+              <Button variant="primary" isLoading={isSaving} type="submit">
                 <CheckCircle2 aria-hidden="true" className="mr-2 h-4 w-4" />
                 {t("prayer.action.close")}
               </Button>
@@ -137,7 +138,7 @@ export function PrayerModal({
               </FormField>
 
               <FormField htmlFor="prayer-category" label={t("prayer.form.category")}>
-                <Select
+                <Dropdown
                   id="prayer-category"
                   onChange={(event) =>
                     onFormChange({
@@ -153,11 +154,11 @@ export function PrayerModal({
                       {category.name}
                     </option>
                   ))}
-                </Select>
+                </Dropdown>
               </FormField>
 
               <FormField htmlFor="prayer-visibility" label={t("prayer.form.visibility")}>
-                <Select
+                <Dropdown
                   id="prayer-visibility"
                   onChange={(event) =>
                     onFormChange({
@@ -172,7 +173,7 @@ export function PrayerModal({
                   <option value="private">{t("prayer.form.visibility.private")}</option>
                   <option value="public">{t("prayer.form.visibility.public")}</option>
                   <option value="shared">{t("prayer.form.visibility.shared")}</option>
-                </Select>
+                </Dropdown>
               </FormField>
 
               <div className="sm:col-span-2 rounded-2xl bg-[var(--bg-base)] p-4 text-sm text-[var(--text-secondary)]">
@@ -249,7 +250,7 @@ export function PrayerModal({
                 <Button onClick={onClose} type="button" variant="secondary">
                   {t("common.cancel")}
                 </Button>
-                <Button isLoading={isSaving} type="submit">
+                <Button variant="primary" isLoading={isSaving} type="submit">
                   {modalMode === "edit" ? t("prayer.action.saveChanges") : t("prayer.action.add")}
                 </Button>
               </div>
@@ -351,7 +352,7 @@ function PrayerViewPanel({
                 {t("prayer.action.reopen")}
               </Button>
             )}
-            <Button onClick={() => onOpenEdit(activePrayer)} type="button">
+            <Button variant="primary" onClick={() => onOpenEdit(activePrayer)} type="button">
               <Edit3 aria-hidden="true" className="mr-2 h-4 w-4" />
               {t("prayer.config.title.edit")}
             </Button>

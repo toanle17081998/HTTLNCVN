@@ -106,11 +106,25 @@ export function renderInlineMarkdown(value: string) {
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2">$1</a>');
 }
 
-export function markdownToHtml(markdown: string) {
+export function getLessonOutlineRole(text: string) {
+  const line = text.trim().replace(/\s+/g, " ");
+  if (/^(?:phần giới thiệu|lời giới thiệu|giới thiệu|dàn ý(?: bài học)?|thảo luận nhóm|tự nghiên cứu|introduction|lesson outline|group discussion|self[- ]study):?$/i.test(line)) {
+    return "section";
+  }
+  const marker = line.match(/^([A-Z]+|\d+)\.\s+\S/)?.[1];
+  if (!marker) return;
+  if (/^(?:X{0,3}(?:IX|IV|V?I{1,3}|V)|X{1,3})$/.test(marker)) return "part";
+  if (/^[A-Z]$/.test(marker)) return "topic";
+  if (/^\d+$/.test(marker)) return "point";
+}
+
+export function markdownToHtml(markdown: string, { lessonOutline = false } = {}) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const html: string[] = [];
   let listType: "ul" | "ol" | null = null;
+  let outlineDepth = 0;
   const codeBlockRef: { current: string[] | null } = { current: null };
+  const indent = (depth: number) => depth ? ` data-lesson-indent="${depth}"` : "";
 
   function closeList() {
     if (listType) {
@@ -140,23 +154,60 @@ export function markdownToHtml(markdown: string) {
       return;
     }
     const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (lessonOutline) {
+      const outlineText = headingMatch?.[2] ?? trimmed;
+      const role = getLessonOutlineRole(outlineText.replaceAll("**", ""));
+      if (role === "section") {
+        closeList();
+        outlineDepth = 0;
+        html.push(`<h3 data-lesson-section>${renderInlineMarkdown(outlineText)}</h3>`);
+        return;
+      }
+
+      if (role === "part") {
+        closeList();
+        outlineDepth = 1;
+        html.push(`<h4>${renderInlineMarkdown(outlineText)}</h4>`);
+        return;
+      }
+      if (role === "topic") {
+        closeList();
+        outlineDepth = 2;
+        html.push(`<h5${indent(1)}>${renderInlineMarkdown(outlineText)}</h5>`);
+        return;
+      }
+      if (role === "point" && outlineDepth) {
+        closeList();
+        outlineDepth = 2;
+        html.push(`<p${indent(outlineDepth)}>${renderInlineMarkdown(outlineText)}</p>`);
+        return;
+      }
+
+      if (/^-{3,}$/.test(trimmed)) {
+        closeList();
+        outlineDepth = 0;
+        html.push("<hr>");
+        return;
+      }
+    }
     if (headingMatch) {
       closeList();
-      const level = headingMatch[1].length + 1;
+      outlineDepth = 0;
+      const level = lessonOutline && html.length === 0 ? 2 : headingMatch[1].length + 1;
       html.push(`<h${level}>${renderInlineMarkdown(headingMatch[2])}</h${level}>`);
       return;
     }
     const quoteMatch = trimmed.match(/^>\s+(.+)$/);
     if (quoteMatch) {
       closeList();
-      html.push(`<blockquote>${renderInlineMarkdown(quoteMatch[1])}</blockquote>`);
+      html.push(`<blockquote${indent(outlineDepth)}>${renderInlineMarkdown(quoteMatch[1])}</blockquote>`);
       return;
     }
     const unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
     if (unorderedMatch) {
       if (listType !== "ul") {
         closeList();
-        html.push("<ul>");
+        html.push(`<ul${indent(outlineDepth)}>`);
         listType = "ul";
       }
       html.push(`<li>${renderInlineMarkdown(unorderedMatch[1])}</li>`);
@@ -173,7 +224,7 @@ export function markdownToHtml(markdown: string) {
       return;
     }
     closeList();
-    html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+    html.push(`<p${indent(outlineDepth)}>${renderInlineMarkdown(trimmed)}</p>`);
   });
 
   closeList();

@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Title, Button, Card, Select, cn } from "@/components/ui";
+import { Text, Title, Button, Card, Dropdown, cn } from "@/components/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Editor, Element, Frame, useEditor } from "@craftjs/core";
 import {
@@ -49,7 +49,8 @@ function LanguageSelector({
 }) {
   return (
     <div className="flex items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-1 text-xs font-semibold">
-      <button
+      <Button
+        variant="unstyled"
         className={`rounded-lg px-2.5 py-1 transition-all ${
           activeLanguage === "vi"
             ? "bg-[var(--brand-primary)] text-[var(--text-inverse)] shadow-sm"
@@ -59,8 +60,9 @@ function LanguageSelector({
         type="button"
       >
         VI
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="unstyled"
         className={`rounded-lg px-2.5 py-1 transition-all ${
           activeLanguage === "en"
             ? "bg-[var(--brand-primary)] text-[var(--text-inverse)] shadow-sm"
@@ -70,7 +72,7 @@ function LanguageSelector({
         type="button"
       >
         EN
-      </button>
+      </Button>
     </div>
   );
 }
@@ -136,6 +138,7 @@ function BuilderHeaderActions({
         {t("action.save")}
       </Button>
       <Button
+        variant="primary"
         isLoading={saving}
         onClick={() => onSave(query.serialize(), "published")}
         size="sm"
@@ -187,6 +190,13 @@ function BuilderShell({
     };
   }, [adminChrome, isFullscreen]);
 
+  useEffect(() => {
+    adminChrome?.setViewSiteHref(page.route_path || "/");
+    return () => {
+      adminChrome?.setViewSiteHref(null);
+    };
+  }, [adminChrome, page.route_path]);
+
   return (
     <Editor enabled resolver={craftResolver}>
       <SectionBuilderProvider contentLocale={editLang}>
@@ -234,13 +244,14 @@ function BuilderShell({
                     </Title>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
+                    <Button
+                      variant="unstyled"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] cursor-pointer"
                       onClick={() => setIsFullscreen((current) => !current)}
                       type="button"
                     >
                       {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <div className={cn("overflow-auto bg-[var(--bg-base)]", isFullscreen && "min-h-0 flex-1")}>
@@ -418,7 +429,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="min-w-[15rem]">
-              <Select
+              <Dropdown
                 onChange={(event) => {
                   if (showDeleted) setSelectedDeletedId(event.target.value);
                   else setSelectedSlug(event.target.value);
@@ -430,7 +441,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
                     {page.title_en} ({page.route_path})
                   </option>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
             <Button
               onClick={() => {
@@ -483,7 +494,7 @@ export function CraftPageEditor({ initialSlug }: { initialSlug?: string }) {
                       </Text>
                     ) : null}
                   </div>
-                  <Button isLoading={restorePage.isPending} onClick={handleRestore}>
+                  <Button variant="primary" isLoading={restorePage.isPending} onClick={handleRestore}>
                     <RotateCcw className="mr-2 h-4 w-4" />
                     {t("pageBuilder.restore")}
                   </Button>

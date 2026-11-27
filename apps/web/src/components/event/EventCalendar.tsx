@@ -313,7 +313,9 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                       </div>
                       <div className="flex-1 space-y-0.5 overflow-hidden">
                         {visibleEvents.map((event, index) => (
-                          <button
+                          <Button
+                            variant="unstyled"
+                            type="submit"
                             key={`${event.id}-${dateKey}-${index}`}
                             onClick={() => onEventClick?.(event)}
                             className="group relative flex w-full items-center gap-1.5 overflow-hidden rounded-md px-2 py-1 text-left transition-all hover:brightness-95 active:scale-[0.98]"
@@ -325,15 +327,17 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                             <span className="truncate text-[10px] font-bold text-[var(--text-primary)]">
                               {event.is_all_day ? `${t("event.form.allDay")} ${event.title}` : `${formatEventTime(locale, event, t("event.form.allDay"))} ${event.title}`}
                             </span>
-                          </button>
+                          </Button>
                         ))}
                         {hasMore && (
-                          <button
+                          <Button
+                            variant="unstyled"
+                            type="submit"
                             onClick={() => setSelectedDayEvents({ date: day.date, events: dayEvents })}
                             className="mt-1 w-full rounded-md px-2 py-0.5 text-left text-[10px] font-bold text-[var(--brand-primary)] transition-colors hover:bg-[var(--brand-muted)]/20"
                           >
                             +{moreCount} {t("event.calendar.more") || "more"}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -367,7 +371,9 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
             </div>
             <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 snap-y snap-proximity scroll-smooth">
               {selectedDayEvents.events.map((event, index) => (
-                <button
+                <Button
+                  variant="unstyled"
+                  type="submit"
                   key={`${event.id}-${getDateKey(selectedDayEvents.date)}-${index}`}
                   onClick={() => {
                     onEventClick?.(event);
@@ -395,7 +401,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                       )}
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           </Card>

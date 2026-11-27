@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Input, Pagination, Select, Skeleton, Text, Title } from "@/components/ui";
+import { Badge, Button, Card, Input, Pagination, Dropdown, Skeleton, Text, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -88,10 +88,15 @@ export function CoursePage() {
     [scrollToList],
   );
 
-  const handleSearch = useCallback(() => {
-    setQ(searchInput.trim());
-    setPage(0);
-  }, [searchInput]);
+  useEffect(() => {
+    const nextQuery = searchInput.trim();
+    if (nextQuery === q) return;
+    const timer = window.setTimeout(() => {
+      setQ(nextQuery);
+      setPage(0);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [q, searchInput]);
 
   const handleCategoryChange = (id: string | undefined) => {
     setSelectedCategoryId(id);
@@ -105,7 +110,7 @@ export function CoursePage() {
       title={t("page.course.title")}
       actions={
         canManageCourses ? (
-          <Button onClick={() => router.push("/admin/courses/create")}>
+          <Button variant="primary" onClick={() => router.push("/admin/courses/create")}>
             {t("action.createCourse")}
           </Button>
         ) : null
@@ -114,20 +119,18 @@ export function CoursePage() {
       {/* Search bar */}
       <div className="mb-4 flex gap-2">
         <Input
+          aria-label={t("course.searchPlaceholder")}
           className="flex-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
           placeholder={t("course.searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          type="search"
         />
-        <Button size="sm" variant="primary" onClick={handleSearch}>
-          {t("common.search")}
-        </Button>
       </div>
 
       {/* Category filters */}
       <div className="mb-8 md:hidden">
-        <Select
+        <Dropdown
           aria-label={t("course.form.category")}
           className="rounded-xl border-[var(--border-subtle)]"
           onChange={(e) => handleCategoryChange(e.target.value || undefined)}
@@ -139,7 +142,7 @@ export function CoursePage() {
               {localize(cat, "name")}
             </option>
           ))}
-        </Select>
+        </Dropdown>
       </div>
       <div className="mb-8 hidden flex-wrap gap-2 md:flex">
         <Button

@@ -15,7 +15,7 @@ import {
   Quote,
   Trash2,
 } from "lucide-react";
-import { Textarea, cn } from "@/components/ui";
+import { Button, Textarea, cn } from "@/components/ui";
 import { isRichTextHtml, markdownToHtml } from "@/components/article/articleEditorUtils";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle, useIsMobile } from "../../shared/helpers";
@@ -152,7 +152,8 @@ export function RichTextBlock(props: RichTextProps) {
         }}
       >
         {enabled && isRemovable ? (
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Delete rich text block"
             className={cn(
               "absolute -right-2 -top-2 z-20 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elevated)] text-[var(--status-danger)] shadow-sm transition hover:bg-[var(--status-danger)] hover:text-white cursor-pointer",
@@ -166,7 +167,7 @@ export function RichTextBlock(props: RichTextProps) {
             type="button"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         ) : null}
 
         {showEditor ? (
@@ -176,79 +177,88 @@ export function RichTextBlock(props: RichTextProps) {
           >
             <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[var(--border-subtle)] pb-2">
               <div className="flex flex-wrap items-center gap-1">
-                <button
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => wrapSelection("**", "**", "bold")}
                   title="Bold"
                   type="button"
                 >
                   <Bold className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => wrapSelection("*", "*", "italic")}
                   title="Italic"
                   type="button"
                 >
                   <Italic className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => prefixLine("## ", "Heading")}
                   title="Heading 2"
                   type="button"
                 >
                   <Heading2 className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => prefixLine("### ", "Subheading")}
                   title="Heading 3"
                   type="button"
                 >
                   <Heading3 className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => prefixLine("- ", "List item")}
                   title="Bullet list"
                   type="button"
                 >
                   <List className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => prefixLine("1. ", "List item")}
                   title="Numbered list"
                   type="button"
                 >
                   <ListOrdered className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => prefixLine("> ", "Quote")}
                   title="Quote"
                   type="button"
                 >
                   <Quote className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                   onClick={() => wrapSelection("[", "](https://example.com)", "link text")}
                   title="Link"
                   type="button"
                 >
                   <Link2 className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--brand-primary)] cursor-pointer"
                 onClick={() => setIsEditing(false)}
                 type="button"
               >
                 <Eye className="h-3.5 w-3.5" />
                 Preview
-              </button>
+              </Button>
             </div>
             <textarea
               className="min-h-40 w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-2 font-mono text-sm text-[var(--text-primary)] outline-none focus:border-[var(--brand-primary)]"
@@ -261,7 +271,8 @@ export function RichTextBlock(props: RichTextProps) {
         ) : (
           <div className="relative">
             {enabled ? (
-              <button
+              <Button
+                variant="unstyled"
                 className={cn(
                   "absolute right-6 -top-2 z-20 inline-flex h-6 items-center gap-1 rounded-full border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-2 text-[11px] font-medium text-[var(--text-secondary)] shadow-sm transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] cursor-pointer",
                   isSelected ? "opacity-100" : "opacity-0 group-hover/richtext:opacity-100 focus:opacity-100",
@@ -274,7 +285,7 @@ export function RichTextBlock(props: RichTextProps) {
               >
                 <Pencil className="h-3 w-3" />
                 Markdown
-              </button>
+              </Button>
             ) : null}
             {renderedHtml ? (
               <div

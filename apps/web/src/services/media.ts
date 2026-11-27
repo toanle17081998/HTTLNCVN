@@ -34,6 +34,12 @@ export type MediaGalleryItem = {
   width?: number;
 };
 
+export type MediaKind = "image" | "video";
+
+export function isVideoMediaUrl(url: string) {
+  return /\.(webm|mp4|mov|m4v)(?:[?#]|$)/i.test(url);
+}
+
 export type MediaStorageUsage = {
   exceedsLimit: boolean;
   limitBytes: number;

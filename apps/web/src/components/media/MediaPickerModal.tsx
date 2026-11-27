@@ -1,13 +1,16 @@
 "use client";
 
-import { X } from "lucide-react";
+import { FolderOpen, X } from "lucide-react";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Button, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { MediaGalleryManager } from "./MediaGalleryManager";
-import type { MediaGalleryItem } from "@/api/media";
+import type { MediaGalleryItem, MediaKind } from "@/api/media";
 
 type MediaPickerModalProps = {
   open: boolean;
+  mediaKind?: MediaKind;
   selectedUrl?: string;
   title?: string;
   onClose: () => void;
@@ -16,6 +19,7 @@ type MediaPickerModalProps = {
 
 export function MediaPickerModal({
   open,
+  mediaKind,
   selectedUrl,
   title,
   onClose,
@@ -25,10 +29,14 @@ export function MediaPickerModal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
       style={{ backgroundColor: "var(--bg-scrim)" }}
     >
       <div
@@ -52,6 +60,7 @@ export function MediaPickerModal({
         </div>
         <div className="flex-1 overflow-y-auto p-5">
           <MediaGalleryManager
+            mediaKind={mediaKind}
             mode="picker"
             onSelect={(item) => {
               onSelect(item);
@@ -61,6 +70,34 @@ export function MediaPickerModal({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
+  );
+}
+
+export function MediaLibraryButton({
+  label,
+  mediaKind,
+  onSelect,
+  selectedUrl,
+}: Pick<MediaPickerModalProps, "mediaKind" | "onSelect" | "selectedUrl"> & { label?: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} size="sm" type="button" variant="secondary">
+        <FolderOpen aria-hidden="true" className="mr-1.5 h-3.5 w-3.5" />
+        {label ?? t("media.picker.chooseFromGallery")}
+      </Button>
+      <MediaPickerModal
+        mediaKind={mediaKind}
+        onClose={() => setOpen(false)}
+        onSelect={onSelect}
+        open={open}
+        selectedUrl={selectedUrl}
+        title={t("media.gallery.title")}
+      />
+    </>
   );
 }

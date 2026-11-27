@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
-import { Card, FormField, Select, Text } from "@/components/ui";
+import { Card, FormField, Dropdown, Text } from "@/components/ui";
 import { LessonForm } from "@/components/course/LessonForm";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -55,7 +55,7 @@ export default function AdminCreateLessonRoute() {
       <div className="grid gap-5 py-6">
         <Card className="p-5">
           <FormField label={t("nav.course.label")} htmlFor="courseSlug">
-            <Select
+            <Dropdown
               className="max-w-xl bg-[var(--bg-base)]"
               disabled={coursesQuery.isLoading || courses.length === 0}
               id="courseSlug"
@@ -68,7 +68,7 @@ export default function AdminCreateLessonRoute() {
                   {localize(course, "title", course.slug)}
                 </option>
               ))}
-            </Select>
+            </Dropdown>
           </FormField>
           {courses.length === 0 && !coursesQuery.isLoading ? (
             <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-sm text-[var(--text-secondary)]">

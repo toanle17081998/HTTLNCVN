@@ -1,7 +1,7 @@
 "use client";
 
-import { Badge, Text, Title, Button, Card, Input, Label, Pagination } from "@/components/ui";
-import { useState } from "react";
+import { Dropdown, Badge, Text, Title, Button, Card, Input, Label, Pagination, cn } from "@/components/ui";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { Course, PublishCourseTestDto } from "@/hooks/course";
@@ -45,7 +45,11 @@ function isDraftComplete(question: DraftQuestion) {
   );
 }
 
-export function CourseTestPanel({ course }: { course: Course }) {
+export function CourseTestPanel({ className, course, loadingFallback = null }: {
+  className?: string;
+  course: Course;
+  loadingFallback?: ReactNode;
+}) {
   const router = useRouter();
   const { t, locale, localize } = useTranslation();
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -89,7 +93,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
     setIsQuestionsModalOpen(true);
   };
 
-  if (testQuery.isLoading) return null;
+  if (testQuery.isLoading) return loadingFallback;
   if (testQuery.error) {
     return <Card className="p-6 text-sm text-[var(--status-danger)]">{t("courseTest.loadError")}</Card>;
   }
@@ -133,7 +137,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
   const title = t("courseTest.title");
 
   return (
-    <Card className="flex flex-col p-6">
+    <Card className={cn("flex flex-col p-6", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Title as="h2" variant="subsection">{title}</Title>
@@ -168,7 +172,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                   ? t("courseTest.inProgress")
                   : `${Math.ceil(status.availability.duration_seconds / 60)} min`}
               </Text>
-              <Button disabled={startTest.isPending} onClick={handleStart}>
+              <Button variant="primary" disabled={startTest.isPending} onClick={handleStart}>
                 {attempt ? t("courseTest.resume") : t("courseTest.start")}
               </Button>
             </div>
@@ -267,8 +271,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
           <div className="mt-4 grid gap-4 sm:max-w-sm">
             <Label variant="control" className="grid gap-1">
               {t("courseTest.class")}
-              <select
-                className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
+              <Dropdown
                 value={activeClassId}
                 onChange={(event) => {
                   setSelectedClassId(event.target.value);
@@ -278,12 +281,11 @@ export function CourseTestPanel({ course }: { course: Course }) {
                 {status.managed_classes.map((managedClass) => (
                   <option key={managedClass.id} value={managedClass.id}>{managedClass.name}</option>
                 ))}
-              </select>
+              </Dropdown>
             </Label>
             <Label variant="control" className="grid gap-1">
               {t("courseTest.testTaker")}
-              <select
-                className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3"
+              <Dropdown
                 value={targetUserId}
                 onChange={(event) => setTargetUserId(event.target.value)}
               >
@@ -291,7 +293,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
                 {activeClass?.members.map((member) => (
                   <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
                 ))}
-              </select>
+              </Dropdown>
             </Label>
             <Label variant="control" className="grid gap-1">
               {t("courseTest.duration")}
@@ -322,18 +324,18 @@ export function CourseTestPanel({ course }: { course: Course }) {
                     {t("courseTest.remove")}
                   </Button>
                 </div>
-                <select className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3" value={question.type} onChange={(event) => updateDraft(question.id, { correctAnswer: "", incorrectAnswers: "", type: event.target.value })}>
+                <Dropdown value={question.type} onChange={(event) => updateDraft(question.id, { correctAnswer: "", incorrectAnswers: "", type: event.target.value })}>
                   <option value="theoretical_question">Theoretical question</option>
                   <option value="true_false">True / False</option>
                   <option value="multiple_choices">Multiple choice</option>
                   <option value="short_answer">Text input</option>
-                </select>
+                </Dropdown>
                 <Input placeholder="Question (English)" value={question.questionEn} onChange={(event) => updateDraft(question.id, { questionEn: event.target.value })} />
                 <Input placeholder="Câu hỏi (Tiếng Việt)" value={question.questionVi} onChange={(event) => updateDraft(question.id, { questionVi: event.target.value })} />
                 {question.type === "true_false" ? (
-                  <select className="h-10 rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3" value={question.correctAnswer || "true"} onChange={(event) => updateDraft(question.id, { correctAnswer: event.target.value })}>
+                  <Dropdown value={question.correctAnswer || "true"} onChange={(event) => updateDraft(question.id, { correctAnswer: event.target.value })}>
                     <option value="true">True</option><option value="false">False</option>
-                  </select>
+                  </Dropdown>
                 ) : (
                   <Input placeholder={question.type === "multiple_choices" ? "Correct answers, separated by commas" : "Correct answer"} value={question.correctAnswer} onChange={(event) => updateDraft(question.id, { correctAnswer: event.target.value })} />
                 )}
@@ -346,6 +348,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
 
           <div className="mt-5 flex flex-wrap gap-2">
             <Button
+              variant="primary"
               disabled={
                 publishTest.isPending ||
                 Boolean(status.availability?.is_active) ||
@@ -372,12 +375,14 @@ export function CourseTestPanel({ course }: { course: Course }) {
               <Title as="h3" variant="subsection">
                 {t("courseTest.selectQuestions")}
               </Title>
-              <button
+              <Button
+                variant="unstyled"
+                type="submit"
                 className="rounded-md p-1.5 text-[var(--text-tertiary)] hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] cursor-pointer"
                 onClick={handleCloseModal}
               >
                 <X className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Search Bar */}
@@ -462,7 +467,7 @@ export function CourseTestPanel({ course }: { course: Course }) {
               <div className="text-xs text-[var(--text-secondary)]">
                 {t("courseTest.selectedCount", { count: String(selectedIds.length) })}
               </div>
-              <Button onClick={handleCloseModal}>
+              <Button variant="primary" onClick={handleCloseModal}>
                 {t("courseTest.done")}
               </Button>
             </div>

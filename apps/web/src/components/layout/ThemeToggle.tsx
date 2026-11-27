@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 
 type Theme = "light" | "dark";
@@ -84,7 +84,8 @@ export function ThemeToggle() {
   }, [theme]);
 
   return (
-    <button
+    <Button
+      variant="unstyled"
       aria-label="Toggle Theme"
       aria-pressed={isDark}
       className="group relative flex h-7 w-12 items-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-base)] p-1 transition-all duration-300 hover:border-[var(--brand-primary)]"
@@ -101,6 +102,6 @@ export function ThemeToggle() {
       >
         {isDark ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
       </div>
-    </button>
+    </Button>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Button, Card, FormField, Input, Select, Text } from "@/components/ui";
+import { Title, Button, Card, FormField, Input, Dropdown, Text } from "@/components/ui";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useArticleCategoriesQuery } from "@/hooks/article";
@@ -71,17 +71,17 @@ export function ArticleMetadataPanel({
       </FormField>
 
       <FormField htmlFor="article-status" label={t("article.form.status")}>
-        <Select
+        <Dropdown
           id="article-status"
           onChange={(e) => onStatusChange(e.target.value === "published" ? "published" : "draft")}
           value={status}
         >
           <option value="draft">{t("course.form.status.draft")}</option>
           <option value="published">{t("course.form.status.published")}</option>
-        </Select>
+        </Dropdown>
       </FormField>
 
-      <Button disabled={isSubmitting} type="submit">
+      <Button variant="primary" disabled={isSubmitting} type="submit">
         {isSubmitting ? t("article.create.submitting") : t("action.submit")}
       </Button>
 

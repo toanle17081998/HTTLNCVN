@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -40,6 +40,7 @@ type AdminLayoutProps = {
 type AdminLayoutChromeContextValue = {
   isFullscreen: boolean;
   setIsFullscreen: (value: boolean) => void;
+  setViewSiteHref: (href: string | null) => void;
 };
 
 type AdminNavItem = {
@@ -62,6 +63,37 @@ const primaryNavItems: AdminNavItem[] = [
   { href: "/admin/serving-schedules/cleaning", labelKey: "nav.servingCleaning.label", icon: CalendarDays },
 ];
 
+function getViewSiteHref(pathname: string): string {
+  const courseLessonMatch = pathname.match(/^\/admin\/courses\/([^/]+)\/lessons\/([^/]+)(?:\/|$)/);
+  if (courseLessonMatch) {
+    return `/course/${courseLessonMatch[1]}/lesson/${courseLessonMatch[2]}`;
+  }
+
+  const courseDetailMatch = pathname.match(/^\/admin\/courses\/([^/]+)\/edit(?:\/|$)/);
+  if (courseDetailMatch) {
+    return `/course/${courseDetailMatch[1]}`;
+  }
+
+  if (
+    pathname.startsWith("/admin/courses") ||
+    pathname.startsWith("/admin/lessons") ||
+    pathname.startsWith("/admin/quizzes") ||
+    pathname.startsWith("/admin/tests")
+  ) {
+    return "/course";
+  }
+
+  if (pathname.startsWith("/admin/articles")) {
+    return "/article";
+  }
+
+  if (pathname.startsWith("/admin/church") || pathname.startsWith("/admin/households")) {
+    return "/church";
+  }
+
+  return "/";
+}
+
 const AdminLayoutChromeContext = createContext<AdminLayoutChromeContextValue | null>(null);
 
 export function useAdminLayoutChrome() {
@@ -76,7 +108,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewSiteHrefOverride, setViewSiteHref] = useState<string | null>(null);
   const { canAny, isAuthenticated, isLoading, logout, role, user } = useAuth();
+  const viewSiteHref = viewSiteHrefOverride ?? getViewSiteHref(pathname);
+  const chromeContextValue = useMemo(
+    () => ({ isFullscreen, setIsFullscreen, setViewSiteHref }),
+    [isFullscreen],
+  );
 
   const canAccessAdmin = canAny([
     PERMISSIONS.manageAbout,
@@ -144,7 +182,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <AdminLayoutChromeContext.Provider value={{ isFullscreen, setIsFullscreen }}>
+    <AdminLayoutChromeContext.Provider value={chromeContextValue}>
       <div className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)]">
         {/* Mobile Backdrop */}
         {isMobileMenuOpen && !isFullscreen && canAccessAdmin && (
@@ -178,14 +216,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <Text as="p" tone="inherit" variant="inherit" className="truncate text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] opacity-70">{t("admin.layout.contentManagement")}</Text>
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="unstyled"
+                  type="submit"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--brand-muted)] lg:hidden"
                   onClick={() => setIsMobileMenuOpen(false)}
                   aria-label={t("nav.closeNavigation")}
                 >
                   <X aria-hidden="true" className="h-5 w-5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="unstyled"
                   aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                   className="hidden h-9 w-9 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--brand-muted)] lg:inline-flex"
                   onClick={() => setIsSidebarCollapsed((current) => !current)}
@@ -193,7 +234,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   type="button"
                 >
                   {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-                </button>
+                </Button>
               </div>
 
               {/* Navigation */}
@@ -213,13 +254,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <Text as="p" tone="inherit" variant="inherit" className="truncate text-sm font-bold text-[var(--text-primary)]">{user?.email?.split("@")[0] || t("admin.layout.defaultUser")}</Text>
                     <Text as="p" tone="inherit" variant="inherit" className="truncate text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{role || t("admin.layout.defaultRole")}</Text>
                   </div>
-                  <button
+                  <Button
+                    variant="unstyled"
+                    type="submit"
                     onClick={handleLogout}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
                     title={t("nav.logout")}
                   >
                     <LogOut className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </aside>
@@ -230,14 +273,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 sm:h-16 sm:px-6">
                 <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                   {canAccessAdmin && (
-                    <button
+                    <Button
+                      variant="unstyled"
                       aria-label="Open navigation"
                       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] lg:hidden"
                       onClick={() => setIsMobileMenuOpen(true)}
                       type="button"
                     >
                       <Menu className="h-5 w-5" />
-                    </button>
+                    </Button>
                   )}
                   <div className="hidden min-w-0 flex-1 overflow-hidden md:block">
                     <Breadcrumb pathname={pathname} />
@@ -248,14 +292,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     aria-label={t("admin.common.viewSite")}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] md:w-auto md:gap-1.5 md:px-3"
-                    href="/"
+                    href={viewSiteHref}
                     title={t("admin.common.viewSite")}
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
                     <span className="hidden md:inline">{t("admin.common.viewSite")}</span>
                   </Link>
                   {isAuthenticated ? (
-                    <button
+                    <Button
+                      variant="unstyled"
                       aria-label={t("nav.logout")}
                       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--status-danger-bg)] hover:text-[var(--status-danger)]"
                       onClick={handleLogout}
@@ -263,7 +308,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       type="button"
                     >
                       <LogOut className="h-4 w-4" />
-                    </button>
+                    </Button>
                   ) : (
                     <Link
                       className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--brand-primary)] px-3 text-sm font-semibold text-[var(--text-inverse)] transition hover:bg-[var(--brand-primary-strong)] sm:px-4"

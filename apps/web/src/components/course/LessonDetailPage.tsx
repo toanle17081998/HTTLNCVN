@@ -1,8 +1,8 @@
 "use client";
 
-import { Text, Button, Card, Title } from "@/components/ui";
+import { Text, Button, Card, Skeleton, Title } from "@/components/ui";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -11,7 +11,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { getLocalizedField } from "@/lib/i18n";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
-import { markdownToHtml, isRichTextHtml } from "@/components/article/articleEditorUtils";
+import { getLessonOutlineRole, markdownToHtml, isRichTextHtml } from "@/components/article/articleEditorUtils";
 import {
   useLessonQuery,
   useStartQuizMutation,
@@ -25,8 +25,66 @@ type LessonDetailPageProps = {
   lessonId: string;
 };
 
-function renderLessonBody(value: string) {
-  return isRichTextHtml(value) ? value : markdownToHtml(value);
+const lessonGrid = "grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start";
+
+function formatRichTextOutline(container: HTMLElement) {
+  let depth = 0;
+
+  function formatChildren(parent: Element) {
+    for (const block of parent.children) {
+      if (block.matches("div, section, article")) {
+        formatChildren(block);
+        continue;
+      }
+      if (!block.matches("p, h1, h2, h3, h4, h5, h6, hr, ol, ul, blockquote")) continue;
+
+      const role = block.matches("p, h1, h2, h3, h4, h5, h6")
+        ? getLessonOutlineRole(block.textContent ?? "")
+        : undefined;
+      let blockDepth = depth;
+      if (role === "section" || role === "part") {
+        blockDepth = 0;
+        depth = role === "part" ? 1 : 0;
+      } else if (role === "topic") {
+        blockDepth = 1;
+        depth = 2;
+      } else if (depth && (role === "point" || block.matches("ol"))) {
+        blockDepth = depth = 2;
+      } else if (block.matches("h1, h2, h3, h4, h5, h6, hr")) {
+        blockDepth = depth = 0;
+      }
+
+      block.toggleAttribute("data-lesson-section", role === "section");
+      if (role === "part" || role === "topic") block.setAttribute("data-lesson-outline", role);
+      if (blockDepth) block.setAttribute("data-lesson-indent", String(blockDepth));
+    }
+  }
+
+  formatChildren(container);
+}
+
+function LessonContentSkeleton({ label }: { label: string }) {
+  return (
+    <div className={lessonGrid} role="status">
+      <span className="sr-only">{label}</span>
+      <Card aria-hidden="true" className="space-y-6 p-6">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-8 w-3/4" />
+        {[0, 1, 2].map((section) => (
+          <div className="space-y-3" key={section}>
+            <Skeleton className="h-5 w-1/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        ))}
+      </Card>
+      <Card aria-hidden="true" className="space-y-3 p-5">
+        <Skeleton className="h-5 w-2/3" />
+        <Skeleton className="h-10 w-full" />
+      </Card>
+    </div>
+  );
 }
 
 export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps) {
@@ -42,7 +100,13 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
   const lesson = lessonQuery.data;
   const readerLang = locale;
   const body = getLocalizedField(lesson, "content_markdown", readerLang);
-  const html = useMemo(() => renderLessonBody(body), [body]);
+  const isHtml = isRichTextHtml(body);
+  const html = useMemo(() => isHtml ? body : markdownToHtml(body, { lessonOutline: true }), [body, isHtml]);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (isHtml && contentRef.current) formatRichTextOutline(contentRef.current);
+  }, [html, isHtml]);
 
   async function handleStartQuiz(quiz: QuizListItem) {
     const attempt = await startQuiz.mutateAsync(quiz.id);
@@ -56,7 +120,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
       title={localize(lesson, "title", t("lesson.label"))}
     >
       {lessonQuery.isLoading ? (
-        <Card className="p-6 text-sm text-[var(--text-secondary)]">{t("common.ready")}...</Card>
+        <LessonContentSkeleton label={t("admin.courses.loadingLessons")} />
       ) : null}
 
       {lessonQuery.error ? (
@@ -66,7 +130,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
       ) : null}
 
       {lesson ? (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+        <div className={lessonGrid}>
           <article className="grid min-w-0 gap-5">
             <Card className="border-0 p-6 shadow-none">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -105,7 +169,9 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                 </div>
               </div>
               <div
+                data-lesson-content
                 data-selectable-content
+                ref={contentRef}
                 className="mt-5 text-base leading-7 text-[var(--text-primary)] [&_a]:font-semibold [&_a]:text-[var(--brand-primary)] [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--brand-primary)] [&_blockquote]:pl-4 [&_code]:rounded [&_code]:bg-[var(--brand-muted)] [&_code]:px-1.5 [&_code]:py-0.5 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:mt-7 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_li]:my-0.5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_strong]:font-semibold [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_table]:w-full [&_table]:my-4 [&_table]:border-collapse [&_table]:border [&_table]:border-[var(--border-subtle)] [&_th]:border [&_th]:border-[var(--border-subtle)] [&_th]:p-3 [&_th]:bg-[var(--brand-muted)] [&_th]:text-left [&_td]:border [&_td]:border-[var(--border-subtle)] [&_td]:p-3"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
@@ -135,6 +201,7 @@ export function LessonDetailPage({ courseSlug, lessonId }: LessonDetailPageProps
                       {quiz.question_count} questions
                     </Text>
                     <Button
+                      variant="primary"
                       className="mt-3 w-full"
                       disabled={!isAuthenticated || !canTakeQuiz || startQuiz.isPending}
                       onClick={() => handleStartQuiz(quiz)}

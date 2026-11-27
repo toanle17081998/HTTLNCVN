@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Button, Card, FormField, Input, Pagination, Select, Textarea, cn, Text } from "@/components/ui";
+import { Title, Button, Card, FormField, Input, Pagination, Dropdown, Textarea, cn, Text } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { Bell, Plus, RefreshCw, Send, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
@@ -113,7 +113,7 @@ export function NotificationPage() {
     <PageLayout
       actions={
         isAdmin ? (
-          <Button onClick={openCreateModal}>
+          <Button variant="primary" onClick={openCreateModal}>
             <Plus className="mr-2 h-4 w-4" />
             {t("action.newItem")}
           </Button>
@@ -135,7 +135,8 @@ export function NotificationPage() {
                 : `Showing ${notifications.length} of ${total} notifications`}
             </Text>
           </div>
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Refresh"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200 active:scale-95"
             onClick={() => void notificationsQuery.refetch()}
@@ -145,7 +146,7 @@ export function NotificationPage() {
               aria-hidden="true"
               className={cn("h-5 w-5", notificationsQuery.isFetching ? "animate-spin" : "")}
             />
-          </button>
+          </Button>
         </div>
 
         <div className="grid divide-y divide-[var(--border-subtle)]">
@@ -231,14 +232,15 @@ export function NotificationPage() {
                   Create Notification
                 </Title>
               </div>
-              <button
+              <Button
+                variant="unstyled"
                 aria-label="Close"
                 className="rounded-md p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
                 onClick={closeModal}
                 type="button"
               >
                 <X className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {createMutation.error && (
@@ -268,7 +270,7 @@ export function NotificationPage() {
               </FormField>
 
               <FormField htmlFor="notif-target-type" label="Target Type">
-                <Select
+                <Dropdown
                   id="notif-target-type"
                   onChange={(event) => setTargetType(event.target.value as any)}
                   value={targetType}
@@ -276,7 +278,7 @@ export function NotificationPage() {
                   <option value="all">All Users</option>
                   <option value="church_unit">Church Unit</option>
                   <option value="user">Specific User ID</option>
-                </Select>
+                </Dropdown>
               </FormField>
 
               {targetType !== "all" && (
@@ -304,7 +306,7 @@ export function NotificationPage() {
               <Button onClick={closeModal} type="button" variant="secondary">
                 {t("common.cancel")}
               </Button>
-              <Button isLoading={isSaving} type="submit">
+              <Button variant="primary" isLoading={isSaving} type="submit">
                 <Send className="mr-2 h-4 w-4" />
                 Send
               </Button>

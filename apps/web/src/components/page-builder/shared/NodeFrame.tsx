@@ -3,7 +3,7 @@
 import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { GripVertical, Image as ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { normalizeCssValue } from "./helpers";
 import type { EditorBreakpoint, SizeValue } from "./types";
@@ -164,7 +164,8 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
       style={responsiveStyle}
     >
       {enabled && parentId === "ROOT" && rootIndex === 0 && openSectionPicker ? (
-        <button
+        <Button
+          variant="unstyled"
           aria-label="Add section above"
           className="absolute left-1/2 top-0 z-30 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[var(--text-inverse)] opacity-0 shadow-lg transition-all duration-200 group-hover/section:opacity-100 hover:scale-110 hover:bg-[var(--brand-primary-strong)] focus:opacity-100 cursor-pointer"
           onClick={(event) => {
@@ -174,10 +175,11 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
           type="button"
         >
           <Plus className="h-4 w-4" />
-        </button>
+        </Button>
       ) : null}
       {enabled && parentId === "ROOT" && openSectionPicker ? (
-        <button
+        <Button
+          variant="unstyled"
           aria-label="Add section below"
           className="absolute bottom-0 left-1/2 z-30 flex h-8 w-8 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[var(--text-inverse)] opacity-0 shadow-lg transition-all duration-200 group-hover/section:opacity-100 hover:scale-110 hover:bg-[var(--brand-primary-strong)] focus:opacity-100 cursor-pointer"
           onClick={(event) => {
@@ -187,14 +189,15 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
           type="button"
         >
           <Plus className="h-4 w-4" />
-        </button>
+        </Button>
       ) : null}
       {enabled && parentId === "ROOT" ? (
         <div className={cn(
           "absolute right-3 top-3 z-20 flex items-center gap-1 rounded-lg bg-[var(--bg-elevated)] p-1 shadow-lg transition-opacity md:group-hover/section:opacity-100 md:focus-within:opacity-100",
           isActive ? "opacity-100" : "opacity-100 md:opacity-0",
         )}>
-          <button
+          <Button
+            variant="unstyled"
             aria-label="Edit section content"
             className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 text-xs font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-soft)] cursor-pointer"
             onClick={(event) => {
@@ -205,8 +208,9 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
           >
             <Pencil className="h-3.5 w-3.5" />
             {t("admin.common.edit")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="unstyled"
             aria-label="Move section"
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)] cursor-grab active:cursor-grabbing"
             ref={(ref) => {
@@ -215,8 +219,9 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
             type="button"
           >
             <GripVertical className="h-4 w-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="unstyled"
             aria-label="Remove section"
             className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 text-xs font-semibold text-[var(--status-danger)] hover:bg-[var(--status-danger)] hover:text-white transition-colors cursor-pointer"
             onClick={(event) => {
@@ -227,9 +232,10 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
           >
             <Trash2 className="h-4 w-4" />
             {t("admin.common.delete")}
-          </button>
+          </Button>
           {typeof allProps.backgroundImage === "string" && allProps.backgroundImage ? (
-            <button
+            <Button
+              variant="unstyled"
               aria-label="Change section background image"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--brand-primary)]"
               onClick={(event) => {
@@ -240,7 +246,7 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
               type="button"
             >
               <ImageIcon className="h-4 w-4" />
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}

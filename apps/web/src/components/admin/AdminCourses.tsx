@@ -170,20 +170,24 @@ function CategoryManager({
               className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-1 text-xs font-medium text-[var(--text-primary)]"
             >
               <span>{localize(cat, "name")}</span>
-              <button
+              <Button
+                variant="unstyled"
+                type="submit"
                 className="ml-1 rounded p-0.5 text-[var(--text-tertiary)] hover:text-[var(--brand-primary)]"
                 onClick={() => startEdit(cat)}
                 title="Edit"
               >
                 <Pencil className="h-3 w-3" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="unstyled"
+                type="submit"
                 className="rounded p-0.5 text-[var(--text-tertiary)] hover:text-[var(--status-danger)]"
                 onClick={() => handleDelete(cat.id)}
                 title="Delete"
               >
                 <Trash2 className="h-3 w-3" />
-              </button>
+              </Button>
             </div>
           ))}
         </div>

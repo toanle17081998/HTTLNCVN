@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Title, Button, Card, Input, Pagination } from "@/components/ui";
+import { Dropdown, Text, Title, Button, Card, Input, Pagination } from "@/components/ui";
 import { useState, type FormEvent } from "react";
 import { Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 
@@ -82,7 +82,7 @@ export function AdminHouseholds() {
           <Input aria-label={t("admin.households.note")} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder={t("admin.households.note")} value={form.note} />
           <div className="md:col-span-2">
             <div className="flex justify-end gap-2 md:justify-start">
-              <Button disabled={createMutation.isPending || updateMutation.isPending} type="submit">
+              <Button variant="primary" disabled={createMutation.isPending || updateMutation.isPending} type="submit">
                 <Plus className="mr-2 h-4 w-4" />
                 {editingId ? t("admin.households.save") : t("admin.households.create")}
               </Button>
@@ -141,21 +141,22 @@ export function AdminHouseholds() {
                       <Text as="p" tone="inherit" variant="inherit" className="font-medium">{member.name}</Text>
                       <Text as="p" tone="inherit" variant="inherit" className="text-xs text-[var(--text-secondary)]">{member.role || "member"}</Text>
                     </div>
-                    <button
+                    <Button
+                      variant="unstyled"
                       aria-label={t("admin.common.delete")}
                       onClick={() => removeMemberMutation.mutate({ householdId: household.id, userId: member.id })}
                       type="button"
                     >
                       <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
                 {!household.members.length ? <Text variant="small">{t("admin.households.noMembers")}</Text> : null}
               </div>
 
               <div className="mt-4 flex gap-2">
-                <select
-                  className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3"
+                <Dropdown
+                  className="min-w-0 flex-1"
                   onChange={(event) => setSelectedMembers({ ...selectedMembers, [household.id]: event.target.value })}
                   value={selected}
                 >
@@ -165,8 +166,9 @@ export function AdminHouseholds() {
                       {member.profile ? `${member.profile.first_name} ${member.profile.last_name}`.trim() : member.username}
                     </option>
                   ))}
-                </select>
+                </Dropdown>
                 <Button
+                  variant="primary"
                   aria-label={t("admin.households.addMember")}
                   disabled={!selected}
                   onClick={() =>

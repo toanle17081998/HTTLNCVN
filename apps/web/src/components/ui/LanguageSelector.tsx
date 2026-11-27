@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/components/ui";
+import { Button } from "./Button";
+import { useTranslation } from "@/providers/I18nProvider";
 
 type LanguageSelectorProps = {
   activeLanguage: "en" | "vi";
@@ -13,10 +15,15 @@ export function LanguageSelector({
   onLanguageChange,
   className,
 }: LanguageSelectorProps) {
+  const { t } = useTranslation();
+
   return (
     <div className={cn("flex items-center gap-1 p-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-lg w-fit", className)}>
-      <button
+      <Button
+        aria-pressed={activeLanguage === "en"}
+        title={t("common.language.editContent", { language: t("common.language.english") })}
         type="button"
+        variant="unstyled"
         onClick={() => onLanguageChange("en")}
         className={cn(
           "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
@@ -26,9 +33,12 @@ export function LanguageSelector({
         )}
       >
         English
-      </button>
-      <button
+      </Button>
+      <Button
+        aria-pressed={activeLanguage === "vi"}
+        title={t("common.language.editContent", { language: t("common.language.vietnamese") })}
         type="button"
+        variant="unstyled"
         onClick={() => onLanguageChange("vi")}
         className={cn(
           "px-3 py-1.5 text-xs font-bold rounded-md transition-all",
@@ -38,7 +48,7 @@ export function LanguageSelector({
         )}
       >
         Tiếng Việt
-      </button>
+      </Button>
     </div>
   );
 }

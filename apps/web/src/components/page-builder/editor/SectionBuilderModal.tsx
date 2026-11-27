@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Title, cn } from "@/components/ui";
+import { Button, Text, Title, cn } from "@/components/ui";
 import { useState, type ReactElement, type ReactNode } from "react";
 import { Element, useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
@@ -723,14 +723,15 @@ export function SectionBuilderProvider({ children, contentLocale }: { children: 
                   <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{t("pageBuilder.sectionLibrary")}</Text>
                   <Title as="h3" tone="inherit" variant="cardSoft">{t("pageBuilder.addSection")}</Title>
                 </div>
-                <button aria-label={t("action.close")} className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
+                <Button variant="unstyled" aria-label={t("action.close")} className="rounded-lg border border-[var(--border-subtle)] p-2" onClick={() => setInsertIndex(null)} type="button">
                   <X className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
               <div className="grid min-h-0 md:grid-cols-[18rem_minmax(0,1fr)]">
                 <div className="grid content-start gap-1 overflow-y-auto border-r border-[var(--border-subtle)] p-4">
                   {sectionCategories.map((item) => (
-                    <button
+                    <Button
+                      variant="unstyled"
                       className={cn(
                         "rounded-lg px-4 py-3 text-left text-sm font-medium",
                         category === item ? "bg-[var(--brand-primary)] text-[var(--text-inverse)]" : "hover:bg-[var(--brand-soft)]",
@@ -740,13 +741,14 @@ export function SectionBuilderProvider({ children, contentLocale }: { children: 
                       type="button"
                     >
                       {t(sectionCategoryKeys[item])}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <div className="grid min-h-0 gap-5 overflow-y-auto p-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
                   <div className="grid content-start gap-2">
                     {visiblePresets.map((preset) => (
-                      <button
+                      <Button
+                        variant="unstyled"
                         className={cn(
                           "rounded-lg border px-4 py-3 text-left",
                           selectedPreset?.id === preset.id ? "border-[var(--brand-primary)] bg-[var(--brand-soft)]" : "border-[var(--border-subtle)]",
@@ -759,12 +761,13 @@ export function SectionBuilderProvider({ children, contentLocale }: { children: 
                         <span className="mt-1 block text-xs text-[var(--text-tertiary)]">
                           {t("pageBuilder.styleVariant", { variant: String(preset.variant) })}
                         </span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   <div className="grid content-start gap-4">
                     {selectedPreset ? <SectionPresetPreview contentLocale={contentLocale} preset={selectedPreset} /> : null}
-                    <button
+                    <Button
+                      variant="unstyled"
                       className={cn(
                         "justify-self-end rounded-lg px-5 py-3 text-sm font-semibold transition-all duration-300",
                         getButtonVariantClass("primary"),
@@ -773,7 +776,7 @@ export function SectionBuilderProvider({ children, contentLocale }: { children: 
                       type="button"
                     >
                       {t("pageBuilder.addSectionToPage")}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

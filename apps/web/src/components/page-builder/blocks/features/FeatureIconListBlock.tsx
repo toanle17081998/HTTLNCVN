@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Text } from "@/components/ui";
+import { Button, Title, Text } from "@/components/ui";
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus } from "lucide-react";
 import { IconBoxBlock } from "../basic/IconBoxBlock";
@@ -59,7 +59,8 @@ export function FeatureIconListBlock({
         <div className="feature-icon-grid grid" style={{ gap: "var(--section-space-lg)", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
           {children}
           {enabled ? (
-            <button
+            <Button
+              variant="unstyled"
               className="flex items-center justify-center border-2 border-dashed border-[var(--border-strong)] text-sm font-semibold text-[var(--brand-primary)] cursor-pointer"
               onClick={(event) => {
                 event.stopPropagation();
@@ -76,7 +77,7 @@ export function FeatureIconListBlock({
               type="button"
             >
               <Plus className="mr-2 h-4 w-4" />Add feature
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

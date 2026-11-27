@@ -1,6 +1,6 @@
 "use client";
 
-import { Text } from "@/components/ui";
+import { Button, Text } from "@/components/ui";
 import { useEditor, useNode } from "@craftjs/core";
 import { Plus } from "lucide-react";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
@@ -78,7 +78,8 @@ export function FeatureGridListBlock({
         <div className="feature-card-grid grid" style={{ gap: "var(--section-space-md)", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
           {children}
           {enabled ? (
-            <button
+            <Button
+              variant="unstyled"
               className="flex items-center justify-center border-2 border-dashed border-[var(--border-strong)] text-sm font-semibold text-[var(--brand-primary)] cursor-pointer"
               onClick={(event) => {
                 event.stopPropagation();
@@ -95,7 +96,7 @@ export function FeatureGridListBlock({
               type="button"
             >
               <Plus className="mr-2 h-4 w-4" />Add feature card
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

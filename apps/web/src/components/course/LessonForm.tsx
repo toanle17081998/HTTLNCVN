@@ -136,7 +136,7 @@ export function LessonForm({ initialData, onSubmit, isLoading, title }: LessonFo
           >
             {t("common.cancel")}
           </Button>
-          <Button type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
+          <Button variant="primary" type="submit" isLoading={isLoading} className="px-8 shadow-lg shadow-[var(--brand-primary-muted)]">
             {initialData ? t("lesson.action.update") : t("lesson.action.create")}
           </Button>
         </div>

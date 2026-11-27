@@ -16,7 +16,7 @@ export function PreviewEditSheet({ editHref, previewHref }: PreviewEditSheetProp
           <Button variant="secondary">Preview</Button>
         </Link>
         <Link href={editHref}>
-          <Button>Edit</Button>
+          <Button variant="primary">Edit</Button>
         </Link>
       </div>
     </Card>

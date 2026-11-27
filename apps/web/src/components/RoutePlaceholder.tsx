@@ -33,7 +33,7 @@ export function RoutePlaceholder({
         actions ?? (
           <>
             <Button variant="secondary">{t("action.viewDraft")}</Button>
-            <Button>{t("action.create")}</Button>
+            <Button variant="primary">{t("action.create")}</Button>
           </>
         )
       }

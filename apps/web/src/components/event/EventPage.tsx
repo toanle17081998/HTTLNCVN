@@ -1,6 +1,6 @@
 "use client";
 
-import { Text, Title, Button, Card, FormField, Input, Select, Textarea, cn, Label } from "@/components/ui";
+import { Text, Title, Button, Card, FormField, Input, Dropdown, Textarea, cn, Label } from "@/components/ui";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useMemo, useState, type FormEvent } from "react";
 import {
@@ -466,7 +466,7 @@ export function EventPage() {
               <LayoutList aria-hidden="true" className="mr-2 h-4 w-4" />
               {t("event.category.title")}
             </Button>
-            <Button onClick={openCreateModal} size="sm">
+            <Button variant="primary" onClick={openCreateModal} size="sm">
               <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
               {t("event.action.add")}
             </Button>
@@ -555,7 +555,7 @@ export function EventPage() {
               <Label variant="caption"  htmlFor="event-status-filter">
                 {t("common.status")}
               </Label>
-              <Select
+              <Dropdown
                 id="event-status-filter"
                 aria-label={t("event.form.status")}
                 className="h-9 text-sm"
@@ -565,14 +565,14 @@ export function EventPage() {
                 <option value="all">{t("prayer.filter.all")}</option>
                 <option value="published">{t("event.form.status.published")}</option>
                 <option value="draft">{t("event.form.status.draft")}</option>
-              </Select>
+              </Dropdown>
             </div>
 
             <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
               <Label variant="caption"  htmlFor="event-audience-filter">
                 {t("common.audience")}
               </Label>
-              <Select
+              <Dropdown
                 id="event-audience-filter"
                 aria-label={t("event.form.audience")}
                 className="h-9 text-sm"
@@ -584,14 +584,14 @@ export function EventPage() {
                 <option value="church">{t("event.form.audience.church")}</option>
                 <option value="church_unit">{t("event.form.audience.churchUnit")}</option>
                 <option value="people">{t("event.form.audience.people")}</option>
-              </Select>
+              </Dropdown>
             </div>
 
             <div className="flex flex-col gap-1 min-w-0 flex-1 xl:w-36 xl:flex-none">
               <Label variant="caption"  htmlFor="event-category-filter">
                 {t("common.category")}
               </Label>
-              <Select
+              <Dropdown
                 id="event-category-filter"
                 aria-label={t("event.form.category")}
                 className="h-9 text-sm"
@@ -604,10 +604,11 @@ export function EventPage() {
                     {category.name}
                   </option>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
 
-            <button
+            <Button
+              variant="unstyled"
               aria-label={t("admin.members.refresh")}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
               onClick={() => {
@@ -625,7 +626,7 @@ export function EventPage() {
                   eventsQuery.isFetching || (canReadMeta && metaQuery.isFetching) ? "animate-spin" : "",
                 )}
               />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -790,7 +791,7 @@ export function EventPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <FormField htmlFor="event-category" label={t("event.form.category")}>
-                  <Select
+                  <Dropdown
                     id="event-category"
                     onChange={(event) =>
                       setForm((current) => ({ ...current, category_id: event.target.value }))
@@ -803,10 +804,10 @@ export function EventPage() {
                         {category.name}
                       </option>
                     ))}
-                  </Select>
+                  </Dropdown>
                 </FormField>
                 <FormField htmlFor="event-status" label={t("event.form.status")}>
-                  <Select
+                  <Dropdown
                     id="event-status"
                     onChange={(event) =>
                       setForm((current) => ({
@@ -818,10 +819,10 @@ export function EventPage() {
                   >
                     <option value="published">{t("event.form.status.published")}</option>
                     <option value="draft">{t("event.form.status.draft")}</option>
-                  </Select>
+                  </Dropdown>
                 </FormField>
                 <FormField htmlFor="event-repeat" label={t("event.form.repeat")}>
-                  <Select
+                  <Dropdown
                     id="event-repeat"
                     onChange={(event) =>
                       setForm((current) => ({
@@ -837,7 +838,7 @@ export function EventPage() {
                     <option value="weekly">{t("event.form.repeat.weekly")}</option>
                     <option value="monthly">{t("event.form.repeat.monthly")}</option>
                     <option value="weekdays">{t("event.form.repeat.weekdays")}</option>
-                  </Select>
+                  </Dropdown>
                 </FormField>
               </div>
 
@@ -958,7 +959,7 @@ export function EventPage() {
 
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <FormField htmlFor="event-audience" label={t("event.form.audience")}>
-                    <Select
+                    <Dropdown
                       id="event-audience"
                       onChange={(event) =>
                         setForm((current) => ({
@@ -972,7 +973,7 @@ export function EventPage() {
                       <option value="church">{t("event.form.audience.church")}</option>
                       <option value="church_unit">{t("event.form.audience.churchUnit")}</option>
                       <option value="people">{t("event.form.audience.people")}</option>
-                    </Select>
+                    </Dropdown>
                   </FormField>
                   <div className="md:col-span-2 rounded-xl border border-dashed border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3 text-sm text-[var(--text-secondary)]">
                     {t("event.utc.description")}
@@ -1041,6 +1042,7 @@ export function EventPage() {
                   {t("common.cancel")}
                 </Button>
                 <Button
+                  variant="primary"
                   isLoading={createMutation.isPending || updateMutation.isPending}
                   type="submit"
                 >
@@ -1110,7 +1112,7 @@ export function EventPage() {
                       value={categoryForm.description}
                     />
                   </FormField>
-                  <Button isLoading={createCategoryMutation.isPending} type="submit">
+                  <Button variant="primary" isLoading={createCategoryMutation.isPending} type="submit">
                     <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
                     {t("event.category.add")}
                   </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
@@ -60,7 +61,8 @@ export function CategorySelect({
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <button
+      <Button
+        variant="unstyled"
         className="flex h-10 w-full items-center justify-between rounded-md border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)] outline-none transition hover:border-[var(--brand-primary)] focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--input-focus-ring)]"
         onClick={() => setIsOpen((prev) => !prev)}
         type="button"
@@ -72,7 +74,7 @@ export function CategorySelect({
           className="h-4 w-4 text-[var(--text-tertiary)] transition-transform duration-200"
           style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
         />
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[240px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-1.5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">

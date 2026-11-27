@@ -1,7 +1,7 @@
 "use client";
 
 import { Tag } from "lucide-react";
-import { cn, Title, Text } from "@/components/ui";
+import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer, PrayerCategory } from "@/hooks/prayer-journal";
 
@@ -57,14 +57,15 @@ export function CategorySidebar({
         ))}
 
         {uncategorisedCount > 0 && (
-          <button
+          <Button
+            variant="unstyled"
             type="button"
             className="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-base)] hover:text-[var(--text-primary)]"
             onClick={() => onCategoryChange("all")}
           >
             <span className="italic">{t("prayer.form.categoryNone")}</span>
             <CountBadge count={uncategorisedCount} />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -91,7 +92,8 @@ function CategoryButton({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Button
+      variant="unstyled"
       type="button"
       onClick={onClick}
       className={cn(
@@ -103,6 +105,6 @@ function CategoryButton({
     >
       <span>{label}</span>
       <CountBadge count={count} />
-    </button>
+    </Button>
   );
 }

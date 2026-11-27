@@ -1,7 +1,9 @@
 "use client";
 
+import { Dropdown } from "./Dropdown";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { Button } from "./Button";
 import { cn } from "./cn";
 
 type PaginationProps = {
@@ -37,9 +39,9 @@ export function Pagination({
       {/* Left: Display N of X records */}
       <div className="flex w-full items-center justify-center gap-2 sm:w-auto sm:justify-start">
         <span>{t("pagination.display")}</span>
-        <select
+        <Dropdown
           aria-label={t("pagination.display")}
-          className="cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--input-focus-ring)]"
+          className="h-8! w-auto!"
           value={pageSize}
           onChange={(e) => {
             onPageSizeChange?.(Number(e.target.value));
@@ -51,7 +53,7 @@ export function Pagination({
               {s}
             </option>
           ))}
-        </select>
+        </Dropdown>
         <span>
           {t("pagination.of")}{" "}
           <span className="font-semibold text-[var(--text-primary)]">{total}</span>{" "}
@@ -114,8 +116,9 @@ function PagBtn({
   "aria-label"?: string;
 }) {
   return (
-    <button
+    <Button
       aria-label={ariaLabel}
+      title={ariaLabel}
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] text-sm font-medium transition-colors",
         disabled
@@ -125,8 +128,9 @@ function PagBtn({
       disabled={disabled}
       onClick={onClick}
       type="button"
+      variant="unstyled"
     >
       {children}
-    </button>
+    </Button>
   );
 }

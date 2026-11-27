@@ -2,20 +2,22 @@
 
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useScrollDirectionVisibility } from "./useScrollDirectionVisibility";
 
 export function BackToTopButton() {
-  const [isVisible, setIsVisible] = useState(false);
-  const { isVisible: isMobileNavVisible } = useScrollDirectionVisibility();
+  const [isPastThreshold, setIsPastThreshold] = useState(false);
+  const { isVisible: isNavVisible } = useScrollDirectionVisibility();
+  const isVisible = isPastThreshold && isNavVisible;
   const { t } = useTranslation();
 
   useEffect(() => {
     function handleScroll() {
-      setIsVisible(window.scrollY > 360);
+      setIsPastThreshold(window.scrollY > 360);
     }
 
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
@@ -28,11 +30,13 @@ export function BackToTopButton() {
   }
 
   return (
-    <button
+    <Button
+      variant="unstyled"
       aria-label={t("action.backToTop")}
+      aria-hidden={!isVisible}
       className={cn(
-        "fixed right-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-lg transition-[bottom,opacity,transform,background-color] duration-300 hover:cursor-pointer hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] sm:right-6 lg:bottom-6",
-        isMobileNavVisible
+        "fixed right-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-lg transition-[bottom,opacity,translate,background-color] duration-300 ease-out hover:cursor-pointer hover:bg-[var(--brand-muted)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)] sm:right-6 lg:bottom-6",
+        isNavVisible
           ? "bottom-[calc(5rem+env(safe-area-inset-bottom))]"
           : "bottom-5",
         isVisible
@@ -40,9 +44,10 @@ export function BackToTopButton() {
           : "pointer-events-none translate-y-3 opacity-0",
       )}
       onClick={scrollToTop}
+      tabIndex={isVisible ? undefined : -1}
       type="button"
     >
       <ArrowUp aria-hidden="true" className="h-5 w-5" />
-    </button>
+    </Button>
   );
 }

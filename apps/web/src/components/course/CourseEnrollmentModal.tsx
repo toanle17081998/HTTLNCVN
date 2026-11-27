@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Button, Card, Select, Textarea, Input, Label, Text } from "@/components/ui";
+import { Title, Button, Card, Dropdown, Textarea, Input, Label, Text } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
@@ -121,9 +121,9 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
         <div className="flex flex-1 flex-col border-r border-[var(--border-subtle)] p-8 overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <Title as="h2" variant="card">Enroll Others</Title>
-            <button onClick={onClose} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+            <Button variant="unstyled" type="submit" onClick={onClose} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
               <X className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
           
           <div className="space-y-6">
@@ -131,7 +131,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
               <Label variant="control" className="block text-[var(--text-secondary)] mb-1.5">
                 Church Unit
               </Label>
-              <Select
+              <Dropdown
                 value={churchUnitId}
                 onChange={(e) => setChurchUnitId(e.target.value)}
               >
@@ -141,7 +141,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
                     {unit.name}
                   </option>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
             
             <div>
@@ -173,6 +173,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
               {t("common.cancel")}
             </Button>
             <Button
+              variant="primary"
               className="flex-1"
               onClick={handleEnroll}
               disabled={enrollOthers.isPending || (selectedMemberIds.size === 0 && removedMemberIds.size === 0)}

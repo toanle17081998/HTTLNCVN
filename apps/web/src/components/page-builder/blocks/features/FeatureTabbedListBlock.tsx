@@ -1,6 +1,6 @@
 "use client";
 
-import { Title, Text } from "@/components/ui";
+import { Button, Title, Text } from "@/components/ui";
 import { useState } from "react";
 import { useEditor, useNode } from "@craftjs/core";
 import { defaultHeroSliderImages } from "../hero/HeroImageSliderBlock";
@@ -80,9 +80,9 @@ export function FeatureTabbedListBlock({
                     padding: "var(--section-space-md)",
                   }}
                 >
-                  <button className="text-left" onClick={() => setActiveIndex(index)} type="button">
+                  <Button variant="unstyled" className="text-left" onClick={() => setActiveIndex(index)} type="button">
                     <strong style={{ fontSize: "var(--section-card-title-size)" }}>{item.title}</strong>
-                  </button>
+                  </Button>
                   <div className="feature-tab-details" data-open={index === activeIndex ? "true" : "false"}>
                     <div className="feature-tab-details-inner grid" style={{ gap: "var(--section-space-xs)", paddingTop: "var(--section-space-xs)" }}>
                       <span style={{ color: "var(--text-secondary)", lineHeight: "var(--section-body-line-height)" }}>{item.description}</span>

@@ -230,7 +230,7 @@ export function PrayerJournalPage() {
     <PageLayout
       actions={
         canManageOwn ? (
-          <Button onClick={openCreateModal}>
+          <Button variant="primary" onClick={openCreateModal}>
             <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
             {t("prayer.action.add")}
           </Button>
@@ -296,7 +296,8 @@ export function PrayerJournalPage() {
                 statusFilter={statusFilter}
                 visibilityFilter={visibilityFilter}
               />
-              <button
+              <Button
+                variant="unstyled"
                 aria-label={t("admin.members.refresh")}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
                 onClick={() => {
@@ -312,7 +313,7 @@ export function PrayerJournalPage() {
                     prayersQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
                   )}
                 />
-              </button>
+              </Button>
             </div>
           </div>
 
