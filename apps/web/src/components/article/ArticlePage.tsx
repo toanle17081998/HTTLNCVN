@@ -221,10 +221,18 @@ export function ArticlePage() {
               href={`/article/${encodeURIComponent(article.slug)}`}
             >
               {article.cover_image_url ? (
-                <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)]">
+                <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-[var(--border-subtle)] bg-[var(--bg-base)]">
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="scale-110 object-cover blur-2xl brightness-75"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    src={article.cover_image_url}
+                  />
                   <Image
                     alt={localize(article, "title")}
-                    className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105"
+                    className="object-contain object-center motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105"
                     fill
                     sizes="(min-width: 768px) 50vw, 100vw"
                     src={article.cover_image_url}

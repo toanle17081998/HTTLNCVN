@@ -175,8 +175,17 @@ export function PageHeader({
             }}
           >
             <Image
+              alt=""
+              aria-hidden="true"
+              className="scale-110 object-cover blur-2xl brightness-75"
+              fill
+              priority
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              src={heroImageSrc}
+            />
+            <Image
               alt={resolvedTitle}
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
               fetchPriority="high"
               fill
               priority

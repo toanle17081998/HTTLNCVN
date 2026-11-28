@@ -211,10 +211,18 @@ export function CoursePage() {
           <Card className="relative h-full overflow-hidden transition hover:border-[var(--brand-primary)] focus-within:ring-4 focus-within:ring-[var(--input-focus-ring)]" key={course.id}>
             <Link className="block h-full focus:outline-none" href={`/course/${encodeURIComponent(course.slug)}`}>
               {course.cover_image_url ? (
-                <div className="relative aspect-[16/9] w-full overflow-hidden">
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--bg-base)]">
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="scale-110 object-cover blur-2xl brightness-75"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    src={course.cover_image_url}
+                  />
                   <Image
                     alt={localize(course, "title")}
-                    className="object-cover"
+                    className="object-contain object-center"
                     fill
                     sizes="(min-width: 768px) 50vw, 100vw"
                     src={course.cover_image_url}
