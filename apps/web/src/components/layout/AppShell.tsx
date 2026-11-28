@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BackToTopButton } from "./BackToTopButton";
 import { Breadcrumb } from "./Breadcrumb";
@@ -53,7 +53,7 @@ export function AppShell({ children }: AppShellProps) {
     return (
       <div className="min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
         <ThemeInitializer />
-        {children}
+        <Suspense fallback={null}>{children}</Suspense>
       </div>
     );
   }
@@ -78,7 +78,9 @@ export function AppShell({ children }: AppShellProps) {
               </ErrorBoundary>
             </div>
           )}
-          <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
+          <ErrorBoundary resetKey={pathname}>
+            <Suspense fallback={null}>{children}</Suspense>
+          </ErrorBoundary>
         </main>
         <ErrorBoundary fallback={null} resetKey={pathname}>
           <Footer />
