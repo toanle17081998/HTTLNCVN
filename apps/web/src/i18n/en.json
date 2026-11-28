@@ -996,6 +996,7 @@
   "article.empty": "No articles found.",
   "article.action.more": "Article actions",
   "course.searchPlaceholder": "Search courses…",
+  "course.emptyTitle": "Empty",
   "course.empty": "No courses found matching your criteria.",
   "pagination.display": "Display",
   "pagination.of": "of",

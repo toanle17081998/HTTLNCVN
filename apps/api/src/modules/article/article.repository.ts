@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
+import { containsSearchQuery } from '../../database/search-query';
 import type {
   ArticleDto,
   ArticleListDto,
@@ -20,14 +21,15 @@ export class ArticleRepository {
     skip: number,
     take: number,
   ): Promise<ArticleListResult> {
+    const search = containsSearchQuery(filters.q);
     const where: Prisma.ArticleWhereInput = {
       deleted_at: null,
       ...(filters.status !== undefined && { status: filters.status }),
       ...(filters.category_id !== undefined && { category_id: filters.category_id }),
-      ...(filters.q && {
+      ...(search && {
         OR: [
-          { title_en: { contains: filters.q } },
-          { title_vi: { contains: filters.q } },
+          { title_en: search },
+          { title_vi: search },
         ],
       }),
     };

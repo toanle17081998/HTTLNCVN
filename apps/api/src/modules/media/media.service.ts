@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import sharp from 'sharp';
 
 import { PrismaService } from '../../database/prisma.service';
+import { trimSearchQuery } from '../../database/search-query';
 
 import type {
   MediaGalleryItemDto,
@@ -427,7 +428,7 @@ export class MediaService {
       }
     }
 
-    const search = q?.trim().toLowerCase();
+    const search = trimSearchQuery(q)?.toLowerCase();
     let filtered = allItems;
     if (folderFilter !== undefined) {
       if (folderFilter === '__uncategorized__') {

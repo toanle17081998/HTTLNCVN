@@ -302,7 +302,7 @@ export function CoursePage() {
 
       {!isListLoading && coursesQuery.data && coursesQuery.data.items.length === 0 ? (
         <Card className="p-12 text-center text-sm text-[var(--text-secondary)] border-dashed">
-          <div className="text-4xl mb-4">Empty</div>
+          <div className="text-4xl mb-4">{t("course.emptyTitle")}</div>
           {t("course.empty")}
         </Card>
       ) : null}

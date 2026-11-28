@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, type Household } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
+import { containsSearchQuery } from '../../database/search-query';
 import type {
   AddHouseholdMemberDto,
   CreateHouseholdDto,
@@ -45,8 +46,9 @@ export class HouseholdRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(skip: number, take: number, q?: string): Promise<HouseholdListResult> {
-    const where: Prisma.HouseholdWhereInput = q
-      ? { OR: [{ name: { contains: q } }, { phone: { contains: q } }] }
+    const search = containsSearchQuery(q);
+    const where: Prisma.HouseholdWhereInput = search
+      ? { OR: [{ name: search }, { phone: search }] }
       : {};
     const [items, total] = await Promise.all([
       this.prisma.household.findMany({ include: HOUSEHOLD_INCLUDE, orderBy: { name: 'asc' }, skip, take, where }),

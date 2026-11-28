@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
+import { containsSearchQuery } from '../../database/search-query';
 import { buildOccurrenceSlug, buildRecurringStarts } from './event.domain';
 import type {
   CreateEventCategoryDto,
@@ -318,12 +319,13 @@ export class EventRepository {
       });
     }
 
-    if (filters.q) {
+    const search = containsSearchQuery(filters.q);
+    if (search) {
       and.push({
         OR: [
-          { title: { contains: filters.q } },
-          { description: { contains: filters.q } },
-          { location: { contains: filters.q } },
+          { title: search },
+          { description: search },
+          { location: search },
         ],
       });
     }

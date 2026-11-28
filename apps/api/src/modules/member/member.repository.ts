@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
+import { containsSearchQuery } from '../../database/search-query';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
 const MEMBER_SELECT = {
@@ -66,18 +67,19 @@ export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(skip: number, take: number, q?: string, role?: string): Promise<MemberListResult> {
+    const search = containsSearchQuery(q);
     const where: Prisma.UserWhereInput = {
       deleted_at: null,
       ...(role && { role: { name: role } }),
-      ...(q && {
+      ...(search && {
         OR: [
-          { email: { contains: q } },
-          { username: { contains: q } },
+          { email: search },
+          { username: search },
           {
             profile: {
               OR: [
-                { first_name: { contains: q } },
-                { last_name: { contains: q } },
+                { first_name: search },
+                { last_name: search },
               ],
             },
           },

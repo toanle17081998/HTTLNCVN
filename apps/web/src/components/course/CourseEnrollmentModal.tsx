@@ -107,10 +107,11 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
     setRemovedMemberIds(nextRemoved);
   };
 
-  const filteredMembers = preview?.members.filter(m => 
-    m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${m.first_name || ""} ${m.last_name || ""}`.toLowerCase().includes(searchTerm.toLowerCase())
+  const normalizedQuery = searchTerm.trim().toLowerCase();
+  const filteredMembers = preview?.members.filter(m =>
+    m.email.toLowerCase().includes(normalizedQuery) ||
+    m.username.toLowerCase().includes(normalizedQuery) ||
+    `${m.first_name || ""} ${m.last_name || ""}`.toLowerCase().includes(normalizedQuery)
   ) || [];
 
   const newEnrollmentCount = preview?.members.filter(m => selectedMemberIds.has(m.id)).length || 0;

@@ -16,7 +16,7 @@ export class HouseholdService {
   findAll(skip: number, take: number, q?: string): Promise<HouseholdListResult> {
     const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
     const safeTake = Number.isFinite(take) && take > 0 ? Math.min(Math.floor(take), 100) : 20;
-    return this.householdRepository.findAll(safeSkip, safeTake, q?.trim() || undefined);
+    return this.householdRepository.findAll(safeSkip, safeTake, q);
   }
 
   async findById(id: string): Promise<HouseholdDto> {

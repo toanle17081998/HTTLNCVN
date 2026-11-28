@@ -2,6 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, NotFoundException } 
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma.service';
+import { containsSearchQuery } from '../../database/search-query';
 import { isAnswerCorrect, shuffle } from './course.domain';
 import type {
   CourseDto,
@@ -369,14 +370,15 @@ export class CourseRepository {
   }
 
   async findAll(skip: number, take: number, status?: string, categoryId?: string, q?: string): Promise<CourseListResult> {
+    const search = containsSearchQuery(q);
     const where: Prisma.CourseWhereInput = {
       deleted_at: null,
       ...(status !== undefined && { status }),
       ...(categoryId !== undefined && { category_id: categoryId }),
-      ...(q && {
+      ...(search && {
         OR: [
-          { title_en: { contains: q } },
-          { title_vi: { contains: q } },
+          { title_en: search },
+          { title_vi: search },
         ],
       }),
     };

@@ -229,11 +229,12 @@ export function IconPicker({
 
   const categories = ["All", "Community", "Faith", "Ministry", "Media", "Events", "General"];
 
+  const normalizedQuery = search.trim().toLowerCase();
   const filteredIcons = AVAILABLE_ICONS.filter((item) => {
     const matchesSearch =
-      !search ||
-      item.label.toLowerCase().includes(search.toLowerCase()) ||
-      item.id.toLowerCase().includes(search.toLowerCase());
+      !normalizedQuery ||
+      item.label.toLowerCase().includes(normalizedQuery) ||
+      item.id.toLowerCase().includes(normalizedQuery);
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

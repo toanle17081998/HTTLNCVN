@@ -996,6 +996,7 @@
   "article.empty": "Không tìm thấy bài viết nào.",
   "article.action.more": "Thao tác với bài viết",
   "course.searchPlaceholder": "Tìm kiếm khóa học…",
+  "course.emptyTitle": "Trống",
   "course.empty": "Không tìm thấy khóa học phù hợp.",
   "pagination.display": "Hiển thị",
   "pagination.of": "trên",
