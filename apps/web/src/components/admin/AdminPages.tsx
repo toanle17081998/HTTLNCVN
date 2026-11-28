@@ -3,23 +3,26 @@
 import { useState } from "react";
 import { FileText, Plus, ArrowLeft, Eye, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Pagination, Switch, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { pageApi } from "@/api/page";
 import { usePagesQuery, useDeletePageMutation, useRestorePageMutation, type Page } from "@/hooks/page";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 import { CraftPageEditor } from "@/components/page-builder/CraftPageEditor";
 import { CreatePageModal } from "@/components/page-builder/editor/CreatePageModal";
 
 function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
   const { localize, t } = useTranslation();
   const { confirm, toast } = useFeedback();
-  const [showDeleted, setShowDeleted] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({ defaultPageSize: 10 });
+  const rawDeleted = searchParams.get("deleted");
+  const isInvalidDeleted = rawDeleted !== null && rawDeleted !== "1";
+  const showDeleted = rawDeleted === "1";
   const pagesQuery = usePagesQuery(showDeleted ? "deleted" : undefined);
   const allPages = pagesQuery.data?.items ?? [];
   const totalPagesCount = allPages.length;
@@ -27,6 +30,10 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
   const pagedPages = allPages.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const deletePage = useDeletePageMutation();
   const restorePage = useRestorePageMutation();
+
+  if (isInvalidParams || isInvalidDeleted || isPageOutOfRange(totalPagesCount, pagesQuery.isSuccess)) {
+    notFound();
+  }
 
   async function handleToggleStatus(slug: string, currentStatus: string) {
     const newStatus = currentStatus === "published" ? "draft" : "published";
@@ -73,7 +80,7 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
     <PageLayout
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={() => setShowDeleted((current) => !current)} variant="secondary">
+          <Button onClick={() => updateParams({ deleted: showDeleted ? null : "1", page: null })} variant="secondary">
             <RotateCcw className="mr-2 h-4 w-4" />
             {showDeleted ? t("admin.pages.showActive") : t("admin.pages.showDeleted")}
           </Button>
@@ -201,7 +208,6 @@ function PageList({ onEdit }: { onEdit: (slug: string) => void }) {
             }}
             onPageSizeChange={(nextSize) => {
               setPageSize(nextSize);
-              setPage(0);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             page={safePage}

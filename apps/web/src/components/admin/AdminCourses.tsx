@@ -3,6 +3,7 @@
 import { Text, Button, Card, Title, Label, Input, Pagination } from "@/components/ui";
 import { useState } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronRight, FileText, GraduationCap, Plus, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { canDeleteContent } from "@/lib/rbac";
@@ -22,15 +23,22 @@ import {
   type CourseCategory,
 } from "@/hooks/course";
 
+import { useUrlPagination } from "@/hooks/useUrlPagination";
+
 export function AdminCourses() {
   const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
   const { user } = useAuth();
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, setPage, setPageSize } = useUrlPagination({
+    defaultPageSize: 10,
+  });
   const coursesQuery = useCoursesQuery({ skip: page * pageSize, take: pageSize });
   const total = coursesQuery.data?.total ?? 0;
   const deleteCourse = useDeleteCourseMutation();
+
+  if (isInvalidParams || isPageOutOfRange(total, coursesQuery.isSuccess)) {
+    notFound();
+  }
 
   async function handleDelete(slug: string) {
     const ok = await confirm({
@@ -90,7 +98,6 @@ export function AdminCourses() {
             }}
             onPageSizeChange={(nextSize) => {
               setPageSize(nextSize);
-              setPage(0);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             page={page}

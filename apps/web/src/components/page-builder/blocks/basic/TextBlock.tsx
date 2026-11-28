@@ -24,10 +24,23 @@ type TextProps = BoxProps & {
 };
 
 export function TextBlock(props: TextProps) {
-  const { actions: editorActions, enabled, parentAllowsInsert } = useEditor((state: any) => {
+  const { actions: editorActions, enabled, getAncestorAlignItems, parentAllowsInsert } = useEditor((state: any) => {
     const enabledState = state.options.enabled;
     return {
       enabled: enabledState,
+      getAncestorAlignItems: (startParentId: string | null, mobile: boolean) => {
+        let currentId = startParentId;
+        while (currentId) {
+          const node = state.nodes?.[currentId];
+          const nodeProps = node?.data?.props as Record<string, unknown> | undefined;
+          const value = mobile && nodeProps?.mobileAlignItems ? nodeProps.mobileAlignItems : nodeProps?.alignItems;
+          if (typeof value === "string" && value) {
+            return value;
+          }
+          currentId = node?.data?.parent ?? null;
+        }
+        return undefined;
+      },
       parentAllowsInsert: (parentId: string | null) =>
         Boolean(parentId && state.nodes?.[parentId]?.data?.props?.allowTextInsert),
     };
@@ -62,8 +75,9 @@ export function TextBlock(props: TextProps) {
     parentId: node.data.parent,
   }));
   const isMobile = useIsMobile();
-  const align = nodeAlign ?? props.align ?? "left";
-  const mobileAlign = nodeMobileAlign ?? props.mobileAlign;
+  const ancestorAlignItems = getAncestorAlignItems(parentId, isMobile);
+  const align = nodeAlign ?? props.align ?? (ancestorAlignItems === "center" ? "center" : "left");
+  const mobileAlign = nodeMobileAlign ?? props.mobileAlign ?? (ancestorAlignItems === "center" ? "center" : undefined);
   const color = nodeColor ?? props.color ?? "inherit";
   const letterSpacing = nodeLetterSpacing ?? props.letterSpacing;
   const lineHeight = nodeLineHeight ?? props.lineHeight ?? 1.6;

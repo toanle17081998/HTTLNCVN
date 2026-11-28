@@ -16,6 +16,8 @@ import {
   useUpdatePrayerMutation,
   type Prayer,
 } from "@/hooks/prayer-journal";
+import { notFound } from "next/navigation";
+import { matchesCategoryParam, toCategorySlug, useUrlPagination } from "@/hooks/useUrlPagination";
 import { CategorySidebar } from "./CategorySidebar";
 import { PrayerCard } from "./PrayerCard";
 import { PrayerFilterBar } from "./PrayerFilterBar";
@@ -42,8 +44,10 @@ export function PrayerJournalPage() {
   const canModerate = can(PERMISSIONS.moderateChurchPrayers);
   const canShare = can(PERMISSIONS.shareChurchPrayers) || canManageOwn;
   const canRead = canManageOwn;
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({
+      defaultPageSize: 20,
+    });
   const prayersQuery = usePrayerJournalQuery(
     { take: pageSize, skip: page * pageSize },
     isAuthenticated && canRead,
@@ -57,10 +61,39 @@ export function PrayerJournalPage() {
   const categories = metaQuery.data?.categories ?? [];
   const members = metaQuery.data?.members ?? [];
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>("all");
-  const [categoryFilter, setCategoryFilter] = useState<number | "all">("all");
+  const query = searchParams.get("q") ?? "";
+  const rawStatus = searchParams.get("status");
+  const isInvalidStatus = rawStatus !== null && rawStatus !== "open" && rawStatus !== "closed";
+  const statusFilter: StatusFilter = rawStatus === "open" || rawStatus === "closed" ? rawStatus : "all";
+  const rawVisibility = searchParams.get("visibility");
+  const isInvalidVisibility =
+    rawVisibility !== null &&
+    rawVisibility !== "private" &&
+    rawVisibility !== "public" &&
+    rawVisibility !== "shared";
+  const visibilityFilter: VisibilityFilter =
+    rawVisibility === "private" || rawVisibility === "public" || rawVisibility === "shared"
+      ? rawVisibility
+      : "all";
+  const rawCategory = searchParams.get("category");
+  const isInvalidCategoryParam = rawCategory !== null && rawCategory.trim() === "";
+  const matchedCategory =
+    rawCategory && !isInvalidCategoryParam
+      ? categories.find((cat) => matchesCategoryParam(rawCategory, [cat.name]))
+      : undefined;
+  const categoryFilter: number | "all" = matchedCategory ? matchedCategory.id : "all";
+  const isUnknownCategory =
+    rawCategory !== null && !isInvalidCategoryParam && metaQuery.isSuccess && !matchedCategory;
+  const setQuery = (next: string) => updateParams({ page: null, q: next || null });
+  const setStatusFilter = (next: StatusFilter) =>
+    updateParams({ page: null, status: next === "all" ? null : next });
+  const setVisibilityFilter = (next: VisibilityFilter) =>
+    updateParams({ page: null, visibility: next === "all" ? null : next });
+  const setCategoryFilter = (next: number | "all") => {
+    const cat = next !== "all" ? categories.find((item) => item.id === next) : undefined;
+    const categoryParam = cat ? toCategorySlug(cat.name) || cat.name : null;
+    updateParams({ category: categoryParam, page: null });
+  };
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [modalOpen, setModalOpen] = useState(false);
   const [activePrayer, setActivePrayer] = useState<Prayer | null>(null);
@@ -92,6 +125,17 @@ export function PrayerJournalPage() {
     deletePrayerMutation.isPending;
   const mutationError =
     createPrayerMutation.error ?? updatePrayerMutation.error ?? deletePrayerMutation.error;
+
+  if (
+    isInvalidParams ||
+    isInvalidStatus ||
+    isInvalidVisibility ||
+    isInvalidCategoryParam ||
+    isUnknownCategory ||
+    isPageOutOfRange(prayersQuery.data?.total ?? 0, prayersQuery.isSuccess)
+  ) {
+    notFound();
+  }
 
   function openCreateModal() {
     setActivePrayer(null);
@@ -341,7 +385,6 @@ export function PrayerJournalPage() {
                   }}
                   onPageSizeChange={(s) => {
                     setPageSize(s);
-                    setPage(0);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                 />

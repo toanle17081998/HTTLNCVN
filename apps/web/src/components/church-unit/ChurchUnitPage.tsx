@@ -35,7 +35,9 @@ import {
   type ChurchUnitMember,
   type CreateChurchUnitMemberInput,
 } from "@/hooks/church-unit";
+import { notFound } from "next/navigation";
 import { useCoursesQuery } from "@/hooks/course";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 
 type ServiceTeamForm = {
   id?: string;
@@ -150,8 +152,10 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
   const canUpdateUnits = can(PERMISSIONS.updateChurchUnits);
   const canDeleteUnits = can(PERMISSIONS.deleteChurchUnits);
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({
+      defaultPageSize: 20,
+    });
 
   const unitsQuery = useChurchUnitsQuery(
     { take: pageSize, skip: page * pageSize },
@@ -168,9 +172,14 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
   const meta = metaQuery.data;
   const courses = coursesQuery.data?.items ?? [];
 
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const query = searchParams.get("q") ?? "";
+  const rawType = searchParams.get("type");
+  const rawStatus = searchParams.get("status");
+  const typeFilter = rawType ?? "all";
+  const statusFilter = rawStatus ?? "all";
+  const setQuery = (next: string) => updateParams({ page: null, q: next || null });
+  const setTypeFilter = (next: string) => updateParams({ page: null, type: next === "all" ? null : next });
+  const setStatusFilter = (next: string) => updateParams({ page: null, status: next === "all" ? null : next });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<ChurchUnit | null>(null);
@@ -191,6 +200,18 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
   const hasPageAccess = canReadUnits || accessibleUnits.length > 0;
   const isLoadingUnits = authLoading || unitsQuery.isLoading;
   const filterTypes = (canReadUnits ? meta?.types : undefined) ?? [...new Set(accessibleUnits.map((unit) => unit.type))];
+  const isInvalidStatus = rawStatus !== null && !["active", "inactive"].includes(rawStatus);
+  const isInvalidType =
+    rawType !== null &&
+    (rawType.trim() === "" || ((metaQuery.isSuccess || unitsQuery.isSuccess) && !filterTypes.includes(rawType)));
+  if (
+    isInvalidParams ||
+    isInvalidStatus ||
+    isInvalidType ||
+    isPageOutOfRange(unitsQuery.data?.total ?? 0, unitsQuery.isSuccess)
+  ) {
+    notFound();
+  }
   const normalizedQuery = query.trim().toLowerCase();
   const visibleUnits = accessibleUnits.filter((unit) => {
     if (typeFilter !== "all" && unit.type !== typeFilter) {
@@ -573,7 +594,6 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               }}
               onPageSizeChange={(s) => {
                 setPageSize(s);
-                setPage(0);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             />

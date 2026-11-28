@@ -44,8 +44,11 @@ export function Pagination({
           className="h-8! w-auto!"
           value={pageSize}
           onChange={(e) => {
-            onPageSizeChange?.(Number(e.target.value));
-            onPageChange(0);
+            if (onPageSizeChange) {
+              onPageSizeChange(Number(e.target.value));
+            } else {
+              onPageChange(0);
+            }
           }}
         >
           {pageSizeOptions.map((s) => (

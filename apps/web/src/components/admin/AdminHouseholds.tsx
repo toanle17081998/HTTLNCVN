@@ -13,7 +13,9 @@ import {
   useUpdateHouseholdMutation,
   type Household,
 } from "@/hooks/household";
+import { notFound } from "next/navigation";
 import { useMembersQuery } from "@/hooks/member";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 import { useTranslation } from "@/providers/I18nProvider";
 
 const emptyForm = { address: "", name: "", note: "", phone: "" };
@@ -30,9 +32,13 @@ export function AdminHouseholds() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedMembers, setSelectedMembers] = useState<Record<string, string>>({});
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, setPage, setPageSize } = useUrlPagination({
+    defaultPageSize: 10,
+  });
   const allHouseholds = householdsQuery.data?.items ?? [];
+  if (isInvalidParams || isPageOutOfRange(allHouseholds.length, householdsQuery.isSuccess)) {
+    notFound();
+  }
   const safePage = Math.min(page, Math.max(0, Math.ceil(allHouseholds.length / pageSize) - 1));
   const pagedHouseholds = allHouseholds.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
@@ -197,7 +203,6 @@ export function AdminHouseholds() {
           }}
           onPageSizeChange={(nextSize) => {
             setPageSize(nextSize);
-            setPage(0);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           page={safePage}

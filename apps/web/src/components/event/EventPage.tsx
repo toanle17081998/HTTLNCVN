@@ -23,7 +23,9 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { notFound } from "next/navigation";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { matchesCategoryParam, toCategorySlug, useUrlPagination } from "@/hooks/useUrlPagination";
 import {
   useCreateEventCategoryMutation,
   useCreateEventMutation,
@@ -250,10 +252,36 @@ export function EventPage() {
   const deleteCategoryMutation = useDeleteEventCategoryMutation();
   const events = eventsQuery.data?.items ?? [];
   const meta = metaQuery.data;
-  const [query, setQuery] = useState("");
-  const [audienceFilter, setAudienceFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const { isInvalidParams, searchParams, updateParams } = useUrlPagination({ defaultPageSize: 100 });
+  const query = searchParams.get("q") ?? "";
+  const rawAudience = searchParams.get("audience");
+  const rawStatus = searchParams.get("status");
+  const rawCategory = searchParams.get("category");
+  const rawView = searchParams.get("view");
+  const isInvalidAudience =
+    rawAudience !== null && !["public", "church", "church_unit", "people"].includes(rawAudience);
+  const isInvalidStatus = rawStatus !== null && !["published", "draft"].includes(rawStatus);
+  const matchedCategory =
+    rawCategory && rawCategory.trim() !== ""
+      ? meta?.categories.find((cat) => matchesCategoryParam(rawCategory, [cat.name]))
+      : undefined;
+  const isInvalidCategory =
+    rawCategory !== null &&
+    (rawCategory.trim() === "" || (metaQuery.isSuccess && !matchedCategory));
+  const isInvalidView = rawView !== null && !["list", "calendar"].includes(rawView);
+  const isNotFound =
+    isInvalidParams || isInvalidAudience || isInvalidStatus || isInvalidCategory || isInvalidView;
+  const audienceFilter = rawAudience ?? "all";
+  const statusFilter = rawStatus ?? "all";
+  const categoryFilter = matchedCategory ? String(matchedCategory.id) : "all";
+  const setQuery = (next: string) => updateParams({ q: next || null });
+  const setAudienceFilter = (next: string) => updateParams({ audience: next === "all" ? null : next });
+  const setStatusFilter = (next: string) => updateParams({ status: next === "all" ? null : next });
+  const setCategoryFilter = (next: string) => {
+    const cat = next !== "all" ? meta?.categories.find((item) => String(item.id) === next) : undefined;
+    const categoryParam = cat ? toCategorySlug(cat.name) || cat.name : null;
+    updateParams({ category: categoryParam });
+  };
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -262,7 +290,8 @@ export function EventPage() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [form, setForm] = useState<EventForm>(() => createEmptyForm());
   const [categoryForm, setCategoryForm] = useState<CategoryForm>({ description: "", name: "" });
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("calendar");
+  const viewMode: "list" | "calendar" = rawView === "list" ? "list" : "calendar";
+  const setViewMode = (next: "list" | "calendar") => updateParams({ view: next === "calendar" ? null : next });
 
   const visibleEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -307,6 +336,10 @@ export function EventPage() {
     deleteMutation.error ??
     createCategoryMutation.error ??
     deleteCategoryMutation.error;
+
+  if (isNotFound) {
+    notFound();
+  }
 
   function openCreateModal() {
     setEditingEvent(null);

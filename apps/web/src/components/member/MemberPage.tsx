@@ -15,6 +15,8 @@ import {
   useUpdateMemberMutation,
   type Member,
 } from "@/hooks/member";
+import { notFound } from "next/navigation";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 
 type MemberForm = {
   address: string;
@@ -98,21 +100,30 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
   const canDeleteMembers = can(PERMISSIONS.deleteChurchMembers);
   const isSystemAdmin = user?.role === "system_admin";
 
-  const [q, setQ] = useState("");
-  const [queryInput, setQueryInput] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({
+      defaultPageSize: 10,
+    });
+  const q = searchParams.get("q") ?? "";
+  const rawRole = searchParams.get("role");
+  const isInvalidRole =
+    rawRole !== null && !(roleOptions as readonly string[]).includes(rawRole);
+  const roleFilter = rawRole ?? "";
+  const [queryInput, setQueryInput] = useState(q);
+  const [syncedQ, setSyncedQ] = useState(q);
+  if (q !== syncedQ) {
+    setSyncedQ(q);
+    setQueryInput(q);
+  }
 
   useEffect(() => {
     const nextQuery = queryInput.trim();
     if (nextQuery === q) return;
     const timer = window.setTimeout(() => {
-      setQ(nextQuery);
-      setPage(0);
+      updateParams({ page: null, q: nextQuery || null });
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [q, queryInput]);
+  }, [q, queryInput, updateParams]);
 
   const membersQuery = useMembersQuery(
     { take: pageSize, skip: page * pageSize, q: q || undefined, role: roleFilter || undefined },
@@ -129,6 +140,10 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [form, setForm] = useState<MemberForm>(() => createEmptyForm());
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  if (isInvalidParams || isInvalidRole || isPageOutOfRange(total, membersQuery.isSuccess)) {
+    notFound();
+  }
 
   const visibleMembers = members;
 
@@ -257,8 +272,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                     id="member-role-filter"
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0 sm:static sm:h-9 sm:text-sm sm:opacity-100"
                     onChange={(event) => {
-                      setRoleFilter(event.target.value);
-                      setPage(0);
+                      updateParams({ page: null, role: event.target.value || null });
                     }}
                     value={roleFilter}
                   >
@@ -406,7 +420,6 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
               }}
               onPageSizeChange={(s) => {
                 setPageSize(s);
-                setPage(0);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             />

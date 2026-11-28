@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { SafeImage as Image } from "@/components/ui/SafeImage";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Input, Pagination, Dropdown, Skeleton, Text, Title } from "@/components/ui";
 import { CardActions } from "@/components/ui/CardActions";
+import { matchesCategoryParam, toCategorySlug, useUrlPagination } from "@/hooks/useUrlPagination";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -30,16 +31,29 @@ export function CoursePage() {
   const { can, isLoading: authLoading } = useAuth();
   const { confirm } = useFeedback();
   const deleteCourse = useDeleteCourseMutation();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
-  const [searchInput, setSearchInput] = useState("");
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({
+      defaultPageSize: PAGE_SIZE_DEFAULT,
+    });
+  const rawCategory = searchParams.get("category");
+  const isInvalidCategoryParam = rawCategory !== null && rawCategory.trim() === "";
+  const q = searchParams.get("q") ?? "";
+  const [searchInput, setSearchInput] = useState(q);
+  const [syncedQ, setSyncedQ] = useState(q);
+  if (q !== syncedQ) {
+    setSyncedQ(q);
+    setSearchInput(q);
+  }
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const canManageCourses = can(PERMISSIONS.manageCourses);
   const categoriesQuery = useCourseCategoriesQuery();
   const categories = categoriesQuery.data ?? [];
+  const matchedCategory =
+    rawCategory && !isInvalidCategoryParam
+      ? categories.find((cat) => matchesCategoryParam(rawCategory, [cat.name_vi, cat.name_en]))
+      : undefined;
+  const selectedCategoryId = matchedCategory?.id;
 
   const coursesQuery = useCoursesQuery(
     {
@@ -49,10 +63,17 @@ export function CoursePage() {
       category_id: selectedCategoryId,
       q: q || undefined,
     },
-    { enabled: !authLoading },
+    { enabled: !authLoading && (rawCategory === null || selectedCategoryId !== undefined) },
   );
 
   const total = coursesQuery.data?.total ?? 0;
+  const isUnknownCategory =
+    rawCategory !== null && !isInvalidCategoryParam && categoriesQuery.isSuccess && !matchedCategory;
+  const isNotFound =
+    isInvalidParams ||
+    isInvalidCategoryParam ||
+    isUnknownCategory ||
+    isPageOutOfRange(total, coursesQuery.isSuccess);
   const isListLoading = coursesQuery.isLoading || (coursesQuery.isFetching && coursesQuery.isPlaceholderData);
   const queryClient = useQueryClient();
 
@@ -80,36 +101,39 @@ export function CoursePage() {
       setPage(nextPage);
       scrollToList();
     },
-    [scrollToList],
+    [scrollToList, setPage],
   );
 
   const handlePageSizeChange = useCallback(
     (nextSize: number) => {
       setPageSize(nextSize);
-      setPage(0);
       scrollToList();
     },
-    [scrollToList],
+    [scrollToList, setPageSize],
   );
 
   useEffect(() => {
     const nextQuery = searchInput.trim();
     if (nextQuery === q) return;
     const timer = window.setTimeout(() => {
-      setQ(nextQuery);
-      setPage(0);
+      updateParams({ page: null, q: nextQuery || null });
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [q, searchInput]);
+  }, [q, searchInput, updateParams]);
 
   const handleCategoryChange = (id: string | undefined) => {
-    setSelectedCategoryId(id);
-    setPage(0);
+    const cat = id ? categories.find((item) => item.id === id) : undefined;
+    const categoryParam = cat ? toCategorySlug(localize(cat, "name")) || localize(cat, "name") : null;
+    updateParams({ category: categoryParam, page: null });
   };
 
   async function handleDelete(slug: string) {
     const ok = await confirm({ variant: "delete", title: t("course.action.deleteConfirm") });
     if (ok) await deleteCourse.mutateAsync(slug);
+  }
+
+  if (isNotFound) {
+    notFound();
   }
 
   return (

@@ -8,13 +8,14 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 import {
   useCreateNotificationMutation,
   useMarkNotificationReadMutation,
   useNotificationsQuery,
   type NotificationDto,
 } from "@/hooks/notification";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 
 export function NotificationPage() {
   const { t } = useTranslation();
@@ -24,8 +25,9 @@ export function NotificationPage() {
 
   const isAdmin = user?.role === "church_admin" || user?.role === "system_admin";
 
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, setPage, setPageSize } = useUrlPagination({
+    defaultPageSize: 10,
+  });
   const [modalOpen, setModalOpen] = useState(false);
   useEscapeKey(closeModal, modalOpen);
 
@@ -46,6 +48,9 @@ export function NotificationPage() {
 
   const notifications = notificationsQuery.data?.items ?? [];
   const total = notificationsQuery.data?.total ?? 0;
+  if (isInvalidParams || isPageOutOfRange(total, notificationsQuery.isSuccess)) {
+    notFound();
+  }
 
   const isSaving = createMutation.isPending;
 
@@ -211,7 +216,6 @@ export function NotificationPage() {
             }}
             onPageSizeChange={(s) => {
               setPageSize(s);
-              setPage(0);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />

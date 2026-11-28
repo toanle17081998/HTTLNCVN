@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { CardActions } from "@/components/ui/CardActions";
+import { matchesCategoryParam, toCategorySlug, useUrlPagination } from "@/hooks/useUrlPagination";
 import {
   articleApi,
   articleKeys,
@@ -25,16 +27,29 @@ export function ArticlePage() {
   const { can, isLoading: authLoading } = useAuth();
   const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
-  const [searchInput, setSearchInput] = useState("");
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, searchParams, setPage, setPageSize, updateParams } =
+    useUrlPagination({
+      defaultPageSize: PAGE_SIZE_DEFAULT,
+    });
+  const rawCategory = searchParams.get("category");
+  const isInvalidCategoryParam = rawCategory !== null && rawCategory.trim() === "";
+  const q = searchParams.get("q") ?? "";
+  const [searchInput, setSearchInput] = useState(q);
+  const [syncedQ, setSyncedQ] = useState(q);
+  if (q !== syncedQ) {
+    setSyncedQ(q);
+    setSearchInput(q);
+  }
   const listTopRef = useRef<HTMLDivElement>(null);
 
   const canManageArticle = can(PERMISSIONS.manageArticle);
 
   const categoriesQuery = useArticleCategoriesQuery();
+  const matchedCategory =
+    rawCategory && !isInvalidCategoryParam
+      ? categoriesQuery.data?.find((cat) => matchesCategoryParam(rawCategory, [cat.name_vi, cat.name_en]))
+      : undefined;
+  const selectedCategoryId = matchedCategory?.id;
   const articlesQuery = useArticlesQuery(
     {
       take: pageSize,
@@ -43,12 +58,19 @@ export function ArticlePage() {
       category_id: selectedCategoryId,
       q: q || undefined,
     },
-    { enabled: !authLoading },
+    { enabled: !authLoading && (rawCategory === null || selectedCategoryId !== undefined) },
   );
 
   const deleteArticle = useDeleteArticleMutation();
 
   const total = articlesQuery.data?.total ?? 0;
+  const isUnknownCategory =
+    rawCategory !== null && !isInvalidCategoryParam && categoriesQuery.isSuccess && !matchedCategory;
+  const isNotFound =
+    isInvalidParams ||
+    isInvalidCategoryParam ||
+    isUnknownCategory ||
+    isPageOutOfRange(total, articlesQuery.isSuccess);
   const isListLoading = articlesQuery.isLoading || articlesQuery.isFetching;
   const queryClient = useQueryClient();
 
@@ -76,31 +98,30 @@ export function ArticlePage() {
       setPage(nextPage);
       scrollToList();
     },
-    [scrollToList],
+    [scrollToList, setPage],
   );
 
   const handlePageSizeChange = useCallback(
     (nextSize: number) => {
       setPageSize(nextSize);
-      setPage(0);
       scrollToList();
     },
-    [scrollToList],
+    [scrollToList, setPageSize],
   );
 
   useEffect(() => {
     const nextQuery = searchInput.trim();
     if (nextQuery === q) return;
     const timer = window.setTimeout(() => {
-      setQ(nextQuery);
-      setPage(0);
+      updateParams({ page: null, q: nextQuery || null });
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [q, searchInput]);
+  }, [q, searchInput, updateParams]);
 
   const handleCategoryChange = (id: number | undefined) => {
-    setSelectedCategoryId(id);
-    setPage(0);
+    const cat = id !== undefined ? categoriesQuery.data?.find((item) => item.id === id) : undefined;
+    const categoryParam = cat ? toCategorySlug(localize(cat, "name")) || localize(cat, "name") : null;
+    updateParams({ category: categoryParam, page: null });
   };
 
   async function handleDelete(slug: string) {
@@ -111,6 +132,10 @@ export function ArticlePage() {
     });
     if (!ok) return;
     await deleteArticle.mutateAsync(slug);
+  }
+
+  if (isNotFound) {
+    notFound();
   }
 
   return (

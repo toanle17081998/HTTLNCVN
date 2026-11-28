@@ -1,8 +1,40 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import { Component, type ErrorInfo, type ReactNode, useState } from "react";
+import { Component, type ReactNode, useState } from "react";
 import { cn } from "./cn";
+
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
+
+function getAllowedNextImageHosts(): Set<string> {
+  const hosts = new Set(["images.unsplash.com", "lh3.googleusercontent.com"]);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl) {
+    try {
+      const parsed = new URL(apiUrl);
+      if (parsed.protocol === "https:" && !LOCAL_HOSTNAMES.has(parsed.hostname)) {
+        hosts.add(parsed.hostname);
+      }
+    } catch {
+      // Ignore malformed NEXT_PUBLIC_API_URL
+    }
+  }
+  return hosts;
+}
+
+const ALLOWED_NEXT_IMAGE_HOSTS = getAllowedNextImageHosts();
+
+function canUseNextImage(src: string): boolean {
+  if (src.startsWith("/") && !src.startsWith("//")) {
+    return true;
+  }
+  try {
+    const parsed = new URL(src);
+    return parsed.protocol === "https:" && ALLOWED_NEXT_IMAGE_HOSTS.has(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
 
 type ImageErrorBoundaryProps = {
   children: ReactNode;
@@ -21,8 +53,7 @@ class ImageErrorBoundary extends Component<ImageErrorBoundaryProps, ImageErrorBo
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.warn("SafeImage fell back to native <img>:", error.message, info.componentStack);
+  componentDidCatch() {
     this.props.onCatch();
   }
 
@@ -62,14 +93,15 @@ export function SafeImage({
   const [nativeImgForSrc, setNativeImgForSrc] = useState<string | null>(null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
-  const useNativeImg = nativeImgForSrc === srcKey;
+  const shouldUseNativeImg =
+    isStringSrc && (nativeImgForSrc === srcKey || !canUseNextImage(srcString));
   const failed = failedSrc === srcKey;
 
   if ((isStringSrc && !srcString) || failed) {
     return <>{fallback}</>;
   }
 
-  if (useNativeImg && isStringSrc) {
+  if (shouldUseNativeImg) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

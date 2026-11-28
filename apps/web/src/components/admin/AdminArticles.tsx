@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { FileText, Plus } from "lucide-react";
 import { CardActions } from "@/components/ui/CardActions";
 import { PageLayout } from "@/components/layout";
@@ -9,15 +9,21 @@ import { Badge, Card, Pagination, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@/hooks/article";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 
 export function AdminArticles() {
   const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const { isInvalidParams, isPageOutOfRange, page, pageSize, setPage, setPageSize } = useUrlPagination({
+    defaultPageSize: 10,
+  });
   const articlesQuery = useArticlesQuery({ skip: page * pageSize, take: pageSize });
   const total = articlesQuery.data?.total ?? 0;
   const deleteArticle = useDeleteArticleMutation();
+
+  if (isInvalidParams || isPageOutOfRange(total, articlesQuery.isSuccess)) {
+    notFound();
+  }
 
   async function handleDelete(slug: string) {
     const ok = await confirm({
@@ -104,7 +110,6 @@ export function AdminArticles() {
             }}
             onPageSizeChange={(nextSize) => {
               setPageSize(nextSize);
-              setPage(0);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             page={page}

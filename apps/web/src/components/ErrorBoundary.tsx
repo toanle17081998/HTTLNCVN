@@ -37,6 +37,18 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      const digest =
+        this.state.error && typeof this.state.error === "object" && "digest" in this.state.error
+          ? String((this.state.error as { digest?: unknown }).digest ?? "")
+          : "";
+      if (
+        digest.startsWith("NEXT_NOT_FOUND") ||
+        digest.startsWith("NEXT_HTTP_ERROR_FALLBACK") ||
+        digest.startsWith("NEXT_REDIRECT")
+      ) {
+        throw this.state.error;
+      }
+
       if (this.props.fallback !== undefined) {
         return this.props.fallback;
       }

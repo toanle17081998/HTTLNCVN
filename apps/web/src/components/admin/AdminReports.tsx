@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Text, Button, Card, Pagination, Title } from "@/components/ui";
 import { Download, RefreshCw } from "lucide-react";
 
+import { notFound } from "next/navigation";
 import { exportMyData } from "@/api/operations";
 import { useAuditLogsQuery, useOperationalReportQuery } from "@/hooks/operations";
+import { useUrlPagination } from "@/hooks/useUrlPagination";
 import { useTranslation } from "@/providers/I18nProvider";
 
 function Metric({ label, value }: { label: string; value: string | number }) {
@@ -24,9 +25,22 @@ export function AdminReports() {
   const reportQuery = useOperationalReportQuery();
   const auditQuery = useAuditLogsQuery();
   const report = reportQuery.data;
-  const [auditPage, setAuditPage] = useState(0);
-  const [auditPageSize, setAuditPageSize] = useState(10);
+  const {
+    isInvalidParams,
+    isPageOutOfRange,
+    page: auditPage,
+    pageSize: auditPageSize,
+    setPage: setAuditPage,
+    setPageSize: setAuditPageSize,
+  } = useUrlPagination({
+    defaultPageSize: 10,
+    pageParam: "auditPage",
+    pageSizeParam: "auditPageSize",
+  });
   const allAuditItems = auditQuery.data?.items ?? [];
+  if (isInvalidParams || isPageOutOfRange(allAuditItems.length, auditQuery.isSuccess)) {
+    notFound();
+  }
   const safeAuditPage = Math.min(auditPage, Math.max(0, Math.ceil(allAuditItems.length / auditPageSize) - 1));
   const pagedAuditItems = allAuditItems.slice(safeAuditPage * auditPageSize, safeAuditPage * auditPageSize + auditPageSize);
 
@@ -162,7 +176,6 @@ export function AdminReports() {
           onPageChange={setAuditPage}
           onPageSizeChange={(nextSize) => {
             setAuditPageSize(nextSize);
-            setAuditPage(0);
           }}
           page={safeAuditPage}
           pageSize={auditPageSize}
