@@ -77,6 +77,7 @@ export function TanStackProvider({ children }: { children: ReactNode }) {
           gcTime: 30 * 60 * 1000,
           refetchOnWindowFocus: false,
           staleTime: 60 * 1000,
+          throwOnError: false,
           retry(failureCount, error) {
             const status =
               error instanceof ApiError

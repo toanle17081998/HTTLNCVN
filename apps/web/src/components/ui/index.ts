@@ -7,6 +7,7 @@ export { LoadingOverlay } from "./LoadingOverlay";
 export { Modal, ModalBody, ModalFooter, ModalHeader } from "./Modal";
 export { Pagination } from "./Pagination";
 export { Dropdown } from "./Dropdown";
+export { SafeImage, type SafeImageProps } from "./SafeImage";
 export { Skeleton, SkeletonCard } from "./Skeleton";
 export { Badge, type BadgeSize, type BadgeVariant } from "./Badge";
 export { Text, type TextTone, type TextVariant } from "./Text";

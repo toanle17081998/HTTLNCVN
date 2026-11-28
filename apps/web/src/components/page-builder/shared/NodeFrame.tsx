@@ -4,6 +4,7 @@ import { createContext, useContext, type CSSProperties, type ReactNode } from "r
 import { useEditor, useNode } from "@craftjs/core";
 import { GripVertical, Image as ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button, cn } from "@/components/ui";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTranslation } from "@/providers/I18nProvider";
 import { normalizeCssValue } from "./helpers";
 import type { EditorBreakpoint, SizeValue } from "./types";
@@ -250,7 +251,9 @@ export function NodeFrame({ children, className }: { children: ReactNode; classN
           ) : null}
         </div>
       ) : null}
-      {children}
+      <ErrorBoundary fallback={null} resetKey={id}>
+        {children}
+      </ErrorBoundary>
     </div>
   );
 }

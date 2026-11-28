@@ -15,12 +15,14 @@ export default function Error({
     console.error(error);
   }, [error]);
 
+  const devMessage = process.env.NODE_ENV === "development" ? error.message : undefined;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--bg-app)]">
-      <ErrorDisplay 
-        statusCode={500} 
-        message={error.message || "An unexpected error occurred."}
-        reset={reset} 
+      <ErrorDisplay
+        statusCode={500}
+        message={devMessage}
+        reset={reset}
       />
     </div>
   );

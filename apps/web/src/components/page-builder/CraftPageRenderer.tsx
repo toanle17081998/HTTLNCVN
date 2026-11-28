@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ApiError } from "@/api/client";
 import { useResolvedPageQuery, type Page } from "@/hooks/page";
 import { Button, ButtonLink, Card, Title, Text } from "@/components/ui";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PERMISSIONS, useAuth } from "@/providers/AuthProvider";
 import { craftResolver, PageCanvas } from "./craftNodes";
 import { ensureValidPageContent } from "./defaultContent";
@@ -113,11 +114,13 @@ export function CraftPageRenderer({
         </div>
       ) : null}
 
-      <Editor key={`${readerLang}-${page.updated_at}`} enabled={false} resolver={craftResolver}>
-        <Frame data={validContent}>
-          <Element canvas is={PageCanvas} snapType="none" />
-        </Frame>
-      </Editor>
+      <ErrorBoundary resetKey={`${path}-${readerLang}-${page.updated_at}`}>
+        <Editor key={`${readerLang}-${page.updated_at}`} enabled={false} resolver={craftResolver}>
+          <Frame data={validContent}>
+            <Element canvas is={PageCanvas} snapType="none" />
+          </Frame>
+        </Editor>
+      </ErrorBoundary>
     </div>
   );
 }

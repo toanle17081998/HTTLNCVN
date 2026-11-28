@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSiteNavigationQuery } from "@/hooks/siteNavigation";

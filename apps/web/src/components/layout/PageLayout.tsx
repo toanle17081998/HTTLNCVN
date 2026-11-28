@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/components/ui";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageHeader } from "./PageHeader";
 
 type PageLayoutProps = {
@@ -40,17 +41,21 @@ export function PageLayout({
           : "gap-12 px-4 pt-[calc(var(--section-space-xl)_-_var(--section-space-md))] pb-20 sm:px-6 sm:pb-24 md:pt-24 lg:px-8 lg:pt-28 lg:pb-32",
       )}
     >
-      <PageHeader
-        actions={actions}
-        align={align}
-        coverImage={coverImage}
-        description={description}
-        eyebrow={eyebrow}
-        image={image}
-        showHeroImage={showHeroImage}
-        title={title}
-      />
-      <div className="min-w-0">{children}</div>
+      <ErrorBoundary fallback={null} resetKey={pathname}>
+        <PageHeader
+          actions={actions}
+          align={align}
+          coverImage={coverImage}
+          description={description}
+          eyebrow={eyebrow}
+          image={image}
+          showHeroImage={showHeroImage}
+          title={title}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary resetKey={pathname}>
+        <div className="min-w-0">{children}</div>
+      </ErrorBoundary>
     </div>
   );
 }

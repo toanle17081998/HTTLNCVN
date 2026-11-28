@@ -2,7 +2,7 @@
 
 import { Text, Title, Button, Card, Input, Textarea, cn, Label, Switch } from "@/components/ui";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import {
   ArrowDown,
   ArrowUp,

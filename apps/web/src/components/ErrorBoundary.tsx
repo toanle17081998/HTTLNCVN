@@ -6,6 +6,7 @@ import { ErrorDisplay } from "./ErrorDisplay";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  resetKey?: string | number;
 }
 
 interface State {
@@ -28,17 +29,25 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error("Uncaught error:", error, errorInfo);
   }
 
+  public componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   public render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
+      if (this.props.fallback !== undefined) {
         return this.props.fallback;
       }
-      
+
+      const devMessage = process.env.NODE_ENV === "development" ? this.state.error?.message : undefined;
+
       return (
         <div className="flex min-h-[400px] items-center justify-center p-6">
-          <ErrorDisplay 
-            statusCode={500} 
-            message={this.state.error?.message || "An unexpected error occurred in this section."}
+          <ErrorDisplay
+            statusCode={500}
+            message={devMessage}
             reset={() => this.setState({ hasError: false, error: null })}
           />
         </div>

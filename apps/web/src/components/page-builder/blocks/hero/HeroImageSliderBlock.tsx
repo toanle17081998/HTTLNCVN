@@ -1,7 +1,7 @@
 "use client";
 
 import { useNode } from "@craftjs/core";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { MediaLibraryButton } from "@/components/media/MediaPickerModal";
 import { Input, Textarea, cn } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";

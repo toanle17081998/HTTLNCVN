@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditor } from "@craftjs/core";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import Link from "next/link";
 import { Text, Title, cn } from "@/components/ui";
 import type { FeedCardStyle } from "../../shared/types";

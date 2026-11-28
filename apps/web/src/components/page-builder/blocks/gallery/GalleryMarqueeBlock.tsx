@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditor, useNode } from "@craftjs/core";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { cn, Title, Text } from "@/components/ui";
 import { Field, NativeSelect, BoxSettings, defaultBoxProps } from "../../shared/settings";
 import { buildBoxStyle } from "../../shared/helpers";

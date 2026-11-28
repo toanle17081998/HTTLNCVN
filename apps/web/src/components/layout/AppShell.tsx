@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname } from "next/navigation";
 import { BackToTopButton } from "./BackToTopButton";
 import { Breadcrumb } from "./Breadcrumb";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { LandingIntro } from "./LandingIntro";
@@ -60,18 +61,28 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex min-h-screen overflow-x-clip bg-[var(--bg-base)] text-[var(--text-primary)]">
       <ThemeInitializer />
-      {pathname === "/" && showLandingIntro ? <LandingIntro onComplete={completeLandingIntro} /> : null}
+      {pathname === "/" && showLandingIntro ? (
+        <ErrorBoundary fallback={null} resetKey={pathname}>
+          <LandingIntro onComplete={completeLandingIntro} />
+        </ErrorBoundary>
+      ) : null}
       <div className="relative flex min-w-0 flex-1 flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
-        <Header pathname={pathname} />
+        <ErrorBoundary fallback={null} resetKey={pathname}>
+          <Header pathname={pathname} />
+        </ErrorBoundary>
         <main ref={pageContentRef} className="min-w-0 flex-1 mt-16 md:mt-20">
           {showBreadcrumb && (
             <div className="mx-auto my-6 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-              <Breadcrumb pathname={pathname} />
+              <ErrorBoundary fallback={null} resetKey={pathname}>
+                <Breadcrumb pathname={pathname} />
+              </ErrorBoundary>
             </div>
           )}
-          {children}
+          <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
         </main>
-        <Footer />
+        <ErrorBoundary fallback={null} resetKey={pathname}>
+          <Footer />
+        </ErrorBoundary>
         <BackToTopButton />
       </div>
     </div>

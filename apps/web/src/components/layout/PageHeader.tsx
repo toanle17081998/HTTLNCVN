@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/ui/SafeImage";
 import { usePathname } from "next/navigation";
 import { cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
