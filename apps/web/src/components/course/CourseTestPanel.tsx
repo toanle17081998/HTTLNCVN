@@ -13,6 +13,7 @@ import {
   useStartCourseTestMutation,
 } from "@/hooks/course";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 type DraftQuestion = {
   correctAnswer: string;
@@ -87,6 +88,7 @@ export function CourseTestPanel({ className, course, loadingFallback = null }: {
     setSearchQuery("");
     setIsQuestionsModalOpen(false);
   };
+  useEscapeKey(handleCloseModal, isQuestionsModalOpen);
 
   const handleOpenModal = () => {
     setSearchQuery("");

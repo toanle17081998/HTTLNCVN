@@ -23,6 +23,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   useCreateEventCategoryMutation,
   useCreateEventMutation,
@@ -256,6 +257,8 @@ export function EventPage() {
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  useEscapeKey(closeModal, modalOpen);
+  useEscapeKey(() => setCategoryModalOpen(false), categoryModalOpen);
   const [slugTouched, setSlugTouched] = useState(false);
   const [form, setForm] = useState<EventForm>(() => createEmptyForm());
   const [categoryForm, setCategoryForm] = useState<CategoryForm>({ description: "", name: "" });

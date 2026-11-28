@@ -3,6 +3,7 @@
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import { useMemo, useRef, useState } from "react";
 import "ckeditor5/ckeditor5.css";
+import "./CkDocumentEditor.css";
 import vietnamese from "ckeditor5/translations/vi.js";
 import {
   Alignment,

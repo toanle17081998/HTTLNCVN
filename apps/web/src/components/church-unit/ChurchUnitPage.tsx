@@ -187,46 +187,34 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
     );
   };
 
-  const hasPageAccess = can(PERMISSIONS.manageChurchUnits) || units.some((unit) => isClassAdmin(unit));
+  const accessibleUnits = canReadUnits ? units : units.filter(isClassAdmin);
+  const hasPageAccess = canReadUnits || accessibleUnits.length > 0;
+  const isLoadingUnits = authLoading || unitsQuery.isLoading;
+  const filterTypes = (canReadUnits ? meta?.types : undefined) ?? [...new Set(accessibleUnits.map((unit) => unit.type))];
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleUnits = accessibleUnits.filter((unit) => {
+    if (typeFilter !== "all" && unit.type !== typeFilter) {
+      return false;
+    }
 
-  const visibleUnits = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const isSystemAdmin = can(PERMISSIONS.manageChurchUnits);
+    if (statusFilter !== "all" && unit.is_active !== (statusFilter === "active")) {
+      return false;
+    }
 
-    return units.filter((unit) => {
-      if (!isSystemAdmin && !isClassAdmin(unit)) {
-        return false;
-      }
+    if (!normalizedQuery) {
+      return true;
+    }
 
-      if (typeFilter !== "all" && unit.type !== typeFilter) {
-        return false;
-      }
+    return [
+      unit.name,
+      unit.type,
+      unit.description ?? "",
+      unit.parent?.name ?? "",
+      unit.leader?.display_name ?? "",
+      ...unit.members.map((member) => member.display_name),
+    ].some((value) => value.toLowerCase().includes(normalizedQuery));
+  });
 
-      if (
-        statusFilter !== "all" &&
-        String(unit.is_active) !== String(statusFilter === "active")
-      ) {
-        return false;
-      }
-
-      if (!normalizedQuery) {
-        return true;
-      }
-
-      return [
-        unit.name,
-        unit.type,
-        unit.description ?? "",
-        unit.parent?.name ?? "",
-        unit.leader?.display_name ?? "",
-        ...unit.members.map((member) => member.display_name),
-      ].some((value) => value.toLowerCase().includes(normalizedQuery));
-    });
-  }, [query, statusFilter, typeFilter, units]);
-
-  const activeCount = units.filter((unit) => unit.is_active).length;
-  const cellGroupCount = units.filter((unit) => unit.type === "cell_group").length;
-  const memberCount = units.reduce((total, unit) => total + unit.member_count, 0);
   const isSaving = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
   const mutationError = createMutation.error ?? updateMutation.error ?? deleteMutation.error;
 
@@ -356,7 +344,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
 
   const content = (
     <>
-      {!authLoading && !unitsQuery.isLoading && !hasPageAccess ? (
+      {!isLoadingUnits && !hasPageAccess ? (
         <Card className="p-5">
           <Text as="p" tone="inherit" variant="inherit" className="font-semibold text-[var(--text-primary)]">{t("admin.members.restrictedTitle")}</Text>
           <Text className="mt-1" variant="small">
@@ -365,29 +353,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
         </Card>
       ) : (
         <div className="grid gap-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.churchUnits.active")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{activeCount}</Text>
-            </div>
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.churchUnits.cellGroups")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{cellGroupCount}</Text>
-            </div>
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.churchUnits.membersAssigned")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{memberCount}</Text>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:flex sm:items-end">
+            <Title as="h2" className="self-center sm:hidden" variant="labelStrong">
+              {t("church.tab.unit")}
+            </Title>
+            <div className="order-2 col-span-2 flex min-w-0 flex-1 flex-col gap-1 sm:order-none">
               <Label variant="caption"  htmlFor="church-unit-search">
                 {t("common.search")}
               </Label>
@@ -406,8 +376,8 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
               </div>
             </div>
 
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="flex min-w-[130px] flex-1 flex-col gap-1 sm:w-40 sm:flex-none">
+            <div className="order-3 col-span-2 grid min-w-0 grid-cols-2 items-end gap-2 sm:order-none sm:flex sm:shrink-0">
+              <div className="flex min-w-0 flex-col gap-1 sm:w-40">
                 <Label variant="caption"  htmlFor="church-unit-type-filter">
                   {t("common.type")}
                 </Label>
@@ -419,7 +389,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                   value={typeFilter}
                 >
                   <option value="all">{t("prayer.filter.all")}</option>
-                  {(meta?.types ?? []).map((type) => (
+                  {filterTypes.map((type) => (
                     <option key={type} value={type}>
                       {typeLabel(type)}
                     </option>
@@ -427,7 +397,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </Dropdown>
               </div>
 
-              <div className="flex min-w-[130px] flex-1 flex-col gap-1 sm:w-36 sm:flex-none">
+              <div className="flex min-w-0 flex-col gap-1 sm:w-36">
                 <Label variant="caption"  htmlFor="church-unit-status-filter">
                   {t("common.status")}
                 </Label>
@@ -444,32 +414,32 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </Dropdown>
               </div>
 
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  variant="unstyled"
-                  aria-label={t("admin.members.refresh")}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
-                  onClick={() => {
-                    void unitsQuery.refetch();
-                    void metaQuery.refetch();
-                  }}
-                  type="button"
-                >
-                  <RefreshCw
-                    aria-hidden="true"
-                    className={cn(
-                      "h-4 w-4",
-                      unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
-                    )}
-                  />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="unstyled"
+                aria-label={t("admin.members.refresh")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--brand-muted)] transition duration-200"
+                onClick={() => {
+                  void unitsQuery.refetch();
+                  if (canReadUnits) void metaQuery.refetch();
+                }}
+                type="button"
+              >
+                <RefreshCw
+                  aria-hidden="true"
+                  className={cn(
+                    "h-4 w-4",
+                    unitsQuery.isFetching || metaQuery.isFetching ? "animate-spin" : "",
+                  )}
+                />
+              </Button>
+              {hideLayout && canCreateUnits ? (
+                <Button aria-label={t("admin.churchUnits.add")} className="sm:w-auto sm:px-4" variant="primary" onClick={openCreateModal} size="icon">
+                  <Plus aria-hidden="true" className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t("admin.churchUnits.add")}</span>
                 </Button>
-                {hideLayout && canCreateUnits ? (
-                  <Button variant="primary" onClick={openCreateModal} size="sm">
-                    <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                    {t("admin.churchUnits.add")}
-                  </Button>
-                ) : null}
-              </div>
+              ) : null}
             </div>
           </div>
 
@@ -490,11 +460,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
             <div className="grid divide-y divide-[var(--border-subtle)]">
               {visibleUnits.map((unit) => (
                 <div
-                  className="group flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-[var(--bg-surface)]/50 sm:flex-row sm:items-center"
+                  className="group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-4 py-4 transition-colors hover:bg-[var(--bg-surface)]/50 sm:flex sm:items-center sm:gap-4 sm:px-6 sm:py-5"
                   key={unit.id}
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)] sm:h-12 sm:w-12">
                       <Building2 aria-hidden="true" className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -524,28 +494,30 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 sm:w-96 sm:justify-end">
-                    {/* Test Scores button (Visible strictly to class admins of this class unit) */}
-                    {isClassAdmin(unit) && (
-                      <Button
-                        onClick={() => setActiveScoresUnit(unit)}
-                        size="sm"
-                        variant="secondary"
-                      >
-                        <Trophy aria-hidden="true" className="mr-1.5 h-4 w-4" />
-                        Scores
-                      </Button>
-                    )}
-
-                    <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
-                      <Users aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
-                      <span>{unit.member_count}</span>
+                  <div className="contents sm:flex sm:items-center sm:justify-end sm:gap-3">
+                    <div className="col-span-2 ml-[3.25rem] flex flex-wrap items-center gap-2 sm:ml-0 sm:gap-3">
+                      <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
+                        <Users aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                        <span>{unit.member_count}</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
+                        <FolderTree aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                        <span>{unit.children_count}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
-                      <FolderTree aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
-                      <span>{unit.children_count}</span>
-                    </div>
-                    <div className="flex gap-2">
+                    <div className="col-start-2 row-start-1 flex gap-1 sm:gap-2">
+                      {isClassAdmin(unit) && (
+                        <Button
+                          aria-label={t("admin.churchUnits.scores.title")}
+                          className="sm:w-auto sm:px-4"
+                          onClick={() => setActiveScoresUnit(unit)}
+                          size="icon"
+                          variant="secondary"
+                        >
+                          <Trophy aria-hidden="true" className="h-4 w-4 sm:mr-1.5" />
+                          <span className="hidden sm:inline">Scores</span>
+                        </Button>
+                      )}
                       {canUpdateUnits ? (
                         <Button
                           variant="unstyled"
@@ -573,7 +545,11 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
                 </div>
               ))}
 
-              {!unitsQuery.isLoading && visibleUnits.length === 0 ? (
+              {isLoadingUnits && visibleUnits.length === 0 ? (
+                <Text as="p" role="status" className="p-5 text-center" variant="small">
+                  {t("admin.churchUnits.loading")}
+                </Text>
+              ) : !isLoadingUnits && visibleUnits.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Building2 className="mb-4 h-12 w-12 text-[var(--text-tertiary)] opacity-20" />
                   <Text as="p" tone="inherit" variant="inherit" className="text-base font-medium text-[var(--text-secondary)]">
@@ -610,6 +586,7 @@ export function ChurchUnitPage({ admin = false, hideLayout = false }: ChurchUnit
           <Modal
             className="max-w-4xl animate-in fade-in duration-200"
             labelledBy="church-unit-modal-title"
+            onClose={closeModal}
             onSubmit={submitChurchUnit}
           >
             <ModalHeader className="flex items-start justify-between gap-4">
@@ -1180,7 +1157,7 @@ function ClassScoresModal({ unit, onClose }: ClassScoresModalProps) {
   }, [activeCourse, scores]);
 
   return (
-      <Modal className="max-w-5xl animate-in fade-in zoom-in duration-200" labelledBy="class-scores-modal-title">
+      <Modal className="max-w-5xl animate-in fade-in zoom-in duration-200" labelledBy="class-scores-modal-title" onClose={onClose}>
         <ModalHeader className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">

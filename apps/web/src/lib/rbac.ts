@@ -1,3 +1,5 @@
+import type { AuthUser } from "@/hooks/auth";
+
 export const PERMISSIONS = {
   viewLanding: "view:landing",
   viewAbout: "view:about",
@@ -39,3 +41,8 @@ export const PERMISSIONS = {
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export function canDeleteContent(user: AuthUser | null, resource: "article" | "course") {
+  return user?.role === "system_admin" &&
+    user.permissions.some((permission) => permission.resource === resource && permission.action === "delete");
+}

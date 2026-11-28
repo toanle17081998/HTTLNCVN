@@ -23,7 +23,7 @@ export function CategorySidebar({
   const uncategorisedCount = prayers.filter((p) => p.category === null).length;
 
   return (
-    <div className="h-max rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+    <div className="hidden h-max rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 lg:block">
       <div className="flex items-center justify-between gap-3">
         <div>
           <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase tracking-wider text-[var(--accent-gold)]">

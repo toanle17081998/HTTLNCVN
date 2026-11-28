@@ -32,6 +32,7 @@ export type MemberListParams = {
   skip?: number;
   take?: number;
   q?: string;
+  role?: string;
 };
 
 export type CreateMemberDto = {
@@ -43,13 +44,14 @@ export type CreateMemberDto = {
   username: string;
 };
 
-export type UpdateMemberDto = Partial<Omit<CreateMemberDto, "password">>;
+export type UpdateMemberDto = Partial<CreateMemberDto>;
 
 function memberListSearch(params: MemberListParams = {}) {
   const search = new URLSearchParams();
   if (params.skip !== undefined) search.set("skip", String(params.skip));
   if (params.take !== undefined) search.set("take", String(params.take));
   if (params.q) search.set("q", params.q);
+  if (params.role) search.set("role", params.role);
   const query = search.toString();
   return query ? `?${query}` : "";
 }

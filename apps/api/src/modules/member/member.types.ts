@@ -35,6 +35,7 @@ export type CreateMemberDto = {
 
 export type UpdateMemberDto = {
   email?: string;
+  password?: string;
   profile?: {
     address?: string | null;
     date_of_birth?: string | null;

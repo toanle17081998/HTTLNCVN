@@ -10,6 +10,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { CardActions } from "@/components/ui/CardActions";
 import {
   articleApi,
   articleKeys,
@@ -214,7 +215,7 @@ export function ArticlePage() {
       {!isListLoading ? (
       <div className="grid gap-6 md:grid-cols-2">
         {articlesQuery.data?.items.map((article) => (
-          <Card className="group overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg flex flex-col h-full" key={article.id}>
+          <Card className="group relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:border-[var(--brand-primary)] hover:shadow-lg" key={article.id}>
             <Link
               className="block flex-1 focus:outline-none"
               href={`/article/${encodeURIComponent(article.slug)}`}
@@ -266,23 +267,13 @@ export function ArticlePage() {
             </Link>
 
             {canManageArticle ? (
-              <div className="px-6 pb-6 mt-auto flex flex-wrap gap-2">
-                <Link
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 text-[10px] font-bold uppercase tracking-wider text-[var(--text-primary)] transition hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)] focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-                  href={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
-                >
-                  {t("lesson.action.edit")}
-                </Link>
-                <Button
-                  disabled={deleteArticle.isPending}
-                  onClick={() => handleDelete(article.slug)}
-                  size="sm"
-                  variant="danger"
-                  className="h-9 rounded-lg px-4 text-[10px] font-bold uppercase tracking-wider"
-                >
-                  {t("prayer.action.delete")}
-                </Button>
-              </div>
+              <CardActions
+                className="absolute right-3 top-3 z-10"
+                deleting={deleteArticle.isPending}
+                editHref={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
+                onDelete={() => handleDelete(article.slug)}
+                resource="article"
+              />
             ) : null}
           </Card>
         ))}

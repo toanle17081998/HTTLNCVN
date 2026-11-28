@@ -65,9 +65,10 @@ function toDto(u: {
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(skip: number, take: number, q?: string): Promise<MemberListResult> {
+  async findAll(skip: number, take: number, q?: string, role?: string): Promise<MemberListResult> {
     const where: Prisma.UserWhereInput = {
       deleted_at: null,
+      ...(role && { role: { name: role } }),
       ...(q && {
         OR: [
           { email: { contains: q } },
@@ -133,9 +134,11 @@ export class MemberRepository {
 
   async update(id: string, dto: UpdateMemberDto): Promise<MemberDto | null> {
     const role = dto.role ? await this.findRole(dto.role) : null;
+    const passwordHash = dto.password !== undefined ? await bcrypt.hash(dto.password, 10) : undefined;
     const user = await this.prisma.user.update({
       data: {
         ...(dto.email !== undefined && { email: dto.email.trim() }),
+        ...(passwordHash !== undefined && { password_hash: passwordHash }),
         ...(role && { role_id: role.id }),
         ...(dto.status !== undefined && { status: dto.status }),
         ...(dto.username !== undefined && { username: dto.username.trim() }),
@@ -182,11 +185,11 @@ export class MemberRepository {
 
   private async findRole(name: string): Promise<{ id: number }> {
     const role = await this.prisma.role.findUnique({
-      select: { id: true },
+      select: { id: true, name: true },
       where: { name },
     });
 
-    if (!role) {
+    if (!role || role.name !== name) {
       throw new Error('ROLE_NOT_FOUND');
     }
 

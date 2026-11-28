@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { isVideoMediaUrl } from "@/api/media";
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { findSectionPreset, sectionPresetNameKey } from "./sectionPresets";
 import { Field, NativeSelect } from "../shared/settings";
 import { getButtonVariantClass, toEmbedUrl } from "../shared/helpers";
@@ -383,6 +384,7 @@ export function ContentEditorDialog() {
   const { actions, stateNodes } = useEditor((state: any) => ({
     stateNodes: state.nodes,
   }));
+  useEscapeKey(() => setEditingId(null), Boolean(editingId && stateNodes?.[editingId]));
 
   if (!editingId || !stateNodes || !stateNodes[editingId]) return null;
 

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { MediaGalleryManager } from "./MediaGalleryManager";
 import type { MediaGalleryItem, MediaKind } from "@/api/media";
 
@@ -26,6 +27,7 @@ export function MediaPickerModal({
   onSelect,
 }: MediaPickerModalProps) {
   const { t } = useTranslation();
+  useEscapeKey(onClose, open);
 
   if (!open) return null;
 

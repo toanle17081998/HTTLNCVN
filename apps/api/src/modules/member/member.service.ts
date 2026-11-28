@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { MemberRepository } from './member.repository';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
@@ -9,11 +9,11 @@ const allowedStatuses = new Set(['active', 'pending', 'suspended']);
 export class MemberService {
   constructor(private readonly memberRepository: MemberRepository) {}
 
-  findAll(skip: number, take: number, q?: string): Promise<MemberListResult> {
+  findAll(skip: number, take: number, q?: string, role?: string): Promise<MemberListResult> {
     const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
     const safeTake = Number.isFinite(take) && take > 0 ? Math.min(Math.floor(take), 100) : 20;
 
-    return this.memberRepository.findAll(safeSkip, safeTake, q);
+    return this.memberRepository.findAll(safeSkip, safeTake, q, typeof role === 'string' ? role.trim() : undefined);
   }
 
   async findById(id: string): Promise<MemberDto> {
@@ -26,7 +26,8 @@ export class MemberService {
     return member;
   }
 
-  async create(dto: CreateMemberDto): Promise<MemberDto> {
+  async create(dto: CreateMemberDto, actorId: string): Promise<MemberDto> {
+    if (dto.role === 'system_admin') await this.requireSystemAdmin(actorId);
     this.validateCreate(dto);
 
     try {
@@ -37,7 +38,11 @@ export class MemberService {
     }
   }
 
-  async update(id: string, dto: UpdateMemberDto): Promise<MemberDto> {
+  async update(id: string, dto: UpdateMemberDto, actorId: string): Promise<MemberDto> {
+    if (dto.password !== undefined || dto.role === 'system_admin') {
+      await this.requireSystemAdmin(actorId);
+    }
+
     this.validateUpdate(dto);
 
     try {
@@ -57,6 +62,16 @@ export class MemberService {
   async delete(id: string): Promise<void> {
     await this.findById(id);
     await this.memberRepository.delete(id);
+  }
+
+  private async requireSystemAdmin(actorId: string): Promise<void> {
+    const actor = await this.memberRepository.findById(actorId);
+    if (actor?.role !== 'system_admin' || actor.status === 'suspended') {
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'This action requires a system administrator.',
+      });
+    }
   }
 
   private validateCreate(dto: CreateMemberDto): void {
@@ -81,6 +96,21 @@ export class MemberService {
   }
 
   private validateUpdate(dto: UpdateMemberDto): void {
+    if (dto.password !== undefined) {
+      if (typeof dto.password !== 'string' || dto.password.length < 8) {
+        throw new BadRequestException({
+          code: 'BAD_REQUEST',
+          message: 'Password must be at least 8 characters.',
+        });
+      }
+      if (Buffer.byteLength(dto.password, 'utf8') > 72) {
+        throw new BadRequestException({
+          code: 'BAD_REQUEST',
+          message: 'Password must be at most 72 bytes.',
+        });
+      }
+    }
+
     if (dto.email !== undefined && !dto.email.trim()) {
       throw new BadRequestException({ code: 'BAD_REQUEST', message: 'Email cannot be empty.' });
     }

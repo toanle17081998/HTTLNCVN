@@ -5,6 +5,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, GraduationCap, Plus, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
+import { canDeleteContent } from "@/lib/rbac";
+import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import {
@@ -23,6 +25,7 @@ import {
 export function AdminCourses() {
   const { localize, t } = useTranslation();
   const { confirm } = useFeedback();
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const coursesQuery = useCoursesQuery({ skip: page * pageSize, take: pageSize });
@@ -67,7 +70,7 @@ export function AdminCourses() {
             isDeletingCourse={deleteCourse.isPending}
             key={course.id}
             localize={localize}
-            onDeleteCourse={handleDelete}
+            onDeleteCourse={canDeleteContent(user, "course") ? handleDelete : undefined}
             t={t}
           />
         ))}
@@ -246,7 +249,7 @@ function CoursePanel({
   course: CourseListItem;
   isDeletingCourse: boolean;
   localize: ReturnType<typeof useTranslation>["localize"];
-  onDeleteCourse: (slug: string) => void;
+  onDeleteCourse?: (slug: string) => void;
   t: ReturnType<typeof useTranslation>["t"];
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -322,20 +325,22 @@ function CoursePanel({
             >
               <Pencil className="h-4 w-4" />
             </Link>
-            <Button
-              aria-label={t("admin.common.delete")}
-              disabled={isDeletingCourse}
-              onClick={(event) => {
-                event.stopPropagation();
-                onDeleteCourse(course.slug);
-              }}
-              size="icon"
-              title={t("admin.common.delete")}
-              variant="danger"
-              className="rounded-lg"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {onDeleteCourse ? (
+              <Button
+                aria-label={t("admin.common.delete")}
+                disabled={isDeletingCourse}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDeleteCourse(course.slug);
+                }}
+                size="icon"
+                title={t("admin.common.delete")}
+                variant="danger"
+                className="rounded-lg"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
         </summary>
 

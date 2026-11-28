@@ -6,6 +6,7 @@ import { Element, useEditor } from "@craftjs/core";
 import { X } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { ContentEditContext, SectionInsertContext } from "../shared/NodeFrame";
 import { getButtonVariantClass } from "../shared/helpers";
 import { defaultHeroSliderImages, HeroImageSliderBlock } from "../blocks/hero/HeroImageSliderBlock";
@@ -693,6 +694,7 @@ export function SectionBuilderProvider({ children, contentLocale }: { children: 
   const { actions, query } = useEditor();
   const { t } = useTranslation();
   const [insertIndex, setInsertIndex] = useState<number | null>(null);
+  useEscapeKey(() => setInsertIndex(null), insertIndex !== null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [category, setCategory] = useState<SectionCategory>("Hero");
   const [selectedId, setSelectedId] = useState(sectionPresets[0].id);

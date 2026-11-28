@@ -41,33 +41,35 @@ function ChurchTabsContent({ admin = false }: ChurchUnitAndMemberPageProps) {
       <div className="flex flex-col gap-6 -mt-4">
         {/* Tabs Header */}
         <div className="border-b border-[var(--border-subtle)]">
-          <div className="flex gap-6">
+          <div className="grid grid-cols-2 gap-2 sm:w-fit sm:gap-6">
             <Button
               variant="unstyled"
-              type="submit"
+              type="button"
+              aria-pressed={activeTab === "unit"}
               onClick={() => handleTabChange("unit")}
               className={cn(
-                "flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
+                "flex items-center justify-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
                 activeTab === "unit"
                   ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
                   : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
             >
-              <Building2 className="h-4 w-4" />
+              <Building2 aria-hidden="true" className="h-4 w-4 shrink-0" />
               {t("church.tab.unit")}
             </Button>
             <Button
               variant="unstyled"
-              type="submit"
+              type="button"
+              aria-pressed={activeTab === "member"}
               onClick={() => handleTabChange("member")}
               className={cn(
-                "flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
+                "flex items-center justify-center gap-2 border-b-2 px-1 py-4 text-sm font-bold transition-all duration-200",
                 activeTab === "member"
                   ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
                   : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
             >
-              <Users className="h-4 w-4" />
+              <Users aria-hidden="true" className="h-4 w-4 shrink-0" />
               {t("church.tab.member")}
             </Button>
           </div>

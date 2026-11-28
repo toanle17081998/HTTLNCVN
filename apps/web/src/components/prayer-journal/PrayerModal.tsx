@@ -1,8 +1,8 @@
 "use client";
 
-import { Text, Button, FormField, Input, Dropdown, Textarea, Title, Label } from "@/components/ui";
+import { Text, Button, FormField, Input, Dropdown, Textarea, Title, Label, Modal, ModalBody, ModalFooter, ModalHeader, cn } from "@/components/ui";
 import type { FormEvent } from "react";
-import { CheckCircle2, Edit3, Globe, Lock, Tag, Users, X } from "lucide-react";
+import { CheckCircle2, Edit3, Tag, Users, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer, PrayerCategory, PrayerMember, PrayerVisibility } from "@/hooks/prayer-journal";
 import { StatusBadge, VisibilityBadge } from "./PrayerBadges";
@@ -59,16 +59,24 @@ export function PrayerModal({
   onSubmitPrayer,
 }: PrayerModalProps) {
   const { t } = useTranslation();
+  const isViewing = modalMode === "view" && activePrayer !== null;
+  const isAnswering = modalMode === "close" && activePrayer !== null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--bg-overlay)] px-4 py-6">
-      <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-3xl gap-5 overflow-y-auto rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 shadow-xl">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
-              {t("prayer.config.eyebrow")}
-            </Text>
-            <Title as="h2" variant="modal">
+    <Modal
+      className={isViewing || isAnswering ? "max-w-xl" : "max-w-3xl"}
+      labelledBy="prayer-modal-title"
+      onClose={onClose}
+      onSubmit={isViewing ? undefined : isAnswering ? onClosePrayer : onSubmitPrayer}
+    >
+        <ModalHeader className={cn("flex items-start justify-between gap-4", isViewing && "p-4")}>
+          <div className="min-w-0">
+            {!isViewing ? (
+              <Text as="p" tone="inherit" variant="inherit" className="text-sm font-semibold uppercase text-[var(--brand-primary)]">
+                {t("prayer.config.eyebrow")}
+              </Text>
+            ) : null}
+            <Title as="h2" id="prayer-modal-title" className={isViewing ? "wrap-anywhere text-xl" : undefined} variant="modal">
               {modalMode === "create"
                 ? t("prayer.config.title.add")
                 : modalMode === "edit"
@@ -81,41 +89,42 @@ export function PrayerModal({
           <Button
             variant="unstyled"
             aria-label={t("action.close")}
-            className="rounded-full p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
+            className="shrink-0 rounded-full p-2 text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] hover:text-[var(--text-primary)]"
             onClick={onClose}
             type="button"
           >
             <X aria-hidden="true" className="h-5 w-5" />
           </Button>
-        </div>
+        </ModalHeader>
 
-        {modalMode === "view" && activePrayer ? (
+        {isViewing && activePrayer ? (
           <PrayerViewPanel
             activePrayer={activePrayer}
             canManageOwn={canManageOwn}
             members={members}
-            onClose={onClose}
             onOpenClose={onOpenClose}
             onOpenEdit={onOpenEdit}
             onReopenPrayer={onReopenPrayer}
           />
-        ) : modalMode === "close" && activePrayer ? (
-          <form className="grid gap-5" onSubmit={onClosePrayer}>
-            <Text variant="small">
-              {t("prayer.close.description", {
-                defaultValue: "Record how this prayer was answered.",
-              })}
-            </Text>
-            <FormField htmlFor="prayer-close-reason" label={t("prayer.form.closeReason")}>
-              <Textarea
-                id="prayer-close-reason"
-                onChange={(event) => onCloseReasonChange(event.target.value)}
-                placeholder={t("prayer.form.closeReasonPlaceholder")}
-                rows={5}
-                value={closeReason}
-              />
-            </FormField>
-            <div className="flex justify-end gap-2 border-t border-[var(--border-subtle)] pt-4">
+        ) : isAnswering ? (
+          <>
+            <ModalBody className="grid gap-4">
+              <Text variant="small">
+                {t("prayer.close.description", {
+                  defaultValue: "Record how this prayer was answered.",
+                })}
+              </Text>
+              <FormField htmlFor="prayer-close-reason" label={t("prayer.form.closeReason")}>
+                <Textarea
+                  id="prayer-close-reason"
+                  onChange={(event) => onCloseReasonChange(event.target.value)}
+                  placeholder={t("prayer.form.closeReasonPlaceholder")}
+                  rows={5}
+                  value={closeReason}
+                />
+              </FormField>
+            </ModalBody>
+            <ModalFooter className="flex flex-wrap justify-end gap-2">
               <Button onClick={onClose} type="button" variant="secondary">
                 {t("common.cancel")}
               </Button>
@@ -123,11 +132,11 @@ export function PrayerModal({
                 <CheckCircle2 aria-hidden="true" className="mr-2 h-4 w-4" />
                 {t("prayer.action.close")}
               </Button>
-            </div>
-          </form>
+            </ModalFooter>
+          </>
         ) : (
-          <form className="grid gap-5" onSubmit={onSubmitPrayer}>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <>
+            <ModalBody className="grid gap-4 sm:grid-cols-2">
               <FormField className="sm:col-span-2" htmlFor="prayer-title" label={t("prayer.form.title")}>
                 <Input
                   id="prayer-title"
@@ -236,9 +245,9 @@ export function PrayerModal({
                   value={form.content}
                 />
               </FormField>
-            </div>
+            </ModalBody>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] pt-4">
+            <ModalFooter className="flex flex-wrap items-center justify-between gap-3">
               {modalMode === "edit" ? (
                 <Button isLoading={isSaving} onClick={onDelete} type="button" variant="danger">
                   {t("prayer.action.delete")}
@@ -254,11 +263,10 @@ export function PrayerModal({
                   {modalMode === "edit" ? t("prayer.action.saveChanges") : t("prayer.action.add")}
                 </Button>
               </div>
-            </div>
-          </form>
+            </ModalFooter>
+          </>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -266,7 +274,6 @@ function PrayerViewPanel({
   activePrayer,
   canManageOwn,
   members,
-  onClose,
   onOpenClose,
   onOpenEdit,
   onReopenPrayer,
@@ -274,7 +281,6 @@ function PrayerViewPanel({
   activePrayer: Prayer;
   canManageOwn: boolean;
   members: PrayerMember[];
-  onClose: () => void;
   onOpenClose: (prayer: Prayer) => void;
   onOpenEdit: (prayer: Prayer) => void;
   onReopenPrayer: (prayer: Prayer) => void;
@@ -286,79 +292,64 @@ function PrayerViewPanel({
   );
 
   return (
-    <div className="grid gap-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge status={activePrayer.status} />
-        <VisibilityBadge visibility={activePrayer.visibility} />
-        {activePrayer.category ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-base)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
-            <Tag aria-hidden="true" className="h-3 w-3" />
-            {activePrayer.category.name}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="grid gap-4 rounded-2xl bg-[var(--bg-base)] p-5">
-        <div className="flex flex-wrap gap-3 text-sm text-[var(--text-secondary)]">
-          <span>{activePrayer.created_by_name}</span>
-          <span>{formatPrayerDate(activePrayer.created_at)}</span>
-          {activePrayer.visibility === "private" ? (
-            <span className="inline-flex items-center gap-1">
-              <Lock aria-hidden="true" className="h-4 w-4" />
-              {t("prayer.form.visibility.private")}
-            </span>
-          ) : null}
-          {activePrayer.visibility === "public" ? (
-            <span className="inline-flex items-center gap-1">
-              <Globe aria-hidden="true" className="h-4 w-4" />
-              {t("prayer.form.visibility.public")}
-            </span>
-          ) : null}
-          {activePrayer.visibility === "shared" ? (
-            <span className="inline-flex items-center gap-1">
-              <Users aria-hidden="true" className="h-4 w-4" />
-              {sharedNames || t("prayer.share.members.none")}
+    <>
+      <ModalBody className="grid gap-3 px-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status={activePrayer.status} />
+          <VisibilityBadge visibility={activePrayer.visibility} />
+          {activePrayer.category ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-base)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+              <Tag aria-hidden="true" className="h-3 w-3" />
+              {activePrayer.category.name}
             </span>
           ) : null}
         </div>
 
-        <Text as="p" tone="inherit" variant="inherit" className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-primary)]">
-          {activePrayer.content}
-        </Text>
-
-        {activePrayer.close_reason ? (
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
-            <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--brand-primary)]">
-              {t("prayer.action.close")}
-            </Text>
-            <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">{activePrayer.close_reason}</Text>
+        <div className="grid min-w-0 gap-2 rounded-xl bg-[var(--bg-base)] p-3">
+          <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)]">
+            <span>{activePrayer.created_by_name}</span>
+            <span>{formatPrayerDate(activePrayer.created_at)}</span>
+            {activePrayer.visibility === "shared" ? (
+              <span className="inline-flex items-center gap-1">
+                <Users aria-hidden="true" className="h-4 w-4" />
+                {sharedNames || t("prayer.share.members.none")}
+              </span>
+            ) : null}
           </div>
-        ) : null}
-      </div>
 
-      <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--border-subtle)] pt-4">
-        <Button onClick={onClose} type="button" variant="secondary">
-          {t("common.cancel")}
-        </Button>
-        {canManageOwn ? (
-          <>
-            {activePrayer.status === "open" ? (
-              <Button onClick={() => onOpenClose(activePrayer)} type="button" variant="secondary">
-                <CheckCircle2 aria-hidden="true" className="mr-2 h-4 w-4" />
+          <Text as="p" tone="inherit" variant="inherit" className="whitespace-pre-wrap text-sm leading-6 wrap-anywhere text-[var(--text-primary)]">
+            {activePrayer.content}
+          </Text>
+
+          {activePrayer.close_reason ? (
+            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-semibold uppercase text-[var(--brand-primary)]">
                 {t("prayer.action.close")}
-              </Button>
-            ) : (
-              <Button onClick={() => onReopenPrayer(activePrayer)} type="button" variant="secondary">
-                {t("prayer.action.reopen")}
-              </Button>
-            )}
-            <Button variant="primary" onClick={() => onOpenEdit(activePrayer)} type="button">
-              <Edit3 aria-hidden="true" className="mr-2 h-4 w-4" />
-              {t("prayer.config.title.edit")}
+              </Text>
+              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-sm text-[var(--text-secondary)]">{activePrayer.close_reason}</Text>
+            </div>
+          ) : null}
+        </div>
+      </ModalBody>
+
+      {canManageOwn ? (
+        <ModalFooter className="flex flex-wrap justify-end gap-2 p-4">
+          {activePrayer.status === "open" ? (
+            <Button onClick={() => onOpenClose(activePrayer)} size="sm" type="button" variant="secondary">
+              <CheckCircle2 aria-hidden="true" className="mr-2 h-4 w-4" />
+              {t("prayer.action.close")}
             </Button>
-          </>
-        ) : null}
-      </div>
-    </div>
+          ) : (
+            <Button onClick={() => onReopenPrayer(activePrayer)} size="sm" type="button" variant="secondary">
+              {t("prayer.action.reopen")}
+            </Button>
+          )}
+          <Button variant="primary" onClick={() => onOpenEdit(activePrayer)} size="sm" type="button">
+            <Edit3 aria-hidden="true" className="mr-2 h-4 w-4" />
+            {t("action.edit")}
+          </Button>
+        </ModalFooter>
+      ) : null}
+    </>
   );
 }

@@ -7,6 +7,7 @@ import { PageLayout } from "@/components/layout";
 import { useAuth } from "@/providers/AuthProvider";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   useCreateNotificationMutation,
   useMarkNotificationReadMutation,
@@ -26,6 +27,7 @@ export function NotificationPage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
+  useEscapeKey(closeModal, modalOpen);
 
   // Form State
   const [title, setTitle] = useState("");

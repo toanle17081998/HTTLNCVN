@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
+import { CardActions } from "@/components/ui/CardActions";
 import { PageLayout } from "@/components/layout";
-import { Badge, Button, Card, Pagination, Title } from "@/components/ui";
+import { Badge, Card, Pagination, Title } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useArticlesQuery, useDeleteArticleMutation } from "@/hooks/article";
@@ -78,27 +79,13 @@ export function AdminArticles() {
                 </div>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <Link
-                aria-label={t("admin.common.edit")}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm transition-all hover:bg-[var(--brand-muted)] hover:text-[var(--brand-primary)]"
-                href={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
-                title={t("admin.common.edit")}
-              >
-                <Pencil className="h-4 w-4" />
-              </Link>
-              <Button
-                aria-label={t("admin.common.delete")}
-                disabled={deleteArticle.isPending}
-                onClick={() => handleDelete(article.slug)}
-                size="icon"
-                title={t("admin.common.delete")}
-                variant="danger"
-                className="rounded-lg"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <CardActions
+              className="relative"
+              deleting={deleteArticle.isPending}
+              editHref={`/admin/articles/create?slug=${encodeURIComponent(article.slug)}`}
+              onDelete={() => handleDelete(article.slug)}
+              resource="article"
+            />
           </Card>
         ))}
 

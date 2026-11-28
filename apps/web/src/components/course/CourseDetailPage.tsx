@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout";
 import { useTranslation } from "@/providers/I18nProvider";
-import { PERMISSIONS } from "@/lib/rbac";
+import { canDeleteContent, PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { markdownToHtml, isRichTextHtml } from "@/components/article/articleEditorUtils";
@@ -30,7 +30,7 @@ export function CourseDetailPage({ initialCourse, slug }: CourseDetailPageProps)
   const { t, localize } = useTranslation();
   const { confirm } = useFeedback();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const courseQuery = useCourseQuery(slug, initialCourse);
   const deleteCourse = useDeleteCourseMutation();
   const deleteLesson = useDeleteLessonMutation(slug);
@@ -62,23 +62,25 @@ export function CourseDetailPage({ initialCourse, slug }: CourseDetailPageProps)
                 <Button size="sm" variant="ghost" onClick={() => router.push(`/admin/courses/${slug}/edit`)}>
                   {t("course.action.edit")}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
-                  onClick={async () => {
-                    const ok = await confirm({
-                      variant: "delete",
-                      title: t("course.action.deleteConfirm"),
-                    });
-                    if (ok) {
-                      await deleteCourse.mutateAsync(slug);
-                      router.push("/course");
-                    }
-                  }}
-                >
-                  {t("prayer.action.delete")}
-                </Button>
+                {canDeleteContent(user, "course") ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[var(--status-danger)] hover:bg-[var(--status-danger-muted)]"
+                    onClick={async () => {
+                      const ok = await confirm({
+                        variant: "delete",
+                        title: t("course.action.deleteConfirm"),
+                      });
+                      if (ok) {
+                        await deleteCourse.mutateAsync(slug);
+                        router.push("/course");
+                      }
+                    }}
+                  >
+                    {t("prayer.action.delete")}
+                  </Button>
+                ) : null}
               </div>
             )}
           </div>

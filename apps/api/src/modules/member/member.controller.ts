@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Request } from '@nestjs/common';
 
 import { Can } from '../../common/decorators/permissions.decorator';
+import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { MemberService } from './member.service';
 import type { CreateMemberDto, MemberDto, MemberListResult, UpdateMemberDto } from './member.types';
 
@@ -14,8 +15,9 @@ export class MemberController {
     @Query('q') q?: string,
     @Query('skip') skip = '0',
     @Query('take') take = '20',
+    @Query('role') role?: string,
   ): Promise<MemberListResult> {
-    return this.memberService.findAll(Number(skip), Number(take), q);
+    return this.memberService.findAll(Number(skip), Number(take), q, role);
   }
 
   @Get(':id')
@@ -26,14 +28,14 @@ export class MemberController {
 
   @Post()
   @Can('create', 'member')
-  create(@Body() dto: CreateMemberDto): Promise<MemberDto> {
-    return this.memberService.create(dto);
+  create(@Body() dto: CreateMemberDto, @Request() req: { user: JwtPayload }): Promise<MemberDto> {
+    return this.memberService.create(dto, req.user.sub);
   }
 
   @Patch(':id')
   @Can('update', 'member')
-  update(@Param('id') id: string, @Body() dto: UpdateMemberDto): Promise<MemberDto> {
-    return this.memberService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateMemberDto, @Request() req: { user: JwtPayload }): Promise<MemberDto> {
+    return this.memberService.update(id, dto, req.user.sub);
   }
 
   @Can('delete', 'member')

@@ -14,6 +14,7 @@ import {
 
 import { Public } from '../../common/decorators/public.decorator';
 import { Can } from '../../common/decorators/permissions.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { ArticleService } from './article.service';
 import type {
@@ -70,6 +71,7 @@ export class ArticleController {
     return this.articleService.update(slug, dto);
   }
 
+  @Roles('system_admin')
   @Can('delete', 'article')
   @Delete(':slug')
   @HttpCode(HttpStatus.NO_CONTENT)

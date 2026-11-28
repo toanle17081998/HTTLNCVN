@@ -1,8 +1,8 @@
 "use client";
 
-import { Text, Button, Card, FormField, Input, Modal, ModalBody, ModalFooter, ModalHeader, Pagination, Dropdown, cn, Title } from "@/components/ui";
+import { Text, Button, Card, FormField, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Pagination, Dropdown, cn, Title } from "@/components/ui";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Edit3, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
+import { Edit3, ListFilter, Plus, RefreshCw, Search, Shield, Trash2, Upload, UserRound, X } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -30,7 +30,7 @@ type MemberForm = {
   username: string;
 };
 
-const roleOptions = ["church_member", "church_admin", "system_admin"];
+const roleOptions = ["church_member", "church_admin", "system_admin"] as const;
 const statusOptions = ["active", "pending", "suspended"];
 
 function createEmptyForm(): MemberForm {
@@ -90,15 +90,17 @@ type MemberPageProps = {
 export function MemberPage({ admin = false, hideLayout = false }: MemberPageProps) {
   const { t } = useTranslation();
   const { confirm } = useFeedback();
-  const { can, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { can, isAuthenticated, isLoading: authLoading, user } = useAuth();
 
   const canReadMembers = can(PERMISSIONS.manageChurchMembers);
   const canCreateMembers = can(PERMISSIONS.createChurchMembers) || canReadMembers;
   const canUpdateMembers = can(PERMISSIONS.updateChurchMembers);
   const canDeleteMembers = can(PERMISSIONS.deleteChurchMembers);
+  const isSystemAdmin = user?.role === "system_admin";
 
   const [q, setQ] = useState("");
   const [queryInput, setQueryInput] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
@@ -113,7 +115,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
   }, [q, queryInput]);
 
   const membersQuery = useMembersQuery(
-    { take: pageSize, skip: page * pageSize, q: q || undefined },
+    { take: pageSize, skip: page * pageSize, q: q || undefined, role: roleFilter || undefined },
     isAuthenticated && canReadMembers,
   );
   const createMemberMutation = useCreateMemberMutation();
@@ -122,8 +124,6 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
 
   const members = membersQuery.data?.items ?? [];
   const total = membersQuery.data?.total ?? 0;
-  const adminCount = members.filter((member) => member.role.includes("admin")).length;
-  const pendingCount = members.filter((member) => member.status === "pending").length;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
@@ -158,6 +158,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
   function closeModal() {
     setModalOpen(false);
     setEditingMember(null);
+    setForm((current) => ({ ...current, password: "" }));
   }
 
   function submitMember(event: FormEvent<HTMLFormElement>) {
@@ -179,7 +180,8 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           dto: {
             email: form.email.trim(),
             profile,
-            role: form.role,
+            ...(form.role !== editingMember.role && { role: form.role }),
+            ...(isSystemAdmin && form.password !== "" && { password: form.password }),
             status: form.status,
             username: form.username.trim(),
           },
@@ -222,91 +224,78 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           </Text>
         </Card>
       ) : (
-        <div className="grid gap-8">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.members.active")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
-                {String(membersQuery.data?.total ?? 0)}
-              </Text>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.members.adminRoles")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
-                {adminCount}
-              </Text>
-            </Card>
-            <Card className="p-6 transition-all duration-300 hover:shadow-md">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("admin.members.pendingReview")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-3xl font-extrabold text-[var(--text-primary)]">
-                {pendingCount}
-              </Text>
-            </Card>
-          </div>
-
-          <Card className="overflow-hidden rounded-2xl border-[var(--border-subtle)] shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <Title as="h2" className="tracking-tight" variant="card">
-                  {t("admin.members.list")}
-                </Title>
-                <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
-                  {membersQuery.isLoading
-                    ? t("admin.members.loading")
-                    : t("admin.members.records", {
-                      count: String(visibleMembers.length),
-                      total: String(membersQuery.data?.total ?? 0),
-                    })}
-                </Text>
-              </div>
-              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
-                <div className="relative min-w-[180px] flex-1 sm:w-72">
-                  <Search
-                    aria-hidden="true"
-                    className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]"
-                  />
-                  <Input
-                    aria-label={t("admin.members.search")}
-                    className="h-11 rounded-xl pl-11 shadow-sm"
-                    onChange={(event) => setQueryInput(event.target.value)}
-                    placeholder={t("admin.members.search")}
-                    type="search"
-                    value={queryInput}
-                  />
-                </div>
-                {hideLayout && (
-                  <>
-                    {admin ? (
-                      <>
-                        <Input
-                          accept=".csv,.xls,.xlsx"
-                          className="hidden"
-                          onChange={(event) => handleImportFile(event.target.files?.[0])}
-                          ref={importInputRef}
-                          type="file"
-                        />
-                        <Button aria-label="Import" onClick={() => importInputRef.current?.click()} size="icon" variant="secondary" className="h-11 w-11 shrink-0 rounded-xl">
-                          <Upload aria-hidden="true" className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : null}
-                    {canCreateMembers ? (
-                      <Button variant="primary" onClick={openCreateModal} className="h-11 shrink-0 rounded-xl">
-                        <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
-                        {t("action.inviteMember")}
-                      </Button>
-                    ) : null}
-                  </>
-                )}
+        <div className="grid gap-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+            <Title as="h2" className="self-center sm:hidden" variant="labelStrong">
+              {t("church.tab.member")}
+            </Title>
+            <div className="order-last col-span-2 flex min-w-0 flex-col gap-1 sm:order-none sm:col-span-1">
+              <Label htmlFor="member-search" variant="caption">{t("common.search")}</Label>
+              <div className="relative">
+                <Search aria-hidden="true" className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                <Input
+                  id="member-search"
+                  className="h-9 pl-10 text-sm"
+                  onChange={(event) => setQueryInput(event.target.value)}
+                  placeholder={t("admin.members.search")}
+                  type="search"
+                  value={queryInput}
+                />
               </div>
             </div>
+            <div className="flex shrink-0 items-end justify-end gap-1.5 sm:gap-2">
+              <div className="flex flex-col gap-1 sm:w-44">
+                <Label className="sr-only sm:not-sr-only" htmlFor="member-role-filter" variant="caption">
+                  {t("admin.members.role")}
+                </Label>
+                <div className={cn(
+                  "relative grid h-9 w-9 place-items-center rounded-lg border border-[var(--border-subtle)] focus-within:ring-2 focus-within:ring-[var(--brand-primary)] sm:block sm:h-auto sm:w-auto sm:border-0 sm:focus-within:ring-0",
+                  roleFilter && "bg-[var(--brand-muted)] text-[var(--brand-primary)]",
+                )}>
+                  <ListFilter aria-hidden="true" className="h-4 w-4 sm:hidden" />
+                  <Dropdown
+                    id="member-role-filter"
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0 sm:static sm:h-9 sm:text-sm sm:opacity-100"
+                    onChange={(event) => {
+                      setRoleFilter(event.target.value);
+                      setPage(0);
+                    }}
+                    value={roleFilter}
+                  >
+                    <option value="">{t("admin.members.allRoles")}</option>
+                    {roleOptions.map((role) => (
+                      <option key={role} value={role}>{t(`admin.members.role.${role}`)}</option>
+                    ))}
+                  </Dropdown>
+                </div>
+              </div>
+              <Button aria-label={t("admin.members.refresh")} onClick={() => void membersQuery.refetch()} size="icon" variant="secondary">
+                <RefreshCw aria-hidden="true" className={cn("h-4 w-4", membersQuery.isFetching && "animate-spin")} />
+              </Button>
+              {hideLayout && admin ? (
+                <>
+                  <Input
+                    accept=".csv,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(event) => handleImportFile(event.target.files?.[0])}
+                    ref={importInputRef}
+                    type="file"
+                  />
+                  <Button aria-label={t("action.importData")} onClick={() => importInputRef.current?.click()} size="icon" variant="secondary">
+                    <Upload aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : null}
+              {hideLayout && canCreateMembers ? (
+                <Button aria-label={t("action.inviteMember")} className="sm:w-auto sm:px-4" onClick={openCreateModal} size="icon" variant="primary">
+                  <Plus aria-hidden="true" className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t("action.inviteMember")}</span>
+                </Button>
+              ) : null}
+            </div>
+          </div>
 
+          <Card className="overflow-hidden rounded-xl shadow-none">
             {membersQuery.error ? (
               <div
                 className="m-6 rounded-xl border p-4 text-sm font-medium"
@@ -323,11 +312,11 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
             <div className="grid divide-y divide-[var(--border-subtle)]">
               {visibleMembers.map((member) => (
                 <div
-                  className="group flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-[var(--bg-surface)]/50 sm:flex-row sm:items-center"
+                  className="group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 px-4 py-4 transition-colors hover:bg-[var(--bg-surface)]/50 sm:flex sm:items-center sm:gap-4 sm:px-6 sm:py-5"
                   key={member.id}
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)]">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-muted)] text-[var(--brand-primary)] sm:h-12 sm:w-12">
                       <UserRound aria-hidden="true" className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -350,13 +339,13 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 sm:w-72 sm:justify-end">
-                    <div className="flex items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)]">
+                  <div className="contents sm:flex sm:w-72 sm:items-center sm:justify-end sm:gap-3">
+                    <div className="col-span-2 ml-[3.25rem] flex w-fit items-center gap-2 rounded-lg bg-[var(--bg-base)] px-3 py-1.5 text-xs font-bold text-[var(--text-secondary)] sm:ml-0">
                       <Shield aria-hidden="true" className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
                       <span className="capitalize">{roleLabel(member.role)}</span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="col-start-2 row-start-1 flex gap-1 sm:gap-2">
                       {canUpdateMembers ? (
                         <Button
                           variant="unstyled"
@@ -429,6 +418,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
           <Modal
             className="max-w-3xl"
             labelledBy="member-modal-title"
+            onClose={closeModal}
             onSubmit={submitMember}
           >
             <ModalHeader className="flex items-start justify-between gap-4">
@@ -488,13 +478,14 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   value={form.email}
                 />
               </FormField>
-              {!editingMember ? (
-                <FormField htmlFor="member-password" label={t("admin.members.initialPassword")}>
+              {!editingMember || isSystemAdmin ? (
+                <FormField htmlFor="member-password" label={t(editingMember ? "admin.members.newPasswordOptional" : "admin.members.initialPassword")}>
                   <Input
+                    autoComplete="new-password"
                     id="member-password"
                     minLength={8}
                     onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                    required
+                    required={!editingMember}
                     type="password"
                     value={form.password}
                   />
@@ -513,7 +504,7 @@ export function MemberPage({ admin = false, hideLayout = false }: MemberPageProp
                   onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
                   value={form.role}
                 >
-                  {roleOptions.map((role) => (
+                  {roleOptions.filter((role) => role !== "system_admin" || isSystemAdmin || editingMember?.role === role).map((role) => (
                     <option key={role} value={role}>
                       {roleLabel(role)}
                     </option>

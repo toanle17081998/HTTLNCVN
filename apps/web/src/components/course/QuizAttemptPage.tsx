@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { CheckCircle2, CircleX } from "lucide-react";
 import {
   useFinishAttemptMutation,
@@ -26,6 +27,7 @@ export function QuizAttemptPage({ attemptId }: QuizAttemptPageProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  useEscapeKey(() => setShowResultModal(false), showResultModal);
   const answersRef = useRef(answers);
   const timeoutSubmittedRef = useRef(false);
   const attempt = attemptQuery.data;

@@ -3,6 +3,7 @@
 import { Text, Title, Button, FormField, Input } from "@/components/ui";
 import type { FormEvent } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import type { TableFormState } from "./articleEditorTypes";
 
 type TableInsertModalProps = {
@@ -19,6 +20,7 @@ export function TableInsertModal({
   onClose,
 }: TableInsertModalProps) {
   const { t } = useTranslation();
+  useEscapeKey(onClose);
 
   return (
     <div

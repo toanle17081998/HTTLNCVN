@@ -4,6 +4,7 @@ import { Text, Title, Button, FormField, Input, Textarea } from "@/components/ui
 import { ImagePickerField } from "@/components/media/ImagePickerField";
 import type { FormEvent } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import type { ImageFormState, ImageModalState } from "./articleEditorTypes";
 
 type MediaInsertModalProps = {
@@ -23,6 +24,7 @@ export function MediaInsertModal({
 }: MediaInsertModalProps) {
   const isImage = imageModal.kind === "image";
   const { t } = useTranslation();
+  useEscapeKey(onClose);
 
   return (
     <div

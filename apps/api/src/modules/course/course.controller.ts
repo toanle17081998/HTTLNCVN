@@ -14,6 +14,7 @@ import {
 
 import { Public } from '../../common/decorators/public.decorator';
 import { Can } from '../../common/decorators/permissions.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import type { JwtPayload } from '../../common/strategies/jwt.strategy';
 import { CourseService } from './course.service';
 import type {
@@ -79,6 +80,7 @@ export class CourseController {
     return this.courseService.update(slug, dto);
   }
 
+  @Roles('system_admin')
   @Can('delete', 'course')
   @Delete(':slug')
   @HttpCode(HttpStatus.NO_CONTENT)

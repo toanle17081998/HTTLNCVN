@@ -1,12 +1,15 @@
 import type { FormEventHandler, HTMLAttributes } from "react";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { cn } from "./cn";
 
 type ModalProps = Pick<HTMLAttributes<HTMLDivElement>, "children" | "className"> & {
   labelledBy: string;
+  onClose: () => void;
   onSubmit?: FormEventHandler<HTMLFormElement>;
 };
 
-export function Modal({ children, className, labelledBy, onSubmit }: ModalProps) {
+export function Modal({ children, className, labelledBy, onClose, onSubmit }: ModalProps) {
+  useEscapeKey(onClose);
   const panelProps = {
     "aria-labelledby": labelledBy,
     "aria-modal": true as const,

@@ -7,10 +7,12 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout";
 import { Badge, Button, Card, Input, Pagination, Dropdown, Skeleton, Text, Title } from "@/components/ui";
+import { CardActions } from "@/components/ui/CardActions";
 import { useTranslation } from "@/providers/I18nProvider";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
-import { courseApi, courseKeys, useCoursesQuery, useCourseCategoriesQuery } from "@/hooks/course";
+import { useFeedback } from "@/providers/FeedbackProvider";
+import { courseApi, courseKeys, useCoursesQuery, useCourseCategoriesQuery, useDeleteCourseMutation } from "@/hooks/course";
 
 const PAGE_SIZE_DEFAULT = 10;
 const statusLabelKeys = {
@@ -26,6 +28,8 @@ export function CoursePage() {
   const { t, localize } = useTranslation();
   const router = useRouter();
   const { can, isLoading: authLoading } = useAuth();
+  const { confirm } = useFeedback();
+  const deleteCourse = useDeleteCourseMutation();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>();
   const [searchInput, setSearchInput] = useState("");
   const [q, setQ] = useState("");
@@ -102,6 +106,11 @@ export function CoursePage() {
     setSelectedCategoryId(id);
     setPage(0);
   };
+
+  async function handleDelete(slug: string) {
+    const ok = await confirm({ variant: "delete", title: t("course.action.deleteConfirm") });
+    if (ok) await deleteCourse.mutateAsync(slug);
+  }
 
   return (
     <PageLayout
@@ -199,12 +208,8 @@ export function CoursePage() {
       {!isListLoading ? (
       <div className="grid gap-4 md:grid-cols-2">
         {coursesQuery.data?.items.map((course) => (
-          <Link
-            className="rounded-lg focus:outline-none focus:ring-4 focus:ring-[var(--input-focus-ring)]"
-            href={`/course/${encodeURIComponent(course.slug)}`}
-            key={course.id}
-          >
-            <Card className="h-full overflow-hidden transition hover:border-[var(--brand-primary)]">
+          <Card className="relative h-full overflow-hidden transition hover:border-[var(--brand-primary)] focus-within:ring-4 focus-within:ring-[var(--input-focus-ring)]" key={course.id}>
+            <Link className="block h-full focus:outline-none" href={`/course/${encodeURIComponent(course.slug)}`}>
               {course.cover_image_url ? (
                 <div className="relative aspect-[16/9] w-full overflow-hidden">
                   <Image
@@ -247,8 +252,17 @@ export function CoursePage() {
                   {localize(course, "summary")}
                 </Text>
               </div>
-            </Card>
-          </Link>
+            </Link>
+            {canManageCourses ? (
+              <CardActions
+                className="absolute right-3 top-3 z-10"
+                deleting={deleteCourse.isPending}
+                editHref={`/admin/courses/${encodeURIComponent(course.slug)}/edit`}
+                onDelete={() => handleDelete(course.slug)}
+                resource="course"
+              />
+            ) : null}
+          </Card>
 
         ))}
       </div>

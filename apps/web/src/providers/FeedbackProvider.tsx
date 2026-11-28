@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -13,6 +12,7 @@ import { AlertTriangle, Trash2, Save, Info, AlertCircle } from "lucide-react";
 import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { Toaster, toast as sonnerToast } from "sonner";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 type ToastVariant = "success" | "error" | "info" | "warning";
 
@@ -153,23 +153,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     [t],
   );
 
-  useEffect(() => {
-    if (!confirmState) {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        confirmState.resolve(false);
-        setConfirmState(null);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [confirmState]);
+  useEscapeKey(() => closeConfirm(false), confirmState !== null);
 
   const value = useMemo<FeedbackContextValue>(() => ({ confirm, toast }), [confirm, toast]);
 

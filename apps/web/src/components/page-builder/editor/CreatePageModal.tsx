@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { ApiError } from "@/api/client";
 import {
   useCreatePageMutation,
@@ -32,6 +33,7 @@ export function CreatePageModal({ isOpen, onClose, onCreated }: CreatePageModalP
   const homePageQuery = usePageQuery(templateId === "welcome" ? "home" : undefined);
   const { toast } = useFeedback();
   const { t } = useTranslation();
+  useEscapeKey(onClose, isOpen);
 
   useEffect(() => {
     if (isOpen) {

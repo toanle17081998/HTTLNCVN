@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Edit3, Eye, Tag, Users } from "lucide-react";
+import { CheckCircle2, Circle, Edit3, EllipsisVertical } from "lucide-react";
 import { Button, cn, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import type { Prayer } from "@/hooks/prayer-journal";
@@ -12,7 +12,6 @@ type PrayerCardProps = {
   prayer: Prayer;
   onEdit: (prayer: Prayer) => void;
   onToggleStatus: (prayer: Prayer) => void;
-  onView: (prayer: Prayer) => void;
 };
 
 export function PrayerCard({
@@ -20,102 +19,85 @@ export function PrayerCard({
   prayer,
   onEdit,
   onToggleStatus,
-  onView,
 }: PrayerCardProps) {
   const { t } = useTranslation();
   const isClosed = prayer.status === "closed";
+  const statusAction = t(isClosed ? "prayer.action.reopen" : "prayer.action.close");
 
   return (
     <div
       className={cn(
-        "grid gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 shadow-sm transition-colors",
+        "relative grid rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 shadow-sm transition-colors focus-within:z-10",
         isClosed ? "opacity-80" : "",
       )}
     >
-      <div className="flex items-start gap-3">
-        <Button
-          variant="unstyled"
-          aria-label={isClosed ? t("prayer.action.reopen") : t("prayer.action.close")}
-          className={cn(
-            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[var(--brand-primary)] transition",
-            canEdit ? "hover:bg-[var(--brand-muted)]" : "cursor-default opacity-50",
-          )}
-          disabled={!canEdit}
-          onClick={() => onToggleStatus(prayer)}
-          type="button"
-        >
-          {isClosed ? (
-            <CheckCircle2 aria-hidden="true" className="h-5 w-5" />
-          ) : (
-            <Circle aria-hidden="true" className="h-5 w-5" />
-          )}
-        </Button>
-
-        <Button
-          variant="unstyled"
-          className="min-w-0 flex-1 text-left"
-          onClick={() => onView(prayer)}
-          type="button"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={prayer.status} />
-            <VisibilityBadge visibility={prayer.visibility} />
-            {prayer.category ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-base)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
-                <Tag aria-hidden="true" className="h-3 w-3" />
-                {prayer.category.name}
-              </span>
-            ) : null}
-            {prayer.shared_with.length > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-base)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
-                <Users aria-hidden="true" className="h-3 w-3" />
-                {prayer.shared_with.length}
-              </span>
-            ) : null}
+      <header className={cn("grid items-start gap-2 lg:gap-3", canEdit && "grid-cols-[minmax(0,1fr)_auto]")}>
+        <div className="min-w-0 wrap-anywhere">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Title
+              as="h3"
+              className={cn("min-w-0", isClosed && "line-through")}
+              tone={isClosed ? "secondary" : "primary"}
+              variant="label"
+            >
+              {prayer.title ?? t("prayer.form.titlePlaceholder")}
+            </Title>
+            <span className="inline-flex shrink-0 items-center gap-2">
+              <StatusBadge iconOnly status={prayer.status} />
+              <VisibilityBadge iconOnly visibility={prayer.visibility} />
+            </span>
           </div>
-
-          <Title
-            as="h3"
-            className={cn(
-              "mt-3",
-              isClosed && "line-through",
-            )}
-            tone={isClosed ? "secondary" : "primary"}
-            variant="label"
-          >
-            {prayer.title ?? t("prayer.form.titlePlaceholder")}
-          </Title>
-          <Text as="p" tone="inherit" variant="inherit"
-            className={cn(
-              "mt-1 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]",
-              isClosed ? "text-[var(--text-tertiary)]" : "",
-            )}
-          >
-            {prayer.content}
+          <Text as="p" tone="inherit" variant="inherit" className="mt-1 text-xs text-[var(--text-tertiary)] lg:hidden">
+            {prayer.created_by_name} · <time dateTime={prayer.created_at}>{formatPrayerDate(prayer.created_at)}</time>
           </Text>
-          <Text as="p" tone="inherit" variant="inherit" className="mt-3 text-xs text-[var(--text-tertiary)]">
-            {prayer.created_by_name} · {formatPrayerDate(prayer.created_at)}
-          </Text>
-          {prayer.close_reason ? (
-            <Text as="p" tone="inherit" variant="inherit" className="mt-2 rounded-xl bg-[var(--bg-base)] px-3 py-2 text-xs text-[var(--text-secondary)]">
-              {prayer.close_reason}
-            </Text>
-          ) : null}
-        </Button>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <Button onClick={() => onView(prayer)} size="sm" variant="ghost">
-            <Eye aria-hidden="true" className="mr-2 h-4 w-4" />
-            {t("prayer.config.title.view")}
-          </Button>
-          {canEdit ? (
-            <Button onClick={() => onEdit(prayer)} size="sm" variant="secondary">
-              <Edit3 aria-hidden="true" className="mr-2 h-4 w-4" />
-              {t("prayer.config.title.edit")}
-            </Button>
-          ) : null}
         </div>
-      </div>
+
+        {canEdit ? (
+          <details
+            className="relative"
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape" || !event.currentTarget.open) return;
+              event.stopPropagation();
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector("summary")?.focus();
+            }}
+          >
+            <summary
+              aria-label={t("prayer.action.more")}
+              className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--brand-muted)] [&::-webkit-details-marker]:hidden"
+            >
+              <EllipsisVertical aria-hidden="true" className="h-5 w-5" />
+            </summary>
+            <div className="absolute right-0 top-full z-20 mt-1 grid w-max max-w-64 gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-elevated)] p-1 shadow-lg">
+              <Button className="justify-start" onClick={(event) => {
+                event.currentTarget.closest("details")?.removeAttribute("open");
+                onEdit(prayer);
+              }} size="sm" variant="ghost">
+                <Edit3 aria-hidden="true" className="mr-2 h-4 w-4" />
+                {t("action.edit")}
+              </Button>
+              <Button className="justify-start" onClick={(event) => {
+                event.currentTarget.closest("details")?.removeAttribute("open");
+                onToggleStatus(prayer);
+              }} size="sm" variant="ghost">
+                {isClosed ? <Circle aria-hidden="true" className="mr-2 h-4 w-4" /> : <CheckCircle2 aria-hidden="true" className="mr-2 h-4 w-4" />}
+                {statusAction}
+              </Button>
+            </div>
+          </details>
+        ) : null}
+      </header>
+      <Text as="p" tone="inherit" variant="inherit"
+        className={cn(
+          "mt-1 whitespace-pre-wrap text-sm leading-6 wrap-anywhere",
+          isClosed ? "text-[var(--text-tertiary)]" : "text-[var(--text-secondary)]",
+        )}
+      >
+        {prayer.content}
+      </Text>
     </div>
   );
 }

@@ -144,7 +144,7 @@ function BuilderHeaderActions({
         size="sm"
       >
         <Globe className="mr-2 h-4 w-4" />
-        {t("action.publish")}
+        {t("pageBuilder.saveAndPublish")}
       </Button>
       <Button
         disabled={saving || deleting}

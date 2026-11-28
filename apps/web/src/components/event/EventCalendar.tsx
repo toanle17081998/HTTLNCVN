@@ -2,6 +2,7 @@ import { Title, Button, Card, cn, Text } from "@/components/ui";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Clock3, MapPin, X } from "lucide-react";
 import { useTranslation } from "@/providers/I18nProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import type { EventItem } from "@/hooks/event";
 
 interface EventCalendarProps {
@@ -139,6 +140,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
   const { locale, t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDayEvents, setSelectedDayEvents] = useState<{ date: Date; events: EventItem[] } | null>(null);
+  useEscapeKey(() => setSelectedDayEvents(null), selectedDayEvents !== null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

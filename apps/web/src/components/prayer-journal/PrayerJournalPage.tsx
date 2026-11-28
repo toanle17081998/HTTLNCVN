@@ -2,7 +2,7 @@
 
 import { Text, Button, Card, Input, Pagination, cn, Label } from "@/components/ui";
 import { useMemo, useState, type FormEvent } from "react";
-import { BookOpen, ListTodo, Plus, RefreshCw, Search } from "lucide-react";
+import { BookOpen, Plus, RefreshCw, Search } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { PERMISSIONS } from "@/lib/rbac";
 import { useAuth } from "@/providers/AuthProvider";
@@ -86,9 +86,6 @@ export function PrayerJournalPage() {
     });
   }, [categoryFilter, prayers, query, statusFilter, visibilityFilter]);
 
-  const ownPrayerCount = prayers.filter((prayer) => prayer.created_by === user?.id).length;
-  const sharedPrayerCount = prayers.filter((prayer) => prayer.visibility === "shared").length;
-  const answeredPrayerCount = prayers.filter((prayer) => prayer.status === "closed").length;
   const isSaving =
     createPrayerMutation.isPending ||
     updatePrayerMutation.isPending ||
@@ -107,12 +104,6 @@ export function PrayerJournalPage() {
     setActivePrayer(prayer);
     setForm(prayerToForm(prayer));
     setModalMode("edit");
-    setModalOpen(true);
-  }
-
-  function openViewModal(prayer: Prayer) {
-    setActivePrayer(prayer);
-    setModalMode("view");
     setModalOpen(true);
   }
 
@@ -249,27 +240,6 @@ export function PrayerJournalPage() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("prayer.summary.mine")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{ownPrayerCount}</Text>
-            </div>
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("prayer.summary.shared")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{sharedPrayerCount}</Text>
-            </div>
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
-              <Text as="p" tone="inherit" variant="inherit" className="text-xs font-bold uppercase tracking-wider text-[var(--accent-gold)]">
-                {t("prayer.summary.answered")}
-              </Text>
-              <Text as="p" tone="inherit" variant="inherit" className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{answeredPrayerCount}</Text>
-            </div>
-          </div>
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-1 min-w-0 flex-1">
               <Label variant="caption"  htmlFor="prayer-search-input">
@@ -317,7 +287,7 @@ export function PrayerJournalPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="grid gap-4">
               {prayersQuery.error || metaQuery.error || mutationError ? (
                 <div className="rounded-xl border border-[var(--status-danger)]/30 bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]">
@@ -352,7 +322,6 @@ export function PrayerJournalPage() {
                       key={prayer.id}
                       onEdit={openEditModal}
                       onToggleStatus={togglePrayerStatus}
-                      onView={openViewModal}
                       prayer={prayer}
                     />
                   ))}

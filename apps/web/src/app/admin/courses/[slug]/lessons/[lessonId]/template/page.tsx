@@ -8,6 +8,7 @@ import { QuestionTemplateForm } from "@/components/course/QuestionTemplateForm";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
 import { useAuth } from "@/providers/AuthProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { PERMISSIONS } from "@/lib/rbac";
 import {
   useLessonQuery,
@@ -33,6 +34,7 @@ export default function AdminTemplatesPage() {
 
   // Modal control states
   const [showModal, setShowModal] = useState(false);
+  useEscapeKey(() => setShowModal(false), showModal);
   const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
 
   // Update mutation helper needs dynamic template ID

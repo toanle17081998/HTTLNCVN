@@ -4,6 +4,7 @@ import { Title, Button, Card, Dropdown, Textarea, Input, Label, Text } from "@/c
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useFeedback } from "@/providers/FeedbackProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { useChurchUnitMetaQuery } from "@/hooks/church-unit";
 import { useEnrollOthersMutation, useEnrollPreviewMutation, type EnrollPreviewDto, type EnrollPreviewMemberDto } from "@/hooks/course";
 import { Search, UserCheck, UserPlus, X } from "lucide-react";
@@ -22,6 +23,7 @@ export function CourseEnrollmentModal({ courseId, onClose }: CourseEnrollmentMod
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [removedMemberIds, setRemovedMemberIds] = useState<Set<string>>(new Set());
+  useEscapeKey(onClose);
   
   const churchUnitMetaQuery = useChurchUnitMetaQuery();
   const enrollOthers = useEnrollOthersMutation(courseId);

@@ -6,6 +6,7 @@ import { Lock, X, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button, FormField, Input, Title, Text } from "@/components/ui";
 import { useTranslation } from "@/providers/I18nProvider";
 import { useChangePasswordMutation } from "@/hooks/auth";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 type ChangePasswordModalProps = {
   isOpen: boolean;
@@ -32,8 +33,6 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
     setMounted(true);
   }, []);
 
-  if (!isOpen || !mounted) return null;
-
   const handleReset = () => {
     setCurrentPassword("");
     setNewPassword("");
@@ -46,6 +45,10 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
     handleReset();
     onClose();
   };
+
+  useEscapeKey(handleClose, isOpen && mounted);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
